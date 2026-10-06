@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Arcade Bowling 3D</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;background:#070912;font-family:Arial,Helvetica,sans-serif}
+canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
+#hud{position:fixed;top:0;left:0;right:0;pointer-events:none;color:#fff;text-align:center;z-index:5}
+#score{font-size:clamp(15px,2.2vw,26px);padding:8px;font-weight:bold;letter-spacing:1px;
+ background:linear-gradient(180deg,rgba(0,0,0,.75),rgba(0,0,0,0));text-shadow:0 2px 4px #000}
+#info{font-size:clamp(11px,1.5vw,16px);opacity:.85;text-shadow:0 1px 3px #000}
+#msg{position:fixed;top:42%;left:50%;transform:translate(-50%,-50%) scale(.5);font-size:clamp(36px,8vw,90px);
+ font-weight:900;color:#ffd94a;text-shadow:0 0 30px #f80,0 4px 8px #000;pointer-events:none;opacity:0;
+ transition:all .25s cubic-bezier(.2,1.6,.4,1);z-index:6;letter-spacing:3px}
+#msg.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#btn{position:fixed;bottom:5%;left:50%;transform:translateX(-50%);padding:14px 44px;font-size:clamp(16px,2.4vw,26px);
+ font-weight:bold;background:linear-gradient(180deg,#39c07a,#1d8a52);color:#fff;border:2px solid #bff;
+ border-radius:40px;cursor:pointer;display:none;z-index:7;box-shadow:0 6px 24px rgba(0,0,0,.6)}
+#meters{position:fixed;right:12px;top:50%;transform:translateY(-50%);width:26px;height:38vh;min-height:140px;
+ background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.7);border-radius:14px;overflow:hidden;z-index:5;pointer-events:none}
+#pw{position:absolute;bottom:0;left:0;right:0;height:0%;background:linear-gradient(0deg,#2f2,#ff0,#f30)}
+#cvM{position:fixed;left:12px;top:50%;transform:translateY(-50%);width:26px;height:38vh;min-height:140px;
+ background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.7);border-radius:14px;z-index:5;pointer-events:none;overflow:hidden}
+#cvB{position:absolute;left:0;right:0;top:50%;height:0%;background:#4df}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud"><div id="score"></div><div id="info"></div></div>
+<div id="msg"></div>
+<div id="meters"><div id="pw"></div></div>
+<div id="cvM"><div id="cvB"></div></div>
+<button id="btn">NEXT</button>
+<script>
+"use strict";
+const C=document.getElementById('c');
+const G=C.getContext('webgl',{antialias:true,alpha:false})||C.getContext('experimental-webgl');
+if(!G){document.body.innerHTML='<h2 style="color:#fff;text-align:center;margin-top:40vh">WebGL not supported</h2>';throw 0;}
+const DPR=Math.min(window.devicePixelRatio||1,1.75);
+let W=1,H=1,ASP=1;
+function resize(){W=C.width=Math.max(2,innerWidth*DPR|0);H=C.height=Math.max(2,innerHeight*DPR|0);ASP=W/H;G.viewport(0,0,W,H);}
+addEventListener('resize',resize);resize();
+const $=id=>document.getElementById(id);
+const PI=Math.PI,sin=Math.sin,cos=Math.cos,sqrt=Math.sqrt,abs=Math.abs,
+      min=Math.min,max=Math.max,clamp=(v,a,b)=>v<a?a:v>b?b:v,rand=Math.random,floor=Math.floor;
+
+/* ---------- audio ---------- */
+let AC=null,noiseBuf=null,rumbleGain=null;
+function audioInit(){
+  if(AC)return;
+  try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
+  noiseBuf=AC.createBuffer(1,AC.sampleRate*0.5|0,AC.sampleRate);
+  const d=noiseBuf.getChannelData(0);
+  for(let i=0;i<d.length;i++)d[i]=rand()*2-1;
+  const src=AC.createBufferSource();src.buffer=noiseBuf;src.loop=true;
+  const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=140;
+  rumbleGain=AC.createGain();rumbleGain.gain.value=0;
+  src.connect(lp);lp.connect(rumbleGain);rumbleGain.connect(AC.destination);src.start();
+}
+function noiseHit(vol,dur,freq){
+  if(!AC)return;
+  const s=AC.createBufferSource();s.buffer=noiseBuf;s.playbackRate.value=.7+rand()*.6;
+  const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=freq;bp.Q.value=1.2;
+  const g=AC.createGain();g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+dur);
+  s.connect(bp);bp.connect(g);g.connect(AC.destination);s.start();s.stop(AC.currentTime+dur);
+}
+function tone(f,dur,vol,delay,type){
+  if(!AC)return;
+  const t=AC.currentTime+(delay||0);
+  const o=AC.createOscillator(),g=AC.createGain();
+  o.type=type||'sine';o.frequency.value=f;
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+dur);
+}
+const sClick=v=>{noiseHit(min(.5,v),.09,2200);tone(110,.08,min(.4,v*.5),0,'triangle');};
+const sGutter=()=>{tone(300,.4,.25,0,'sawtooth');tone(180,.5,.2,.1,'sawtooth');};
+const sStrike=()=>{[523,659,784,1046].forEach((f,i)=>tone(f,.35,.35,i*.09,'square'));noiseHit(.4,.5,900);};
+const sSpare =()=>{[440,660,880].forEach((f,i)=>tone(f,.3,.3,i*.1,'square'));};
+
+/* ---------- math ---------- */
+function m4(){return new Float32Array(16)}
+function m4id(){const m=m4();m[0]=m[5]=m[10]=m[15]=1;return m}
+function m4mul(a,b){const r=m4();for(let i=0;i<4;i++)for(let j=0;j<4;j++)
+  r[j*4+i]=a[i]*b[j*4]+a[4+i]*b[j*4+1]+a[8+i]*b[j*4+2]+a[12+i]*b[j*4+3];return r;}
+function m4persp(fov,a,n,f){const m=m4(),t=1/Math.tan(fov/2);m[0]=t/a;m[5]=t;m[10]=(f+n)/(n-f);m[11]=-1;m[14]=2*f*n/(n-f);return m}
+function m4look(e,c,up){
+  let z=[e[0]-c[0],e[1]-c[1],e[2]-c[2]];const zl=Math.hypot(z[0],z[1],z[2]);z=[z[0]/zl,z[1]/zl,z[2]/zl];
+  let x=[up[1]*z[2]-up[2]*z[1],up[2]*z[0]-up[0]*z[2],up[0]*z[1]-up[1]*z[0]];
+  const xl=Math.hypot(x[0],x[1],x[2])||1;x=[x[0]/xl,x[1]/xl,x[2]/xl];
+  const y=[z[1]*x[2]-z[2]*x[1],z[2]*x[0]-z[0]*x[2],z[0]*x[1]-z[1]*x[0]];
+  const m=m4();m[0]=x[0];m[1]=y[0];m[2]=z[0];m[4]=x[1];m[5]=y[1];m[6]=z[1];m[8]=x[2];m[9]=y[2];m[10]=z[2];
+  m[12]=-(x[0]*e[0]+x[1]*e[1]+x[2]*e[2]);m[13]=-(y[0]*e[0]+y[1]*e[1]+y[2]*e[2]);m[14]=-(z[0]*e[0]+z[1]*e[1]+z[2]*e[2]);m[15]=1;return m;
+}
+function m4t(x,y,z){const m=m4id();m[12]=x;m[13]=y;m[14]=z;return m}
+function m4rx(a){const m=m4id(),c=cos(a),s=sin(a);m[5]=c;m[6]=s;m[9]=-s;m[10]=c;return m}
+function m4ry(a){const m=m4id(),c=cos(a),s=sin(a);m[0]=c;m[2]=-s;m[8]=s;m[10]=c;return m}
+function m4rz(a){const m=m4id(),c=cos(a),s=sin(a);m[0]=c;m[1]=s;m[4]=-s;m[5]=c;return m}
+function m4s(x,y,z){const m=m4id();m[0]=x;m[5]=y;m[10]=z;return m}
+
+/* ---------- shaders ---------- */
+const VS=`attribute vec3 P,N;uniform mat4 MVP,M;varying vec3 vN,vW;
+void main(){vW=(M*vec4(P,1.0)).xyz;vN=mat3(M)*N;gl_Position=MVP*vec4(P,1.0);}`;
+const FS=`precision mediump float;varying vec3 vN,vW;
+uniform vec3 Col;uniform float Shin;
+void main(){
+  vec3 n=normalize(vN);
+  vec3 L1=normalize(vec3(0.35,0.9,-0.25));
+  vec3 L2=normalize(vec3(-0.5,0.4,0.6));
+  float d=max(dot(n,L1),0.0)*0.75+max(dot(n,L2),0.0)*0.25;
+  vec3 V=normalize(-vW);vec3 Hh=normalize(L1+V);
+  float sp=pow(max(dot(n,Hh),0.0),Shin)*0.5;
+  vec3 c=Col*(0.34+d*0.80)+vec3(sp);
+  gl_FragColor=vec4(c,1.0);
+}`;
+function sh(s,t){const o=G.createShader(t);G.shaderSource(o,s);G.compileShader(o);
+  if(!G.getShaderParameter(o,G.COMPILE_STATUS))throw G.getShaderInfoLog(o);return o;}
+const PG=G.createProgram();
+G.attachShader(PG,sh(VS,G.VERTEX_SHADER));G.attachShader(PG,sh(FS,G.FRAGMENT_SHADER));
+G.linkProgram(PG);G.useProgram(PG);
+const aP=G.getAttribLocation(PG,'P'),aN=G.getAttribLocation(PG,'N');
+const uMVP=G.getUniformLocation(PG,'MVP'),uM=G.getUniformLocation(PG,'M'),
+      uCol=G.getUniformLocation(PG,'Col'),uShin=G.getUniformLocation(PG,'Shin');
+G.enable(G.DEPTH_TEST);G.enable(G.CULL_FACE);G.clearColor(0.05,0.06,0.12,1);
+
+/* ---------- meshes ---------- */
+function buf(a,t){const b=G.createBuffer();G.bindBuffer(t,b);
+  G.bufferData(t,new Float32Array(a),G.STATIC_DRAW);return b;}
+function ibuf(a){const b=G.createBuffer();G.bindBuffer(G.ELEMENT_ARRAY_BUFFER,b);
+  G.bufferData(G.ELEMENT_ARRAY_BUFFER,new Uint16Array(a),G.STATIC_DRAW);return b;}
+function mesh(v,n,i){return{vb:buf(v,G.ARRAY_BUFFER),nb:buf(n,G.ARRAY_BUFFER),ib:ibuf(i),cnt:i.length};}
+function mSphere(seg,rng){
+  const v=[],n=[],idx=[];
+  for(let y=0;y<=rng;y++){const ph=y/rng*PI;
+    for(let x=0;x<=seg;x++){const th=x/seg*PI*2;
+      const nx=sin(ph)*cos(th),ny=cos(ph),nz=sin(ph)*sin(th);
+      v.push(nx,ny,nz);n.push(nx,ny,nz);}}
+  for(let y=0;y<rng;y++)for(let x=0;x<seg;x++){
+    const a=y*(seg+1)+x,b=a+seg+1;idx.push(a,b,a+1,b,b+1,a+1);}
+  return mesh(v,n,idx);
+}
+function mBox(){
+  const v=[],n=[],idx=[];
+  const F=[
+    [[0,0,1],[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]]],
+    [[0,0,-1],[[1,-1,-1],[-1,-1,-1],[-1,1,-1],[1,1,-1]]],
+    [[0,1,0],[[-1,1,1],[1,1,1],[1,1,-1],[-1,1,-1]]],
+    [[0,-1,0],[[-1,-1,-1],[1,-1,-1],[1,-1,1],[-1,-1,1]]],
+    [[1,0,0],[[1,-1,1],[1,-1,-1],[1,1,-1],[1,1,1]]],
+    [[-1,0,0],[[-1,-1,-1],[-1,-1,1],[-1,1,1],[-1,1,-1]]]];
+  for(let f=0;f<6;f++){
+    const nn=F[f][0],co=F[f][1],base=f*4;
+    for(let k=0;k<4;k++){v.push(co[k][0],co[k][1],co[k][2]);n.push(nn[0],nn[1],nn[2]);}
+    idx.push(base,base+1,base+2,base,base+2,base+3);
+  }
+  return mesh(v,n,idx);
+}
+function mPin(seg,rng){
+  const v=[],n=[],idx=[];
+  const prof=t=>{
+    if(t<0.06)return 0.16+t*1.2;
+    if(t<0.30)return 0.23-((t-0.06)/0.24)*0.02;
+    if(t<0.55)return 0.21-((t-0.30)/0.25)*0.11;
+    if(t<0.80)return 0.10-((t-0.55)/0.25)*0.02;
+    return 0.08+((t-0.80)/0.20)*0.02;
+  };
+  for(let y=0;y<=rng;y++){
+    const t=y/rng,r=prof(t);
+    const r2=prof(min(1,t+0.02)),slope=(r-r2)/0.02;
+    const nl=Math.hypot(1,slope);
+    for(let x=0;x<=seg;x++){
+      const th=x/seg*PI*2,c=cos(th),s=sin(th);
+      v.push(c*r,t,s*r);n.push(c/nl,slope/nl,s/nl);
+    }
+  }
+  for(let y=0;y<rng;y++)for(let x=0;x<seg;x++){
+    const a=y*(seg+1)+x,b=a+seg+1;idx.push(a,b,a+1,b,b+1,a+1);}
+  return mesh(v,n,idx);
+}
+function mTri(){
+  return mesh([0,0.0,-0.5, -0.22,0.0,0.25, 0.22,0.0,0.25],[0,1,0,0,1,0,0,1,0],[0,1,2]);
+}
+const M_SPH=mSphere(18,12), M_BOX=mBox(), M_PIN=mPin(14,18), M_TRI=mTri();
+
+let PROJVIEW=m4id();
+function draw(m,model,col,shin){
+  G.uniformMatrix4fv(uMVP,false,m4mul(PROJVIEW,model));
+  G.uniformMatrix4fv(uM,false,model);
+  G.uniform3f(uCol,col[0],col[1],col[2]);
+  G.uniform1f(uShin,shin||24);
+  G.bindBuffer(G.ARRAY_BUFFER,m.vb);G.enableVertexAttribArray(aP);G.vertexAttribPointer(aP,3,G.FLOAT,false,0,0);
+  G.bindBuffer(G.ARRAY_BUFFER,m.nb);G.enableVertexAttribArray(aN);G.vertexAttribPointer(aN,3,G.FLOAT,false,0,0);
+  G.bindBuffer(G.ELEMENT_ARRAY_BUFFER,m.ib);
+  G.drawElements(G.TRIANGLES,m.cnt,G.UNSIGNED_SHORT,0);
+}
+
+/* ---------- world ---------- */
+const LW=1.2, GUTX=LW+0.22, WALLX=LW+0.52;
+const BALL_R=0.16, PIN_H=0.55, PIN_R=0.115;
+const PIN_Z=-10.6, PIT_Z=-13.1, START_Z=2.2;
+/* hook phases (seconds): skid -> hook -> roll */
+const SKID=0.30, HOOK_END=1.10, HOOK_A=2.3;
+
+let level=1,score=0,frame=1,throwNum=1;
+let pins=[],bumpers=[],parts=[];
+let ball=null;
+let phase='aim';
+let aim=0,power=0,spin=0;
+let drag=null,spinVel=0,lastMoveT=0,lastMoveX=0;
+let settleT=0,standingBefore=10;
+let hookMul=1,fricDec=0.4,oilName='';
+let seed=1;
+const srnd=()=>((seed=(seed*16807)%2147483647)-1)/2147483646;
+
+function makePin(x,z){return{x,z,vx:0,vz:0,tx:0,tz:0,wx:0,wz:0,
+  down:false,spin:rand()*PI,rs:0,cr:0.12};}
+
+/* ALWAYS a proper 10-pin triangle; procedural part = oil, friction, bumpers */
+function genLevel(){
+  pins=[];bumpers=[];parts=[];
+  seed=level*104729+7;
+  const S=0.46,RZ=0.40;
+  for(let r=0;r<4;r++)
+    for(let c=0;c<=r;c++)
+      pins.push(makePin((c-r/2)*S, PIN_Z-r*RZ));
+  const oil=srnd();
+  if(oil<0.34){oilName='DRY OIL';hookMul=1.3;}
+  else if(oil<0.67){oilName='MED OIL';hookMul=1.0;}
+  else{oilName='HEAVY OIL';hookMul=0.7;}
+  fricDec=0.30+srnd()*0.30;
+  if(level>=3){
+    const nb=min(2+floor(level/2),5);
+    for(let i=0;i<nb;i++){
+      const bx=(srnd()*2-1)*LW*0.7,bz=-3-srnd()*5;
+      let ok=true;
+      for(const b of bumpers)if(abs(b.x-bx)<0.7&&abs(b.z-bz)<1.5)ok=false;
+      if(ok)bumpers.push({x:bx,z:bz,r:0.14+srnd()*0.1,h:0.35+srnd()*0.3});
+    }
+  }
+}
+function resetBall(){
+  ball={x:0,y:BALL_R,z:START_Z,vx:0,vy:0,vz:0,rx:0,ry:0,rz:0,
+        spin:0,active:false,gutter:false,dead:false,t:0};
+}
+function meters(){
+  $('pw').style.height=(power*100)+'%';
+  const c=clamp(drag?spinVel:spin,-1,1);
+  const h=abs(c)*50;
+  $('cvB').style.height=h+'%';
+  $('cvB').style.top=c>=0?(50-h)+'%':'50%';
+}
+function startFrame(clearAll){
+  if(clearAll)genLevel();
+  else pins=pins.filter(p=>!p.down);
+  resetBall();
+  phase='aim';aim=0;power=0;spin=0;spinVel=0;drag=null;
+  standingBefore=pins.length;
+  $('btn').style.display='none';
+  meters();hud();
+}
+function hud(){
+  $('score').textContent=`LVL ${level} \u2022 SCORE ${score} \u2022 FRAME ${frame}/10 \u2022 THROW ${throwNum} \u2022 ${oilName}`;
+  $('info').textContent='DRAG: up=power, side=aim, flick side at release=curve  |  PC: \u2190\u2192 aim, \u2191\u2193 curve, SPACE hold=power';
+}
+let msgTO=0;
+function msg(t,ms){
+  const e=$('msg');e.textContent=t;e.classList.add('on');
+  clearTimeout(msgTO);msgTO=setTimeout(()=>e.classList.remove('on'),ms||1400);
+}
+
+/* ---------- physics ---------- */
+const DT=1/120;
+const hookPhase=t=>(t<SKID||t>HOOK_END)?0:1;   /* skid, hook, then roll straight */
+function capV(p,mx){const s=Math.hypot(p.vx,p.vz);if(s>mx){p.vx*=mx/s;p.vz*=mx/s;}}
+function capW(p,mx){const s=Math.hypot(p.wx,p.wz);if(s>mx){p.wx*=mx/s;p.wz*=mx/s;}}
+
+function stepBall(dt){
+  const b=ball;
+  b.t+=dt;
+  if(b.gutter){
+    if(b.vz<0)b.vz+=fricDec*2.2*dt;
+    b.z+=b.vz*dt;
+    b.rx+=b.vz/BALL_R*dt;
+    if(b.z<PIT_Z+0.3){b.z=PIT_Z+0.3;b.vz=0;b.dead=true;}
+    return;
+  }
+  if(b.dead){b.vz*=0.8;b.z+=b.vz*dt;return;}
+  const spd=Math.hypot(b.vx,b.vz);
+  /* realistic 3-phase hook */
+  b.vx+=b.spin*HOOK_A*hookMul*hookPhase(b.t)*dt*min(1,spd/5);
+  if(spd>0.01){
+    const ns=max(0,spd-fricDec*dt);
+    b.vx*=ns/spd;b.vz*=ns/spd;
+  }
+  b.x+=b.vx*dt;b.z+=b.vz*dt;
+  b.rx+=b.vz/BALL_R*dt;
+  b.rz-=b.vx/BALL_R*dt;
+  b.ry+=b.spin*2*dt;
+  b.vy-=9.8*dt;b.y+=b.vy*dt;
+  if(b.y<BALL_R){b.y=BALL_R;if(b.vy<0)b.vy*=-0.25;if(abs(b.vy)<0.2)b.vy=0;}
+  if(abs(b.x)>LW+0.02){
+    b.gutter=true;b.x=b.x>0?GUTX:-GUTX;b.vx=0;b.spin=0;b.y=BALL_R-0.10;
+    sGutter();
+  }
+  if(b.z<PIT_Z){b.z=PIT_Z;b.vz*=0.2;b.dead=true;}
+  for(const o of bumpers){
+    const dx=b.x-o.x,dz=b.z-o.z,d=Math.hypot(dx,dz),md=BALL_R+o.r;
+    if(d<md&&d>1e-4){
+      const nx=dx/d,nz=dz/d;
+      b.x=o.x+nx*md;b.z=o.z+nz*md;
+      const vn=b.vx*nx+b.vz*nz;
+      if(vn<0){b.vx-=2*vn*nx*0.85;b.vz-=2*vn*nz*0.85;sClick(abs(vn)*0.06);}
+    }
+  }
+  for(const p of pins){
+    const py=p.down?0.10:0.28;
+    const dx=p.x-b.x,dz=p.z-b.z,dy=py-b.y;
+    const d=sqrt(dx*dx+dy*dy+dz*dz),md=BALL_R+p.cr;
+    if(d<md&&d>1e-4){
+      const nx=dx/d,ny=dy/d,nz=dz/d;
+      const ov=md-d;
+      p.x+=nx*ov*0.8;p.z+=nz*ov*0.8;
+      b.x-=nx*ov*0.2;b.z-=nz*ov*0.2;
+      const vn=(b.vx-p.vx)*nx+(b.vz-p.vz)*nz;
+      if(vn>0){
+        /* sane impulse: pin leaves at ~1.5x approach speed, capped */
+        const j=min(vn,12)*1.5;
+        p.vx+=nx*j;p.vz+=nz*j;
+        p.wx+=nz*min(vn,10)*1.1;p.wz-=nx*min(vn,10)*1.1;
+        capV(p,11);capW(p,8);
+        b.vx-=nx*vn*0.14;b.vz-=nz*vn*0.14;   /* ball plows through */
+        sClick(min(.6,vn*0.09));
+        burst(p.x,0.3,p.z,5);
+      }
+    }
+  }
+}
+function stepPins(dt){
+  for(const p of pins){
+    if(!p.down){
+      const tl=Math.hypot(p.tx,p.tz);
+      if(tl>1e-4){
+        const ax=p.tx/tl,az=p.tz/tl;
+        /* wobble (restoring) below 0.12 rad, toppling above */
+        const tq=tl<0.12?-8*tl:7.5*tl;
+        p.wx+=ax*tq*dt;p.wz+=az*tq*dt;
+      }
+      p.wx*=(1-1.5*dt);p.wz*=(1-1.5*dt);
+      p.tx+=p.wx*dt;p.tz+=p.wz*dt;
+      p.vx*=(1-3.5*dt);p.vz*=(1-3.5*dt);
+      p.x+=p.vx*dt;p.z+=p.vz*dt;
+      p.rs+=dt*1.5;
+      if(Math.hypot(p.tx,p.tz)>0.5)p.down=true;
+    }else{
+      p.vx*=(1-2.0*dt);p.vz*=(1-2.0*dt);
+      p.x+=p.vx*dt;p.z+=p.vz*dt;
+      p.tx+=p.wx*dt;p.tz+=p.wz*dt;
+      const tl=Math.hypot(p.tx,p.tz);
+      if(tl>1.50){const k=1.50/tl;p.tx*=k;p.tz*=k;p.wx*=0.5;p.wz*=0.5;}
+      p.rs+=Math.hypot(p.vx,p.vz)*dt*4;
+    }
+    capV(p,11);
+    if(p.z<PIT_Z+0.15){p.z=PIT_Z+0.15;p.vz*=-0.3;}
+    if(p.z>PIN_Z+3)p.z=PIN_Z+3;
+    if(abs(p.x)>WALLX-0.1){p.x=p.x>0?WALLX-0.1:-WALLX+0.1;p.vx*=-0.3;}
+  }
+  /* pin-pin chain reactions */
+  for(let i=0;i<pins.length;i++)for(let j=i+1;j<pins.length;j++){
+    const a=pins[i],b=pins[j];
+    const dx=b.x-a.x,dz=b.z-a.z;
+    const d=Math.hypot(dx,dz),md=a.cr+b.cr;
+    if(d<md&&d>1e-4){
+      const nx=dx/d,nz=dz/d,ov=(md-d)*0.5;
+      a.x-=nx*ov;a.z-=nz*ov;b.x+=nx*ov;b.z+=nz*ov;
+      const vn=(a.vx-b.vx)*nx+(a.vz-b.vz)*nz;
+      if(vn>0){
+        const J=vn*0.9;
+        a.vx-=nx*J;a.vz-=nz*J;b.vx+=nx*J;b.vz+=nz*J;
+        const w=min(vn,8)*1.0;
+        b.wx+=nz*w;b.wz-=nx*w;
+        a.wx-=nz*w*0.6;a.wz+=nx*w*0.6;
+        capV(a,11);capV(b,11);capW(a,8);capW(b,8);
+        if(vn>0.8)sClick(min(.4,vn*0.05));
+      }
+    }
+  }
+  for(const p of pins)for(const o of bumpers){
+    const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz),md=p.cr+o.r;
+    if(d<md&&d>1e-4){
+      const nx=dx/d,nz=dz/d;
+      p.x=o.x+nx*md;p.z=o.z+nz*md;
+      const vn=p.vx*nx+p.vz*nz;
+      if(vn<0){p.vx-=2*vn*nx*0.6;p.vz-=2*vn*nz*0.6;}
+    }
+  }
+}
+function settled(){
+  if(ball&&!ball.dead&&!ball.gutter&&ball.z>PIT_Z-0.5){
+    if(Math.hypot(ball.vx,ball.vz)>0.12)return false;
+  }
+  if(ball&&ball.gutter&&Math.abs(ball.vz)>0.12)return false;
+  for(const p of pins)
+    if(Math.hypot(p.vx,p.vz)>0.08||Math.hypot(p.wx,p.wz)>0.15)return false;
+  return true;
+}
+function burst(x,y,z,n){
+  for(let i=0;i<n&&parts.length<80;i++)
+    parts.push({x,y,z,vx:(rand()-.5)*3,vy:rand()*3+1,vz:(rand()-.5)*3,l:0.5});
+}
+function stepParts(dt){
+  for(let i=parts.length-1;i>=0;i--){
+    const p=parts[i];
+    p.vy-=9*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.l-=dt;
+    if(p.l<=0||p.y<0)parts.splice(i,1);
+  }
+}
+
+/* ---------- camera ---------- */
+let camX=0,camY=1.75,camZ=START_Z+2.7,lookX=0,lookY=0.3,lookZ=START_Z-8;
+function camUpdate(dt){
+  const bz=ball?ball.z:START_Z,bx=ball?ball.x:0;
+  const dz=clamp(bz,-6.2,START_Z);
+  const ex=bx*0.30,ey=1.75,ez=dz+2.7;
+  let lx=bx*0.45,ly=0.30,lz=bz-8;
+  if(phase==='aim'){lx+=sin(aim)*1.2;lz=clamp(lz,-12,START_Z-6);}
+  lz=max(lz,-12.4);
+  const k=1-Math.exp(-7*dt);
+  camX+=(ex-camX)*k;camY+=(ey-camY)*k;camZ+=(ez-camZ)*k;
+  lookX+=(lx-lookX)*k;lookY+=(ly-lookY)*k;lookZ+=(lz-lookZ)*k;
+  PROJVIEW=m4mul(m4persp(58*PI/180,ASP,0.05,60),m4look([camX,camY,camZ],[lookX,lookY,lookZ],[0,1,0]));
+}
+
+/* ---------- render ---------- */
+const COL_LANE=[0.82,0.66,0.42],COL_BOARD=[0.70,0.55,0.34],COL_DECK=[0.75,0.62,0.45],
+      COL_GUT=[0.22,0.22,0.27],COL_WALL=[0.38,0.30,0.24],COL_PIN=[0.96,0.95,0.90],
+      COL_STR=[0.80,0.10,0.12],COL_BALL=[0.16,0.18,0.75],COL_BACK=[0.12,0.12,0.20],
+      COL_ARR=[0.55,0.30,0.15],COL_LIT=[1.0,0.95,0.8],COL_FLOOR=[0.07,0.08,0.13],
+      COL_NEO=[0.30,0.80,1.0];
+function render(){
+  G.clear(G.COLOR_BUFFER_BIT|G.DEPTH_BUFFER_BIT);
+  draw(M_BOX,m4mul(m4t(0,-0.45,-6),m4s(16,0.15,16)),COL_FLOOR,4);
+  draw(M_BOX,m4mul(m4t(0,2.2,PIT_Z-1.2),m4s(9,2.4,0.1)),COL_BACK,4);
+  draw(M_BOX,m4mul(m4t(0,3.4,PIT_Z-1.1),m4s(9,0.06,0.06)),COL_NEO,2);
+  draw(M_BOX,m4mul(m4t(0,-0.05,-3.2),m4s(LW,0.05,10.2)),COL_LANE,40);
+  draw(M_BOX,m4mul(m4t(0,-0.055,-11.9),m4s(LW,0.055,1.6)),COL_DECK,30);
+  for(let i=-4;i<=4;i++)
+    draw(M_BOX,m4mul(m4t(i*0.26,0.004,-3.2),m4s(0.008,0.002,10.2)),COL_BOARD,8);
+  draw(M_BOX,m4mul(m4t(-GUTX,-0.13,-3.2),m4s(0.20,0.04,10.2)),COL_GUT,10);
+  draw(M_BOX,m4mul(m4t( GUTX,-0.13,-3.2),m4s(0.20,0.04,10.2)),COL_GUT,10);
+  draw(M_BOX,m4mul(m4t(-WALLX,0.12,-3.2),m4s(0.06,0.22,10.2)),COL_WALL,8);
+  draw(M_BOX,m4mul(m4t( WALLX,0.12,-3.2),m4s(0.06,0.22,10.2)),COL_WALL,8);
+  draw(M_BOX,m4mul(m4t(-WALLX,0.35,-3.2),m4s(0.02,0.02,10.2)),COL_NEO,2);
+  draw(M_BOX,m4mul(m4t( WALLX,0.35,-3.2),m4s(0.02,0.02,10.2)),COL_NEO,2);
+  draw(M_BOX,m4mul(m4t(0,0.5,PIT_Z+0.15),m4s(2.4,0.6,0.08)),[0.15,0.15,0.22],6);
+  for(let i=0;i<3;i++)
+    draw(M_BOX,m4mul(m4t(0,2.1,-1-i*4.5),m4s(1.5,0.03,0.35)),COL_LIT,2);
+  for(let i=-3;i<=3;i++){
+    const sc=0.55-abs(i)*0.05;
+    draw(M_TRI,m4mul(m4t(i*0.30,0.012,-3.4+abs(i)*0.22),m4s(sc,1,sc)),COL_ARR,6);
+    draw(M_BOX,m4mul(m4t(i*0.30,0.008,0.6),m4s(0.035,0.004,0.035)),COL_ARR,6);
+  }
+  for(const o of bumpers)
+    draw(M_BOX,m4mul(m4t(o.x,o.h/2,o.z),m4s(o.r,o.h/2,o.r)),[0.75,0.25,0.2],30);
+  for(const p of pins){
+    const tl=Math.hypot(p.tx,p.tz);
+    const lift=p.down?0.09*min(1,tl/1.5):0;
+    const ang=tl>1e-4?Math.atan2(p.tz,tl):0;
+    let R=m4id();
+    if(tl>1e-4)R=m4mul(m4mul(m4ry(ang),m4rx(min(tl,1.52))),m4ry(-ang));
+    const MM=m4mul(m4t(p.x,lift,p.z),
+              m4mul(m4ry(p.spin+p.rs),m4mul(R,m4s(0.52,PIN_H,0.52))));
+    draw(M_PIN,MM,p.down?[0.80,0.76,0.68]:COL_PIN,60);
+    draw(M_BOX,m4mul(MM,m4mul(m4t(0,0.70,0),m4s(0.105,0.030,0.105))),p.down?[0.55,0.2,0.2]:COL_STR,40);
+  }
+  if(ball){
+    const M=m4mul(m4t(ball.x,ball.y,ball.z),
+            m4mul(m4rx(ball.rx),m4mul(m4ry(ball.ry),m4mul(m4rz(ball.rz),m4s(BALL_R,BALL_R,BALL_R)))));
+    draw(M_SPH,M,COL_BALL,90);
+    /* finger holes: SMALL, on the surface */
+    draw(M_SPH,m4mul(M,m4mul(m4t(0.25,0.80,0.50),m4s(0.13,0.13,0.13))),[0.06,0.07,0.30],40);
+    draw(M_SPH,m4mul(M,m4mul(m4t(-0.15,0.85,0.45),m4s(0.13,0.13,0.13))),[0.06,0.07,0.30],40);
+  }
+  for(const p of parts){
+    const s=0.06*p.l;
+    draw(M_SPH,m4mul(m4t(p.x,p.y,p.z),m4s(s,s,s)),[1,0.85,0.3],8);
+  }
+  if(phase==='aim'&&power>0.04){
+    const sim=preview();
+    for(let i=4;i<sim.length;i+=4){
+      const q=sim[i];
+      draw(M_BOX,m4mul(m4t(q.x,0.02,q.z),m4s(0.05,0.006,0.05)),[1,0.9,0.25],4);
+    }
+  }
+}
+function preview(){
+  const pts=[];
+  let x=ball.x,z=ball.z,vx=sin(aim)*(4+power*10)*0.35,vz=-cos(aim)*(4+power*10),t=0;
+  for(let i=0;i<70;i++){
+    t+=1/30;
+    vx+=spin*HOOK_A*hookMul*hookPhase(t)*(1/30)*min(1,Math.hypot(vx,vz)/5);
+    const s0=Math.hypot(vx,vz);
+    if(s0>0.01){const ns=max(0,s0-fricDec/30);vx*=ns/s0;vz*=ns/s0;}
+    x+=vx/30;z+=vz/30;
+    pts.push({x,z});
+    if(abs(x)>LW||z<PIN_Z-1)break;
+  }
+  return pts;
+}
+
+/* ---------- input ---------- */
+function pos(e){const t=e.touches?e.touches[0]||e.changedTouches[0]:e;return[t.clientX,t.clientY];}
+function down(e){
+  audioInit();if(AC&&AC.state==='suspended')AC.resume();
+  if(phase!=='aim')return;
+  const p=pos(e);
+  drag={x:p[0],y:p[1]};lastMoveX=p[0];lastMoveT=performance.now();spinVel=0;
+  aim=0;power=0;spin=0;meters();
+}
+function move(e){
+  if(!drag||phase!=='aim')return;
+  e.preventDefault();
+  const p=pos(e),now=performance.now();
+  const dx=p[0]-drag.x,dy=p[1]-drag.y;
+  aim=clamp(dx*0.006,-0.55,0.55);
+  power=clamp(-dy*0.006,0,1);
+  const dtm=max(8,now-lastMoveT)/1000;
+  spinVel=clamp(spinVel*0.6+((p[0]-lastMoveX)/dtm)*0.0048,-1.4,1.4);
+  lastMoveX=p[0];lastMoveT=now;
+  meters();
+}
+function up(){
+  if(!drag||phase!=='aim'){drag=null;return;}
+  drag=null;
+  spin=clamp(spinVel,-1,1);
+  if(power>0.06)throwBall();else{power=0;meters();}
+}
+addEventListener('mousedown',down);addEventListener('mousemove',move);addEventListener('mouseup',up);
+addEventListener('touchstart',down,{passive:false});addEventListener('touchmove',move,{passive:false});
+addEventListener('touchend',up,{passive:false});
+
+const keys={};
+addEventListener('keydown',e=>{
+  audioInit();if(AC&&AC.state==='suspended')AC.resume();
+  keys[e.code]=true;
+  if(e.code==='Space'){e.preventDefault();if(phase==='aim'&&!keys._chg){keys._chg=true;keys._t=0;}}
+  if(e.code==='Enter'&&phase==='done')nextAction();
+});
+addEventListener('keyup',e=>{
+  keys[e.code]=false;
+  if(e.code==='Space'&&keys._chg){keys._chg=false;if(phase==='aim'&&power>0.06)throwBall();else{power=0;}meters();}
+});
+function keyUpdate(dt){
+  if(phase!=='aim')return;
+  if(keys.ArrowLeft||keys.KeyA)aim=clamp(aim-1.2*dt,-0.55,0.55);
+  if(keys.ArrowRight||keys.KeyD)aim=clamp(aim+1.2*dt,-0.55,0.55);
+  if(keys.ArrowUp||keys.KeyW)spin=clamp(spin+1.5*dt,-1,1);
+  if(keys.ArrowDown||keys.KeyS)spin=clamp(spin-1.5*dt,-1,1);
+  if(keys._chg){keys._t+=dt*1.1;const ph=keys._t%2;power=ph<1?ph:2-ph;}
+  meters();
+}
+
+/* ---------- flow ---------- */
+function throwBall(){
+  phase='roll';
+  const v=4+power*10;
+  ball.vx=sin(aim)*v*0.35;
+  ball.vz=-cos(aim)*v;
+  ball.vy=0.4;
+  ball.spin=spin;
+  ball.active=true;ball.t=0;
+  throwNum++;
+  standingBefore=pins.filter(p=>!p.down).length;
+  power=0;meters();hud();
+}
+function endThrow(){
+  const standing=pins.filter(p=>!p.down).length;
+  const knocked=standingBefore-standing;
+  score+=knocked;
+  if(throwNum===1&&standing===0){score+=10;msg('STRIKE!',1800);sStrike();burst(0,1,PIN_Z,26);}
+  else if(throwNum===2&&standing===0){score+=5;msg('SPARE!',1600);sSpare();burst(0,1,PIN_Z,18);}
+  else if(knocked===0)msg(ball.gutter?'GUTTER!':'MISS',1200);
+  else msg(knocked+' DOWN',1200);
+  phase='done';
+  const b=$('btn');
+  b.textContent=(throwNum===1&&standing>0)?'THROW 2':(frame>=10?'LEVEL '+(level+1):'NEXT FRAME');
+  b.style.display='block';
+  hud();
+}
+function nextAction(){
+  if(phase!=='done')return;
+  $('btn').style.display='none';
+  const standing=pins.filter(p=>!p.down).length;
+  if(throwNum===1&&standing>0){throwNum=2;startFrame(false);}
+  else if(frame>=10){level++;frame=1;throwNum=1;msg('LEVEL '+level,1600);startFrame(true);}
+  else{frame++;throwNum=1;startFrame(true);}
+  hud();
+}
+$('btn').addEventListener('click',()=>{audioInit();nextAction();});
+
+/* ---------- loop ---------- */
+let last=performance.now(),acc=0;
+function loop(now){
+  requestAnimationFrame(loop);
+  let dt=(now-last)/1000;last=now;
+  if(dt>0.1)dt=0.1;
+  if(drag&&phase==='aim'){
+    if((now-lastMoveT)/1000>0.12){spinVel*=Math.exp(-6*dt);meters();}
+  }
+  keyUpdate(dt);
+  if(phase==='roll'||phase==='settle'){
+    acc+=dt;let n=0;
+    while(acc>=DT&&n<12){stepBall(DT);stepPins(DT);acc-=DT;n++;}
+    if(acc>DT*12)acc=0;
+    if(rumbleGain){
+      const on=phase==='roll'&&!ball.dead&&ball.y<=BALL_R+0.01;
+      const g=on?min(0.22,Math.hypot(ball.vx,ball.vz)*0.02):0;
+      rumbleGain.gain.value+=(g-rumbleGain.gain.value)*0.2;
+    }
+    if(phase==='roll'){
+      if(ball.dead||ball.z<PIN_Z-1.2||settled()){phase='settle';settleT=0;}
+    }else{
+      settleT+=dt;
+      if(settleT>3.5||settled())endThrow();
+    }
+  }else if(rumbleGain)rumbleGain.gain.value*=0.8;
+  stepParts(dt);
+  camUpdate(dt);
+  render();
+}
+genLevel();resetBall();standingBefore=pins.length;hud();meters();
+msg('LEVEL 1',1500);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

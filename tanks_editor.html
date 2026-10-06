@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0a0d08">
+<title>IRON VANGUARD — Resource Editor</title>
+<style>
+:root{--amber:#ffb000;--amber2:#ffd75e;--olive:#6a7d3f;--olive-d:#2c3519;--steel:#9fb4c7;--red:#ff5040;--cyan:#7fd4ff;--grn:#7dffb0;--ink:#0a0d08;--panel:#161c11;--line:#4a5530}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{background:var(--ink);color:#dfe6cf;font-family:system-ui,"Segoe UI",Roboto,sans-serif;background-image:repeating-linear-gradient(135deg,#0b0f09 0 26px,#0d120b 26px 52px);padding-bottom:60px}
+.mono{font-family:"Courier New",ui-monospace,monospace}
+.hst{font-family:"Courier New",ui-monospace,monospace;font-weight:700;text-transform:uppercase;letter-spacing:.14em}
+.wrap{max-width:1280px;margin:0 auto;padding:0 14px}
+header{border-bottom:2px solid var(--line);background:linear-gradient(#131a0e,#0e1309)}
+.hazard{height:10px;background:repeating-linear-gradient(45deg,#c8a020 0 9px,#141810 9px 18px);opacity:.85}
+.hbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 0}
+h1{font-size:clamp(20px,3.4vw,32px);color:var(--amber);text-shadow:0 2px 0 #5c3c00,0 4px 0 #241700,0 0 18px rgba(255,176,0,.4)}
+.sub{color:var(--steel);font-size:12px;letter-spacing:.1em}
+.spacer{flex:1}
+.btn{font-family:"Courier New",monospace;font-weight:700;letter-spacing:.06em;background:#232b18;color:#cfd8b8;border:2px solid var(--line);padding:7px 11px;font-size:12px;cursor:pointer;text-transform:uppercase;transition:background .12s,border-color .12s}
+.btn:hover{background:#33401f;border-color:#7d8c4d}
+.btn:active{transform:translateY(1px)}
+.btn.amber{background:#3a2f08;color:var(--amber2);border-color:var(--amber)}
+.btn.red{border-color:#8a3a30;color:#ffb0a0}
+.btn.grn{border-color:#4a8a5c;color:#b8ffc8}
+.btn.sm{padding:3px 7px;font-size:11px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;padding:12px 0 0}
+.tabs button{font-family:"Courier New",monospace;font-weight:700;letter-spacing:.1em;background:#1a2113;color:#9aa87c;border:2px solid var(--line);border-bottom:none;padding:10px 16px;font-size:13px;cursor:pointer;text-transform:uppercase}
+.tabs button:hover{color:#dfe6cf}
+.tabs button.on{background:var(--panel);color:var(--amber2);border-color:var(--amber);box-shadow:0 -3px 12px rgba(255,176,0,.15)}
+.tabpane{display:none;background:var(--panel);border:2px solid var(--line);box-shadow:0 14px 40px rgba(0,0,0,.5),inset 0 0 0 1px #232b16;padding:16px;margin-bottom:16px}
+.tabpane.on{display:block}
+.cols{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.colMain{flex:1 1 560px;min-width:320px}
+.colSide{flex:0 0 380px;min-width:300px;max-width:100%}
+h2{font-size:16px;color:var(--amber2);letter-spacing:.12em;margin-bottom:10px}
+h3{font-size:13px;color:#c8d2a8;letter-spacing:.1em;margin:12px 0 6px;text-transform:uppercase;font-family:"Courier New",monospace}
+label.tag{color:#9aa87c;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-family:"Courier New",monospace;font-weight:700}
+textarea{width:100%;background:#0d1109;border:2px solid var(--line);color:#cfe0a8;font-family:"Courier New",monospace;font-size:11.5px;padding:8px;resize:vertical;outline:none;line-height:1.5}
+textarea:focus{border-color:var(--amber)}
+textarea.ro{color:#8fa07a}
+input[type=text],input[type=number]{background:#0d1109;border:2px solid var(--line);color:var(--amber2);font-family:"Courier New",monospace;font-size:13px;padding:5px 7px;outline:none}
+input[type=text]:focus,input[type=number]:focus{border-color:var(--amber)}
+input[type=number]{width:86px}
+select{background:#0d1109;border:2px solid var(--line);color:var(--amber2);font-family:"Courier New",monospace;padding:5px;outline:none}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.tbtn{font-family:"Courier New",monospace;font-weight:700;background:#232b18;color:#cfd8b8;border:2px solid var(--line);padding:6px 10px;font-size:12px;cursor:pointer}
+.tbtn:hover{border-color:#7d8c4d}
+.tbtn.on{background:var(--olive-d);color:var(--amber2);border-color:var(--amber)}
+.swl{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:8px 0}
+.sw{width:34px;height:34px;border:2px solid var(--line);cursor:pointer;position:relative;display:flex;align-items:flex-end;justify-content:flex-end;font-family:"Courier New",monospace;font-size:10px;font-weight:700;color:rgba(255,255,255,.85);text-shadow:0 1px 2px #000}
+.sw:hover{border-color:#7d8c4d}
+.sw.on{border-color:var(--amber);box-shadow:0 0 8px rgba(255,176,0,.5)}
+.sw.checker{background:repeating-conic-gradient(#20261a 0 25%,#161a12 0 50%) 0 0/12px 12px}
+canvas.px{image-rendering:pixelated;image-rendering:crisp-edges;border:2px solid var(--line);background:#0c100a;cursor:crosshair;touch-action:none}
+.grid{display:grid;grid-template-columns:repeat(4,auto);gap:8px;align-items:start}
+.cellp{text-align:center}
+.cellp .lbl{font-family:"Courier New",monospace;font-size:10px;color:#7f8a68;letter-spacing:.1em;margin-bottom:3px}
+.cellp canvas{image-rendering:pixelated;border:1px solid #2c3519;background:#0c100a}
+.animrow{display:flex;gap:14px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.dirs{display:flex;gap:4px}
+.note{color:#7f8a68;font-size:12px;line-height:1.6;margin-top:8px}
+.note b{color:#c8d2a8}
+fieldset{border:2px solid #2c3519;padding:10px;margin-bottom:12px;background:#12170d}
+legend{font-family:"Courier New",monospace;font-weight:700;letter-spacing:.12em;color:var(--amber2);padding:0 8px;font-size:13px;text-transform:uppercase}
+.krow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0}
+.krow label{width:120px;color:#9aa87c;font-family:"Courier New",monospace;font-size:12px;font-weight:700}
+.krow .sub2{margin-left:18px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.arrEl{display:flex;gap:4px;align-items:center}
+.palEntry{border:2px solid #2c3519;background:#12170d;padding:10px;margin-bottom:10px}
+.palHead{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.palHead canvas{image-rendering:pixelated;border:1px solid #2c3519;background:#0c100a}
+.palSw{display:flex;flex-wrap:wrap;gap:10px}
+.palSw .one{display:flex;flex-direction:column;align-items:center;gap:3px;font-family:"Courier New",monospace;font-size:11px;font-weight:700;color:#9aa87c}
+.palSw input[type=color]{width:46px;height:30px;border:2px solid var(--line);background:#0d1109;padding:1px;cursor:pointer}
+.strRow{display:flex;gap:8px;align-items:center;margin:4px 0}
+.strRow .k{width:150px;flex:0 0 150px;color:var(--cyan);font-family:"Courier New",monospace;font-size:12px;font-weight:700;word-break:break-all}
+.strRow input[type=text]{flex:1;text-transform:none}
+.codewrap{margin-top:10px}
+.codewrap .btnrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#2c3519;border:2px solid var(--amber);color:var(--amber2);font-family:"Courier New",monospace;font-weight:700;font-size:13px;padding:9px 18px;z-index:99;opacity:0;pointer-events:none;transition:opacity .2s;max-width:92vw;text-align:center}
+#toast.show{opacity:1}
+.gImport{background:#101509;border:2px dashed #3a4526;padding:12px;margin:14px 0}
+.small{font-size:11px;color:#7f8a68}
+@media(max-width:900px){.colSide{flex:1 1 100%}}
+</style>
+</head>
+<body>
+<header>
+<div class="hazard"></div>
+<div class="wrap hbar">
+  <div>
+    <h1 class="hst">IRON VANGUARD — Resource Editor</h1>
+    <div class="sub hst">TANK BATTALION '90 · SPRITES · PALETTES · BALANCE · STRINGS</div>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn amber" id="btnCopyAll">⧉ Copy All Resources</button>
+  <button class="btn red" id="btnResetAll">↺ Reset To Defaults</button>
+</div>
+</header>
+
+<div class="wrap">
+
+<div class="gImport">
+  <h3 style="margin-top:0">Import from full game code</h3>
+  <div class="small" style="margin-bottom:6px">Paste the entire game HTML / script here and click Extract — <b>TANK_A, PAL, BAL, STR, SIZES</b> will all be loaded at once. Only paste code you trust (it is evaluated locally).</div>
+  <textarea id="fullSrc" rows="4" placeholder="Paste the full game file or its <script> contents here..."></textarea>
+  <div style="margin-top:6px"><button class="btn grn" id="btnExtract">▼ Extract Resources</button> <span id="extractStatus" class="small"></span></div>
+</div>
+
+<div class="tabs">
+  <button data-t="tank" class="on">Tank Sprite</button>
+  <button data-t="pal">Palettes</button>
+  <button data-t="bal">Balance</button>
+  <button data-t="str">Strings</button>
+</div>
+
+<!-- ============ TANK SPRITE ============ -->
+<div class="tabpane on" id="pane-tank">
+  <div class="cols">
+    <div class="colMain">
+      <h2 class="hst">Pixel Editor — TANK_A</h2>
+      <div class="toolbar">
+        <button class="tbtn on" data-tool="paint" title="Paint (B)">✎ Paint</button>
+        <button class="tbtn" data-tool="fill" title="Flood fill (F)">◧ Fill</button>
+        <button class="tbtn" data-tool="erase" title="Erase (E)">⌫ Erase</button>
+        <button class="tbtn" data-tool="pick" title="Eyedropper (I)">✚ Pick</button>
+        <span style="width:8px"></span>
+        <button class="tbtn on" id="btnMirror" title="Paint symmetrically">⇋ Mirror X</button>
+        <button class="tbtn" id="btnUndo" title="Ctrl+Z">⤺ Undo</button>
+        <button class="tbtn" id="btnClear">Clear</button>
+      </div>
+      <div class="toolbar">
+        <label class="tag">W</label><input type="number" id="szW" min="4" max="32" value="16">
+        <label class="tag">H</label><input type="number" id="szH" min="4" max="32" value="16">
+        <button class="btn sm" id="btnResize">Apply Size</button>
+        <span style="width:14px"></span>
+        <label class="tag">Preview palette</label>
+        <select id="palSel"></select>
+      </div>
+      <div class="swl" id="swl"></div>
+      <canvas id="gridCv" class="px"></canvas>
+      <div class="note">Left-drag paints · <b>right-click</b> erases · <b>Alt-click</b> picks a color. Characters map to palette letters (<span class="mono">k c l m h G x X</span>), “.” = transparent. Frame B (track animation) is auto-generated exactly like the game, and the 4 rotations are produced the same way <span class="mono">rotCW()</span> does it.</div>
+      <h3>Live preview (as rendered in game)</h3>
+      <div class="grid" id="sheet"></div>
+      <div class="animrow">
+        <canvas id="animCv" class="px" width="96" height="96"></canvas>
+        <div>
+          <div class="small" style="margin-bottom:4px">Animation (frames A/B cycling) · facing:</div>
+          <div class="dirs">
+            <button class="tbtn" data-dir="0">▲</button>
+            <button class="tbtn" data-dir="1">▶</button>
+            <button class="tbtn on" data-dir="2">▼</button>
+            <button class="tbtn" data-dir="3">◀</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="colSide">
+      <h3>Import — paste TANK_A from game code</h3>
+      <textarea id="tankIn" rows="9" placeholder='var TANK_A=[".......GG.......",...];'></textarea>
+      <div style="margin:6px 0"><button class="btn grn" id="btnTankLoad">▼ Load Into Editor</button></div>
+      <h3>Export — paste back into game</h3>
+      <div class="codewrap">
+        <div class="btnrow"><button class="btn amber" data-copy="tankOut">⧉ Copy</button></div>
+        <textarea id="tankOut" rows="18" class="ro" readonly></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PALETTES ============ -->
+<div class="tabpane" id="pane-pal">
+  <div class="cols">
+    <div class="colMain">
+      <h2 class="hst">Palette Editor — PAL</h2>
+      <div id="palList"></div>
+      <button class="btn" id="btnAddPal">+ Add Palette</button>
+      <div class="note">Each letter is a pixel channel used by the tank art: <b>k</b> dark track, <b>c</b> track highlight, <b>l</b> light edge, <b>m</b> main hull, <b>h</b> shadow, <b>G</b> barrel glow, <b>x</b> turret, <b>X</b> turret highlight. The mini tank on the right of each header previews that palette on the current sprite.</div>
+    </div>
+    <div class="colSide">
+      <h3>Import — paste PAL from game code</h3>
+      <textarea id="palIn" rows="9" placeholder="var PAL={player:{k:'#2a2620',...},...};"></textarea>
+      <div style="margin:6px 0"><button class="btn grn" id="btnPalLoad">▼ Load Into Editor</button></div>
+      <h3>Export — paste back into game</h3>
+      <div class="codewrap">
+        <div class="btnrow"><button class="btn amber" data-copy="palOut">⧉ Copy</button></div>
+        <textarea id="palOut" rows="18" class="ro" readonly></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ BALANCE ============ -->
+<div class="tabpane" id="pane-bal">
+  <div class="cols">
+    <div class="colMain">
+      <h2 class="hst">Balance Editor — BAL &amp; SIZES</h2>
+      <div id="balFields"></div>
+      <fieldset>
+        <legend>SIZES — battlefields</legend>
+        <div id="sizesList"></div>
+        <button class="btn sm" id="btnAddSize">+ Add Size</button>
+      </fieldset>
+    </div>
+    <div class="colSide">
+      <h3>Import — paste BAL / SIZES from game code</h3>
+      <textarea id="balIn" rows="9" placeholder="var BAL={ui:{hudReserve:142},...};  (may also contain var SIZES=...)"></textarea>
+      <div style="margin:6px 0"><button class="btn grn" id="btnBalLoad">▼ Load Into Editor</button></div>
+      <h3>Export — paste back into game</h3>
+      <div class="codewrap">
+        <div class="btnrow"><button class="btn amber" data-copy="balOut">⧉ Copy</button></div>
+        <textarea id="balOut" rows="18" class="ro" readonly></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ STRINGS ============ -->
+<div class="tabpane" id="pane-str">
+  <div class="cols">
+    <div class="colMain">
+      <h2 class="hst">String Editor — STR</h2>
+      <div class="toolbar">
+        <input type="text" id="strFilter" placeholder="filter..." style="width:220px;text-transform:none">
+        <button class="btn sm" id="btnAddStr">+ Add Key</button>
+      </div>
+      <div id="strList"></div>
+      <div class="note">Placeholders like <b>{1}</b> / <b>{2}</b> are filled by the game's <span class="mono">tx()</span> function — keep them in. HTML is allowed (help texts use <span class="mono">&lt;b&gt;</span>).</div>
+    </div>
+    <div class="colSide">
+      <h3>Import — paste STR from game code</h3>
+      <textarea id="strIn" rows="9" placeholder="var STR={hiScore:'HI-SCORE {1}',...};"></textarea>
+      <div style="margin:6px 0"><button class="btn grn" id="btnStrLoad">▼ Load Into Editor</button></div>
+      <h3>Export — paste back into game</h3>
+      <div class="codewrap">
+        <div class="btnrow"><button class="btn amber" data-copy="strOut">⧉ Copy</button></div>
+        <textarea id="strOut" rows="18" class="ro" readonly></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="note" style="padding-bottom:20px">
+  <b>Workflow:</b> copy a resource from the game source → paste it into the matching Import box (or use the full-file extractor at the top) → edit visually → press Copy on the Export box → replace the old declaration inside the game's <span class="mono">&lt;script&gt;</span> block. The Tank Sprite, Palettes and Balance tabs are linked: changing a palette instantly recolors the sprite editor.
+</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){'use strict';
+var $=function(id){return document.getElementById(id);};
+
+/* ================= DEFAULTS (copied from the game) ================= */
+var DEF_TANK=[".......GG.......",".......GG.......",".kkkk..GG..kkkk.",".kcckllllllkcck.",".kkkklmmmmhkkkk.",".kkkklmGGmhkkkk.",".kccklxxxxhkcck.",".kkkklxXXxhkkkk.",".kkkklxXXxhkkkk.",".kccklxxxxhkcck.",".kccklmmmmhkcck.",".kkkklmmmmhkkkk.",".kccklmmmmhkcck.",".kkkklmmmmhkkkk.",".kcckhhhhhhkcck.",".kkkk..hh..kkkk."];
+var DEF_PAL={player:{k:'#2a2620',c:'#9a8d50',l:'#ffe9a0',m:'#e8b830',h:'#8a5a10',G:'#fff2b0',x:'#c8901c',X:'#ffe060'},player2:{k:'#14240f',c:'#5a8a4a',l:'#d8f4a8',m:'#86c050',h:'#2c5c18',G:'#f0ffd8',x:'#6ca83c',X:'#b8e878'},basic:{k:'#20242c',c:'#8a93a6',l:'#e6ebf4',m:'#a8b2c6',h:'#5a6478',G:'#f2f6ff',x:'#8a93a6',X:'#d4dcea'},red:{k:'#2c1414',c:'#c06050',l:'#ffb0a0',m:'#e05040',h:'#7a1f18',G:'#ffd0c0',x:'#c03828',X:'#ff8070'},fast:{k:'#182428',c:'#6aa0aa',l:'#d8f4f8',m:'#7fc4d0',h:'#3a6a74',G:'#eafcff',x:'#5f9aa6',X:'#b8ecf4'},power:{k:'#20241a',c:'#90966a',l:'#e4e8c0',m:'#a8ae7e',h:'#5a6048',G:'#f6f8e0',x:'#8c9262',X:'#d4dab0'},armor:[{k:'#14241a',c:'#4a8a5c',l:'#b8ecc4',m:'#5fae72',h:'#2c5c3a',G:'#dcffe6',x:'#4a9660',X:'#96dca8'},{k:'#242414',c:'#9aa04a',l:'#f0f4b8',m:'#b4ba5e',h:'#5c602c',G:'#fcffe0',x:'#9ca24a',X:'#dce296'},{k:'#281c10',c:'#b08040',l:'#ffdca0',m:'#d09850',h:'#7a5424',G:'#fff0d8',x:'#b8843c',X:'#f4c480'},{k:'#202020',c:'#9a9a9a',l:'#f4f4f4',m:'#bcbcbc',h:'#606060',G:'#ffffff',x:'#a4a4a4',X:'#e4e4e4'}]};
+var DEF_BAL={ui:{hudReserve:142},cam:{maxW:880,maxH:620,speed:5,lookahead:22},fx:{particles:140,shakeMax:9},player:{speed:72,speedBoost:1.45,lives:3,respawnDelay:1.3,spawnShield:3,baseCd:0.36,cdLvl2:0.85,cdLvl3:0.8,cdRapid:0.55,bulletSpeed:280,bulletSpeedPerLvl:25,maxBullets:2,shieldTime:12,speedTime:12},eagle:{hp:2},enemy:{types:{basic:{hp:1,spd:44,bs:170,pts:100,aggro:0.55},fast:{hp:1,spd:76,bs:185,pts:200,aggro:0.65},power:{hp:1,spd:50,bs:265,pts:300,aggro:0.8},armor:{hp:4,spd:38,bs:185,pts:400,aggro:0.7}},rosterBase:[12,16,20],rosterPerLevel:1,rosterLevelCap:8,rosterMax:26,maxConcurrent:5,spawnIntBase:2.6,spawnIntMin:1.2,spawnIntLevelCut:0.05,spawnIntDiffCut:0.4,fireBase:0.9,fireVar:1.8,upBonus:55,drop:[0,0.08,0.2,0.4],flashEvery:7,lootRange:80,lootChance:0.65},diff:{spd:[0.85,1,1.15],fire:[0.7,1,1.4],levelScale:0.02,levelCap:0.25},prizes:{life:20,secrets:[1,3,5,8],pickupScore:500,gem:1000}};
+var DEF_SIZES={S:[34,24],M:[46,32],L:[60,40],XL:[84,52]};
+var DEF_STR={hiScore:'HI-SCORE {1}',helpSolo:'<b>WASD / Arrows</b> drive · <b>Space / J / Enter</b> fire',helpCoop:'<b>P1: WASD + Space</b> · <b>P2: Arrows + Enter</b> · allies never hurt each other',helpCpu:'<b>WASD + Space</b> drive &amp; fire · CPU ally defends Eagle and hunts enemies',helpBoth:'<b>SPECTATE MODE</b> · both tanks are CPU-controlled · watch the procedural war unfold',modes:['SOLO','CO-OP HUMAN','CO-OP CPU','CPU DUO'],skills:['CADET','VETERAN','ACE'],diffs:['RECRUIT','VETERAN','ELITE'],rates:['LOW','NORMAL','HIGH','FLOOD'],foes:['NO PRIZES','UPGRADES + 1UP','FULL (TRAPS!)'],fxOn:'FX: HIGH',fxOff:'FX: LITE',sndOn:'SOUND: ON',sndOff:'SOUND: OFF',stage:'ST',base:'BASE',p1:'1P',p2:'2P',ai:'AI',ai1:'AI1',ai2:'AI2',scoreLbl:'SCORE',hiLbl:'HI',eff:{SHD:'SHD',FRZ:'FRZ',FRP:'FRP',WLL:'WLL',SPD:'SPD',RPD:'RPD',AP:'AP'},popStar:'FIREPOWER UP!',popAP:'STEEL-PIERCING ROUNDS!',popTree:'FOREST CLEARER!',popShield:'SHIELD!',popNuke:'NUKE!',popFreeze:'ENEMIES FROZEN',popFort:'BASE FORTIFIED',popLife:'1UP!',popRepair:'BASE REPAIRED',popSpeed:'OVERDRIVE!',popRapid:'RAPID FIRE!',popGem:'+1500',popSecret:'SECRET!',popEUp:'ENEMY UPGRADED',popELife:'ENEMY 1UP',popEShield:'ENEMY SHIELD',popESpeed:'ENEMY OVERDRIVE',popERapid:'ENEMY RAPID',popBomb:'TRAP BOMB!',popPFreeze:'PLAYERS FROZEN!',popBreach:'WALLS BREACHED!',reasonEagle:'THE EAGLE HAS FALLEN',reasonArmy:'ALL TANKS DESTROYED',enemies:{basic:'ARMORED SCOUT',fast:'RAIDER',power:'GUNSHIP',armor:'FORTRESS'},op:'OP. {1} {2}',adj:['CRIMSON','IRON','SILENT','BROKEN','GOLDEN','FROZEN','BURNING','HIDDEN','THUNDER','MIDNIGHT','SAVAGE','LONE'],noun:['VANGUARD','BASTION','HAMMER','HORIZON','CITADEL','RECKONING','STAMPEDE','MIRAGE','AVALANCHE','PROTOCOL','SIEGE','DAWN'],pauseInfo:'STAGE {1} · {2} · SEED {3}{4}',pauseLine:'Supplies: {1} · Enemy loot: {2}',pausePl:'{1}: weapon L{2} · lives {3}{4}',out:' · OUT',introStats:'SEED {1} · GRID {2} · {3} HOSTILES · SUPPLY {4} · FOE {5}',autoNext:'NEXT IN {1}s'};
+
+function clone(o){return JSON.parse(JSON.stringify(o));}
+var MODEL={tank:DEF_TANK.map(function(r){return r.split('');}),pal:clone(DEF_PAL),bal:clone(DEF_BAL),str:clone(DEF_STR),sizes:clone(DEF_SIZES)};
+var LETTERS=['k','c','l','m','h','G','x','X'];
+var ALLOWED=/^\.?[kclmhGxX]*$/;
+
+/* ================= UTIL ================= */
+var toastT=null;
+function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
+function copyText(txt,btn){
+  function done(){if(btn){var o=btn.textContent;btn.textContent='✓ COPIED';setTimeout(function(){btn.textContent=o;},1200);}toast('Copied to clipboard');}
+  function fallback(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){toast('Copy failed — select the text manually');}document.body.removeChild(ta);}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(fallback);}else fallback();
+}
+function isIdent(s){return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(s);}
+function fmtNum(n){if(typeof n!=='number'||isNaN(n))return '0';if(Number.isInteger(n))return String(n);return String(parseFloat(n.toFixed(5)));}
+function serVal(v){
+  if(typeof v==='string')return "'"+v.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+"'";
+  if(typeof v==='number')return fmtNum(v);
+  if(Array.isArray(v))return '['+v.map(serVal).join(',')+']';
+  if(v&&typeof v==='object')return '{'+Object.entries(v).map(function(kv){return (isIdent(kv[0])?kv[0]:serVal(kv[0]))+':'+serVal(kv[1]);}).join(',')+'}';
+  return String(v);
+}
+function serPretty(v,d){
+  var pad='';for(var i=0;i<d;i++)pad+='  ';
+  if(Array.isArray(v)){
+    if(v.every(function(x){return x===null||typeof x!=='object';}))return '['+v.map(serVal).join(',')+']';
+    return '[\n'+v.map(function(x){return pad+'  '+serPretty(x,d+1);}).join(',\n')+'\n'+pad+']';
+  }
+  if(v&&typeof v==='object'){
+    var lines=Object.entries(v).map(function(kv){return pad+'  '+(isIdent(kv[0])?kv[0]:serVal(kv[0]))+':'+serPretty(kv[1],d+1);});
+    return '{\n'+lines.join(',\n')+'\n'+pad+'}';
+  }
+  return serVal(v);
+}
+function parseText(text){
+  var t=String(text).trim();
+  if(!t)throw new Error('empty');
+  t=t.replace(/^var\s+[A-Za-z_$][\w$]*\s*=\s*/,'');
+  t=t.replace(/;\s*$/,'');
+  return new Function('return ('+t+');')();
+}
+/* balanced-bracket extractor for pulling vars out of the full game source */
+function extractBalanced(src,i){
+  var open=src[i],close=open==='{'?'}':']',depth=0,q=null,esc=false,ch;
+  for(;i<src.length;i++){
+    ch=src[i];
+    if(q){if(esc)esc=false;else if(ch==='\\')esc=true;else if(ch===q)q=null;continue;}
+    if(ch==='"'||ch==="'"){q=ch;continue;}
+    if(ch==='`'){q=ch;continue;}
+    if(ch===open)depth++;
+    else if(ch===close){depth--;if(depth===0)return src.slice(i-depth>=0?i:i,i+1);}
+  }
+  return null;
+}
+function extractBalanced2(src,start){
+  var open=src[start],close=open==='{'?'}':']',depth=0,q=null,esc=false,i,ch;
+  for(i=start;i<src.length;i++){
+    ch=src[i];
+    if(q){if(esc)esc=false;else if(ch==='\\')esc=true;else if(ch===q)q=null;continue;}
+    if(ch==='"'||ch==="'"){q=ch;continue;}
+    if(ch===open)depth++;
+    else if(ch===close){depth--;if(depth===0)return src.slice(start,i+1);}
+  }
+  return null;
+}
+function findVar(src,name){
+  var re=new RegExp('(?:\\bvar\\s+)?\\b'+name+'\\s*=\\s*'),m=re.exec(src);
+  if(!m)return null;
+  var i=m.index+m[0].length;
+  while(i<src.length&&/\s/.test(src[i]))i++;
+  if(src[i]==='{'||src[i]==='[')return extractBalanced2(src,i);
+  var semi=src.indexOf(';',i);
+  if(semi<0)semi=src.length;
+  return src.slice(i,semi);
+}
+
+/* ================= SPRITE MATH (mirrors the game) ================= */
+function frameBChars(rows){
+  return rows.map(function(r,y){
+    if(y<2)return r.slice();
+    var a=r.slice();
+    [2,3,12,13].forEach(function(ix){
+      if(ix>=a.length)return;
+      if(a[ix]==='c')a[ix]='k';else if(a[ix]==='k')a[ix]='c';
+    });
+    return a;
+  });
+}
+function rotChars(rows){
+  var h=rows.length,w=rows[0].length,out=[],x,y,s;
+  for(x=0;x<w;x++){s=[];for(y=h-1;y>=0;y--)s.push(rows[y][x]);out.push(s);}
+  return out;
+}
+function charsToCanvas(rows,pal){
+  var c=document.createElement('canvas');c.width=rows[0].length;c.height=rows.length;
+  var g=c.getContext('2d'),x,y,ch;
+  for(y=0;y<c.height;y++)for(x=0;x<c.width;x++){
+    ch=rows[y][x];
+    if(ch&&ch!=='.'){g.fillStyle=(pal&&pal[ch])||'#ff00ff';g.fillRect(x,y,1,1);}
+  }
+  return c;
+}
+
+/* ================= TABS ================= */
+document.querySelectorAll('.tabs button').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.tabs button').forEach(function(x){x.classList.remove('on');});
+    document.querySelectorAll('.tabpane').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on');
+    $('pane-'+b.dataset.t).classList.add('on');
+  });
+});
+
+/* ================= SPRITE EDITOR ================= */
+var gridCv=$('gridCv'),gctx=gridCv.getContext('2d');
+var animCv=$('animCv'),actx=animCv.getContext('2d');
+var CELL=24,tool='paint',selChar='m',mirror=true,painting=false,undoStack=[];
+var animFrame=0,previewDir=2,sheetCvs=[];
+
+function gridW(){return MODEL.tank[0].length;}
+function gridH(){return MODEL.tank.length;}
+
+function palChoices(){
+  var out=[];
+  Object.entries(MODEL.pal).forEach(function(kv){
+    var k=kv[0],v=kv[1];
+    if(Array.isArray(v))v.forEach(function(sp,i){out.push({id:k+'['+i+']',label:k+' ['+i+']',obj:sp});});
+    else out.push({id:k,label:k,obj:v});
+  });
+  return out;
+}
+function getPreviewPal(){
+  var id=$('palSel').value;
+  var c=palChoices().find(function(x){return x.id===id;});
+  if(c)return c.obj;
+  var first=palChoices()[0];
+  return first?first.obj:{k:'#000',c:'#555',l:'#fff',m:'#999',h:'#333',G:'#ff0',x:'#777',X:'#bbb'};
+}
+function buildPalSelect(){
+  var sel=$('palSel'),cur=sel.value;
+  sel.innerHTML='';
+  palChoices().forEach(function(c){
+    var o=document.createElement('option');o.value=c.id;o.textContent=c.label;sel.appendChild(o);
+  });
+  if(cur&&palChoices().some(function(c){return c.id===cur;}))sel.value=cur;
+  else if(MODEL.pal.player)sel.value='player';
+}
+
+function buildSwatches(){
+  var w=$('swl');w.innerHTML='';
+  var pal=getPreviewPal();
+  LETTERS.forEach(function(ch){
+    var d=document.createElement('div');
+    d.className='sw'+(selChar===ch?' on':'');
+    d.style.background=pal[ch]||'#f0f';
+    d.textContent=ch;
+    d.title='paint with “'+ch+'” ('+(pal[ch]||'?')+')';
+    d.addEventListener('click',function(){selChar=ch;setTool('paint');buildSwatches();});
+    w.appendChild(d);
+  });
+  var e=document.createElement('div');
+  e.className='sw checker'+(selChar==='.'?' on':'');
+  e.textContent='.';e.title='transparent';
+  e.addEventListener('click',function(){selChar='.';setTool('paint');buildSwatches();});
+  w.appendChild(e);
+}
+function setTool(t){
+  tool=t;
+  document.querySelectorAll('[data-tool]').forEach(function(b){b.classList.toggle('on',b.dataset.tool===t);});
+}
+document.querySelectorAll('[data-tool]').forEach(function(b){b.addEventListener('click',function(){setTool(b.dataset.tool);});});
+$('btnMirror').addEventListener('click',function(){mirror=!mirror;$('btnMirror').classList.toggle('on',mirror);drawGrid();});
+
+function pushUndo(){
+  undoStack.push(JSON.stringify(MODEL.tank));
+  if(undoStack.length>80)undoStack.shift();
+}
+function undo(){
+  if(!undoStack.length){toast('Nothing to undo');return;}
+  MODEL.tank=JSON.parse(undoStack.pop());
+  $('szW').value=gridW();$('szH').value=gridH();
+  sizeGridCanvas();drawGrid();renderPreviews();regenExports();
+}
+$('btnUndo').addEventListener('click',undo);
+$('btnClear').addEventListener('click',function(){
+  pushUndo();
+  var w=gridW(),h=gridH(),r=[];
+  for(var y=0;y<h;y++){var row=[];for(var x=0;x<w;x++)row.push('.');r.push(row);}
+  MODEL.tank=r;drawGrid();renderPreviews();regenExports();
+});
+$('btnResize').addEventListener('click',function(){
+  var w=Math.max(4,Math.min(32,parseInt($('szW').value)||16));
+  var h=Math.max(4,Math.min(32,parseInt($('szH').value)||16));
+  pushUndo();
+  var ng=[],x,y;
+  for(y=0;y<h;y++){var row=[];for(x=0;x<w;x++){row.push((MODEL.tank[y]&&MODEL.tank[y][x])?MODEL.tank[y][x]:'.');}ng.push(row);}
+  MODEL.tank=ng;
+  $('szW').value=w;$('szH').value=h;
+  buildSheet();sizeGridCanvas();drawGrid();renderPreviews();regenExports();
+});
+
+function sizeGridCanvas(){gridCv.width=gridW()*CELL;gridCv.height=gridH()*CELL;}
+function drawGrid(){
+  var w=gridW(),h=gridH(),pal=getPreviewPal(),x,y,ch;
+  gctx.clearRect(0,0,gridCv.width,gridCv.height);
+  for(y=0;y<h;y++)for(x=0;x<w;x++){
+    ch=MODEL.tank[y][x];
+    if(ch==='.'){
+      gctx.fillStyle='#161a12';gctx.fillRect(x*CELL,y*CELL,CELL,CELL);
+      gctx.fillStyle='#1e2417';
+      gctx.beginPath();gctx.moveTo(x*CELL,y*CELL);gctx.lineTo(x*CELL+CELL,y*CELL);gctx.lineTo(x*CELL,y*CELL+CELL);gctx.closePath();gctx.fill();
+    }else{
+      gctx.fillStyle=pal[ch]||'#ff00ff';
+      gctx.fillRect(x*CELL,y*CELL,CELL,CELL);
+    }
+  }
+  gctx.strokeStyle='rgba(0,0,0,.35)';gctx.lineWidth=1;
+  for(x=0;x<=w;x++){gctx.beginPath();gctx.moveTo(x*CELL+.5,0);gctx.lineTo(x*CELL+.5,h*CELL);gctx.stroke();}
+  for(y=0;y<=h;y++){gctx.beginPath();gctx.moveTo(0,y*CELL+.5);gctx.lineTo(w*CELL,y*CELL+.5);gctx.stroke();}
+  if(mirror){
+    gctx.strokeStyle='rgba(255,176,0,.55)';gctx.setLineDash([5,4]);gctx.lineWidth=2;
+    gctx.beginPath();gctx.moveTo(w*CELL/2,0);gctx.lineTo(w*CELL/2,h*CELL);gctx.stroke();
+    gctx.setLineDash([]);
+  }
+}
+function setCell(x,y,ch){
+  if(x<0||y<0||x>=gridW()||y>=gridH())return;
+  MODEL.tank[y][x]=ch;
+  if(mirror){var mx=gridW()-1-x;if(mx>=0)MODEL.tank[y][mx]=ch;}
+}
+function floodFill(x,y,ch){
+  var target=MODEL.tank[y][x];
+  if(target===ch)return;
+  var st=[[x,y]];
+  while(st.length){
+    var p=st.pop(),px=p[0],py=p[1];
+    if(px<0||py<0||px>=gridW()||py>=gridH())continue;
+    if(MODEL.tank[py][px]!==target)continue;
+    MODEL.tank[py][px]=ch;
+    st.push([px+1,py],[px-1,py],[px,py+1],[px,py-1]);
+  }
+}
+function pickAt(x,y){
+  if(x<0||y<0||x>=gridW()||y>=gridH())return;
+  selChar=MODEL.tank[y][x];
+  setTool('paint');buildSwatches();toast('Picked “'+selChar+'”');
+}
+function cellFromEvent(e){
+  var r=gridCv.getBoundingClientRect();
+  var sx=gridCv.width/r.width,sy=gridCv.height/r.height;
+  var x=Math.floor((e.clientX-r.left)*sx/CELL),y=Math.floor((e.clientY-r.top)*sy/CELL);
+  return [x,y];
+}
+gridCv.addEventListener('contextmenu',function(e){e.preventDefault();});
+gridCv.addEventListener('pointerdown',function(e){
+  e.preventDefault();gridCv.setPointerCapture(e.pointerId);
+  var c=cellFromEvent(e),x=c[0],y=c[1];
+  if(e.altKey){pickAt(x,y);return;}
+  pushUndo();painting=true;
+  var erase=(e.button===2)||tool==='erase';
+  var ch=erase?'.':(tool==='fill'?selChar:selChar);
+  if(tool==='fill'&&e.button!==2)floodFill(x,y,selChar);
+  else setCell(x,y,erase?'.':selChar);
+  drawGrid();renderPreviews();regenExports();
+});
+gridCv.addEventListener('pointermove',function(e){
+  if(!painting)return;
+  e.preventDefault();
+  var c=cellFromEvent(e),erase=(e.buttons&2)||tool==='erase';
+  if(tool==='fill')return;
+  setCell(c[0],c[1],erase?'.':selChar);
+  drawGrid();renderPreviews();regenExports();
+});
+['pointerup','pointercancel'].forEach(function(ev){gridCv.addEventListener(ev,function(){painting=false;});});
+
+function buildSheet(){
+  var sh=$('sheet');sh.innerHTML='';sheetCvs=[];
+  ['A','B'].forEach(function(fr){
+    for(var d=0;d<4;d++){
+      var cell=document.createElement('div');cell.className='cellp';
+      var l=document.createElement('div');l.className='lbl';l.textContent='FRAME '+fr+' · DIR '+d;
+      var cv=document.createElement('canvas');cv.width=64;cv.height=64;
+      cell.appendChild(l);cell.appendChild(cv);sh.appendChild(cell);
+      sheetCvs.push({cv:cv,frame:fr==='B'?1:0,dir:d});
+    }
+  });
+}
+function renderPreviews(){
+  var pal=getPreviewPal();
+  var frames=[MODEL.tank,frameBChars(MODEL.tank)];
+  sheetCvs.forEach(function(s){
+    var ch=frames[s.frame],i;
+    for(i=0;i<s.dir;i++)ch=rotChars(ch);
+    var src=charsToCanvas(ch,pal);
+    var g=s.cv.getContext('2d');
+    g.imageSmoothingEnabled=false;
+    g.clearRect(0,0,64,64);
+    g.drawImage(src,0,0,src.width,src.height,0,0,64,64);
+  });
+  drawAnim();
+  if(palMinis.length)drawPalMinis();
+}
+function drawAnim(){
+  var pal=getPreviewPal();
+  var frames=[MODEL.tank,frameBChars(MODEL.tank)];
+  var ch=frames[animFrame],i;
+  for(i=0;i<previewDir;i++)ch=rotChars(ch);
+  var src=charsToCanvas(ch,pal);
+  actx.imageSmoothingEnabled=false;
+  actx.clearRect(0,0,96,96);
+  actx.drawImage(src,0,0,src.width,src.height,0,0,96,96);
+}
+setInterval(function(){animFrame^=1;if($('pane-tank').classList.contains('on'))drawAnim();},160);
+document.querySelectorAll('.dirs .tbtn').forEach(function(b){
+  b.addEventListener('click',function(){
+    previewDir=+b.dataset.dir;
+    document.querySelectorAll('.dirs .tbtn').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on');drawAnim();
+  });
+});
+$('palSel').addEventListener('change',function(){buildSwatches();drawGrid();renderPreviews();});
+
+/* ================= PALETTE EDITOR ================= */
+var palMinis=[];
+function drawPalMinis(){
+  palMinis.forEach(function(m){
+    var src=charsToCanvas(MODEL.tank,m.pal);
+    var g=m.cv.getContext('2d');g.imageSmoothingEnabled=false;
+    g.clearRect(0,0,m.cv.width,m.cv.height);
+    g.drawImage(src,0,0,src.width,src.height,0,0,m.cv.width,m.cv.height);
+  });
+}
+function refreshAllPreviews(){drawGrid();buildSwatches();renderPreviews();}
+function palBlock(title,palObj,opts){
+  opts=opts||{};
+  var box=document.createElement('div');box.className='palEntry';
+  var head=document.createElement('div');head.className='palHead';
+  if(opts.renamable){
+    var nm=document.createElement('input');nm.type='text';nm.value=title;nm.style.width='130px';
+    nm.addEventListener('change',function(){renamePalette(title,nm.value);});
+    head.appendChild(nm);
+  }else{
+    var sp=document.createElement('span');sp.className='hst';sp.style.color='#c8d2a8';sp.textContent=title;head.appendChild(sp);
+  }
+  var mini=document.createElement('canvas');mini.width=48;mini.height=48;
+  head.appendChild(mini);palMinis.push({cv:mini,pal:palObj});
+  var spacer=document.createElement('span');spacer.style.flex='1';head.appendChild(spacer);
+  if(opts.onDelete){
+    var del=document.createElement('button');del.className='btn sm red';del.textContent='✕ Delete';
+    del.addEventListener('click',opts.onDelete);head.appendChild(del);
+  }
+  box.appendChild(head);
+  var sw=document.createElement('div');sw.className='palSw';
+  LETTERS.forEach(function(ch){
+    var one=document.createElement('div');one.className='one';
+    var lab=document.createElement('span');lab.textContent=ch;
+    var inp=document.createElement('input');inp.type='color';
+    var v=palObj[ch]||'#000000';
+    if(/^#[0-9a-f]{3}$/i.test(v))v='#'+v[1]+v[1]+v[2]+v[2]+v[3]+v[3];
+    inp.value=v;
+    inp.addEventListener('input',function(){palObj[ch]=inp.value;refreshAllPreviews();regenExports();});
+    one.appendChild(lab);one.appendChild(inp);sw.appendChild(one);
+  });
+  box.appendChild(sw);
+  return box;
+}
+function buildPalTab(){
+  var wrap=$('palList');wrap.innerHTML='';palMinis=[];
+  Object.entries(MODEL.pal).forEach(function(kv){
+    var name=kv[0],val=kv[1];
+    if(Array.isArray(val)){
+      var grp=document.createElement('fieldset');
+      var lg=document.createElement('legend');lg.textContent=name+' — '+val.length+' variants';grp.appendChild(lg);
+      val.forEach(function(sp,ix){
+        grp.appendChild(palBlock(name+' ['+ix+']',sp,{onDelete:function(){
+          if(!confirm('Delete '+name+'['+ix+']?'))return;
+          val.splice(ix,1);buildPalTab();buildPalSelect();refreshAllPreviews();regenExports();
+        }}));
+      });
+      var add=document.createElement('button');add.className='btn sm';add.textContent='+ Add Variant';
+      add.addEventListener('click',function(){val.push(clone(val[val.length-1]||MODEL.pal.player||{}));buildPalTab();buildPalSelect();refreshAllPreviews();regenExports();});
+      grp.appendChild(add);
+      wrap.appendChild(grp);
+    }else{
+      wrap.appendChild(palBlock(name,val,{renamable:true,onDelete:function(){
+        if(!confirm('Delete palette “'+name+'”?'))return;
+        delete MODEL.pal[name];buildPalTab();buildPalSelect();refreshAllPreviews();regenExports();
+      }}));
+    }
+  });
+  drawPalMinis();
+}
+function renamePalette(oldN,newN){
+  newN=newN.trim();
+  if(!newN||newN===oldN){buildPalTab();return;}
+  if(MODEL.pal[newN]!==undefined){toast('Palette “'+newN+'” already exists');buildPalTab();return;}
+  if(!isIdent(newN)){toast('Use letters/digits only');buildPalTab();return;}
+  var np={};
+  Object.entries(MODEL.pal).forEach(function(kv){np[kv[0]===oldN?newN:kv[0]]=kv[1];});
+  MODEL.pal=np;buildPalTab();buildPalSelect();refreshAllPreviews();regenExports();
+}
+$('btnAddPal').addEventListener('click',function(){
+  var n=prompt('New palette name (letters/digits):','custom');
+  if(!n)return;n=n.trim();
+  if(!isIdent(n)){toast('Invalid name');return;}
+  if(MODEL.pal[n]!==undefined){toast('Already exists');return;}
+  MODEL.pal[n]=clone(MODEL.pal.player||{k:'#000000',c:'#555555',l:'#ffffff',m:'#999999',h:'#333333',G:'#ffff00',x:'#777777',X:'#bbbbbb'});
+  buildPalTab();buildPalSelect();refreshAllPreviews();regenExports();
+});
+
+/* ================= BALANCE EDITOR ================= */
+function numInput(val,apply){
+  var inp=document.createElement('input');inp.type='number';inp.step='any';inp.value=val;
+  inp.addEventListener('input',function(){
+    var n=parseFloat(inp.value);
+    if(!isNaN(n)){apply(n);regenExports();}
+  });
+  return inp;
+}
+function renderValue(parent,val,apply){
+  if(typeof val==='number'){parent.appendChild(numInput(val,apply));return;}
+  if(Array.isArray(val)){
+    var row=document.createElement('div');row.className='sub2';
+    val.forEach(function(v,i){
+      var ae=document.createElement('span');ae.className='arrEl';
+      ae.appendChild(numInput(v,function(n){val[i]=n;}));
+      var rm=document.createElement('button');rm.className='btn sm red';rm.textContent='–';rm.title='remove element';
+      rm.addEventListener('click',function(){val.splice(i,1);buildBalTab();regenExports();});
+      ae.appendChild(rm);row.appendChild(ae);
+    });
+    var add=document.createElement('button');add.className='btn sm';add.textContent='+';add.title='add element';
+    add.addEventListener('click',function(){val.push(0);buildBalTab();regenExports();});
+    row.appendChild(add);parent.appendChild(row);return;
+  }
+  if(val&&typeof val==='object'){
+    Object.entries(val).forEach(function(kv){
+      var r=document.createElement('div');r.className='krow';
+      var l=document.createElement('label');l.textContent=kv[0];r.appendChild(l);
+      renderValue(r,kv[1],function(nv){val[kv[0]]=nv;});
+      parent.appendChild(r);
+    });
+  }
+}
+function buildBalTab(){
+  var f=$('balFields');f.innerHTML='';
+  Object.entries(MODEL.bal).forEach(function(kv){
+    var fs=document.createElement('fieldset');
+    var lg=document.createElement('legend');lg.textContent=kv[0];fs.appendChild(lg);
+    renderValue(fs,kv[1],function(nv){MODEL.bal[kv[0]]=nv;});
+    f.appendChild(fs);
+  });
+  var sl=$('sizesList');sl.innerHTML='';
+  Object.entries(MODEL.sizes).forEach(function(kv){
+    var key=kv[0],arr=kv[1];
+    var r=document.createElement('div');r.className='krow';
+    var nm=document.createElement('input');nm.type='text';nm.value=key;nm.style.width='70px';
+    nm.addEventListener('change',function(){
+      var nk=nm.value.trim();
+      if(!nk||nk===key){buildBalTab();return;}
+      if(MODEL.sizes[nk]!==undefined||!isIdent(nk)){toast('Invalid or duplicate key');buildBalTab();return;}
+      var ns={};Object.entries(MODEL.sizes).forEach(function(e2){ns[e2[0]===key?nk:e2[0]]=e2[1];});
+      MODEL.sizes=ns;buildBalTab();regenExports();
+    });
+    r.appendChild(nm);
+    var w=numInput(arr[0],function(n){arr[0]=Math.max(1,Math.round(n));});
+    var h=numInput(arr[1],function(n){arr[1]=Math.max(1,Math.round(n));});
+    var lw=document.createElement('label');lw.textContent='W';lw.style.width='20px';
+    var lh=document.createElement('label');lh.textContent='H';lh.style.width='20px';
+    r.appendChild(lw);r.appendChild(w);r.appendChild(lh);r.appendChild(h);
+    var rm=document.createElement('button');rm.className='btn sm red';rm.textContent='✕';
+    rm.addEventListener('click',function(){if(confirm('Delete size “'+key+'”?')){delete MODEL.sizes[key];buildBalTab();regenExports();}});
+    var sp=document.createElement('span');sp.style.flex='1';
+    r.appendChild(sp);r.appendChild(rm);
+    sl.appendChild(r);
+  });
+}
+$('btnAddSize').addEventListener('click',function(){
+  var k=prompt('Size key (e.g. XXL):','XXL');
+  if(!k)return;k=k.trim();
+  if(!isIdent(k)||MODEL.sizes[k]!==undefined){toast('Invalid or duplicate key');return;}
+  MODEL.sizes[k]=[40,28];buildBalTab();regenExports();
+});
+
+/* ================= STRINGS EDITOR ================= */
+function renderStrList(){
+  var list=$('strList');list.innerHTML='';
+  var flt=$('strFilter').value.toLowerCase();
+  Object.entries(MODEL.str).forEach(function(kv){
+    var k=kv[0],v=kv[1];
+    var sval=Array.isArray(v)?v.join(' | '):String(v);
+    if(flt&&(k.toLowerCase().indexOf(flt)<0&&sval.toLowerCase().indexOf(flt)<0))return;
+    var r=document.createElement('div');r.className='strRow';
+    var key=document.createElement('span');key.className='k';key.textContent=k;
+    var inp=document.createElement('input');inp.type='text';
+    inp.value=Array.isArray(v)?v.join(' | '):v;
+    inp.addEventListener('input',function(){
+      if(Array.isArray(MODEL.str[k]))MODEL.str[k]=inp.value.split('|').map(function(s){return s.trim();});
+      else MODEL.str[k]=inp.value;
+      regenExports();
+    });
+    var rm=document.createElement('button');rm.className='btn sm red';rm.textContent='✕';
+    rm.addEventListener('click',function(){if(confirm('Delete string “'+k+'”?')){delete MODEL.str[k];renderStrList();regenExports();}});
+    r.appendChild(key);r.appendChild(inp);r.appendChild(rm);
+    list.appendChild(r);
+  });
+}
+$('strFilter').addEventListener('input',renderStrList);
+$('btnAddStr').addEventListener('click',function(){
+  var k=prompt('New string key:','myText');
+  if(!k)return;k=k.trim();
+  if(MODEL.str[k]!==undefined){toast('Key exists');return;}
+  MODEL.str[k]='';renderStrList();regenExports();
+});
+
+/* ================= SERIALIZERS / EXPORT ================= */
+function serTank(){
+  var rows=MODEL.tank.map(function(r){return r.join('');});
+  return 'var TANK_A=[\n'+rows.map(function(r){return JSON.stringify(r);}).join(',\n')+'\n];';
+}
+function regenExports(){
+  $('tankOut').value=serTank();
+  $('palOut').value='var PAL='+serPretty(MODEL.pal,0)+';';
+  $('balOut').value='var BAL='+serPretty(MODEL.bal,0)+';\n\nvar SIZES='+serPretty(MODEL.sizes,0)+';';
+  $('strOut').value='var STR='+serPretty(MODEL.str,0)+';';
+}
+document.querySelectorAll('[data-copy]').forEach(function(b){
+  b.addEventListener('click',function(){copyText($(b.dataset.copy).value,b);});
+});
+$('btnCopyAll').addEventListener('click',function(){
+  var all=serTank()+'\n\n'+'var PAL='+serPretty(MODEL.pal,0)+';\n\n'+'var BAL='+serPretty(MODEL.bal,0)+';\n\n'+'var SIZES='+serPretty(MODEL.sizes,0)+';\n\n'+'var STR='+serPretty(MODEL.str,0)+';';
+  copyText(all,$('btnCopyAll'));
+});
+
+/* ================= LOADERS / IMPORT ================= */
+function loadTank(v){
+  if(!Array.isArray(v)||!v.length)throw new Error('not an array of rows');
+  var w=v[0].length;
+  if(!w)throw new Error('empty rows');
+  v.forEach(function(r,i){
+    if(typeof r!=='string'||r.length!==w)throw new Error('row '+i+' is not a string of equal length');
+    if(!ALLOWED.test(r))throw new Error('row '+i+' contains invalid characters (allowed: . k c l m h G x X)');
+  });
+  MODEL.tank=v.map(function(r){return r.split('');});
+  undoStack.length=0;
+  $('szW').value=gridW();$('szH').value=gridH();
+  buildSheet();sizeGridCanvas();drawGrid();renderPreviews();regenExports();
+}
+function loadPal(v){
+  if(!v||typeof v!=='object'||Array.isArray(v))throw new Error('expected an object');
+  MODEL.pal=v;buildPalTab();buildPalSelect();refreshAllPreviews();regenExports();
+}
+function loadBal(v){
+  if(!v||typeof v!=='object'||Array.isArray(v))throw new Error('expected an object');
+  MODEL.bal=v;buildBalTab();regenExports();
+}
+function loadStr(v){
+  if(!v||typeof v!=='object'||Array.isArray(v))throw new Error('expected an object');
+  MODEL.str=v;renderStrList();regenExports();
+}
+function loadSizes(v){
+  if(!v||typeof v!=='object'||Array.isArray(v))throw new Error('expected an object');
+  MODEL.sizes=v;buildBalTab();regenExports();
+}
+function tryImport(text,loader,name){
+  try{var v=parseText(text);loader(v);toast(name+' loaded');return true;}
+  catch(e){toast('⚠ '+name+' import failed: '+e.message);return false;}
+}
+$('btnTankLoad').addEventListener('click',function(){tryImport($('tankIn').value,loadTank,'TANK_A');});
+$('btnPalLoad').addEventListener('click',function(){tryImport($('palIn').value,loadPal,'PAL');});
+$('btnStrLoad').addEventListener('click',function(){tryImport($('strIn').value,loadStr,'STR');});
+$('btnBalLoad').addEventListener('click',function(){
+  var t=$('balIn').value,ok=false;
+  try{
+    var b=findVar(t,'BAL');
+    if(b){loadBal(parseText(b));ok=true;}
+    var s=findVar(t,'SIZES');
+    if(s){loadSizes(parseText(s));ok=true;}
+    if(!ok)tryImport(t,loadBal,'BAL');
+    else toast('BAL / SIZES loaded');
+  }catch(e){toast('⚠ Balance import failed: '+e.message);}
+});
+$('btnExtract').addEventListener('click',function(){
+  var src=$('fullSrc').value;
+  if(!src.trim()){toast('Paste the game code first');return;}
+  var res=[];
+  function go(name,fn){
+    var t=findVar(src,name);
+    if(!t){res.push(name+': not found');return;}
+    try{fn(parseText(t));res.push(name+': OK');}
+    catch(e){res.push(name+': ERROR');}
+  }
+  go('TANK_A',loadTank);go('PAL',loadPal);go('BAL',loadBal);go('STR',loadStr);go('SIZES',loadSizes);
+  $('extractStatus').textContent=res.join(' · ');
+  toast('Extraction finished');
+});
+
+/* ================= RESET ================= */
+function resetAll(){
+  MODEL.tank=DEF_TANK.map(function(r){return r.split('');});
+  MODEL.pal=clone(DEF_PAL);MODEL.bal=clone(DEF_BAL);MODEL.str=clone(DEF_STR);MODEL.sizes=clone(DEF_SIZES);
+  undoStack.length=0;
+  initAll();toast('All resources reset to game defaults');
+}
+$('btnResetAll').addEventListener('click',function(){if(confirm('Reset ALL resources to the original game values?'))resetAll();});
+
+/* ================= KEYBOARD ================= */
+addEventListener('keydown',function(e){
+  var tag=(document.activeElement&&document.activeElement.tagName)||'';
+  if(tag==='INPUT'||tag==='TEXTAREA')return;
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return;}
+  if(!$('pane-tank').classList.contains('on'))return;
+  var k=e.key.toLowerCase();
+  if(k==='b')setTool('paint');
+  else if(k==='f')setTool('fill');
+  else if(k==='e')setTool('erase');
+  else if(k==='i')setTool('pick');
+  else if(k==='m')$('btnMirror').click();
+});
+
+/* ================= INIT ================= */
+function initAll(){
+  buildSheet();buildPalSelect();buildSwatches();
+  sizeGridCanvas();drawGrid();
+  buildPalTab();buildBalTab();renderStrList();
+  renderPreviews();regenExports();
+  $('szW').value=gridW();$('szH').value=gridH();
+}
+initAll();
+})();
+</script>
+</body>
+</html>

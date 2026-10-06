@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Arcade Pinball</title>
+<style>
+    html, body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #02040a;
+        font-family: monospace;
+        user-select: none;
+    }
+    canvas {
+        width: 100vw;
+        height: 100vh;
+        display: block;
+    }
+    #hud {
+        position: fixed;
+        top: 10px;
+        left: 12px;
+        font-size: 16px;
+        line-height: 1.5;
+        color: #8ff;
+        text-shadow: 0 0 6px #0ff;
+        pointer-events: none;
+        z-index: 2;
+    }
+    #msg {
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 18%;
+        text-align: center;
+        font-size: 28px;
+        color: #8ff;
+        text-shadow: 0 0 10px #0ff;
+        pointer-events: none;
+        z-index: 2;
+    }
+    #help {
+        position: fixed;
+        bottom: 8px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 12px;
+        color: #577;
+        pointer-events: none;
+        z-index: 2;
+    }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud">
+    <div>SCORE: <span id="score">0</span></div>
+    <div>BALLS: <span id="balls">3</span></div>
+    <div>LEVEL: <span id="level">1</span></div>
+    <div>TARGETS LEFT: <span id="targets">0</span></div>
+</div>
+
+<div id="msg"></div>
+<div id="help">A / ← left flipper &nbsp;&nbsp; D / → right flipper &nbsp;&nbsp; SPACE launch &nbsp;&nbsp; N new game</div>
+
+<script>
+"use strict";
+
+const canvas = document.getElementById("c");
+const msgEl = document.getElementById("msg");
+const scoreEl = document.getElementById("score");
+const ballsEl = document.getElementById("balls");
+const levelEl = document.getElementById("level");
+const targetsEl = document.getElementById("targets");
+
+const gl = canvas.getContext("webgl", { antialias: true });
+if (!gl) {
+    msgEl.textContent = "WebGL is required.";
+    throw new Error("WebGL not available");
+}
+
+function fail(message) {
+    msgEl.textContent = message;
+    throw new Error(message);
+}
+
+function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.floor(window.innerWidth * dpr);
+    canvas.height = Math.floor(window.innerHeight * dpr);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+}
+window.addEventListener("resize", resize);
+resize();
+
+/* ----------------------------- shaders ----------------------------- */
+
+const vsSource = `
+attribute vec3 aPos;
+attribute vec3 aNorm;
+uniform mat4 uModel;
+uniform mat4 uView;
+uniform mat4 uProj;
+varying vec3 vNormal;
+varying vec3 vWorldPos;
+void main() {
+    vec4 world = uModel * vec4(aPos, 1.0);
+    vWorldPos = world.xyz;
+    vNormal = normalize((uModel * vec4(aNorm, 0.0)).xyz);
+    gl_Position = uProj * uView * world;
+}
+`;
+
+const fsSource = `
+precision mediump float;
+uniform vec3 uColor;
+uniform vec3 uEye;
+varying vec3 vNormal;
+varying vec3 vWorldPos;
+void main() {
+    vec3 n = normalize(vNormal);
+    vec3 lightDir = normalize(vec3(0.35, -0.55, 1.0));
+    float diff = max(dot(n, lightDir), 0.0);
+    vec3 viewDir = normalize(uEye - vWorldPos);
+    vec3 halfDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(n, halfDir), 0.0), 48.0);
+    vec3 color = uColor * (0.28 + diff * 0.85) + vec3(0.55) * spec;
+    gl_FragColor = vec4(color, 1.0);
+}
+`;
+
+function makeShader(type, source) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, source);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        fail(gl.getShaderInfoLog(s));
+    }
+    return s;
+}
+
+const program = gl.createProgram();
+gl.attachShader(program, makeShader(gl.VERTEX_SHADER, vsSource));
+gl.attachShader(program, makeShader(gl.FRAGMENT_SHADER, fsSource));
+gl.linkProgram(program);
+if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    fail(gl.getProgramInfoLog(program));
+}
+gl.useProgram(program);
+
+const aPos = gl.getAttribLocation(program, "aPos");
+const aNorm = gl.getAttribLocation(program, "aNorm");
+const uModel = gl.getUniformLocation(program, "uModel");
+const uView = gl.getUniformLocation(program, "uView");
+const uProj = gl.getUniformLocation(program, "uProj");
+const uColor = gl.getUniformLocation(program, "uColor");
+const uEye = gl.getUniformLocation(program, "uEye");
+
+gl.enable(gl.DEPTH_TEST);
+gl.disable(gl.CULL_FACE);
+
+/* ----------------------------- math ----------------------------- */
+
+function identity() {
+    return new Float32Array([
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    ]);
+}
+
+function translation(x, y, z) {
+    const m = identity();
+    m[12] = x;
+    m[13] = y;
+    m[14] = z;
+    return m;
+}
+
+function scaling(x, y, z) {
+    const m = identity();
+    m[0] = x;
+    m[5] = y;
+    m[10] = z;
+    return m;
+}
+
+function rotationZ(a) {
+    const c = Math.cos(a);
+    const s = Math.sin(a);
+    const m = identity();
+    m[0] = c;
+    m[1] = s;
+    m[4] = -s;
+    m[5] = c;
+    return m;
+}
+
+function multiply(a, b) {
+    const out = new Float32Array(16);
+    for (let c = 0; c < 4; c++) {
+        for (let r = 0; r < 4; r++) {
+            out[c * 4 + r] =
+                a[r] * b[c * 4 + 0] +
+                a[4 + r] * b[c * 4 + 1] +
+                a[8 + r] * b[c * 4 + 2] +
+                a[12 + r] * b[c * 4 + 3];
+        }
+    }
+    return out;
+}
+
+function compose() {
+    let m = arguments[0];
+    for (let i = 1; i < arguments.length; i++) {
+        m = multiply(m, arguments[i]);
+    }
+    return m;
+}
+
+function perspective(fovy, aspect, near, far) {
+    const f = 1.0 / Math.tan(fovy / 2);
+    const nf = 1 / (near - far);
+    return new Float32Array([
+        f / aspect, 0, 0, 0,
+        0, f, 0, 0,
+        0, 0, (far + near) * nf, -1,
+        0, 0, 2 * far * near * nf, 0
+    ]);
+}
+
+function lookAt(eye, center, up) {
+    let zx = eye[0] - center[0];
+    let zy = eye[1] - center[1];
+    let zz = eye[2] - center[2];
+    let len = Math.hypot(zx, zy, zz);
+    if (len > 0) {
+        zx /= len; zy /= len; zz /= len;
+    }
+
+    let xx = up[1] * zz - up[2] * zy;
+    let xy = up[2] * zx - up[0] * zz;
+    let xz = up[0] * zy - up[1] * zx;
+    len = Math.hypot(xx, xy, xz);
+    if (len > 0) {
+        xx /= len; xy /= len; xz /= len;
+    }
+
+    const yx = zy * xz - zz * xy;
+    const yy = zz * xx - zx * xz;
+    const yz = zx * xy - zy * xx;
+
+    return new Float32Array([
+        xx, yx, zx, 0,
+        xy, yy, zy, 0,
+        xz, yz, zz, 0,
+        -(xx * eye[0] + xy * eye[1] + xz * eye[2]),
+        -(yx * eye[0] + yy * eye[1] + yz * eye[2]),
+        -(zx * eye[0] + zy * eye[1] + zz * eye[2]),
+        1
+    ]);
+}
+
+function clamp(v, a, b) {
+    return v < a ? a : v > b ? b : v;
+}
+
+/* ----------------------------- geometry ----------------------------- */
+
+function createMesh(positions, normals, indices) {
+    const vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+    const nbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, nbo);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+
+    const ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+    return { vbo, nbo, ibo, count: indices.length };
+}
+
+function makeBox() {
+    const p = [];
+    const n = [];
+    const idx = [];
+
+    function face(nx, ny, nz, verts) {
+        const base = p.length / 3;
+        for (const v of verts) {
+            p.push(v[0], v[1], v[2]);
+            n.push(nx, ny, nz);
+        }
+        idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    }
+
+    face(0, 0, 1, [[-0.5, -0.5, 0.5], [0.5, -0.5, 0.5], [0.5, 0.5, 0.5], [-0.5, 0.5, 0.5]]);
+    face(0, 0, -1, [[-0.5, -0.5, -0.5], [-0.5, 0.5, -0.5], [0.5, 0.5, -0.5], [0.5, -0.5, -0.5]]);
+    face(0, 1, 0, [[-0.5, 0.5, -0.5], [-0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, -0.5]]);
+    face(0, -1, 0, [[-0.5, -0.5, -0.5], [0.5, -0.5, -0.5], [0.5, -0.5, 0.5], [-0.5, -0.5, 0.5]]);
+    face(1, 0, 0, [[0.5, -0.5, -0.5], [0.5, 0.5, -0.5], [0.5, 0.5, 0.5], [0.5, -0.5, 0.5]]);
+    face(-1, 0, 0, [[-0.5, -0.5, -0.5], [-0.5, -0.5, 0.5], [-0.5, 0.5, 0.5], [-0.5, 0.5, -0.5]]);
+
+    return createMesh(p, n, idx);
+}
+
+function makeSphere(latBands, longBands) {
+    const positions = [];
+    const normals = [];
+    const indices = [];
+
+    for (let lat = 0; lat <= latBands; lat++) {
+        const theta = lat * Math.PI / latBands;
+        const sinTheta = Math.sin(theta);
+        const cosTheta = Math.cos(theta);
+
+        for (let lon = 0; lon <= longBands; lon++) {
+            const phi = lon * 2 * Math.PI / longBands;
+            const x = Math.cos(phi) * sinTheta;
+            const y = cosTheta;
+            const z = Math.sin(phi) * sinTheta;
+
+            positions.push(x, y, z);
+            normals.push(x, y, z);
+        }
+    }
+
+    for (let lat = 0; lat < latBands; lat++) {
+        for (let lon = 0; lon < longBands; lon++) {
+            const first = lat * (longBands + 1) + lon;
+            const second = first + longBands + 1;
+            indices.push(first, second, first + 1);
+            indices.push(second, second + 1, first + 1);
+        }
+    }
+
+    return createMesh(positions, normals, indices);
+}
+
+function makeCylinder(segments) {
+    const p = [];
+    const n = [];
+    const idx = [];
+
+    for (let i = 0; i <= segments; i++) {
+        const a = i / segments * Math.PI * 2;
+        const x = Math.cos(a);
+        const y = Math.sin(a);
+
+        p.push(x, y, 0);
+        n.push(x, y, 0);
+
+        p.push(x, y, 1);
+        n.push(x, y, 0);
+    }
+
+    for (let i = 0; i < segments; i++) {
+        const a = i * 2;
+        idx.push(a, a + 2, a + 1);
+        idx.push(a + 1, a + 2, a + 3);
+    }
+
+    let center = p.length / 3;
+    p.push(0, 0, 1);
+    n.push(0, 0, 1);
+    const topRing = center + 1;
+    for (let i = 0; i <= segments; i++) {
+        const a = i / segments * Math.PI * 2;
+        p.push(Math.cos(a), Math.sin(a), 1);
+        n.push(0, 0, 1);
+    }
+    for (let i = 0; i < segments; i++) {
+        idx.push(center, topRing + i + 1, topRing + i);
+    }
+
+    center = p.length / 3;
+    p.push(0, 0, 0);
+    n.push(0, 0, -1);
+    const bottomRing = center + 1;
+    for (let i = 0; i <= segments; i++) {
+        const a = i / segments * Math.PI * 2;
+        p.push(Math.cos(a), Math.sin(a), 0);
+        n.push(0, 0, -1);
+    }
+    for (let i = 0; i < segments; i++) {
+        idx.push(center, bottomRing + i, bottomRing + i + 1);
+    }
+
+    return createMesh(p, n, idx);
+}
+
+const boxMesh = makeBox();
+const sphereMesh = makeSphere(18, 26);
+const cylinderMesh = makeCylinder(22);
+
+function draw(mesh, model, color) {
+    gl.uniformMatrix4fv(uModel, false, model);
+    gl.uniform3fv(uColor, color);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
+    gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(aPos);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.nbo);
+    gl.vertexAttribPointer(aNorm, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(aNorm);
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ibo);
+    gl.drawElements(gl.TRIANGLES, mesh.count, gl.UNSIGNED_SHORT, 0);
+}
+
+/* ----------------------------- game state ----------------------------- */
+
+const LEFT = -1.6;
+const RIGHT = 1.6;
+const TOP = 3.2;
+const BOTTOM = -3.2;
+const DRAIN = -3.55;
+const GRAVITY = -7.5;
+const BALL_R = 0.12;
+
+const state = {
+    score: 0,
+    balls: 3,
+    level: 1,
+    mode: "ready",
+    timer: 0
+};
+
+const ball = {
+    x: 0,
+    y: 2.75,
+    vx: 0,
+    vy: 0,
+    r: BALL_R
+};
+
+const FLIP_Y = -2.45;
+const FLIP_LEN = 0.68;
+const FLIP_R = 0.08;
+
+const flippers = [
+    {
+        x: -0.85,
+        y: FLIP_Y,
+        length: FLIP_LEN,
+        r: FLIP_R,
+        rest: -0.60,
+        active: 0.60,
+        angle: -0.60,
+        av: 0
+    },
+    {
+        x: 0.85,
+        y: FLIP_Y,
+        length: FLIP_LEN,
+        r: FLIP_R,
+        rest: Math.PI + 0.60,
+        active: Math.PI - 0.60,
+        angle: Math.PI + 0.60,
+        av: 0
+    }
+];
+
+let walls = [];
+let bumpers = [];
+const keys = {};
+
+/* ----------------------------- level generation ----------------------------- */
+
+function rand(a, b) {
+    return a + Math.random() * (b - a);
+}
+
+function addWall(ax, ay, bx, by, r = 0.06) {
+    walls.push({ ax, ay, bx, by, r });
+}
+
+function addWallPair(cx, cy, len, ang) {
+    const dx = Math.cos(ang) * len * 0.5;
+    const dy = Math.sin(ang) * len * 0.5;
+
+    addWall(cx - dx, cy - dy, cx + dx, cy + dy);
+    addWall(-cx + dx, cy - dy, -cx - dx, cy + dy);
+}
+
+function distToSegment(x, y, w) {
+    const abx = w.bx - w.ax;
+    const aby = w.by - w.ay;
+    const len2 = abx * abx + aby * aby;
+    let t = 0;
+    if (len2 > 0) {
+        t = ((x - w.ax) * abx + (y - w.ay) * aby) / len2;
+        t = clamp(t, 0, 1);
+    }
+    const px = w.ax + abx * t;
+    const py = w.ay + aby * t;
+    return Math.hypot(x - px, y - py);
+}
+
+function addBumper(x, y, r) {
+    bumpers.push({
+        x,
+        y,
+        r,
+        height: rand(0.28, 0.40),
+        hit: false,
+        kick: rand(3.0, 4.0),
+        score: 100
+    });
+}
+
+function canPlaceBumper(x, y, r) {
+    if (y < -0.1 || y > 2.15) return false;
+    if (Math.abs(x) + r > 1.35) return false;
+
+    // keep serve zone clear
+    if (Math.hypot(x, y - 2.75) < r + 0.50) return false;
+
+    for (const b of bumpers) {
+        if (Math.hypot(x - b.x, y - b.y) < r + b.r + 0.30) return false;
+    }
+
+    for (const w of walls) {
+        if (distToSegment(x, y, w) < r + w.r + 0.18) return false;
+    }
+
+    return true;
+}
+
+function addBumperPair() {
+    for (let i = 0; i < 35; i++) {
+        const x = rand(0.30, 1.05);
+        const y = rand(0.20, 2.00);
+        const r = rand(0.15, 0.22);
+
+        if (2 * x < 2 * r + 0.35) continue;
+
+        if (canPlaceBumper(x, y, r) && canPlaceBumper(-x, y, r)) {
+            addBumper(x, y, r);
+            addBumper(-x, y, r);
+            return true;
+        }
+    }
+    return false;
+}
+
+function addCenterBumper() {
+    for (let i = 0; i < 35; i++) {
+        const y = rand(0.50, 2.00);
+        const r = rand(0.16, 0.22);
+        if (canPlaceBumper(0, y, r)) {
+            addBumper(0, y, r);
+            return true;
+        }
+    }
+    return false;
+}
+
+function generateLevel() {
+    walls.length = 0;
+    bumpers.length = 0;
+
+    // Outer boundary.
+    addWall(LEFT, BOTTOM - 0.2, LEFT, TOP + 0.2, 0.08);
+    addWall(RIGHT, BOTTOM - 0.2, RIGHT, TOP + 0.2, 0.08);
+    addWall(LEFT, TOP + 0.2, RIGHT, TOP + 0.2, 0.08);
+
+    // Top corner guides.
+    addWall(LEFT, 2.2, -0.6, TOP + 0.1);
+    addWall(RIGHT, 2.2, 0.6, TOP + 0.1);
+
+    // Lower guides toward flippers.
+    addWall(LEFT, -1.2, -0.88, -2.45);
+    addWall(RIGHT, -1.2, 0.88, -2.45);
+
+    // Randomized symmetric slingshots.
+    const sTopY = rand(-1.2, -0.5);
+    const sBotY = Math.max(-2.2, sTopY - rand(0.5, 0.9));
+    const sTopX = rand(0.95, 1.2);
+    const sBotX = rand(0.55, 0.80);
+    addWall(-sTopX, sTopY, -sBotX, sBotY);
+    addWall(sTopX, sTopY, sBotX, sBotY);
+
+    // A few random upper lane dividers, mirrored.
+    let dividers = Math.random() < 0.65 ? 1 : 0;
+    if (state.level > 2 && Math.random() < 0.5) dividers++;
+    for (let i = 0; i < dividers; i++) {
+        addWallPair(
+            rand(0.50, 1.05),
+            rand(0.40, 1.70),
+            rand(0.35, 0.60),
+            rand(-0.45, 0.45)
+        );
+    }
+
+    // Bumper clusters, generally symmetric.
+    const desiredPairs = Math.min(
+        1 + Math.floor(state.level / 2) + (Math.random() < 0.5 ? 1 : 0),
+        4
+    );
+
+    let attempts = 0;
+    let placedPairs = 0;
+    while (placedPairs < desiredPairs && attempts < 140) {
+        if (addBumperPair()) placedPairs++;
+        attempts++;
+    }
+
+    if (bumpers.length < 3) addCenterBumper();
+    if (bumpers.length === 0) addBumper(0, 1.2, 0.18);
+
+    updateHUD();
+}
+
+/* ----------------------------- UI ----------------------------- */
+
+function setMsg(text, color) {
+    msgEl.textContent = text;
+    msgEl.style.color = color || "#8ff";
+}
+
+function updateHUD() {
+    scoreEl.textContent = state.score;
+    ballsEl.textContent = state.balls;
+    levelEl.textContent = state.level;
+    targetsEl.textContent = bumpers.filter(b => !b.hit).length;
+}
+
+/* ----------------------------- physics ----------------------------- */
+
+function collideSegment(ax, ay, bx, by, rad, restitution) {
+    const abx = bx - ax;
+    const aby = by - ay;
+    const len2 = abx * abx + aby * aby;
+
+    let t = 0;
+    if (len2 > 0) {
+        t = ((ball.x - ax) * abx + (ball.y - ay) * aby) / len2;
+        t = clamp(t, 0, 1);
+    }
+
+    const px = ax + abx * t;
+    const py = ay + aby * t;
+
+    let nx = ball.x - px;
+    let ny = ball.y - py;
+    let d = Math.hypot(nx, ny);
+    const minDist = ball.r + rad;
+
+    if (d < minDist) {
+        if (d < 1e-6) {
+            nx = 0;
+            ny = 1;
+            d = 1;
+        } else {
+            nx /= d;
+            ny /= d;
+        }
+
+        ball.x = px + nx * minDist;
+        ball.y = py + ny * minDist;
+
+        const vn = ball.vx * nx + ball.vy * ny;
+        if (vn < 0) {
+            ball.vx -= (1 + restitution) * vn * nx;
+            ball.vy -= (1 + restitution) * vn * ny;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+function collideWall(w) {
+    collideSegment(w.ax, w.ay, w.bx, w.by, w.r, 0.72);
+}
+
+function allHit() {
+    return bumpers.length > 0 && bumpers.every(b => b.hit);
+}
+
+function levelComplete() {
+    if (state.mode !== "play") return;
+    state.mode = "complete";
+    state.timer = 1.5;
+    state.score += 1000;
+    setMsg("LEVEL COMPLETE", "#8f8");
+    updateHUD();
+}
+
+function collideBumper(b) {
+    let dx = ball.x - b.x;
+    let dy = ball.y - b.y;
+    let d = Math.hypot(dx, dy);
+    const minDist = ball.r + b.r;
+
+    if (d < minDist) {
+        if (d < 1e-6) {
+            dx = 0;
+            dy = 1;
+            d = 1;
+        } else {
+            dx /= d;
+            dy /= d;
+        }
+
+        ball.x = b.x + dx * minDist;
+        ball.y = b.y + dy * minDist;
+
+        const vn = ball.vx * dx + ball.vy * dy;
+        if (vn < 0) {
+            ball.vx -= 2 * vn * dx;
+            ball.vy -= 2 * vn * dy;
+        }
+
+        ball.vx += dx * b.kick;
+        ball.vy += dy * b.kick;
+
+        if (!b.hit) {
+            b.hit = true;
+            state.score += b.score;
+            updateHUD();
+            if (allHit()) levelComplete();
+        } else {
+            state.score += 10;
+            updateHUD();
+        }
+    }
+}
+
+function collideFlipper(f) {
+    const dx = Math.cos(f.angle) * f.length;
+    const dy = Math.sin(f.angle) * f.length;
+
+    const ax = f.x;
+    const ay = f.y;
+    const bx = f.x + dx;
+    const by = f.y + dy;
+
+    const abx = dx;
+    const aby = dy;
+    const len2 = f.length * f.length;
+
+    let t = 0;
+    if (len2 > 0) {
+        t = ((ball.x - ax) * abx + (ball.y - ay) * aby) / len2;
+        t = clamp(t, 0, 1);
+    }
+
+    const px = ax + abx * t;
+    const py = ay + aby * t;
+
+    let nx = ball.x - px;
+    let ny = ball.y - py;
+    let d = Math.hypot(nx, ny);
+    const minDist = ball.r + f.r;
+
+    if (d < minDist) {
+        if (d < 1e-6) {
+            nx = 0;
+            ny = 1;
+            d = 1;
+        } else {
+            nx /= d;
+            ny /= d;
+        }
+
+        ball.x = px + nx * minDist;
+        ball.y = py + ny * minDist;
+
+        const rx = px - f.x;
+        const ry = py - f.y;
+
+        const pvx = -f.av * ry;
+        const pvy = f.av * rx;
+
+        let rvx = ball.vx - pvx;
+        let rvy = ball.vy - pvy;
+
+        const vn = rvx * nx + rvy * ny;
+        if (vn < 0) {
+            const restitution = 0.25;
+            rvx -= (1 + restitution) * vn * nx;
+            rvy -= (1 + restitution) * vn * ny;
+        }
+
+        ball.vx = rvx + pvx;
+        ball.vy = rvy + pvy;
+
+        ball.vx += nx * 0.02;
+        ball.vy += ny * 0.02;
+    }
+}
+
+function loseBall() {
+    if (state.mode !== "play") return;
+
+    state.balls--;
+    updateHUD();
+
+    if (state.balls <= 0) {
+        state.mode = "gameover";
+        setMsg("GAME OVER - PRESS N", "#f66");
+    } else {
+        state.mode = "ready";
+        resetBall();
+        setMsg("BALL LOST - PRESS SPACE", "#fc6");
+    }
+}
+
+function physicsStep(h) {
+    ball.vy += GRAVITY * h;
+
+    const damp = Math.exp(-0.12 * h);
+    ball.vx *= damp;
+    ball.vy *= damp;
+
+    ball.x += ball.vx * h;
+    ball.y += ball.vy * h;
+
+    for (const w of walls) collideWall(w);
+
+    for (const b of bumpers) {
+        collideBumper(b);
+        if (state.mode !== "play") return;
+    }
+
+    for (const f of flippers) collideFlipper(f);
+
+    // Second pass helps prevent being pushed through static geometry.
+    for (const w of walls) collideWall(w);
+
+    // Fail-safe outer clamp.
+    if (ball.x < LEFT + ball.r) {
+        ball.x = LEFT + ball.r;
+        ball.vx = Math.abs(ball.vx) * 0.6;
+    }
+    if (ball.x > RIGHT - ball.r) {
+        ball.x = RIGHT - ball.r;
+        ball.vx = -Math.abs(ball.vx) * 0.6;
+    }
+    if (ball.y > TOP + 0.2 - ball.r) {
+        ball.y = TOP + 0.2 - ball.r;
+        ball.vy = -Math.abs(ball.vy) * 0.6;
+    }
+
+    const speed = Math.hypot(ball.vx, ball.vy);
+    const maxSpeed = 16;
+    if (speed > maxSpeed) {
+        ball.vx *= maxSpeed / speed;
+        ball.vy *= maxSpeed / speed;
+    }
+
+    if (ball.y < DRAIN) {
+        loseBall();
+    }
+}
+
+/* ----------------------------- input / flow ----------------------------- */
+
+function leftPressed() {
+    return keys["a"] || keys["arrowleft"];
+}
+
+function rightPressed() {
+    return keys["d"] || keys["arrowright"];
+}
+
+function moveFlipper(f, pressed, dt) {
+    const target = pressed ? f.active : f.rest;
+    const prev = f.angle;
+    const speed = 24;
+
+    if (f.angle < target) {
+        f.angle = Math.min(target, f.angle + speed * dt);
+    } else if (f.angle > target) {
+        f.angle = Math.max(target, f.angle - speed * dt);
+    }
+
+    f.av = (f.angle - prev) / dt;
+}
+
+function updateFlippers(dt) {
+    moveFlipper(flippers[0], leftPressed(), dt);
+    moveFlipper(flippers[1], rightPressed(), dt);
+}
+
+function resetBall() {
+    ball.x = 0;
+    ball.y = 2.75;
+    ball.vx = 0;
+    ball.vy = 0;
+}
+
+function newGame() {
+    state.score = 0;
+    state.balls = 3;
+    state.level = 1;
+    state.mode = "ready";
+    state.timer = 0;
+
+    generateLevel();
+    resetBall();
+    setMsg("PRESS SPACE TO START");
+    updateHUD();
+}
+
+function nextLevel() {
+    state.level++;
+    state.mode = "ready";
+    state.timer = 0;
+
+    generateLevel();
+    resetBall();
+    setMsg("PRESS SPACE TO START LEVEL " + state.level);
+    updateHUD();
+}
+
+function action() {
+    if (state.mode === "ready") {
+        state.mode = "play";
+        ball.vx = (Math.random() - 0.5) * 2;
+        ball.vy = -3;
+        setMsg("");
+    } else if (state.mode === "gameover") {
+        newGame();
+    } else if (state.mode === "complete") {
+        state.timer = 0;
+    }
+}
+
+window.addEventListener("keydown", e => {
+    const k = e.key.toLowerCase();
+
+    if ([" ", "arrowleft", "arrowright", "arrowup", "arrowdown"].includes(k)) {
+        e.preventDefault();
+    }
+
+    keys[k] = true;
+
+    if (!e.repeat && (k === " " || k === "enter")) {
+        action();
+    }
+
+    if (k === "n") {
+        newGame();
+    }
+});
+
+window.addEventListener("keyup", e => {
+    keys[e.key.toLowerCase()] = false;
+});
+
+canvas.addEventListener("pointerdown", () => {
+    action();
+});
+
+/* ----------------------------- update / render ----------------------------- */
+
+function update(dt) {
+    if (state.mode === "complete") {
+        state.timer -= dt;
+        if (state.timer <= 0) {
+            nextLevel();
+        }
+    }
+
+    if (state.mode === "ready" || state.mode === "play" || state.mode === "gameover") {
+        const substeps = 5;
+        const h = dt / substeps;
+
+        for (let i = 0; i < substeps; i++) {
+            updateFlippers(h);
+
+            if (state.mode === "play") {
+                physicsStep(h);
+                if (state.mode !== "play") break;
+            }
+        }
+    }
+}
+
+function render() {
+    gl.clearColor(0.015, 0.02, 0.05, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    const aspect = canvas.width / Math.max(1, canvas.height);
+    const proj = perspective(50 * Math.PI / 180, aspect, 0.1, 100);
+
+    const eye = [0, -6.8, 7.6];
+    const center = [0, -0.15, 0];
+    const view = lookAt(eye, center, [0, 1, 0]);
+
+    gl.uniformMatrix4fv(uProj, false, proj);
+    gl.uniformMatrix4fv(uView, false, view);
+    gl.uniform3fv(uEye, eye);
+
+    // Floor.
+    draw(
+        boxMesh,
+        compose(
+            translation(0, 0, -0.11),
+            scaling(3.9, 7.4, 0.22)
+        ),
+        [0.05, 0.07, 0.14]
+    );
+
+    // Walls.
+    const wallH = 0.45;
+    for (const w of walls) {
+        const dx = w.bx - w.ax;
+        const dy = w.by - w.ay;
+        const len = Math.hypot(dx, dy);
+        if (len < 0.001) continue;
+
+        const ang = Math.atan2(dy, dx);
+        const mx = (w.ax + w.bx) * 0.5;
+        const my = (w.ay + w.by) * 0.5;
+        const thickness = w.r * 2;
+
+        draw(
+            boxMesh,
+            compose(
+                translation(mx, my, wallH * 0.5),
+                rotationZ(ang),
+                scaling(len + thickness, thickness, wallH)
+            ),
+            [0.25, 0.32, 0.58]
+        );
+    }
+
+    // Bumpers.
+    for (const b of bumpers) {
+        const color = b.hit ? [0.12, 0.85, 0.35] : [1.0, 0.25, 0.55];
+        draw(
+            cylinderMesh,
+            compose(
+                translation(b.x, b.y, 0),
+                scaling(b.r, b.r, b.height)
+            ),
+            color
+        );
+    }
+
+    // Flippers.
+    const flipperH = 0.20;
+    for (const f of flippers) {
+        draw(
+            boxMesh,
+            compose(
+                translation(f.x, f.y, flipperH * 0.5),
+                rotationZ(f.angle),
+                translation(f.length * 0.5, 0, 0),
+                scaling(f.length, f.r * 2, flipperH)
+            ),
+            [0.92, 0.22, 0.18]
+        );
+    }
+
+    // Ball.
+    draw(
+        sphereMesh,
+        compose(
+            translation(ball.x, ball.y, ball.r),
+            scaling(ball.r, ball.r, ball.r)
+        ),
+        [1.0, 0.85, 0.18]
+    );
+}
+
+let lastTime = performance.now();
+
+function frame(now) {
+    const dt = Math.min((now - lastTime) / 1000, 0.033);
+    lastTime = now;
+
+    update(dt);
+    render();
+
+    requestAnimationFrame(frame);
+}
+
+newGame();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
