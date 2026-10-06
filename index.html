@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="description" content="1nd1g0 Games — Free browser-based game collection">
+<title>1nd1g0 Games</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0a0f;--card:#14141f;--card-h:#1c1c2e;--border:#2a2a3d;
+--txt:#e0e0e8;--dim:#7a7a8f;--acc:#00ffc8;--acc2:#7b5eff;--glow:rgba(0,255,200,.15)
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;
+background:var(--bg);color:var(--txt);min-height:100vh;
+background-image:radial-gradient(ellipse at 50% 0%,rgba(123,94,255,.08) 0%,transparent 60%);
+-webkit-font-smoothing:antialiased
+}
+.wrap{max-width:1200px;margin:0 auto;padding:1rem}
+
+/* HEADER */
+header{text-align:center;padding:2.5rem 1rem 1.5rem}
+header h1{
+font-size:clamp(1.8rem,5vw,2.8rem);font-weight:800;letter-spacing:-.02em;
+background:linear-gradient(135deg,var(--acc),var(--acc2));
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+background-clip:text
+}
+header p{color:var(--dim);margin-top:.5rem;font-size:.95rem}
+.stats{
+display:inline-flex;gap:.5rem;margin-top:1rem;padding:.3rem .8rem;
+background:var(--card);border:1px solid var(--border);border-radius:999px;
+font-size:.8rem;color:var(--dim)
+}
+.stats b{color:var(--acc)}
+
+/* SEARCH */
+.search-wrap{
+max-width:520px;margin:1.5rem auto;position:relative
+}
+#search{
+width:100%;padding:.85rem 1.2rem .85rem 2.8rem;
+background:var(--card);border:1px solid var(--border);border-radius:12px;
+color:var(--txt);font-size:1rem;outline:none;
+transition:border-color .2s,box-shadow .2s
+}
+#search:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--glow)}
+#search::placeholder{color:var(--dim)}
+.s-icon{
+position:absolute;left:1rem;top:50%;transform:translateY(-50%);
+color:var(--dim);pointer-events:none;font-size:1.1rem
+}
+
+/* GRID */
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+gap:1rem;margin:1.5rem 0 3rem
+}
+.card{
+background:var(--card);border:1px solid var(--border);border-radius:14px;
+padding:1.4rem;text-decoration:none;color:var(--txt);
+display:flex;flex-direction:column;gap:.6rem;
+transition:transform .15s,border-color .15s,background .15s;
+position:relative;overflow:hidden
+}
+.card:hover,.card:focus{
+transform:translateY(-3px);border-color:var(--acc);background:var(--card-h);
+outline:none
+}
+.card:active{transform:translateY(-1px)}
+.card-icon{font-size:2.4rem;line-height:1}
+.card-name{font-size:1.15rem;font-weight:700;letter-spacing:-.01em}
+.card-tags{
+display:flex;flex-wrap:wrap;gap:.3rem;margin-top:auto
+}
+.tag{
+font-size:.7rem;padding:.15rem .55rem;border-radius:999px;
+background:rgba(123,94,255,.12);color:var(--acc2);
+border:1px solid rgba(123,94,255,.2);text-transform:capitalize;
+letter-spacing:.02em
+}
+.card::before{
+content:"";position:absolute;top:0;left:0;right:0;height:3px;
+background:linear-gradient(90deg,var(--acc),var(--acc2));
+opacity:0;transition:opacity .2s
+}
+.card:hover::before,.card:focus::before{opacity:1}
+
+/* EMPTY STATE */
+.empty{
+text-align:center;padding:3rem 1rem;color:var(--dim);display:none
+}
+.empty.show{display:block}
+.empty span{font-size:2.5rem;display:block;margin-bottom:.5rem}
+
+/* FOOTER */
+footer{
+text-align:center;padding:2rem 1rem;color:var(--dim);
+font-size:.8rem;border-top:1px solid var(--border)
+}
+footer a{color:var(--acc);text-decoration:none}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+.grid{grid-template-columns:1fr}
+header{padding:1.5rem .5rem 1rem}
+.wrap{padding:.8rem}
+.card{padding:1.2rem}
+}
+@media(min-width:1400px){
+.grid{grid-template-columns:repeat(4,1fr)}
+}
+
+/* REDUCED MOTION */
+@media(prefers-reduced-motion:reduce){
+*{transition:none!important;animation:none!important}
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--dim)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>1nd1g0 Games</h1>
+<p>Free browser-based retro game collection — no installs, no ads</p>
+<div class="stats"><span><b id="count">18</b> games available</span></div>
+</header>
+
+<div class="search-wrap">
+<span class="s-icon">🔍</span>
+<input type="text" id="search" placeholder="Search games... (e.g. &quot;arcade&quot;, &quot;puzzle&quot;)" autocomplete="off" spellcheck="false">
+</div>
+
+<main>
+<div class="grid" id="grid">
+
+<a href="asteroids.html" class="card">
+<span class="card-icon">☄️</span>
+<span class="card-name">Asteroids</span>
+<div class="card-tags">
+<span class="tag">arcade</span><span class="tag">shooter</span><span class="tag">space</span>
+</div>
+</a>
+
+<a href="billiards.html" class="card">
+<span class="card-icon">🎱</span>
+<span class="card-name">Billiards</span>
+<div class="card-tags">
+<span class="tag">sport</span><span class="tag">puzzle</span><span class="tag">physics</span>
+</div>
+</a>
+
+<a href="bomberman.html" class="card">
+<span class="card-icon">💣</span>
+<span class="card-name">Bomberman</span>
+<div class="card-tags">
+<span class="tag">arcade</span><span class="tag">maze</span><span class="tag">action</span>
+</div>
+</a>
+
+<a href="bowling32.html" class="card">
+<span class="card-icon">🎳</span>
+<span class="card-name">Bowling 32</span>
+<div class="card-tags">
+<span class="tag">sport</span>
+</div>
+</a>
+
+<a href="bullethell.html" class="card">
+<span class="card-icon">🔫</span>
+<span class="card-name">Bullet Hell</span>
+<div class="card-tags">
+<span class="tag">arcade</span><span class="tag">shooter</span><span class="tag">action</span>
+</div>
+</a>
+
+<a href="defender.html" class="card">
+<span class="card-icon">🛡️</span>
+<span class="card-name">Defender</span>
+<div class="card-tags">
+<span class="tag">arcade</span><span class="tag">shooter</span><span class="tag">defense</span>
+</div>
+</a>
+
+<a href="earth.html" class="card">
+<span class="card-icon">🌍</span>
+<span class="card-name">Earth</span>
+<div class="card-tags">
+<span class="tag">simulation</span>
+</div>
+</a>
+
+<a href="lander.html" class="card">
+<span class="card-icon">🚀</span>
+<span class="card-name">Lander</span>
+<div class="card-tags">
+<span class="tag">simulation</span><span class="tag">arcade</span>
+</div>
+</a>
+
+<a href="lemmings.html" class="card">
+<span class="card-icon">🐹</span>
+<span class="card-name">Lemmings</span>
+<div class="card-tags">
+<span class="tag">puzzle</span><span class="tag">strategy</span>
+</div>
+</a>
+
+<a href="minigolf3D.html" class="card">
+<span class="card-icon">⛳</span>
+<span class="card-name">Mini Golf 3D</span>
+<div class="card-tags">
+<span class="tag">sport</span><span class="tag">3d</span>
+</div>
+</a>
+
+<a href="noid.html" class="card">
+<span class="card-icon">🧱</span>
+<span class="card-name">Noid</span>
+<div class="card-tags">
+<span class="tag">arcade</span><span class="tag">breakout</span>
+</div>
+</a>
+
+<a href="pinball32.html" class="card">
+<span class="card-icon">🎰</span>
+<span class="card-name">Pinball 32</span>
+<div class="card-tags">
+<span class="tag">arcade</span><span class="tag">sport</span>
+</div>
+</a>
+
+<a href="quad.html" class="card">
+<span class="card-icon">🏍️</span>
+<span class="card-name">Quad</span>
+<div class="card-tags">
+<span class="tag">racing</span><span class="tag">sport</span>
+</div>
+</a>
+
+<a href="stuntcarracer.html" class="card">
+<span class="card-icon">🏎️</span>
+<span class="card-name">Stunt Car Racer</span>
+<div class="card-tags">
+<span class="tag">racing</span><span class="tag">arcade</span>
+</div>
+</a>
+
+<a href="tanks.html" class="card">
+<span class="card-icon">🔰</span>
+<span class="card-name">Tanks</span>
+<div class="card-tags">
+<span class="tag">arcade</span><span class="tag">action</span><span class="tag">shooter</span>
+</div>
+</a>
+
+<a href="tanks_editor.html" class="card">
+<span class="card-icon">🛠️</span>
+<span class="card-name">Tanks Editor</span>
+<div class="card-tags">
+<span class="tag">editor</span><span class="tag">utility</span>
+</div>
+</a>
+
+<a href="tetris.html" class="card">
+<span class="card-icon">🟦</span>
+<span class="card-name">Tetris</span>
+<div class="card-tags">
+<span class="tag">puzzle</span><span class="tag">classic</span>
+</div>
+</a>
+
+<a href="tetris2.html" class="card">
+<span class="card-icon">🟩</span>
+<span class="card-name">Tetris 2</span>
+<div class="card-tags">
+<span class="tag">puzzle</span><span class="tag">classic</span>
+</div>
+</a>
+
+</div>
+
+<div class="empty" id="empty">
+<span>🕹️</span>
+<p>No games found. Try a different search term.</p>
+</div>
+</main>
+
+<footer>
+<p>Built with 💚 — all games run locally in your browser</p>
+</footer>
+</div>
+
+<script>
+(function(){
+const input=document.getElementById("search");
+const grid=document.getElementById("grid");
+const cards=[...grid.querySelectorAll(".card")];
+const countEl=document.getElementById("count");
+const empty=document.getElementById("empty");
+
+function filter(){
+const q=input.value.trim().toLowerCase();
+let n=0;
+cards.forEach(c=>{
+const text=(c.textContent+" "+c.getAttribute("href")).toLowerCase();
+const match=!q||text.includes(q);
+c.style.display=match?"":"none";
+if(match)n++;
+});
+countEl.textContent=n;
+empty.classList.toggle("show",n===0);
+}
+
+input.addEventListener("input",filter);
+
+// Keyboard shortcut: "/" to focus search
+document.addEventListener("keydown",function(e){
+if(e.key==="/"&&document.activeElement!==input){
+e.preventDefault();
+input.focus();
+}
+if(e.key==="Escape"&&document.activeElement===input){
+input.value="";
+filter();
+input.blur();
+}
+});
+})();
+</script>
+</body>
+</html>
