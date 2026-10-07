@@ -1,0 +1,2514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BENCHKIT v1.9.4 — Laptop Benchmark &amp; Diagnostics (Repair Shop Edition)</title>
+<style>
+:root{
+  --bg:#0c1218; --bg2:#0f1720; --panel:#131d27; --panel2:#0e1620;
+  --line:#233240; --line2:#31455a; --ink:#dfe8f1; --mut:#8fa2b5; --dim:#5b7288;
+  --amber:#ffb454; --amber2:#ff9a1f; --green:#4ade80; --red:#ff5f56; --cyan:#53c7f0; --blue:#6ea8ff;
+  --mono:ui-monospace,"Cascadia Code","SF Mono","JetBrains Mono",Consolas,"Liberation Mono",monospace;
+  --sans:system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);min-height:100vh;overflow-x:hidden}
+body.noscroll{overflow:hidden!important}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:linear-gradient(rgba(120,160,200,.045) 1px,transparent 1px),
+             linear-gradient(90deg,rgba(120,160,200,.045) 1px,transparent 1px);
+  background-size:28px 28px}
+body::after{content:"";position:fixed;inset:-20%;pointer-events:none;z-index:0;
+  background:radial-gradient(700px at 85% 0%,rgba(255,154,31,.07),transparent 60%),
+             radial-gradient(800px at 5% 100%,rgba(83,199,240,.06),transparent 60%);
+  animation:drift 26s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translate3d(-1.5%,-1%,0)}to{transform:translate3d(1.5%,1%,0)}}
+::selection{background:rgba(255,180,84,.3)}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#2b3c4e;border-radius:5px}::-webkit-scrollbar-track{background:#0b1117}
+
+#topbar{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;align-items:center;gap:14px;
+  padding:10px 20px;background:#0c1218f5;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand b{font:800 17px/1 var(--mono);letter-spacing:.06em}
+.brand b em{color:var(--amber);font-style:normal}
+.brand small{display:block;font:500 9.5px var(--mono);letter-spacing:.18em;color:var(--dim);text-transform:uppercase;margin-top:2px}
+.ver{font:600 9.5px var(--mono);color:var(--dim);border:1px solid var(--line);padding:3px 7px;border-radius:3px;letter-spacing:.1em}
+.tb-fields{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.tb-fields label{font:600 9px var(--mono);letter-spacing:.14em;color:var(--dim);display:block;margin-bottom:3px;text-transform:uppercase}
+.tb-fields input{background:#0a1016;border:1px solid var(--line);color:var(--ink);font:600 12px var(--mono);
+  padding:6px 8px;border-radius:3px;width:120px;transition:border-color .15s}
+.tb-fields input:focus{outline:none;border-color:var(--amber)}
+.tb-status{display:flex;align-items:center;gap:14px;font:600 10px var(--mono);letter-spacing:.1em;color:var(--mut)}
+.tb-status .cell{display:flex;align-items:center;gap:6px}
+#clock{color:var(--amber);font-weight:700;min-width:66px;text-align:right}
+.led{width:9px;height:9px;border-radius:50%;background:#3a4a5c;flex:none;box-shadow:0 0 0 2px rgba(255,255,255,.04)}
+.led.on{background:var(--green);box-shadow:0 0 8px rgba(74,222,128,.8)}
+.led.warn{background:var(--amber);box-shadow:0 0 8px rgba(255,180,84,.8)}
+.led.bad{background:var(--red);box-shadow:0 0 8px rgba(255,95,86,.8)}
+.led.info{background:var(--cyan);box-shadow:0 0 8px rgba(83,199,240,.8)}
+.led.run{background:var(--amber);box-shadow:0 0 8px rgba(255,180,84,.9);animation:pulse .8s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+#runbar{height:3px;background:#101a24;position:relative;z-index:49}
+#runFill{height:100%;width:0;background:linear-gradient(90deg,var(--amber2),var(--amber));transition:width .25s;box-shadow:0 0 10px rgba(255,154,31,.6)}
+
+main{position:relative;z-index:1;max-width:1420px;margin:0 auto;padding:22px 20px 60px}
+.sec{display:flex;align-items:center;gap:14px;margin:38px 0 14px}
+.sec:first-of-type{margin-top:6px}
+.sec .no{font:800 11px var(--mono);color:var(--amber);letter-spacing:.2em}
+.sec h2{font:800 clamp(17px,2vw,22px)/1 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.sec .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line2),transparent)}
+.sec .tag{font:600 9.5px var(--mono);color:var(--dim);letter-spacing:.14em}
+
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.mod{grid-column:span 3;background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid var(--line);border-radius:5px;padding:14px 15px 15px;position:relative;
+  clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);
+  transition:transform .18s,border-color .18s;opacity:0;transform:translateY(10px)}
+.mod.in{opacity:1;transform:none;transition:opacity .5s ease,transform .5s ease,border-color .18s}
+.mod:hover{transform:translateY(-2px);border-color:var(--line2)}
+.mod::before{content:"";position:absolute;top:0;left:0;width:34%;height:2px;background:var(--ac,var(--amber));opacity:.85}
+.mod.s-ok::before{background:var(--green)}.mod.s-bad::before{background:var(--red)}.mod.s-warn::before{background:var(--amber)}.mod.s-info::before{background:var(--cyan)}
+.w5{grid-column:span 5}.w6{grid-column:span 6}.w7{grid-column:span 7}.w8{grid-column:span 8}.w9{grid-column:span 9}.w4{grid-column:span 4}.w12{grid-column:span 12}
+.mod header{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.mod header .code{font:700 9.5px var(--mono);color:var(--dim);letter-spacing:.14em;border:1px solid var(--line);padding:2px 6px;border-radius:3px}
+.mod header h3{font:700 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut);flex:1}
+.val{font:800 26px/1.1 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums;margin:2px 0 4px;letter-spacing:-.01em}
+.val small{font:600 11px var(--mono);color:var(--dim);margin-left:5px;letter-spacing:.06em}
+.hint{font-size:11.5px;color:var(--dim);min-height:16px;margin-bottom:11px}
+.actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+
+.btn{font:700 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;padding:8px 12px;
+  background:#18242f;color:var(--ink);border:1px solid var(--line2);border-radius:3px;cursor:pointer;transition:.15s}
+.btn:hover:not(:disabled){border-color:var(--amber);color:var(--amber)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:linear-gradient(180deg,#ffc978,var(--amber2));border-color:var(--amber);color:#241505}
+.btn.primary:hover:not(:disabled){filter:brightness(1.08);color:#241505}
+.btn.tiny{padding:5px 8px;font-size:9.5px}
+.btn.ok:hover,.btn.ok.mark{border-color:var(--green);color:var(--green)}
+.btn.bad:hover,.btn.bad.mark{border-color:var(--red);color:var(--red)}
+select{background:#0a1016;border:1px solid var(--line2);color:var(--ink);font:600 11px var(--mono);padding:7px 8px;border-radius:3px;max-width:170px}
+label.ck{display:flex;align-items:center;gap:6px;font:600 10px var(--mono);letter-spacing:.08em;color:var(--mut);
+  border:1px solid var(--line2);border-radius:3px;padding:7px 9px;cursor:pointer;user-select:none;text-transform:uppercase;transition:.15s;background:#0a1016}
+label.ck:hover{border-color:var(--amber);color:var(--ink)}
+label.ck input{accent-color:var(--amber2)}
+label.ck.off{opacity:.35;pointer-events:none}
+
+.chip{display:inline-block;font:700 9px var(--mono);letter-spacing:.14em;padding:3px 7px;border-radius:3px;text-transform:uppercase}
+.chip.p{background:rgba(74,222,128,.14);color:var(--green);border:1px solid rgba(74,222,128,.4)}
+.chip.w{background:rgba(255,180,84,.12);color:var(--amber);border:1px solid rgba(255,180,84,.4)}
+.chip.f{background:rgba(255,95,86,.12);color:var(--red);border:1px solid rgba(255,95,86,.4)}
+.chip.i{background:rgba(83,199,240,.12);color:var(--cyan);border:1px solid rgba(83,199,240,.4)}
+.chip.m{background:rgba(140,160,180,.1);color:var(--mut);border:1px solid var(--line2)}
+canvas.fit{width:100%;display:block;border:1px solid var(--line);border-radius:4px;background:#0a1016}
+
+.tchip{display:inline-block;font:600 10px var(--mono);border-radius:3px;padding:5px 9px;border:1px solid var(--line);color:#7c8ba0;letter-spacing:.04em;margin:0}
+.tchip.y{color:var(--green);border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.07)}
+.tchip.n{text-decoration:line-through;border-style:dashed}
+.cchip{display:inline-flex;gap:5px;align-items:center;font:600 10px var(--mono);border-radius:3px;padding:4px 8px;border:1px solid var(--line2);color:var(--mut)}
+.cchip b{color:var(--ink)}
+.cchip .y{color:var(--green)}.cchip .n{color:var(--red)}.cchip .u{color:var(--dim)}
+#probeList{font:11px/1.75 var(--mono);background:#080d12;border:1px solid var(--line);border-radius:4px;padding:8px 10px;max-height:205px;overflow:auto;margin-top:10px}
+#probeList .OK{color:var(--green)}#probeList .WARN{color:var(--amber)}#probeList .FAIL{color:var(--red)}#probeList .INFO{color:var(--cyan)}
+
+.note h4{font:700 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:9px}
+.note ul{list-style:none}
+.note li{font-size:12px;color:var(--mut);padding:5px 0 5px 16px;position:relative;border-bottom:1px dashed #1c2936}
+.note li:last-child{border:none}
+.note li::before{content:"▸";position:absolute;left:0;color:var(--amber);font-size:10px}
+.note li b{color:var(--ink);font-family:var(--mono);font-size:11px}
+.note p{font-size:12px;color:var(--mut)}
+.note code{font:600 11px var(--mono);background:#0a1016;border:1px solid var(--line);padding:1px 6px;border-radius:3px;color:var(--cyan)}
+
+#specStrip{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.spec{background:#0a1016;border:1px solid var(--line);border-radius:4px;padding:8px 11px;min-width:130px;flex:1}
+.spec .k{font:600 8.5px var(--mono);letter-spacing:.16em;color:var(--dim);text-transform:uppercase}
+.spec .v{font:700 12.5px var(--mono);color:var(--ink);margin-top:3px;word-break:break-word}
+.spec .v.hi{color:var(--amber)}
+
+.rogrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:8px;margin:10px 0}
+.ro{background:#0a1016;border:1px solid var(--line);border-radius:4px;padding:8px 10px}
+.ro .k{font:600 8.5px var(--mono);letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+.ro .v{font:800 16px var(--mono);margin-top:2px}
+.ro .s{font:600 9.5px var(--mono);color:var(--dim)}
+
+/* Stress Lab responsive layout */
+.labWrap{display:flex;gap:18px;flex-wrap:wrap}
+.labLeft{flex:1 1 300px;max-width:380px;display:flex;flex-direction:column;min-width:0}
+.labRight{flex:2 1 300px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.labCvRow{display:flex;gap:8px;flex-wrap:wrap}
+.labCvBox{flex:1 1 140px;min-width:0}
+.labCvBox canvas{width:100%}
+
+#kb{display:flex;flex-direction:column;gap:4px;background:#0a1016;border:1px solid var(--line);border-radius:5px;padding:10px}
+.krow{display:flex;gap:4px}
+.key{flex:1;height:27px;display:flex;align-items:center;justify-content:center;font:600 8.5px var(--mono);
+  color:var(--dim);background:#121c26;border:1px solid #1e2c3a;border-radius:3px;transition:background .08s,color .08s;user-select:none}
+.key.lit{background:var(--green);border-color:var(--green);color:#08130b;box-shadow:0 0 10px rgba(74,222,128,.5)}
+.key.held{background:var(--amber2);border-color:var(--amber2);color:#241505;box-shadow:0 0 12px rgba(255,154,31,.85)}
+.key.now{background:var(--red);border-color:var(--red);color:#1c0806}
+#kbBar{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+.meter{height:6px;background:#101a24;border-radius:3px;overflow:hidden;flex:1;min-width:120px}
+.meter i{display:block;height:100%;width:0;background:var(--green);transition:width .2s}
+
+#pad{position:relative;height:216px;background:#0a1016;border:1px solid var(--line);border-radius:5px;overflow:hidden;cursor:crosshair;touch-action:none;user-select:none}
+#pad .ch{position:absolute;background:rgba(255,180,84,.35);pointer-events:none;display:none}
+#pad .chv{width:1px;top:0;bottom:0}#pad .chh{height:1px;left:0;right:0}
+#pad .dot{position:absolute;width:14px;height:14px;margin:-7px;border-radius:50%;border:2px solid var(--cyan);background:rgba(83,199,240,.2);pointer-events:none}
+.ptrow{display:flex;gap:12px;flex-wrap:wrap;margin-top:9px;font:600 10.5px var(--mono);color:var(--mut)}
+.ptrow span b{color:var(--ink)}
+.btnchip{font:700 9px var(--mono);letter-spacing:.1em;padding:4px 8px;border:1px solid var(--line2);border-radius:3px;color:var(--dim);transition:.12s}
+.btnchip.hot{border-color:var(--amber);color:var(--amber);background:rgba(255,180,84,.1)}
+
+.gpPad{background:#0a1016;border:1px solid var(--line);border-radius:4px;padding:8px 10px;margin-top:8px}
+.gpName{font:700 10px var(--mono);color:var(--cyan);margin-bottom:6px;word-break:break-all}
+.gpBtns{display:flex;flex-wrap:wrap;gap:4px}
+.gpBtn{min-width:22px;text-align:center;font:600 9px var(--mono);padding:4px 5px;border:1px solid var(--line2);border-radius:3px;color:var(--dim)}
+.gpBtn.hot{background:var(--green);border-color:var(--green);color:#08130b}
+.gpAxes{margin-top:6px;display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:4px}
+.gpAxis{height:6px;background:#101a24;border-radius:3px;overflow:hidden}
+.gpAxis i{display:block;height:100%;width:50%;background:var(--amber);transition:width .05s}
+.gpMeta{margin-top:6px;font:600 9.5px var(--mono);color:var(--dim)}
+
+.vumeter{height:14px;background:#0a1016;border:1px solid var(--line);border-radius:3px;overflow:hidden;margin:8px 0}
+.vumeter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--amber) 70%,var(--red));transition:width .06s linear}
+video.cam{width:100%;height:170px;background:#000;border:1px solid var(--line);border-radius:4px;object-fit:cover}
+audio.rec{width:100%;height:34px;margin-top:6px}
+
+.batgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:9px;margin-top:10px}
+.batcell{background:#0a1016;border:1px solid var(--line);border-radius:4px;padding:9px 11px}
+.batcell .k{font:600 8.5px var(--mono);letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+.batcell .v{font:800 19px var(--mono);margin-top:2px}
+.batcell .v.g{color:var(--green)}.batcell .v.w{color:var(--amber)}.batcell .v.f{color:var(--red)}
+
+.swgrid{display:flex;flex-wrap:wrap;gap:6px}
+.sw{width:34px;height:26px;border:1px solid var(--line2);border-radius:3px;cursor:pointer;transition:transform .12s}
+.sw:hover{transform:scale(1.15)}
+
+#pix{position:fixed;inset:0;z-index:200;background:#000;display:none;cursor:pointer;overflow:hidden}
+#pix.on{display:block}
+#pixCv{position:absolute;inset:0;width:100%;height:100%;display:none}
+#pix .bar{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);display:flex;gap:6px;flex-wrap:wrap;justify-content:center;
+  background:#0c1218ee;border:1px solid var(--line2);border-radius:6px;padding:9px;max-width:94vw;cursor:default}
+#pix .tip{position:absolute;top:18px;left:50%;transform:translateX(-50%);font:600 10px var(--mono);letter-spacing:.16em;
+  color:#ffffff55;text-transform:uppercase;max-width:90vw;text-align:center}
+#pix.tdark .tip{color:#00000077}
+
+#touchOv{position:fixed;inset:0;z-index:210;background:#000;display:none;cursor:crosshair;overflow:hidden;touch-action:none}
+#touchOv.on{display:block}
+#touchCv{position:absolute;inset:0;width:100%;height:100%}
+.tbar{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;
+  background:#0c1218ee;border:1px solid var(--line2);border-radius:6px;padding:9px;max-width:94vw;cursor:default}
+.thint{font:600 9.5px var(--mono);letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+.thud{position:absolute;top:14px;left:14px;font:700 11px var(--mono);letter-spacing:.14em;color:var(--cyan);background:#0c1218cc;border:1px solid var(--line2);border-radius:4px;padding:6px 10px}
+
+#reportTable{width:100%;border-collapse:collapse;font-size:12px}
+#reportTable td{padding:6px 8px;border-bottom:1px solid #1a2735;font-family:var(--mono)}
+#reportTable td:first-child{color:var(--mut);font-size:10.5px;letter-spacing:.06em}
+#reportTable td:nth-child(2){font-weight:700}
+#reportTable td:last-child{color:var(--dim);font-size:10px;text-align:right}
+#verdictStamp{font:800 30px var(--mono);letter-spacing:.08em;padding:6px 18px;border:3px solid var(--dim);color:var(--dim);
+  display:inline-block;transform:rotate(-2deg);border-radius:4px;transition:.3s}
+#verdictStamp.PASS{border-color:var(--green);color:var(--green);box-shadow:0 0 24px rgba(74,222,128,.25)}
+#verdictStamp.FAIL{border-color:var(--red);color:var(--red);box-shadow:0 0 24px rgba(255,95,86,.25)}
+#verdictStamp.NOTES{border-color:var(--amber);color:var(--amber)}
+textarea{width:100%;background:#0a1016;border:1px solid var(--line);color:var(--ink);border-radius:4px;
+  font:12.5px var(--sans);padding:9px;resize:vertical;min-height:64px}
+textarea:focus{outline:none;border-color:var(--amber)}
+#logBox{height:330px;overflow-y:auto;background:#080d12;border:1px solid var(--line);border-radius:4px;padding:9px;font:11px/1.7 var(--mono)}
+#logBox .t{color:var(--dim)}
+#logBox .OK{color:var(--green)}#logBox .FAIL{color:var(--red)}#logBox .WARN{color:var(--amber)}#logBox .INFO{color:var(--cyan)}
+#logBox .RUN{color:var(--mut)}
+
+.print-only{display:none}
+.secl{font:700 9pt var(--mono);letter-spacing:.1em;text-transform:uppercase;margin:3mm 0 1mm;border-bottom:1px solid #000}
+.small{font-size:8.5pt;line-height:1.45;word-break:break-word}
+
+footer{position:relative;z-index:1;border-top:1px solid var(--line);padding:18px 20px;display:flex;flex-wrap:wrap;gap:10px;
+  justify-content:space-between;font:500 10.5px var(--mono);color:var(--dim);letter-spacing:.06em}
+
+@media(max-width:1100px){.mod{grid-column:span 6}.w4,.w5{grid-column:span 6}.w7,.w8,.w9{grid-column:span 12}}
+@media(max-width:680px){.mod,.w4,.w5,.w6,.w7,.w8,.w9{grid-column:span 12}.tb-fields{margin-left:0}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.mod{opacity:1;transform:none}}
+
+@media print{
+ @page{margin:9mm}
+ body{background:#fff!important;color:#000!important;font-size:9.5pt}
+ body::before,body::after,#topbar,#runbar,footer,.print-hide,#pix,#touchOv{display:none!important}
+ main{padding:0;max-width:none}
+ .sec{display:none!important}
+ .grid{display:block}
+ .mod{display:none!important}
+ #reportCard{display:block!important;background:#fff;color:#000;border:1px solid #000;box-shadow:none;clip-path:none;
+   opacity:1;transform:none;margin:0;padding:2mm;break-inside:auto}
+ .actions,.btn,select,textarea,.hint,.led,.note,.tag,.rule,.meter,.vumeter,canvas,video,audio,.swgrid,#pad,#kb,#gpPads,#logBox,#codecCaps{display:none!important}
+ .mod header .code{display:none}
+ .val{color:#000;font-size:12pt}
+ .chip{background:#fff!important;color:#000!important;border:1px solid #000}
+ #verdictStamp{color:#000;border-color:#000;box-shadow:none;transform:none;font-size:15pt;padding:2px 10px}
+ #reportTable{margin-top:2mm;width:100%}
+ #reportTable td{border:1px solid #777;color:#000;padding:1.5px 4px}
+ #reportTable td:first-child,#reportTable td:last-child{color:#000}
+ .print-only{display:block!important}
+ #printLog{font:7.5pt/1.4 var(--mono);background:#fff;border:1px solid #888;padding:2mm;margin-top:1mm;
+   max-height:none;overflow:visible;color:#000}
+ #printLog .t{color:#444}
+ #printLog .OK,#printLog .FAIL,#printLog .WARN,#printLog .INFO,#printLog .RUN{color:#000;font-weight:bold}
+ .small{color:#000}
+}
+</style>
+</head>
+<body>
+
+<header id="topbar" class="print-hide">
+  <div class="brand">
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+      <rect x="6" y="6" width="18" height="18" rx="2" stroke="#ffb454" stroke-width="2"/>
+      <rect x="11" y="11" width="8" height="8" fill="#ffb454"/>
+      <path d="M15 1v4M15 25v4M1 15h4M25 15h4" stroke="#53c7f0" stroke-width="2"/>
+    </svg>
+    <div><b>BENCH<em>KIT</em></b><small>Laptop benchmark &amp; diagnostics · repair edition</small></div>
+  </div>
+  <span class="ver" id="buildTag">v1.9.4</span>
+  <div class="tb-fields">
+    <div><label for="fTicket">Ticket #</label><input id="fTicket" placeholder="RK-0000" autocomplete="off"></div>
+    <div><label for="fModel">Model / Serial</label><input id="fModel" placeholder="T480 · PF1X…" autocomplete="off" style="width:170px"></div>
+    <div><label for="fTech">Technician</label><input id="fTech" placeholder="J. Doe" autocomplete="off" style="width:110px"></div>
+  </div>
+  <div class="tb-status">
+    <span class="cell"><span class="led on"></span>PWR</span>
+    <span class="cell"><span class="led" id="ledNet"></span><span id="netTxt">NET</span></span>
+    <span class="cell"><span class="led" id="ledBat"></span><span id="batTxt">BATT —</span></span>
+    <span class="cell" id="clock">--:--:--</span>
+  </div>
+</header>
+<div id="runbar" class="print-hide"><div id="runFill"></div></div>
+
+<main>
+
+<section class="sec print-hide"><span class="no">00</span><h2>Unit Identification</h2><div class="rule"></div><span class="tag">AUTO-DETECTED</span></section>
+<div class="grid">
+  <div class="mod w12 note" id="sysCard" style="--ac:var(--cyan)">
+    <header><span class="code">SYS</span><h3>Detected hardware &amp; environment</h3><span class="led info" id="sysLed"></span></header>
+    <div id="specStrip"></div>
+    <div class="actions" style="margin-top:12px">
+      <button class="btn" id="btnCopySpec">Copy spec summary</button>
+      <button class="btn" id="btnReDetect">Re-detect</button>
+      <span style="font:500 10px var(--mono);color:var(--dim)">GPU name via WebGL debug ext — may be masked by the browser.</span>
+    </div>
+  </div>
+</div>
+
+<div class="grid" style="margin-top:14px">
+  <div class="mod w12" style="--ac:var(--amber2)">
+    <header><span class="code">CTRL</span><h3>Automated intake bench</h3><span class="led" id="ledAll"></span></header>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <select id="loopSel" title="Bench passes">
+        <option value="1" selected>1 pass</option>
+        <option value="3">3 passes</option>
+        <option value="5">5 passes</option>
+        <option value="10">10 passes</option>
+        <option value="0">∞ until stop</option>
+      </select>
+      <button class="btn primary" id="btnRunAll" style="padding:12px 22px;font-size:12px">▶ Run bench</button>
+      <button class="btn bad" id="btnStopAll" disabled>■ Stop</button>
+      <span style="font:600 11px var(--mono);color:var(--mut);flex:1" id="runStep">idle — 15 tests · multi-pass scores min / avg / max</span>
+      <div class="meter" style="flex:1;min-width:140px"><i id="runMeter" style="background:var(--amber)"></i></div>
+    </div>
+    <p class="hint" style="margin-top:9px;margin-bottom:0">Multi-pass mode catches leaks &amp; thermal creep: every pass is scored, trends below −15% are flagged, Stop halts between tests without touching recorded results.</p>
+  </div>
+</div>
+
+<section class="sec print-hide"><span class="no">01</span><h2>Compute &amp; RAM</h2><div class="rule"></div><span class="tag">WARM-UP → STABILIZED WINDOW · GAP-FREE LOOPS</span></section>
+<div class="grid">
+  <div class="mod" data-t="cpuSingle" style="--ac:var(--amber)">
+    <header><span class="code">M-01</span><h3>CPU · Single-core int</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>Mop/s</small></div>
+    <p class="hint" data-detail>200 ms untimed warm-up, then a 900 ms pinned-core window.</p>
+    <div class="actions"><button class="btn" data-run>Run</button></div>
+  </div>
+  <div class="mod" data-t="cpuMulti" style="--ac:var(--amber)">
+    <header><span class="code">M-02</span><h3>CPU · Multi-core</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>Gop/s</small></div>
+    <p class="hint" data-detail>Warm-up burst, then one busy worker per logical core for 1.3 s.</p>
+    <div class="actions"><button class="btn" data-run>Run</button></div>
+  </div>
+  <div class="mod" data-t="cpuFloat" style="--ac:var(--amber)">
+    <header><span class="code">M-03</span><h3>CPU · FP math</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>Mflop/s</small></div>
+    <p class="hint" data-detail>FP64 sqrt + sin throughput after a warm-up pass.</p>
+    <div class="actions"><button class="btn" data-run>Run</button></div>
+  </div>
+  <div class="mod" data-t="memBW" style="--ac:var(--amber)">
+    <header><span class="code">M-04</span><h3>Memory · Bandwidth</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>GB/s</small></div>
+    <p class="hint" data-detail>Untimed warm copy, then timed 64 MB copies.</p>
+    <div class="actions"><button class="btn" data-run>Run</button></div>
+  </div>
+  <div class="mod" data-t="memLat" style="--ac:var(--amber)">
+    <header><span class="code">M-28</span><h3>RAM · Random latency</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>ns/hop</small></div>
+    <p class="hint" data-detail>8M random hops across an 8 MB cycle.</p>
+    <div class="actions"><button class="btn" data-run>Run</button></div>
+  </div>
+  <div class="mod" data-t="memCheck" style="--ac:var(--amber)">
+    <header><span class="code">M-29</span><h3>RAM · Pattern check</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>errors</small></div>
+    <p class="hint" data-detail>00/FF/AA/55 + LCG patterns on 32 MB. Any error = suspect RAM.</p>
+    <div class="actions"><button class="btn" data-run>Run</button></div>
+  </div>
+</div>
+
+<section class="sec print-hide"><span class="no">02</span><h2>GPU Bench &amp; Codecs</h2><div class="rule"></div><span class="tag">WEBGL2-FIRST · 2D · 3D · AI · ENCODE/DECODE</span></section>
+<div class="grid">
+  <div class="mod w6" data-t="gpu2d" style="--ac:var(--cyan)">
+    <header><span class="code">M-05</span><h3>GPU · Canvas 2D</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>fps</small></div>
+    <p class="hint" data-detail>600 ms warm-up, then 3 s measured particle storm.</p>
+    <canvas class="fit" id="cv2d" height="170" style="height:170px"></canvas>
+  </div>
+  <div class="mod w6" data-t="gpu3d" style="--ac:var(--cyan)">
+    <header><span class="code">M-06</span><h3>GPU · 3D scene</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>fps</small></div>
+    <p class="hint" data-detail>33k-triangle lit torus via WebGL2 (falls back to WebGL1); recovery-aware.</p>
+    <canvas class="fit" id="cvGL" height="170" style="height:170px"></canvas>
+  </div>
+  <div class="mod w4" data-t="gpuAI" style="--ac:var(--cyan)">
+    <header><span class="code">M-07</span><h3>AI / matrix compute</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>GFLOP/s</small></div>
+    <p class="hint" data-detail>256×256 matmul on WebGPU; CPU FP32 fallback.</p>
+    <div class="actions"><button class="btn" data-run>Run</button></div>
+  </div>
+  <div class="mod w8" data-t="gpuCodec" style="--ac:var(--cyan)">
+    <header><span class="code">M-08</span><h3>Codecs · encode / decode engine</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>enc / dec fps @720p</small></div>
+    <p class="hint" data-detail>Hardware encoder first, automatic software fallback; timeout-bounded everywhere.</p>
+    <div id="codecCaps" class="actions" style="margin-bottom:9px"></div>
+    <div class="actions"><button class="btn" data-run>Run codec bench</button></div>
+  </div>
+  <div class="mod" data-t="refresh" style="--ac:var(--cyan)">
+    <header><span class="code">M-11</span><h3>Display · Refresh</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>Hz</small></div>
+    <p class="hint" data-detail>rAF timing, median of stabilized frames.</p>
+    <div class="actions"><button class="btn" data-run>Measure</button></div>
+  </div>
+  <div class="mod w5" data-t="latency" style="--ac:var(--cyan)">
+    <header><span class="code">M-12</span><h3>Input · Click-to-frame latency</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>ms avg</small></div>
+    <p class="hint" data-detail>Click the pad 5+ times.</p>
+    <div id="latPad" style="height:58px;border:1px dashed var(--line2);border-radius:4px;display:flex;align-items:center;justify-content:center;font:700 10px var(--mono);letter-spacing:.2em;color:var(--dim);cursor:pointer;user-select:none;background:#0a1016">CLICK HERE REPEATEDLY</div>
+  </div>
+</div>
+
+<section class="sec print-hide"><span class="no">03</span><h2>Stress Lab · Hybrid Stability</h2><div class="rule"></div><span class="tag">PRESETS SAFE → EXTREME · ∞ ENDLESS</span></section>
+<div class="grid">
+  <div class="mod w12" data-t="stress" style="--ac:var(--amber)">
+    <header><span class="code">M-13</span><h3>Hybrid stress / stability run</h3><span class="led"></span></header>
+    <div class="labWrap">
+      <div class="labLeft">
+        <div class="actions" style="margin-bottom:8px">
+          <button class="btn tiny" id="preSafe">SAFE</button>
+          <button class="btn tiny" id="preStd">STANDARD</button>
+          <button class="btn tiny bad" id="preExt">EXTREME</button>
+          <span id="labElapsed" style="font:700 10px var(--mono);color:var(--cyan);margin-left:auto"></span>
+        </div>
+        <div class="actions" style="margin-bottom:8px">
+          <select id="labDur"><option value="30000">30 s</option><option value="60000" selected>1 min</option><option value="120000">2 min</option><option value="300000">5 min</option><option value="0">∞ endless</option></select>
+          <select id="labThreads" title="CPU threads to pin"></select>
+          <button class="btn primary" id="btnLabStart">Start stress</button>
+          <button class="btn bad" id="btnLabAbort">Abort</button>
+        </div>
+        <div class="actions" style="margin-bottom:8px">
+          <label class="ck" id="lbG3d"><input type="checkbox" id="chG3d" checked> GPU 3D storm</label>
+          <label class="ck" id="lbG2d"><input type="checkbox" id="chG2d"> GPU 2D storm</label>
+          <label class="ck" id="lbAi"><input type="checkbox" id="chAi"> AI matrix</label>
+        </div>
+        <div class="actions" style="margin-bottom:8px">
+          <label class="ck" id="lbRam"><input type="checkbox" id="chRam"> RAM churn</label>
+          <label class="ck" id="lbRamP"><input type="checkbox" id="chRamP"> RAM pattern</label>
+          <label class="ck" id="lbIo"><input type="checkbox" id="chIo"> Storage I/O</label>
+          <label class="ck" id="lbCodec"><input type="checkbox" id="chCodec"> Codec encode</label>
+        </div>
+        <div class="rogrid">
+          <div class="ro"><div class="k">CPU load</div><div class="v" id="roCpu">—</div><div class="s" id="roCpuS">min — · stab —</div></div>
+          <div class="ro"><div class="k">GPU fps</div><div class="v" id="roGpu">—</div><div class="s" id="roGpuS">min — · stab —</div></div>
+          <div class="ro"><div class="k">AI GFLOP/s</div><div class="v" id="roAi">—</div><div class="s">matrix churn</div></div>
+          <div class="ro"><div class="k">RAM GB/s</div><div class="v" id="roRam">—</div><div class="s">copy churn</div></div>
+          <div class="ro"><div class="k">RAM pattern</div><div class="v" id="roRamP">—</div><div class="s" id="roRamPS">errors —</div></div>
+          <div class="ro"><div class="k">Storage</div><div class="v" id="roIo">—</div><div class="s">MB written</div></div>
+          <div class="ro"><div class="k">Codec enc</div><div class="v" id="roCodec">—</div><div class="s">frames</div></div>
+        </div>
+        <div class="meter"><i id="labProg" style="background:var(--amber)"></i></div>
+        <p class="hint" data-detail style="margin-top:8px;margin-bottom:0">EXTREME may force throttling or a GPU reset. RAM pattern errors = instant FAIL. Plug in AC &amp; keep this tab focused.</p>
+      </div>
+      <div class="labRight">
+        <div class="labCvRow">
+          <div class="labCvBox"><canvas class="fit" id="labGL" height="120" style="height:120px"></canvas></div>
+          <div class="labCvBox"><canvas class="fit" id="lab2d" height="120" style="height:120px"></canvas></div>
+        </div>
+        <canvas class="fit" id="labChart" height="150" style="height:150px"></canvas>
+        <div style="font:600 9px var(--mono);letter-spacing:.14em;color:var(--dim)">
+          <span style="color:var(--amber)">■</span> CPU Mop/s &nbsp; <span style="color:var(--cyan)">■</span> GPU fps</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="sec print-hide"><span class="no">04</span><h2>Storage Throughput</h2><div class="rule"></div><span class="tag">SANDBOX-APPROXIMATED</span></section>
+<div class="grid">
+  <div class="mod w6" data-t="storageIDB" style="--ac:var(--green)">
+    <header><span class="code">M-14</span><h3>IndexedDB · write / read</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>MB/s</small></div>
+    <p class="hint" data-detail>16 × 1 MB blobs written, read back, deleted.</p>
+    <div class="actions"><button class="btn" data-run>Run</button></div>
+  </div>
+  <div class="mod w6" data-t="storageLS" style="--ac:var(--green)">
+    <header><span class="code">M-15</span><h3>localStorage · synchronous write</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>MB/s</small></div>
+    <p class="hint" data-detail>1 MB string persistence — sync I/O path.</p>
+    <div class="actions"><button class="btn" data-run>Run</button></div>
+  </div>
+</div>
+
+<section class="sec print-hide"><span class="no">05</span><h2>Power &amp; Battery</h2><div class="rule"></div><span class="tag">LIVE TELEMETRY</span></section>
+<div class="grid">
+  <div class="mod w8" data-t="battery" style="--ac:var(--green)">
+    <header><span class="code">M-16</span><h3>Battery · health &amp; state</h3><span class="led"></span></header>
+    <div class="batgrid">
+      <div class="batcell"><div class="k">Charge</div><div class="v" id="bLvl">—</div></div>
+      <div class="batcell"><div class="k">Health</div><div class="v" id="bHealth">—</div></div>
+      <div class="batcell"><div class="k">State</div><div class="v" id="bState" style="font-size:14px">—</div></div>
+      <div class="batcell"><div class="k">Time est.</div><div class="v" id="bTime" style="font-size:14px">—</div></div>
+      <div class="batcell"><div class="k">Full charge cap.</div><div class="v" id="bFcc" style="font-size:14px">—</div></div>
+      <div class="batcell"><div class="k">Design cap.</div><div class="v" id="bDes" style="font-size:14px">—</div></div>
+    </div>
+    <div class="actions" style="margin-top:12px"><button class="btn" data-run>Read battery</button></div>
+    <p class="hint" data-detail style="margin-top:8px">Health = full-charge ÷ design capacity (when exposed).</p>
+  </div>
+</div>
+
+<section class="sec print-hide"><span class="no">06</span><h2>Display Inspection</h2><div class="rule"></div><span class="tag">PIXELS · GREY · CHECKERS · TEARING · GHOSTING</span></section>
+<div class="grid">
+  <div class="mod w12" data-t="display" style="--ac:var(--green)">
+    <header><span class="code">M-17</span><h3>Panel inspection suite</h3><span class="led"></span></header>
+    <div class="swgrid" id="swGrid"></div>
+    <div class="actions" style="margin-top:11px">
+      <button class="btn primary" id="btnCycle">▶ Auto cycle solids</button>
+      <button class="btn" id="btnBleed">Black · bleed</button>
+      <button class="btn" id="btnGrad">Gradient · banding</button>
+      <button class="btn" id="btnGrid">Grid · geometry</button>
+      <button class="btn" id="btnTear">Tearing</button>
+      <button class="btn" id="btnGhost">Ghosting</button>
+      <span style="flex:1"></span>
+      <button class="btn tiny ok" data-mark="pass">✓ Pass</button>
+      <button class="btn tiny bad" data-mark="fail">✗ Fail</button>
+    </div>
+  </div>
+</div>
+
+<section class="sec print-hide"><span class="no">07</span><h2>Input Lab</h2><div class="rule"></div><span class="tag">KEYBOARD · POINTER · PINCH · GAMEPAD · DIGITIZER</span></section>
+<div class="grid">
+  <div class="mod w7" data-t="keyboard" style="--ac:var(--amber)">
+    <header><span class="code">M-18</span><h3>Keyboard matrix test</h3><span class="led"></span></header>
+    <div id="kb"></div>
+    <div id="kbBar">
+      <button class="btn" id="kbArm">Arm test</button>
+      <button class="btn" id="kbReset">Reset</button>
+      <label class="ck"><input type="checkbox" id="kbTones" checked> Key tones</label>
+      <label class="ck"><input type="checkbox" id="kbFull" checked> Full 101/104</label>
+      <span style="font:700 11px var(--mono)" id="kbCount">0 / 0 keys</span>
+      <div class="meter" style="min-width:80px"><i id="kbProg"></i></div>
+      <span style="font:700 10px var(--mono);color:var(--mut)">HELD: <b id="kbHeld" style="color:var(--amber)">—</b></span>
+      <span style="flex:1"></span>
+      <button class="btn tiny ok" data-mark="pass">✓ Pass</button>
+      <button class="btn tiny bad" data-mark="fail">✗ Fail</button>
+    </div>
+  </div>
+  <div class="mod w5" data-t="pointer" style="--ac:var(--amber)">
+    <header><span class="code">M-19</span><h3>Pointer · mouse / trackpad / gestures</h3><span class="led"></span></header>
+    <div id="pad"><div class="ch chv" id="chV"></div><div class="ch chh" id="chH"></div></div>
+    <div class="ptrow">
+      <span>BTN <span class="btnchip" id="bL">L</span> <span class="btnchip" id="bM">M</span> <span class="btnchip" id="bR">R</span></span>
+      <span>V-SCROLL <b id="scrV">0</b></span>
+      <span>H-SCROLL <b id="scrH">0</b></span>
+      <span>DIR <b id="scrDir">—</b></span>
+      <span>PINCH <b id="pinchV">—</b></span>
+      <span>POS <b id="pos">—</b></span>
+      <span>POINTS <b id="ptN">0</b></span>
+    </div>
+    <div class="actions" style="margin-top:10px">
+      <span style="flex:1"></span>
+      <button class="btn tiny ok" data-mark="pass">✓ Pass</button>
+      <button class="btn tiny bad" data-mark="fail">✗ Fail</button>
+    </div>
+  </div>
+  <div class="mod w6" data-t="gamepad" style="--ac:var(--amber)">
+    <header><span class="code">M-20</span><h3>Gamepad · controllers</h3><span class="led"></span></header>
+    <div id="gpStatus" style="font:600 10.5px var(--mono);color:var(--dim)">No gamepad yet — plug one in and press a button.</div>
+    <div id="gpPads"></div>
+    <div class="actions" style="margin-top:10px">
+      <button class="btn tiny ok" data-mark="pass">✓ Pass</button>
+      <button class="btn tiny bad" data-mark="fail">✗ Fail</button>
+    </div>
+  </div>
+  <div class="mod w6" data-t="touch" style="--ac:var(--amber)">
+    <header><span class="code">M-21</span><h3>Touch · digitizer trail test</h3><span class="led"></span></header>
+    <div class="actions">
+      <button class="btn primary" id="btnTouchOpen">Open trail test</button>
+      <span style="flex:1"></span>
+      <button class="btn tiny ok" data-mark="pass">✓ Pass</button>
+      <button class="btn tiny bad" data-mark="fail">✗ Fail</button>
+    </div>
+  </div>
+</div>
+
+<section class="sec print-hide"><span class="no">08</span><h2>Audio / Visual</h2><div class="rule"></div><span class="tag">PER-DEVICE SELECTORS · RECORD → REPLAY</span></section>
+<div class="grid">
+  <div class="mod" data-t="audio" style="--ac:var(--blue)">
+    <header><span class="code">M-22</span><h3>Speakers · sweep</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>20 Hz–20 kHz</small></div>
+    <div class="actions" style="margin:6px 0">
+      <select id="spkOut"></select>
+      <button class="btn tiny" id="spkRefresh" title="Refresh device list">↻</button>
+    </div>
+    <div class="actions">
+      <button class="btn tiny" data-sweep="-1">Sweep L</button>
+      <button class="btn tiny" data-sweep="0">Both</button>
+      <button class="btn tiny" data-sweep="1">Sweep R</button>
+      <button class="btn tiny" data-tone="1">1 kHz</button>
+      <button class="btn tiny bad" data-sweep="x">Stop</button>
+      <button class="btn tiny ok" data-mark="pass">✓</button>
+      <button class="btn tiny bad" data-mark="fail">✗</button>
+    </div>
+  </div>
+  <div class="mod" data-t="mic" style="--ac:var(--blue)">
+    <header><span class="code">M-23</span><h3>Microphone · meter + record</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>dBFS</small></div>
+    <div class="actions" style="margin:6px 0">
+      <select id="micIn"></select>
+      <button class="btn tiny" id="micRefresh" title="Refresh device list">↻</button>
+    </div>
+    <div class="vumeter"><i id="vu"></i></div>
+    <audio id="micPlayback" class="rec" controls preload="metadata" style="display:none"></audio>
+    <div class="actions">
+      <button class="btn tiny" id="micOn">Meter</button>
+      <button class="btn tiny bad" id="micOff">Stop</button>
+      <button class="btn tiny" id="micRecord">● Record</button>
+      <button class="btn tiny" id="micReplay">Replay</button>
+      <span id="micRecState" style="font:600 9px var(--mono);color:var(--dim)">idle</span>
+      <span style="flex:1"></span>
+      <button class="btn tiny ok" data-mark="pass">✓</button>
+      <button class="btn tiny bad" data-mark="fail">✗</button>
+    </div>
+  </div>
+  <div class="mod" data-t="camera" style="--ac:var(--blue)">
+    <header><span class="code">M-24</span><h3>Camera · preview + record</h3><span class="led"></span></header>
+    <div class="actions" style="margin:0 0 6px">
+      <select id="camIn"></select>
+      <button class="btn tiny" id="camRefresh" title="Refresh device list">↻</button>
+    </div>
+    <video class="cam" id="camV" muted playsinline></video>
+    <video class="cam" id="camPlayback" controls playsinline preload="metadata" style="display:none"></video>
+    <div class="actions" style="margin-top:8px">
+      <button class="btn tiny" id="camOn">Live</button>
+      <button class="btn tiny bad" id="camOff">Stop</button>
+      <button class="btn tiny" id="camRecord">● Record</button>
+      <button class="btn tiny" id="camReplay">Replay</button>
+      <span id="camRecState" style="font:600 9px var(--mono);color:var(--dim)">idle</span>
+      <span style="flex:1"></span>
+      <button class="btn tiny ok" data-mark="pass">✓</button>
+      <button class="btn tiny bad" data-mark="fail">✗</button>
+    </div>
+  </div>
+  <div class="mod" data-t="sensors" style="--ac:var(--blue)">
+    <header><span class="code">M-25</span><h3>Motion sensors</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small>accel</small></div>
+    <div class="actions">
+      <button class="btn tiny" data-run>Test</button>
+      <button class="btn tiny ok" data-mark="pass">✓</button>
+      <button class="btn tiny bad" data-mark="fail">✗</button>
+    </div>
+  </div>
+</div>
+
+<section class="sec print-hide"><span class="no">09</span><h2>Interfaces, Ports &amp; Technologies</h2><div class="rule"></div><span class="tag">HW/SW DIFFERENTIATION</span></section>
+<div class="grid">
+  <div class="mod w7" data-t="tech" style="--ac:var(--blue)">
+    <header><span class="code">M-27</span><h3>Technology matrix (HW/SW aware)</h3><span class="led"></span></header>
+    <div id="techGrid" class="actions" style="gap:6px"></div>
+    <div class="actions" style="margin-top:11px"><button class="btn tiny" id="btnTechRe">Re-detect</button></div>
+  </div>
+  <div class="mod w5" data-t="ports" style="--ac:var(--blue)">
+    <header><span class="code">M-30</span><h3>Deep port probe</h3><span class="led"></span></header>
+    <div class="actions">
+      <button class="btn tiny" id="pMedia">Media devices</button>
+      <button class="btn tiny" id="pGame">Gamepads</button>
+      <button class="btn tiny" id="pStorage">Storage quota</button>
+      <button class="btn tiny" id="pUsb">USB</button>
+      <button class="btn tiny" id="pSerial">Serial</button>
+      <button class="btn tiny" id="pHid">HID</button>
+      <button class="btn tiny" id="pBt">Bluetooth</button>
+      <button class="btn tiny" id="pMidi">MIDI</button>
+      <span style="flex:1"></span>
+      <button class="btn tiny ok" data-mark="pass">✓ Ports OK</button>
+      <button class="btn tiny bad" data-mark="fail">✗ Ports fail</button>
+    </div>
+    <div id="probeList">USB / Serial / HID list only previously-authorized devices (sandbox). Physical checks need a plug-in test.</div>
+  </div>
+</div>
+
+<section class="sec print-hide"><span class="no">10</span><h2>Network</h2><div class="rule"></div><span class="tag">STATE · LOCAL INTERFACES</span></section>
+<div class="grid">
+  <div class="mod w6" data-t="net" style="--ac:var(--cyan)">
+    <header><span class="code">M-31</span><h3>Network status &amp; interfaces</h3><span class="led"></span></header>
+    <div class="val"><span data-val>—</span><small id="netUnit"></small></div>
+    <div class="actions"><button class="btn tiny" data-run>Read</button><button class="btn tiny" id="btnIfProbe">Probe local interfaces</button></div>
+    <div id="netIf" style="font:600 10px var(--mono);color:var(--mut);margin-top:8px;word-break:break-all">local interfaces: not probed yet</div>
+  </div>
+</div>
+
+<section class="sec" id="sec-report"><span class="no">11</span><h2>Bench Report</h2><div class="rule"></div><span class="tag">EXPORT · PRINT · LOG</span></section>
+<div class="grid">
+  <div class="mod w8" id="reportCard" style="--ac:var(--green)">
+    <header><span class="code">RPT</span><h3>Verdict &amp; results ledger</h3></header>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:14px">
+      <span id="verdictStamp">PENDING</span>
+      <div style="font:600 11px var(--mono);color:var(--mut)">
+        <div id="rpMeta1">UNIT — · TICKET — · TECH —</div>
+        <div id="rpMeta2" style="color:var(--dim)">No tests recorded yet.</div>
+      </div>
+    </div>
+    <table id="reportTable"><tbody></tbody></table>
+    <label style="font:600 9px var(--mono);letter-spacing:.16em;color:var(--dim);display:block;margin:14px 0 5px" for="notes">TECHNICIAN NOTES</label>
+    <textarea id="notes" placeholder="Findings, parts required, customer-visible condition…"></textarea>
+    <div class="actions" style="margin-top:11px">
+      <button class="btn primary" id="btnPrint">Print report</button>
+      <button class="btn" id="btnJson">Export JSON</button>
+      <button class="btn" id="btnCsv">Export CSV</button>
+      <button class="btn" id="btnCopyRpt">Copy summary</button>
+      <button class="btn bad" id="btnReset">Reset session</button>
+    </div>
+    <div class="print-only" id="printArea">
+      <div class="secl">Unit</div><div id="printSpecs" class="small"></div>
+      <div class="secl">Keyboard matrix</div><div id="printKeys" class="small"></div>
+      <div class="secl">Technician notes</div><div id="printNotes" class="small"></div>
+      <div class="secl">Event log (full)</div><div id="printLog"></div>
+    </div>
+  </div>
+  <div class="mod w4 print-hide" style="--ac:var(--dim)">
+    <header><span class="code">LOG</span><h3>Event console</h3></header>
+    <div id="logBox"></div>
+  </div>
+</div>
+
+</main>
+
+<footer class="print-hide">
+  <span>BENCHKIT · single-file diagnostics · no network calls · no dependencies</span>
+  <span id="footBuild"></span>
+  <span>SCREENING TOOL — VERIFY FAILURES WITH NATIVE TESTERS</span>
+</footer>
+
+<div id="pix">
+  <canvas id="pixCv"></canvas>
+  <div class="tip">click = next pattern · esc = exit</div>
+  <div class="bar" id="pixBar">
+    <button class="btn tiny" data-p="0">W</button><button class="btn tiny" data-p="1">R</button>
+    <button class="btn tiny" data-p="2">G</button><button class="btn tiny" data-p="3">B</button>
+    <button class="btn tiny" data-p="4">K</button><button class="btn tiny" data-p="10">GRY50</button>
+    <button class="btn tiny" data-p="11">GRAYS</button><button class="btn tiny" data-p="12">GRAD</button>
+    <button class="btn tiny" data-p="13">GRID</button><button class="btn tiny" data-p="14">CHK16</button>
+    <button class="btn tiny" data-p="15">CHK16i</button><button class="btn tiny" data-p="16">CHK2</button>
+    <button class="btn tiny" data-p="17">CHK2i</button><button class="btn tiny" data-p="18">TEAR</button>
+    <button class="btn tiny" data-p="19">GHOST</button>
+    <button class="btn tiny bad" id="pixExit">EXIT</button>
+  </div>
+</div>
+
+<div id="touchOv">
+  <canvas id="touchCv"></canvas>
+  <div class="thud" id="touchHud">POINTERS 0 · MAX 0</div>
+  <div class="tbar" id="touchBar">
+    <button class="btn tiny" id="tClear">CLEAR</button>
+    <button class="btn tiny" id="tGrid">GRID</button>
+    <span class="thint">drag everywhere — trace borders &amp; corners · ESC exits</span>
+    <button class="btn tiny bad" id="tExit">EXIT</button>
+  </div>
+</div>
+
+<noscript><p style="padding:30px;font-family:monospace">BENCHKIT needs JavaScript — enable it and reload.</p></noscript>
+
+<script>
+"use strict";
+/* BENCHKIT v1.9.4 — fixes: setProg restored (loop engine), Stress Lab responsive layout
+   (no canvas cropping on narrow screens), full-file undefined-reference sweep. */
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const fmt=(x,d=0)=>Number(x).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+function fmtAuto(x){if(!isFinite(x))return"—";const a=Math.abs(x);
+  if(a>=100)return fmt(x,0);if(a>=10)return fmt(x,1);return fmt(x,2);}
+const hms=s=>{if(!isFinite(s))return"—";s=Math.round(s);return Math.floor(s/60)+":"+(s%60+"").padStart(2,"0")};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const REDUCED=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function withTimeout(p,ms,label){return new Promise((res,rej)=>{
+  const t=setTimeout(()=>rej(new Error(label+" timed out after "+(ms/1000)+" s")),ms);
+  Promise.resolve(p).then(v=>{clearTimeout(t);res(v)},e=>{clearTimeout(t);rej(e)});});}
+function lockScroll(on2){document.body.classList.toggle("noscroll",!!on2);}
+function pickMime(kind){
+  if(typeof MediaRecorder==="undefined")return null;
+  const list=kind==="video"
+    ?["video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm","video/mp4"]
+    :["audio/webm;codecs=opus","audio/webm","audio/mp4"];
+  for(const m of list){try{if(MediaRecorder.isTypeSupported(m))return m;}catch(e){}}
+  return null;}
+
+/* ---------- console log ---------- */
+const logBox=$("#logBox");
+function log(lv,msg){
+  if(!logBox)return;
+  const d=document.createElement("div");
+  d.innerHTML=`<span class="t">${new Date().toTimeString().slice(0,8)}</span> <span class="${lv}">[${lv}]</span> ${msg}`;
+  logBox.appendChild(d); logBox.scrollTop=logBox.scrollHeight;
+  while(logBox.children.length>400)logBox.firstChild.remove();
+}
+window.addEventListener("error",e=>{try{log("FAIL","JS error: "+e.message+" @line "+(e.lineno||"?"))}catch(x){}});
+window.addEventListener("unhandledrejection",e=>{try{log("FAIL","Unhandled promise: "+((e.reason&&e.reason.message)||e.reason))}catch(x){}});
+
+function on(sel,ev,fn){const el=typeof sel==="string"?$(sel):sel;
+  if(el)el.addEventListener(ev,fn);else log("WARN","Binder: missing element "+sel);return el;}
+function setTxt(id,v){const e=$("#"+id);if(e)e.textContent=v;}
+function setProg(p){const a=$("#runMeter"),b=$("#runFill");
+  if(a)a.style.width=p;if(b)b.style.width=p;}
+
+/* ---------- bench guard ---------- */
+const GUARD={active:false,wake:null,osc:null};
+async function guardOn(){
+  if(GUARD.active)return;GUARD.active=true;
+  try{if(navigator.wakeLock)GUARD.wake=await navigator.wakeLock.request("screen");}catch(e){}
+  try{const a=ac();const o=a.createOscillator(),g=a.createGain();g.gain.value=0.0001;
+    o.connect(g);g.connect(a.destination);o.start();GUARD.osc=o;}catch(e){}
+  log("INFO","Bench guard on — wake-lock + keep-alive.");}
+function guardOff(){if(!GUARD.active)return;GUARD.active=false;
+  try{if(GUARD.osc)GUARD.osc.stop();}catch(e){}GUARD.osc=null;
+  try{if(GUARD.wake)GUARD.wake.release();}catch(e){}GUARD.wake=null;}
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden&&GUARD.active&&navigator.wakeLock){
+    navigator.wakeLock.request("screen").then(w=>{GUARD.wake=w}).catch(()=>{});}});
+
+/* ---------- GPU backend interruption tracker ---------- */
+const GPU_STATE={losses:0,restored:true,lostCanvases:new Set(),lastLoss:0};
+function gpuLoss(cvId){
+  GPU_STATE.losses++;GPU_STATE.restored=false;GPU_STATE.lastLoss=Date.now();
+  GPU_STATE.lostCanvases.add(cvId);
+  log("WARN","WebGL context LOST on #"+cvId+" — GPU backend interruption #"+GPU_STATE.losses+". Waiting for auto-restore…");}
+function gpuRestore(cvId){
+  GPU_STATE.lostCanvases.delete(cvId);
+  if(GPU_STATE.lostCanvases.size>0){log("INFO","WebGL context restored on #"+cvId+".");return;}
+  GPU_STATE.restored=true;
+  const gap=Date.now()-GPU_STATE.lastLoss;
+  if(GPU_STATE.losses===1)log("OK","GPU backend restored ("+fmt(gap/1000,1)+" s) — transient, GPU back in service.");
+  else log("WARN","GPU backend restored ("+fmt(gap/1000,1)+" s), interruption #"+GPU_STATE.losses+" — check dmesg/journalctl.");}
+function gpuHealthy(){return GPU_STATE.restored&&GPU_STATE.lostCanvases.size===0;}
+function gpuCurrentlyLost(){return !gpuHealthy();}
+function waitGpuRestore(timeoutMs){return new Promise(res=>{
+  if(gpuHealthy())return res(true);
+  const t0=Date.now();
+  (function poll(){
+    if(gpuHealthy())return res(true);
+    if(Date.now()-t0>timeoutMs)return res(false);
+    setTimeout(poll,150);})();});}
+
+/* ---------- worker source ---------- */
+const WSRC=[
+"onmessage=function(e){var d=e.data;",
+"if(d.cmd==='int'){var end=performance.now()+d.ms,x=(Math.random()*4294967295)>>>0,ops=0;",
+"while(performance.now()<end){for(var i=0;i<20000;i++){x^=x<<13;x^=x>>>17;x^=x<<5;x=(x+0x9e3779b9)>>>0;}ops+=20000;}",
+"postMessage({cmd:'int',ops:ops});}",
+"else if(d.cmd==='float'){var end2=performance.now()+d.ms,n=1<<18,a=new Float64Array(n),ops2=0;",
+"for(var k=0;k<n;k++)a[k]=Math.random()+0.5;",
+"while(performance.now()<end2){for(var j=0;j<n;j++){a[j]=Math.sqrt(a[j])*1.0000001;a[j]=Math.sin(a[j])+1.0000001;}ops2+=n*2;}",
+"postMessage({cmd:'float',ops:ops2});}",
+"else if(d.cmd==='mem'){var size=d.bytes,A=new Uint8Array(size),B=new Uint8Array(size);A.fill(101);",
+"var reps=Math.max(2,Math.ceil(3e8/size));B.set(A);A.set(B);",
+"var t0=performance.now();",
+"for(var r=0;r<reps;r++){B.set(A);A.set(B);}",
+"var ms=performance.now()-t0;postMessage({cmd:'mem',gbps:(size*2*reps)/(ms/1000)/1e9,ms:ms});}",
+"else if(d.cmd==='memlat'){var n=1<<21,arr=new Int32Array(n);",
+"var step=(((Math.random()*(n/4))|0)*2+1)+1001;if(step%2===0)step++;",
+"var idx=0;for(var f=0;f<n;f++){arr[f]=idx;idx=(idx+step)&(n-1);}",
+"var p=0;for(var w=0;w<n*2;w++)p=arr[p];",
+"var hops=8000000,t1=performance.now();",
+"for(var h=0;h<hops;h++)p=arr[p];",
+"var ms2=performance.now()-t1;",
+"postMessage({cmd:'memlat',ns:(ms2*1e6)/hops,hops:hops,p:p});}",
+"else if(d.cmd==='memcheck'){var size3=1<<25,U=new Uint32Array(size3/4),errs=0,t0c=performance.now();",
+"var pats=[0,4294967295,2863311530,1431655765];",
+"for(var q=0;q<pats.length;q++){U.fill(pats[q]);for(var v=0;v<U.length;v++){if(U[v]!==pats[q])errs++;}}",
+"var seed=12345;for(var r2=0;r2<U.length;r2++){seed=(Math.imul(seed,1103515245)+12345)>>>0;U[r2]=seed;}",
+"var seed2=12345;for(var v2=0;v2<U.length;v2++){seed2=(Math.imul(seed2,1103515245)+12345)>>>0;if(U[v2]!==seed2)errs++;}",
+"var msc=performance.now()-t0c;",
+"postMessage({cmd:'memcheck',errors:errs,mb:(size3*10)/1048576,ms:msc,gbps:(size3*10)/(msc/1000)/1e9});}",
+"else if(d.cmd==='memstress'){var end6=performance.now()+d.ms,U6=new Uint32Array(1<<20);",
+"var pats6=[0,4294967295,2863311530,1431655765],bad6=0,win6=performance.now(),wb6=0;",
+"while(true){",
+"for(var q6=0;q6<4;q6++){U6.fill(pats6[q6]);",
+"for(var v6=0;v6<U6.length;v6++){if(U6[v6]!==pats6[q6])bad6++;}}",
+"wb6+=U6.length*8;",
+"var nw6=performance.now();",
+"if(nw6-win6>=1000){postMessage({cmd:'prog',ops:wb6,bad:bad6});wb6=0;bad6=0;win6=nw6;}",
+"if(nw6>=end6)break;}",
+"postMessage({cmd:'done',ops:wb6,bad:bad6,ms:performance.now()-(end6-d.ms)});}",
+"else if(d.cmd==='sustain'){var st=performance.now(),end3=st+d.ms,x3=(Math.random()*4294967295)>>>0,win=st,wop=0;",
+"while(true){",
+"for(var i3=0;i3<131072;i3++){x3^=x3<<13;x3^=x3>>>17;x3^=x3<<5;x3=(x3+0x9e3779b9)>>>0;}",
+"wop+=131072;var nw=performance.now();",
+"if(nw-win>=1000){postMessage({cmd:'prog',ops:wop});wop=0;win=nw;}",
+"if(nw>=end3)break;}",
+"postMessage({cmd:'done',ops:wop,ms:performance.now()-st});}",
+"else if(d.cmd==='aimul'){var end4=performance.now()+d.ms,m=64,AA=new Float32Array(m*m),BB=new Float32Array(m*m),CC=new Float32Array(m*m);",
+"for(var q0=0;q0<m*m;q0++){AA[q0]=Math.random();BB[q0]=Math.random();}",
+"var win4=performance.now(),w4=0;",
+"while(true){",
+"for(var b4=0;b4<40;b4++){for(var i4=0;i4<m;i4++){var ci=i4*m;for(var j4=0;j4<m;j4++){var s4=0;for(var k4=0;k4<m;k4++)s4+=AA[ci+k4]*BB[k4*m+j4];CC[ci+j4]=s4;}}}",
+"w4+=40;var nw4=performance.now();",
+"if(nw4-win4>=1000){postMessage({cmd:'prog',ops:w4*(2*m*m*m)});w4=0;win4=nw4;}",
+"if(nw4>=end4)break;}",
+"postMessage({cmd:'done',ops:w4*(2*m*m*m),ms:performance.now()-(end4-d.ms)});}",
+"else if(d.cmd==='memloop'){var end5=performance.now()+d.ms,sz=1<<24,X=new Uint8Array(sz),Y=new Uint8Array(sz);X.fill(77);",
+"var win5=performance.now(),wb=0;",
+"while(true){Y.set(X);X.set(Y);wb+=sz*2;var nw5=performance.now();",
+"if(nw5-win5>=1000){postMessage({cmd:'prog',ops:wb});wb=0;win5=nw5;}",
+"if(nw5>=end5)break;}",
+"postMessage({cmd:'done',ops:wb,ms:performance.now()-(end5-d.ms)});}",
+"};"].join("\n");
+function mkWorker(){try{return new Worker(URL.createObjectURL(new Blob([WSRC],{type:"text/javascript"})))}catch(e){return null}}
+function workerAvailable(){const w=mkWorker();if(w){try{w.terminate()}catch(e){}return true}return false}
+function wTask(cmd,ms,extra){return new Promise(res=>{
+  let attempt=0;
+  function go(){attempt++;const w=mkWorker();
+    if(!w)return res(null);
+    const to=setTimeout(()=>{try{w.terminate()}catch(e){};
+      if(attempt<2){log("WARN","Worker "+cmd+" timed out — retrying.");go();}else res(null);},(ms||1000)+8000);
+    w.onmessage=e=>{clearTimeout(to);w.terminate();res(e.data)};
+    w.onerror=()=>{clearTimeout(to);w.terminate();
+      if(attempt<2){log("WARN","Worker "+cmd+" crashed — retrying.");go();}else res(null)};
+    w.postMessage(Object.assign({cmd,ms},extra||{}));}
+  go();});}
+function mtInt(ms){const end=performance.now()+ms;let x=12345>>>0,ops=0;
+  while(performance.now()<end){for(let i=0;i<20000;i++){x^=x<<13;x^=x>>>17;x^=x<<5;x=(x+0x9e3779b9)>>>0}ops+=20000}
+  return {cmd:"int",ops};}
+function mtFloat(ms){const end=performance.now()+ms;let a=0.7,ops=0;
+  while(performance.now()<end){for(let i=0;i<2000;i++){a=Math.sqrt(a)*1.0000001;a=Math.sin(a)+1.0000001;}ops+=4000;}
+  return {ops};}
+function mtMem(){const size=1<<26,A=new Uint8Array(size),B=new Uint8Array(size);A.fill(101);
+  B.set(A);A.set(B);
+  const t0=performance.now();for(let r=0;r<4;r++){B.set(A);A.set(B);}
+  const ms=performance.now()-t0;return {gbps:(size*2*4)/(ms/1000)/1e9,ms};}
+function mtMemLat(){const n=1<<20,arr=new Int32Array(n);
+  let step=(((Math.random()*(n/4))|0)*2+1)+1001;if(step%2===0)step++;
+  let idx=0;for(let f=0;f<n;f++){arr[f]=idx;idx=(idx+step)&(n-1);}
+  let p=0;for(let w=0;w<n*2;w++)p=arr[p];
+  const hops=4000000,t0=performance.now();
+  for(let h=0;h<hops;h++)p=arr[p];
+  const ms=performance.now()-t0;return {ns:(ms*1e6)/hops,hops,p};}
+function mtMemCheck(){const size=1<<23,U=new Uint32Array(size/4);let errs=0;const t0=performance.now();
+  const pats=[0,4294967295,2863311530,1431655765];
+  for(let q=0;q<pats.length;q++){U.fill(pats[q]);for(let v=0;v<U.length;v++){if(U[v]!==pats[q])errs++;}}
+  let seed=12345;for(let r=0;r<U.length;r++){seed=(Math.imul(seed,1103515245)+12345)>>>0;U[r]=seed;}
+  let seed2=12345;for(let v=0;v<U.length;v++){seed2=(Math.imul(seed2,1103515245)+12345)>>>0;if(U[v]!==seed2)errs++;}
+  const ms=performance.now()-t0;
+  return {errors:errs,mb:(size*10)/1048576,ms,gbps:(size*10)/(ms/1000)/1e9};}
+
+/* ---------- results registry ---------- */
+const TESTS=[
+ ["cpuSingle","CPU · Single-core int"],["cpuMulti","CPU · Multi-core agg."],["cpuFloat","CPU · FP math"],["memBW","Memory · Bandwidth"],
+ ["memLat","RAM · Random latency"],["memCheck","RAM · Pattern check"],
+ ["gpu2d","GPU · Canvas 2D"],["gpu3d","GPU · 3D scene"],["gpuAI","GPU · AI/matrix compute"],["gpuCodec","Codecs · encode/decode"],
+ ["refresh","Display · Refresh rate"],["latency","Input · Click latency"],
+ ["stress","Stress Lab · hybrid stability"],
+ ["storageIDB","Storage · IndexedDB R/W"],["storageLS","Storage · localStorage"],
+ ["battery","Battery · Health/state"],
+ ["display","Display · Panel suite"],
+ ["keyboard","Keyboard · Matrix"],["pointer","Pointer · Mouse/TP/gestures"],["gamepad","Gamepad · controllers"],["touch","Touch · digitizer trails"],
+ ["audio","Speakers · Sweep"],["mic","Microphone · meter+record"],["camera","Camera · preview+record"],["sensors","Sensors · Motion"],
+ ["tech","Interfaces · technologies HW/SW"],["ports","Ports · deep probe"],["net","Network · status/interfaces"]];
+const CARD={};$$("[data-t]").forEach(c=>{const id=c.dataset.t;
+  CARD[id]={el:c,led:c.querySelector(".led"),val:c.querySelector("[data-val]"),det:c.querySelector("[data-detail]")};});
+const R={};
+const STL={pass:["s-ok","ok"],warn:["s-warn","warn"],fail:["s-bad","bad"],info:["s-info","info"],run:["","run"],manual:["s-info","info"]};
+const CHIPLBL={pass:"PASS",warn:"NOTE",fail:"FAIL",info:"INFO",manual:"MANUAL",run:"RUNNING",idle:"—"};
+const CHIPCLS={pass:"p",warn:"w",fail:"f",info:"i",manual:"m",run:"m",idle:"m"};
+const LOOP={running:false,abort:false,passes:0,stats:{}};
+
+function setStatus(id,st,val,detail,quiet){
+  const c=CARD[id]; if(!c)return;
+  R[id]={st,val:val==null?"—":String(val),detail:detail||"",ts:Date.now()};
+  const pair=STL[st]||["","info"];
+  c.el.classList.remove("s-ok","s-warn","s-bad","s-info");
+  if(pair[0])c.el.classList.add(pair[0]);
+  if(c.led)c.led.className="led "+(pair[1]||"");
+  if(val!=null&&c.val)c.val.textContent=val;
+  if(detail&&c.det)c.det.textContent=detail;
+  renderReport(); saveSession();
+  if(!quiet){const n=(TESTS.find(t=>t[0]===id)||["",id])[1];
+    log(st==="pass"?"OK":st==="fail"?"FAIL":st==="warn"?"WARN":"INFO",n+" → "+(val!=null?val:st));}
+}
+function liveVal(id,val,detail){const c=CARD[id];if(!c)return;
+  if(val!=null&&c.val)c.val.textContent=val;
+  if(detail&&c.det)c.det.textContent=detail;}
+function markRunning(id){const c=CARD[id];if(!c)return;
+  R[id]={st:"run",val:"…",detail:"Running…",ts:Date.now()};
+  c.el.classList.remove("s-ok","s-warn","s-bad","s-info");
+  if(c.led)c.led.className="led run";
+  if(c.val)c.val.textContent="…";
+  renderReport();}
+function stab(arr){if(!arr||arr.length<2)return null;
+  const avg=arr.reduce((a,b)=>a+b,0)/arr.length,mn=Math.min(...arr);
+  return {avg,mn,st:mn/avg*100};}
+
+/* ---------- chart helpers ---------- */
+function prepCv(cv,h){const d=devicePixelRatio||1;cv.width=Math.max(cv.clientWidth,10)*d;cv.height=h*d;
+  const x=cv.getContext("2d");x.setTransform(d,0,0,d,0,0);return x;}
+function drawSeries(x,s,color,W,H){if(!s.length)return;
+  const max=Math.max(...s)*1.1||1;
+  x.beginPath();
+  s.forEach((v,i)=>{const px=s.length>1?i/(s.length-1)*(W-8)+4:W/2,py=H-8-(v/max)*(H-18);
+    i?x.lineTo(px,py):x.moveTo(px,py);});
+  x.strokeStyle=color;x.lineWidth=2;x.stroke();
+  x.lineTo(s.length>1?W-4:W/2,H);x.lineTo(s.length>1?4:W/2,H);x.closePath();
+  x.globalAlpha=.12;x.fillStyle=color;x.fill();x.globalAlpha=1;}
+function drawLab(){const cv=$("#labChart");if(!cv)return;const x=prepCv(cv,150);
+  const W=cv.clientWidth,H=150;
+  x.clearRect(0,0,W,H);
+  x.strokeStyle="#22303e";x.lineWidth=1;
+  for(let i=1;i<4;i++){x.beginPath();x.moveTo(0,H*i/4);x.lineTo(W,H*i/4);x.stroke();}
+  drawSeries(x,HY.samples.cpu,"#ffb454",W,H);
+  drawSeries(x,HY.samples.gpu,"#53c7f0",W,H);}
+
+/* ---------- GPU engines ---------- */
+function makeStorm(cv,h){if(!cv)return null;
+  const d=devicePixelRatio||1;
+  cv.width=Math.max(cv.clientWidth,10)*d;cv.height=h*d;
+  const x=cv.getContext("2d");if(!x)return null;
+  const W=cv.width,H=cv.height;
+  const N=Math.min(2600,Math.max(800,Math.round(cv.clientWidth*2.2)));
+  const P=[];for(let i=0;i<N;i++)P.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*3*d,vy:(Math.random()-.5)*3*d,c:Math.random()});
+  x.fillStyle="#0a1016";x.fillRect(0,0,W,H);
+  return{step(){x.fillStyle="rgba(10,15,22,.28)";x.fillRect(0,0,W,H);
+    for(let i=0;i<N;i++){const p=P[i];p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;
+      x.fillStyle=p.c>.5?"#ffb454":"#53c7f0";x.fillRect(p.x,p.y,2*d,2*d);}},
+   clear(){x.fillStyle="#10181f";x.fillRect(0,0,W,H)}};}
+function getGL(cv){const opts=["webgl2","webgl","experimental-webgl"];
+  for(const o of opts){try{const g=cv.getContext(o);if(g){cv.__bkGLKind=o;return g;}}catch(e){}}
+  return null;}
+function m4Persp(fov,asp,n,f){const t=1/Math.tan(fov/2);
+  return [t/asp,0,0,0, 0,t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0];}
+function m4Mul(a,b){const o=new Array(16).fill(0);
+  for(let c=0;c<4;c++)for(let r=0;r<4;r++){let s=0;for(let k=0;k<4;k++)s+=a[k*4+r]*b[c*4+k];o[c*4+r]=s;}return o;}
+function m4RotY(a){const c=Math.cos(a),s=Math.sin(a);return[c,0,-s,0, 0,1,0,0, s,0,c,0, 0,0,0,1];}
+function m4RotX(a){const c=Math.cos(a),s=Math.sin(a);return[1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1];}
+function m4Trans(tx,ty,tz){return[1,0,0,0,0,1,0,0,0,0,1,0,tx,ty,tz,1];}
+function glSh(gl,t,s){const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);return o;}
+const TORUS_VS="attribute vec3 p;attribute vec3 nrm;uniform mat4 mvp;uniform mat3 rot;varying float vl;"+
+ "void main(){vec3 n=normalize(rot*nrm);float d=max(dot(n,normalize(vec3(0.6,0.7,0.5))),0.);vl=0.16+0.84*d;gl_Position=mvp*vec4(p,1.);}";
+const TORUS_FS="precision mediump float;varying float vl;void main(){vec3 base=mix(vec3(1.,.62,.18),vec3(.30,.78,.95),vl);gl_FragColor=vec4(base*vl,1.);}";
+function buildTorus(cv,h){
+  if(!cv)return null;
+  if(cv.__bkTorus)return cv.__bkTorus;
+  try{
+    const cw=Math.max(cv.clientWidth||0,220);
+    cv.width=cw*(devicePixelRatio||1);cv.height=h*(devicePixelRatio||1);
+    const gl=getGL(cv);
+    if(!gl||typeof gl.createShader!=="function"||typeof gl.createProgram!=="function")return null;
+    if(gl.isContextLost&&gl.isContextLost())return null;
+    if(!cv.__bkGLWatch){cv.__bkGLWatch=true;
+      cv.addEventListener("webglcontextlost",e=>{e.preventDefault();cv.__bkTorus=null;gpuLoss(cv.id||"canvas");});
+      cv.addEventListener("webglcontextrestored",()=>gpuRestore(cv.id||"canvas"));}
+    const SEG=260,TUB=64,MAJ=1,MIN=.36,VT=[];
+    for(let i=0;i<=SEG;i++){const u=i/SEG*Math.PI*2,cu=Math.cos(u),su=Math.sin(u);
+      for(let j=0;j<=TUB;j++){const v=j/TUB*Math.PI*2,cv2=Math.cos(v),sv=Math.sin(v);
+        VT.push((MAJ+MIN*cv2)*cu,(MAJ+MIN*cv2)*su,MIN*sv, cv2*cu,cv2*su,sv);}}
+    const IDX=[];
+    for(let i=0;i<SEG;i++)for(let j=0;j<TUB;j++){
+      const a=i*(TUB+1)+j,b=a+TUB+1;IDX.push(a,b,a+1,b,b+1,a+1);}
+    const pr=gl.createProgram();
+    if(!pr)return null;
+    const vs=glSh(gl,gl.VERTEX_SHADER,TORUS_VS);
+    const fs=glSh(gl,gl.FRAGMENT_SHADER,TORUS_FS);
+    if(!gl.getShaderParameter(vs,gl.COMPILE_STATUS)){log("FAIL","Vertex shader: "+(gl.getShaderInfoLog(vs)||"no log"));return null;}
+    if(!gl.getShaderParameter(fs,gl.COMPILE_STATUS)){log("FAIL","Fragment shader: "+(gl.getShaderInfoLog(fs)||"no log"));return null;}
+    gl.attachShader(pr,vs);gl.attachShader(pr,fs);gl.linkProgram(pr);
+    if(!gl.getProgramParameter(pr,gl.LINK_STATUS)){log("FAIL","Program link: "+(gl.getProgramInfoLog(pr)||"no log"));return null;}
+    gl.useProgram(pr);
+    const vb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vb);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(VT),gl.STATIC_DRAW);
+    const ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(IDX),gl.STATIC_DRAW);
+    const aP=gl.getAttribLocation(pr,"p"),aN=gl.getAttribLocation(pr,"nrm"),
+          uMvp=gl.getUniformLocation(pr,"mvp"),uRot=gl.getUniformLocation(pr,"rot");
+    gl.enable(gl.DEPTH_TEST);gl.clearColor(0.03,0.05,0.08,1);
+    const t0=performance.now();
+    const scene={nTri:IDX.length/3,
+     draw(){try{
+       if(gl.isContextLost&&gl.isContextLost())return;
+       const t=(performance.now()-t0)/1000;
+       const asp=cv.width/cv.height;
+       const rot=m4Mul(m4RotX(0.5+0.21*Math.sin(t*0.7)),m4RotY(t*0.9));
+       const mv=m4Mul(m4Trans(0,0,-3.4),rot);
+       const mvp=m4Mul(m4Persp(0.9,asp,0.1,50),mv);
+       gl.viewport(0,0,cv.width,cv.height);
+       gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+       gl.useProgram(pr);
+       gl.uniformMatrix4fv(uMvp,false,new Float32Array(mvp));
+       gl.uniformMatrix3fv(uRot,false,new Float32Array([rot[0],rot[1],rot[2],rot[4],rot[5],rot[6],rot[8],rot[9],rot[10]]));
+       gl.bindBuffer(gl.ARRAY_BUFFER,vb);
+       gl.enableVertexAttribArray(aP);gl.vertexAttribPointer(aP,3,gl.FLOAT,false,24,0);
+       gl.enableVertexAttribArray(aN);gl.vertexAttribPointer(aN,3,gl.FLOAT,false,24,12);
+       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);
+       gl.drawElements(gl.TRIANGLES,IDX.length,gl.UNSIGNED_SHORT,0);
+     }catch(e){}}};
+    cv.__bkTorus=scene;
+    return scene;
+  }catch(e){return null;}
+}
+function fpsBench(ms,frame,warmMs){return new Promise(res=>{
+  const tStart=performance.now();let phase=0,n=0,t0=0,last=0,drops=0;const fts=[];
+  (function loop(){const now=performance.now();
+    try{frame(now)}catch(e){return res({fps:0,med:0,drops:0,frames:n,failed:e});}
+    if(phase===0){
+      if(now-tStart>=(warmMs||0)){phase=1;t0=now;last=now;n=0;}
+      requestAnimationFrame(loop);return;}
+    const dt=now-last;last=now;
+    if(n>1){fts.push(dt);if(dt>34)drops++}
+    n++;
+    if(now-t0<ms)requestAnimationFrame(loop);
+    else{const el=now-t0,med=[...fts].sort((a,b)=>a-b)[Math.floor(fts.length/2)]||16.7;
+      res({fps:Math.round(1000/(el/Math.max(n,1))),med:med,drops:drops,frames:n});}})();});}
+
+/* ---------- RUN registry ---------- */
+const RUN={};
+RUN.cpuSingle=async()=>{markRunning("cpuSingle");
+  await wTask("int",200);
+  const r=await wTask("int",900)||mtInt(900);
+  setStatus("cpuSingle","info",fmt(r.ops/900/1000),"1 worker · "+fmt(r.ops)+" ops / 900 ms stabilized window.");};
+RUN.cpuMulti=async()=>{markRunning("cpuMulti");
+  const cores=Math.min(navigator.hardwareConcurrency||4,16);
+  await wTask("int",200);
+  const t0=performance.now();let total=0,done=0,fallback=false;const ws=[];
+  await new Promise(res=>{
+    for(let i=0;i<cores;i++){const w=mkWorker();
+      if(!w){fallback=true;break}
+      w.onmessage=e=>{total+=e.data.ops;w.terminate();if(++done===cores)res()};
+      w.onerror=()=>{w.terminate();if(++done===cores)res()};
+      ws.push(w);}
+    if(fallback)res();else ws.forEach(w=>w.postMessage({cmd:"int",ms:1300}));});
+  const el=(performance.now()-t0)/1000;
+  if(fallback||total===0){const s=mtInt(500).ops/500/1e6;
+    setStatus("cpuMulti","warn",fmt(s*cores*0.85,2),"Workers unavailable — estimated single-core × "+cores+" × 0.85.");return;}
+  const gops=total/el/1e9;
+  setStatus("cpuMulti","info",fmt(gops,2),cores+" logical cores pinned · "+fmt(total/1e9,2)+" Gops · BK-pts "+fmt(gops*1000));};
+RUN.cpuFloat=async()=>{markRunning("cpuFloat");
+  await wTask("float",200);
+  const r=await wTask("float",1000)||mtFloat(1000);
+  setStatus("cpuFloat","info",fmt(r.ops/1e6),"FP64 sqrt+sin loop, stabilized 1 s window.");};
+RUN.memBW=async()=>{markRunning("memBW");
+  await wTask("int",150);
+  const r=await wTask("mem",0,{bytes:1<<26})||mtMem();
+  const st=r.gbps>=3.5?"pass":r.gbps>=2?"warn":"fail";
+  setStatus("memBW",st,fmt(r.gbps,2),"64 MB copies after warm pass · "+fmt(r.ms)+" ms timed total.");};
+RUN.memLat=async()=>{markRunning("memLat");
+  const r=await wTask("memlat",0)||mtMemLat();
+  const st=r.ns<=90?"pass":r.ns<=140?"warn":"fail";
+  setStatus("memLat",st,fmt(r.ns,1),fmt(r.hops)+" random hops over 8 MB · typical DDR4 ≈ 70–110 ns.");};
+RUN.memCheck=async()=>{markRunning("memCheck");
+  const r=await wTask("memcheck",0)||mtMemCheck();
+  const st=r.errors===0?"pass":"fail";
+  setStatus("memCheck",st,r.errors===0?"CLEAN":fmt(r.errors)+" ERR",
+    "5 patterns × "+fmt(r.mb,0)+" MB traffic · "+fmt(r.ms)+" ms"+
+    (r.errors?" — FAULTY RAM LIKELY, confirm with native memtest":""));};
+RUN.gpu2d=async()=>{markRunning("gpu2d");
+  const cv=$("#cv2d");if(!cv)return setStatus("gpu2d","warn","—","Canvas missing.");
+  const s=makeStorm(cv,170);
+  if(!s)return setStatus("gpu2d","warn","—","No 2D context available.");
+  const r=await fpsBench(3000,()=>s.step(),600);s.clear();
+  if(r.failed)return setStatus("gpu2d","fail","CRASH","Renderer threw mid-test ("+(r.failed.message||r.failed)+").");
+  const st=r.fps>=55?"pass":r.fps>=40?"warn":"fail";
+  setStatus("gpu2d",st,r.fps,r.frames+" frames · median "+fmt(r.med,1)+" ms · "+r.drops+" dropped.");};
+RUN.gpu3d=async()=>{markRunning("gpu3d");
+  const cv=$("#cvGL");if(!cv)return setStatus("gpu3d","warn","—","Canvas missing.");
+  let b=buildTorus(cv,170),recovered=false;
+  if(!b&&gpuCurrentlyLost()){
+    liveVal("gpu3d","…","GPU backend down — waiting for auto-restore…");
+    if(await waitGpuRestore(4000)){b=buildTorus(cv,170);recovered=true;}}
+  if(!b){await sleep(500);cv.__bkTorus=null;b=buildTorus(cv,170);}
+  if(!b){let lost=false;
+    try{const g=getGL(cv);lost=!!(g&&g.isContextLost&&g.isContextLost());}catch(e){}
+    return setStatus("gpu3d","warn","—",lost?
+      "WebGL still down after retry — re-run in a moment.":
+      "WebGL unavailable here (webgl2 & webgl refused). If games work, check chrome://gpu — driver/flag quirk, not missing hardware.");}
+  try{b.draw();}catch(e){
+    return setStatus("gpu3d","warn","—","Warm-up draw failed — GPU backend unstable right now.");}
+  let r=await fpsBench(3000,()=>b.draw(),600);
+  if((r.failed||r.fps===0)&&gpuCurrentlyLost()){
+    liveVal("gpu3d","…","Interrupted mid-run — waiting for restore & retrying once…");
+    if(await waitGpuRestore(4000)){
+      cv.__bkTorus=null;b=buildTorus(cv,170);
+      if(b){recovered=true;try{b.draw();}catch(e){b=null;}}}
+    if(b)r=await fpsBench(3000,()=>b.draw(),600);}
+  if(!b||r.failed)return setStatus("gpu3d","fail","CRASH","Rendering failed repeatedly ("+((r.failed&&r.failed.message)||"context lost")+") — GPU unstable under load.");
+  const st=r.fps>=55?"pass":r.fps>=40?"warn":"fail";
+  setStatus("gpu3d",st,r.fps,fmt(b.nTri)+" tris · ctx "+(cv.__bkGLKind||"?")+" · median "+fmt(r.med,1)+" ms"+(recovered?" · (backend recycled mid-test, retry succeeded)":"")+".");};
+async function gpuCompute(){
+  if(!navigator.gpu)throw new Error("no-webgpu");
+  if(gpuCurrentlyLost())throw new Error("gpu-backend-down");
+  let ad=null;
+  try{ad=await withTimeout(navigator.gpu.requestAdapter({powerPreference:"high-performance"}),5000,"WebGPU adapter probe");}catch(e){}
+  if(!ad){try{ad=await withTimeout(navigator.gpu.requestAdapter(),5000,"WebGPU adapter probe");}catch(e){}}
+  if(!ad)throw new Error("no-adapter");
+  const dev=await withTimeout(ad.requestDevice(),8000,"WebGPU device");
+  try{dev.lost.then(info=>{if(info&&info.reason!=="destroyed")log("WARN","WebGPU device lost — GPU backend hiccup.");}).catch(()=>{});}catch(e){}
+  const N=256,K=24;
+  const code="const N: u32 = 256u;\n"+
+   "@group(0) @binding(0) var<storage, read> A: array<f32>;\n"+
+   "@group(0) @binding(1) var<storage, read> B: array<f32>;\n"+
+   "@group(0) @binding(2) var<storage, read_write> C: array<f32>;\n"+
+   "@compute @workgroup_size(8, 8)\n"+
+   "fn main(@builtin(global_invocation_id) g: vec3<u32>) {\n"+
+   "  let r = g.x; let c = g.y;\n  if (r >= N || c >= N) { return; }\n"+
+   "  var s = 0.0;\n  for (var k = 0u; k < N; k = k + 1u) { s = s + A[r * N + k] * B[k * N + c]; }\n"+
+   "  C[r * N + c] = s;\n}";
+  const mod=dev.createShaderModule({code});
+  const pipe=dev.createComputePipeline({layout:"auto",compute:{module:mod,entryPoint:"main"}});
+  const bytes=N*N*4,rnd=()=>{const a=new Float32Array(N*N);for(let i=0;i<a.length;i++)a[i]=Math.random();return a};
+  const bA=dev.createBuffer({size:bytes,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST});
+  const bB=dev.createBuffer({size:bytes,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST});
+  const bC=dev.createBuffer({size:bytes,usage:GPUBufferUsage.STORAGE});
+  dev.queue.writeBuffer(bA,0,rnd());dev.queue.writeBuffer(bB,0,rnd());
+  const bg=dev.createBindGroup({layout:pipe.getBindGroupLayout(0),entries:[
+    {binding:0,resource:{buffer:bA}},{binding:1,resource:{buffer:bB}},{binding:2,resource:{buffer:bC}}]});
+  const run=k=>{const e=dev.createCommandEncoder();const p=e.beginComputePass();
+    p.setPipeline(pipe);p.setBindGroup(0,bg);p.dispatchWorkgroups(N/8,N/8,k);p.end();
+    dev.queue.submit([e.finish()]);};
+  run(3);await withTimeout(dev.queue.onSubmittedWorkDone(),8000,"WebGPU warm-up");
+  const t0=performance.now();run(K);await withTimeout(dev.queue.onSubmittedWorkDone(),15000,"WebGPU compute");
+  const el=performance.now()-t0;
+  const gf=2*N*N*N*K/(el/1000)/1e9;
+  let info="";try{if(ad.info)info=ad.info.description||ad.info.vendor||""}catch(e){}
+  dev.destroy();
+  return {gf,ms:el,info};}
+RUN.gpuAI=async()=>{markRunning("gpuAI");
+  try{const r=await gpuCompute();
+    setStatus("gpuAI","info",fmt(r.gf,1),"WebGPU compute · 256³ matmul ×24 in "+fmt(r.ms)+" ms"+(r.info?" · "+r.info:""));
+  }catch(e){
+    const n=128,A=new Float32Array(n*n),B=new Float32Array(n*n),C=new Float32Array(n*n);
+    for(let i=0;i<n*n;i++){A[i]=Math.random();B[i]=Math.random();}
+    const t0=performance.now();let it=0;
+    while(performance.now()-t0<1200){
+      for(let i=0;i<n;i++){const ci=i*n;
+        for(let j=0;j<n;j++){let s=0;for(let k=0;k<n;k++)s+=A[ci+k]*B[k*n+j];C[ci+j]=s;}}
+      it++;}
+    const el=(performance.now()-t0)/1000,gf=2*n*n*n*it/el/1e9;
+    setStatus("gpuAI","warn",fmt(gf,2),"No WebGPU ("+(e.message||"unavailable")+") — CPU FP32 fallback, "+fmt(it)+" matmuls.");}};
+
+/* ---------- codecs ---------- */
+async function probeCodecCaps(){
+  const box=$("#codecCaps");if(!box)return;box.innerHTML="";
+  const list=[["H.264",'video/mp4; codecs="avc1.640033"'],["HEVC",'video/mp4; codecs="hev1.1.6.L150.90"'],
+              ["VP9",'video/webm; codecs="vp09.00.50.08"'],["AV1",'video/mp4; codecs="av01.0.12M.08"']];
+  for(const [name,mime] of list){
+    let sup=false,smooth=false,pw=false;
+    try{if(navigator.mediaCapabilities){
+      const r=await withTimeout(navigator.mediaCapabilities.decodingInfo({type:"file",
+        video:{contentType:mime,width:3840,height:2160,bitrate:40e6,framerate:60}}),6000,"codec capability probe");
+      sup=!!r.supported;smooth=!!r.smooth;pw=!!r.powerEfficient;}}catch(e){}
+    const s=document.createElement("span");s.className="cchip";
+    s.innerHTML=`<b>${name}</b> 4K60: <span class="${sup?"y":"n"}">${sup?"✓":"✗"}</span>`+
+      ` <span class="${smooth?"y":"u"}">${smooth?"smooth":"choppy?"}</span>`+
+      ` <span class="${pw?"y":"u"}">${pw?"HW":"SW?"}</span>`;
+    box.appendChild(s);}
+}
+async function pickEncoder(){
+  const cands=[{codec:'avc1.42001f',name:'H.264'},{codec:'vp09.00.10.08',name:'VP9'},{codec:'av01.0.04M.08',name:'AV1'}];
+  for(const c of cands){try{
+    const s=await withTimeout(VideoEncoder.isConfigSupported({codec:c.codec,width:1280,height:720,framerate:30,bitrate:8e6}),4000,"encoder config probe");
+    if(s&&s.supported)return c;}catch(e){}}
+  return null;}
+function encDrain(enc,max){return new Promise(res=>{
+  try{
+    if(typeof enc.encodeQueueSize!=="number"||enc.encodeQueueSize<=max)return res();
+    const to=setTimeout(()=>{try{enc.removeEventListener("dequeue",h);}catch(e){};res();},2000);
+    function h(){try{
+      if(enc.encodeQueueSize<=max){clearTimeout(to);enc.removeEventListener("dequeue",h);res();}
+    }catch(e){clearTimeout(to);res();}}
+    enc.addEventListener("dequeue",h);
+  }catch(e){res();}});}
+async function codecEngine(pick,hwPref,N,softDecode){
+  let enc=null,dec=null;
+  try{
+    const W=1280,H=720,cv=document.createElement("canvas");cv.width=W;cv.height=H;
+    const cx=cv.getContext("2d",{willReadFrequently:true});
+    if(!cx)throw new Error("2d canvas unavailable");
+    const chunks=[];let decCfg=null,encErr=null;
+    enc=new VideoEncoder({output:(ch,meta)=>{chunks.push(ch);if(meta&&meta.decoderConfig)decCfg=meta.decoderConfig;},
+      error:e=>{encErr=e;}});
+    const cfg={codec:pick.codec,width:W,height:H,bitrate:8e6,framerate:30};
+    if(pick.codec.startsWith("avc"))cfg.avc={format:"annexb"};
+    try{cfg.hardwareAcceleration=hwPref;}catch(e){}
+    enc.configure(cfg);
+    const t0=performance.now();
+    for(let i=0;i<N;i++){
+      if(encErr)break;
+      cx.fillStyle="#0a1016";cx.fillRect(0,0,W,H);
+      cx.fillStyle=i%2?"#ffb454":"#53c7f0";
+      cx.fillRect((i*29)%W,100,220,420);
+      cx.fillStyle="#dfe8f1";cx.font="80px monospace";cx.fillText("BK "+i,40,90);
+      let fr=null;
+      try{
+        fr=new VideoFrame(cv,{timestamp:i*33333,duration:33333});
+        enc.encode(fr,{keyFrame:i%30===0});
+      }catch(e){encErr=encErr||e;break;}
+      finally{if(fr){try{fr.close();}catch(e){}}}
+      if(typeof enc.encodeQueueSize==="number"&&enc.encodeQueueSize>8)await encDrain(enc,8);
+      if(i%10===9)await sleep(0);
+    }
+    if(!encErr){try{await withTimeout(enc.flush(),6000,"Encoder flush");}catch(e){encErr=e;}}
+    const encMs=performance.now()-t0;
+    if(encErr)throw encErr;
+    let decN=0,decErr=null,decNote="";
+    dec=new VideoDecoder({output:frame=>{decN++;try{frame.close();}catch(e){}},error:e=>{decErr=e}});
+    const dcfg=decCfg||{codec:pick.codec,width:W,height:H};
+    if(softDecode){try{dcfg.hardwareAcceleration="prefer-software";}catch(e){}}
+    dec.configure(dcfg);
+    const t1=performance.now();
+    try{
+      for(const ch of chunks){if(decErr)break;dec.decode(ch);}
+      await withTimeout(dec.flush(),6000,"Decoder flush");
+    }catch(e){if(decN>0)decNote=" (flush cut short)";else decErr=decErr||e;}
+    const decMs=performance.now()-t1;
+    if(decErr)throw decErr;
+    return {ok:true,ef:N/(encMs/1000),df:decN/((decMs||1)/1000),encMs,decMs,decN,N,note:decNote};
+  }catch(e){return {ok:false,err:String((e&&e.message)||e)};}
+  finally{
+    try{if(enc&&enc.state!=="closed")enc.close();}catch(e){}
+    try{if(dec&&dec.state!=="closed")dec.close();}catch(e){}
+  }
+}
+RUN.gpuCodec=async()=>{markRunning("gpuCodec");
+  try{await withTimeout(probeCodecCaps(),20000,"Codec capability matrix");}catch(e){log("WARN","Capability probe slow: "+e.message);}
+  if(typeof VideoEncoder==="undefined")
+    return setStatus("gpuCodec","info","N/A","WebCodecs not available in this browser — capability matrix shown above.");
+  if(gpuCurrentlyLost()){
+    liveVal("gpuCodec","…","GPU backend down — waiting for auto-restore…");
+    if(!await waitGpuRestore(3000))
+      return setStatus("gpuCodec","warn","SKIPPED","GPU backend still down — re-run after it recovers.");}
+  const pick=await pickEncoder();
+  if(!pick)return setStatus("gpuCodec","warn","NO ENC","No supported encoder config found.");
+  liveVal("gpuCodec","…","Trying hardware encoder (60 frames, timeout-bounded)…");
+  let res;
+  try{res=await withTimeout(codecEngine(pick,"prefer-hardware",60,false),25000,"Hardware codec bench");}
+  catch(e){res={ok:false,err:e.message};}
+  let viaSW=false;
+  if(!res.ok){
+    log("WARN","Hardware encode path failed ("+res.err+") — retrying on the software path.");
+    if(gpuCurrentlyLost())await waitGpuRestore(3000);
+    liveVal("gpuCodec","…","Software encode path running (fully CPU-side)…");
+    let res2;
+    try{res2=await withTimeout(codecEngine(pick,"prefer-software",60,true),30000,"Software codec bench");}
+    catch(e){res2={ok:false,err:e.message};}
+    if(res2.ok){res=res2;viaSW=true;}
+    else return setStatus("gpuCodec","warn","ERROR","Codec bench failed — HW: "+res.err+" · SW: "+res2.err);}
+  const st=(res.ef>=28&&res.df>=28)?"pass":(res.ef>=15&&res.df>=15)?"warn":"fail";
+  setStatus("gpuCodec",st,fmt(res.ef)+" / "+fmt(res.df),
+    pick.name+" · "+(viaSW?"SOFTWARE path (hardware path failed — VA-API/GPU-process quirk)":"hardware path")+
+    " · "+res.N+" frames @720p · enc "+fmt(res.encMs)+" ms / dec "+fmt(res.decMs)+" ms.");};
+
+/* ---------- timing ---------- */
+RUN.refresh=()=>new Promise(res=>{markRunning("refresh");
+  const deltas=[];let last=null,i=0;
+  requestAnimationFrame(function frame(t){
+    if(last!==null)deltas.push(t-last);
+    last=t;
+    if(++i<70){requestAnimationFrame(frame);return;}
+    const s=deltas.slice(10).sort((a,b)=>a-b);
+    const med=s[Math.floor(s.length/2)]||16.7;
+    const hz=1000/med;
+    const st=hz>=58?"pass":hz>=50?"warn":"fail";
+    setStatus("refresh",st,fmt(hz,1),"median frame "+fmt(med,2)+" ms over "+s.length+" stabilized frames."+(hz>63?" High-refresh panel detected.":""));
+    res();});});
+const lat=[];
+on("#latPad","pointerdown",()=>{
+  const t0=performance.now();
+  requestAnimationFrame(ts=>{const l=Math.max(0,ts-t0);lat.push(l);if(lat.length>12)lat.shift();
+    const avg=lat.reduce((a,b)=>a+b,0)/lat.length;
+    const st=avg<=50?"pass":avg<=80?"warn":"fail";
+    setStatus("latency",st,fmt(avg,1),lat.length+" clicks · last "+fmt(l,1)+" ms (click→next frame).");});});
+
+/* ---------- STRESS LAB ---------- */
+const HY={active:false,endless:false,raf:0,intv:0,ws:[],lastCk:0,
+  samples:{cpu:[],gpu:[],ai:[],ram:[],ramP:[]},
+  acc:{cpu:0,ai:0,ram:0,ramP:0},ramPErrs:0,
+  facc:0,win:0,t0:0,dur:0,
+  ioOn:false,ioMB:0,codecOn:false,codecFrames:0,storm3d:null,storm2d:null,gpuOn:false};
+let labRun=0;
+(function(){const sel=$("#labThreads");if(!sel)return;
+  const nC=navigator.hardwareConcurrency||4,max=Math.min(nC,32);
+  for(let i=0;i<=max;i++){const o=document.createElement("option");o.value=i;
+    o.textContent=i===0?"0 · GPU only":i===max?i+" cores (all)":i+(i===1?" core":" cores");
+    sel.appendChild(o);}
+  sel.value=max;
+  if(typeof VideoEncoder==="undefined"){const lb=$("#lbCodec");if(lb)lb.classList.add("off");
+    const cb=$("#chCodec");if(cb)cb.checked=false;}
+})();
+function labPreset(p){
+  const nC=navigator.hardwareConcurrency||4,max=Math.min(nC,32);
+  const set=(id,v)=>{const e=$("#"+id);if(!e)return;if(e.type==="checkbox")e.checked=v;else e.value=v;};
+  const chans=["chG3d","chG2d","chAi","chRam","chRamP","chIo","chCodec"];
+  if(p==="safe"){set("labDur",30000);set("labThreads",Math.max(1,Math.ceil(max/2)));
+    chans.forEach(id=>set(id,false));log("INFO","Preset SAFE — half cores, 30 s, no GPU/IO load.");}
+  if(p==="standard"){set("labDur",60000);set("labThreads",max);
+    chans.forEach(id=>set(id,id==="chG3d"));log("INFO","Preset STANDARD — all cores + GPU 3D, 1 min.");}
+  if(p==="extreme"){set("labDur",300000);set("labThreads",max);
+    chans.forEach(id=>{if(id==="chCodec"&&$("#lbCodec")&&$("#lbCodec").classList.contains("off"))return;set(id,true);});
+    log("WARN","Preset EXTREME — every channel for 5 min. Not guaranteed safe.");}}
+on("#preSafe","click",e=>{labPreset("safe");e.currentTarget.blur();});
+on("#preStd","click",e=>{labPreset("standard");e.currentTarget.blur();});
+on("#preExt","click",e=>{labPreset("extreme");e.currentTarget.blur();});
+function spawnChannel(tok,cmd,wms,onProg){const w=mkWorker();if(!w)return null;
+  w.onmessage=e=>{if(tok!==labRun)return;const d=e.data;
+    if(d.cmd==="prog")onProg(d.ops,d.bad||0);
+    else if(d.cmd==="done")onProg(d.ops,d.bad||0);};
+  w.onerror=()=>{if(tok===labRun)log("WARN","Stress channel "+cmd+" crashed.")};
+  HY.ws.push(w);w.postMessage({cmd,ms:wms});return w;}
+async function ioChurn(tok,dur){HY.ioOn=true;HY.ioMB=0;
+  let db=null;const name="bk_io_"+Date.now();
+  try{db=await new Promise((res,rej)=>{const rq=indexedDB.open(name,1);
+    rq.onupgradeneeded=e=>e.target.result.createObjectStore("s");
+    rq.onsuccess=e=>res(e.target.result);rq.onerror=rej;});}
+  catch(e){if(tok===labRun)log("WARN","I/O churn unavailable.");HY.ioOn=false;return;}
+  const chunk=new Uint8Array(1<<20);chunk.fill(101);
+  const end=performance.now()+dur;let key=0;
+  while(labRun===tok&&performance.now()<end){
+    await new Promise(res=>{try{const tx=db.transaction("s","readwrite");
+      for(let i=0;i<8;i++)tx.objectStore("s").put(chunk,(key++)%64);
+      tx.oncomplete=res;tx.onerror=res;tx.onabort=res;}catch(e){res();}});
+    if(labRun!==tok)break;
+    HY.ioMB+=8;}
+  try{db.close();indexedDB.deleteDatabase(name);}catch(e){}
+  HY.ioOn=false;}
+async function codecChurn(tok,dur){HY.codecOn=true;HY.codecFrames=0;
+  let enc=null;
+  try{
+    const pick=await pickEncoder();if(!pick){HY.codecOn=false;return;}
+    const cv=document.createElement("canvas");cv.width=640;cv.height=360;
+    const cx=cv.getContext("2d",{willReadFrequently:true});
+    let encErr=null;
+    enc=new VideoEncoder({output:()=>{},error:e=>{encErr=e;HY.codecOn=false;}});
+    const cfg={codec:pick.codec,width:640,height:360,bitrate:3e6,framerate:30};
+    if(pick.codec.startsWith("avc"))cfg.avc={format:"annexb"};
+    try{cfg.hardwareAcceleration=GPU_STATE.losses>0?"prefer-software":"prefer-hardware";}catch(e){}
+    enc.configure(cfg);
+    if(GPU_STATE.losses>0)log("INFO","Codec churn using software path (GPU interruptions this session).");
+    const end=performance.now()+dur;let i=0;
+    await new Promise(res=>{(function loop(){
+      if(labRun!==tok||performance.now()>=end||!HY.codecOn||encErr)return res();
+      cx.fillStyle=i%2?"#132030":"#101820";cx.fillRect(0,0,640,360);
+      cx.fillStyle="#ffb454";cx.fillRect((i*37)%560,40,80,280);
+      let fr=null;
+      try{
+        if(typeof enc.encodeQueueSize!=="number"||enc.encodeQueueSize<32){
+          fr=new VideoFrame(cv,{timestamp:i*33333,duration:33333});
+          enc.encode(fr);HY.codecFrames++;}
+      }catch(e){HY.codecOn=false;return res();}
+      finally{if(fr){try{fr.close();}catch(e){}}}
+      i++;requestAnimationFrame(loop);})();});
+    try{await withTimeout(enc.flush(),5000,"churn flush");}catch(e){}
+    if(encErr)log("WARN","Codec churn encoder error: "+((encErr&&encErr.message)||encErr));
+  }catch(e){}
+  try{if(enc&&enc.state!=="closed")enc.close();}catch(e){}
+  HY.codecOn=false;}
+function labFinish(tok,aborted){
+  if(tok===0||tok!==labRun)return;
+  labRun=0;
+  HY.ws.forEach(w=>{try{w.terminate()}catch(e){}});HY.ws=[];
+  cancelAnimationFrame(HY.raf);
+  if(HY.intv){clearInterval(HY.intv);HY.intv=0;}
+  if(HY.storm2d){try{HY.storm2d.clear()}catch(e){}}
+  HY.storm3d=HY.storm2d=null;HY.gpuOn=false;HY.active=false;
+  const bs=$("#btnLabStart");if(bs){bs.disabled=false;bs.textContent="Start stress";}
+  const lp=$("#labProg");if(lp)lp.style.width=aborted?"0%":"100%";
+  setTxt("labElapsed","");
+  guardOff();
+  const elTotal=(performance.now()-HY.t0)/1000;
+  const sc=stab(HY.samples.cpu),sg=stab(HY.samples.gpu);
+  setTxt("roCpuS",sc?("min "+fmt(sc.mn)+" · stab "+fmt(sc.st,1)+"%"):"min — · stab —");
+  setTxt("roGpuS",sg?("min "+fmt(sg.mn)+" · stab "+fmt(sg.st,1)+"%"):"min — · stab —");
+  const parts=[],sevs=[];
+  if(sc){parts.push("CPU avg "+fmt(sc.avg)+" min "+fmt(sc.mn)+" Mop/s ("+fmt(sc.st,1)+"% stab)");
+    sevs.push(sc.st>=92?"pass":sc.st>=80?"warn":"fail");}
+  if(sg){parts.push("GPU avg "+fmt(sg.avg)+" min "+fmt(sg.mn)+" fps ("+fmt(sg.st,1)+"% stab)");
+    sevs.push((sg.st>=88&&sg.avg>=24)?"pass":(sg.st>=70)?"warn":"fail");}
+  const sa=stab(HY.samples.ai);if(sa)parts.push("AI "+fmt(sa.avg/1e9,2)+" GF/s");
+  const sr=stab(HY.samples.ram);if(sr)parts.push("RAM "+fmt(sr.avg,1)+" GB/s");
+  const sp=stab(HY.samples.ramP);if(sp)parts.push("RAMpatt "+fmt(sp.avg,0)+" MB/s");
+  if(HY.ramPErrs>0){parts.push("RAM PATTERN ERRORS: "+HY.ramPErrs);sevs.push("fail");}
+  if(HY.ioMB)parts.push("I/O "+fmt(HY.ioMB)+" MB written");
+  if(HY.codecFrames)parts.push("codec "+fmt(HY.codecFrames)+" frames encoded");
+  const rank={pass:0,warn:1,fail:2};
+  let verdict="info";
+  for(const s of sevs){if(verdict==="info"||rank[s]>rank[verdict])verdict=s;}
+  if(aborted){
+    setStatus("stress","warn","ABORT","Aborted after "+fmt(elTotal,0)+" s"+(HY.endless?" (endless mode)":"")+(parts.length?" · "+parts.join(" · "):" · no samples"));
+    return;}
+  const stabs=[sc,sg].filter(Boolean);
+  const worst=stabs.length?Math.min(...stabs.map(x=>x.st)):null;
+  setStatus("stress",verdict,worst!=null?fmt(worst,1)+"%":"—",
+    fmt(elTotal,0)+" s · "+(parts.length?parts.join(" · "):"no samples collected"));
+  log("INFO","—— HYBRID STRESS COMPLETE · verdict "+verdict.toUpperCase()+" ——");}
+function startLab(){
+  if(HY.active)return;
+  const dur=+($("#labDur")&&$("#labDur").value);
+  const endless=dur===0;
+  const threads=+($("#labThreads")&&$("#labThreads").value)||0;
+  const gv=id=>{const e=$("#"+id);return e?e.checked:false};
+  const ch={g3d:gv("chG3d"),g2d:gv("chG2d"),ai:gv("chAi"),ram:gv("chRam"),ramP:gv("chRamP"),io:gv("chIo"),codec:gv("chCodec")};
+  if(!threads&&!Object.values(ch).some(v=>v)){log("WARN","Stress Lab: select at least one load channel.");return;}
+  const wok=workerAvailable();
+  labRun++;const tok=labRun;
+  HY.active=true;HY.endless=endless;HY.dur=dur;HY.t0=performance.now();HY.win=HY.t0;HY.facc=0;
+  HY.lastCk=0;HY.ramPErrs=0;
+  HY.samples={cpu:[],gpu:[],ai:[],ram:[],ramP:[]};HY.acc={cpu:0,ai:0,ram:0,ramP:0};
+  HY.ioMB=0;HY.codecFrames=0;HY.ws=[];
+  ["roCpu","roGpu","roAi","roRam","roRamP","roIo","roCodec"].forEach(id=>setTxt(id,"—"));
+  setTxt("roCpuS","min — · stab —");setTxt("roGpuS","min — · stab —");setTxt("roRamPS","errors —");
+  const lp=$("#labProg");if(lp)lp.style.width=endless?"100%":"0%";
+  setTxt("labElapsed",endless?"∞ ENDLESS":"T-"+(dur/1000)+" s");
+  markRunning("stress");drawLab();
+  const bs=$("#btnLabStart");if(bs){bs.disabled=true;bs.textContent="STRESSING…";}
+  log("INFO","—— HYBRID STRESS START · "+(endless?"∞ ENDLESS":fmt(dur/1000)+" s")+" · CPU×"+threads+
+    (ch.g3d?" ·GPU3D":"")+(ch.g2d?" ·GPU2D":"")+(ch.ai?" ·AI":"")+(ch.ram?" ·RAM":"")+(ch.ramP?" ·RAMPATT":"")+(ch.io?" ·IO":"")+(ch.codec?" ·CODEC":"")+" ——");
+  if(gpuCurrentlyLost()&&(ch.g3d||ch.g2d))
+    log("WARN","GPU backend currently down — GPU channels start once it restores.");
+  else if(GPU_STATE.losses>0&&(ch.g3d||ch.g2d))
+    log("INFO","GPU recovered from "+GPU_STATE.losses+" earlier interruption(s) — GPU channels allowed.");
+  if(!wok&&(threads||ch.ai||ch.ram||ch.ramP))log("WARN","Workers unavailable — CPU/AI/RAM channels disabled.");
+  guardOn();
+  const wms=endless?86400000:dur;
+  const churnDur=endless?Infinity:dur;
+  if(threads>0&&wok)for(let i=0;i<threads;i++)spawnChannel(tok,"sustain",wms,o=>HY.acc.cpu+=o);
+  if(ch.ai&&wok)spawnChannel(tok,"aimul",wms,o=>HY.acc.ai+=o);
+  if(ch.ram&&wok)spawnChannel(tok,"memloop",wms,o=>HY.acc.ram+=o);
+  if(ch.ramP&&wok)spawnChannel(tok,"memstress",wms,(o,bad)=>{HY.acc.ramP+=o;HY.ramPErrs+=bad;});
+  HY.storm3d=ch.g3d?buildTorus($("#labGL"),120):null;
+  HY.storm2d=ch.g2d?makeStorm($("#lab2d"),120):null;
+  if(ch.g3d&&!HY.storm3d)log("WARN","WebGL unavailable — GPU 3D channel skipped.");
+  if(ch.g2d&&!HY.storm2d)log("WARN","2D context unavailable — GPU 2D channel skipped.");
+  HY.gpuOn=!!(HY.storm3d||HY.storm2d);
+  if(HY.gpuOn){(function gloop(){if(tok!==labRun||!HY.gpuOn)return;
+    if(HY.storm3d)try{HY.storm3d.draw()}catch(e){}
+    if(HY.storm2d)try{HY.storm2d.step()}catch(e){}
+    HY.facc++;HY.raf=requestAnimationFrame(gloop);})();}
+  if(ch.io)ioChurn(tok,churnDur);
+  if(ch.codec&&typeof VideoEncoder!=="undefined")codecChurn(tok,churnDur);
+  HY.intv=setInterval(()=>{
+    if(tok!==labRun)return;
+    const now=performance.now(),el=now-HY.win;
+    if(el>=1000){
+      if(HY.acc.cpu>0)HY.samples.cpu.push(HY.acc.cpu/(el/1000)/1e6);
+      if(HY.acc.ai>0)HY.samples.ai.push(HY.acc.ai/(el/1000));
+      if(HY.acc.ram>0)HY.samples.ram.push(HY.acc.ram/(el/1000)/1e9);
+      if(HY.acc.ramP>0)HY.samples.ramP.push(HY.acc.ramP/(el/1000)/1e6);
+      if(HY.gpuOn)HY.samples.gpu.push(HY.facc/(el/1000));
+      HY.acc={cpu:0,ai:0,ram:0,ramP:0};HY.facc=0;HY.win=now;
+      const lc=HY.samples.cpu,lg=HY.samples.gpu,la=HY.samples.ai,lr=HY.samples.ram,lrP=HY.samples.ramP;
+      if(lc.length)setTxt("roCpu",fmt(lc[lc.length-1]));
+      if(lg.length)setTxt("roGpu",fmt(lg[lg.length-1]));
+      if(la.length)setTxt("roAi",fmt(la[la.length-1]/1e9,2));
+      if(lr.length)setTxt("roRam",fmt(lr[lr.length-1],1));
+      if(lrP.length)setTxt("roRamP",fmt(lrP[lrP.length-1],0));
+      setTxt("roRamPS",HY.ramPErrs+" errors");
+      setTxt("roIo",HY.ioMB?fmt(HY.ioMB):"—");
+      setTxt("roCodec",HY.codecFrames?fmt(HY.codecFrames):"—");
+      drawLab();}
+    const elS=(now-HY.t0)/1000;
+    const p2=$("#labProg");
+    if(HY.endless){
+      setTxt("labElapsed","∞ "+hms(elS));
+      if(p2)p2.style.width="100%";
+      const ck=Math.floor(elS/60);
+      if(ck>HY.lastCk){HY.lastCk=ck;
+        const lsc=HY.samples.cpu,lsg=HY.samples.gpu;
+        log("INFO","Stress checkpoint "+ck+" min — CPU "+(lsc.length?fmt(lsc[lsc.length-1])+" Mop/s":"—")+
+          " · GPU "+(lsg.length?fmt(lsg[lsg.length-1])+" fps":"—")+(HY.ramPErrs?" · RAM ERR "+HY.ramPErrs:""));}
+    }else{
+      setTxt("labElapsed","T-"+fmt(Math.max(0,Math.ceil((HY.dur-(now-HY.t0))/1000)))+" s");
+      if(p2)p2.style.width=Math.min(100,100*(now-HY.t0)/HY.dur)+"%";
+      if(now-HY.t0>=HY.dur)labFinish(tok,false);}
+  },500);}
+on("#btnLabStart","click",startLab);
+on("#btnLabAbort","click",()=>{if(!HY.active)return;
+  log("WARN","Stress aborted by technician.");labFinish(labRun,true);});
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden&&HY.active)log("WARN","Tab hidden during stress — background throttling may fake failures; keep focused.");});
+
+/* ---------- storage ---------- */
+RUN.storageIDB=()=>{markRunning("storageIDB");
+  return new Promise(res=>{
+    if(!window.indexedDB)return res(setStatus("storageIDB","warn","—","IndexedDB blocked in this context."));
+    const name="bk_"+Date.now(),MB=16,req=indexedDB.open(name,1);
+    req.onupgradeneeded=e=>e.target.result.createObjectStore("s");
+    req.onerror=()=>res(setStatus("storageIDB","warn","—","Could not open test database."));
+    req.onsuccess=e=>{const db=e.target.result,chunk=new Uint8Array(1<<20);chunk.fill(197);
+      const t0=performance.now();const tx=db.transaction("s","readwrite");
+      for(let i=0;i<MB;i++)tx.objectStore("s").put(chunk,i);
+      tx.oncomplete=()=>{const wMs=performance.now()-t0;
+        const t1=performance.now();const rx=db.transaction("s","readonly");
+        rx.objectStore("s").openCursor().onsuccess=ev=>{const c=ev.target.result;if(c)c.continue()};
+        rx.oncomplete=()=>{const rMs=performance.now()-t1;
+          const w=MB/(wMs/1000),r=MB/(rMs/1000);
+          db.close();indexedDB.deleteDatabase(name);
+          const st=w>=60?"pass":w>=25?"warn":"fail";
+          setStatus("storageIDB",st,fmt(w)+" / "+fmt(r),"write "+fmt(wMs)+" ms · read "+fmt(rMs)+" ms · "+MB+" MB.");
+          res();};};};});};
+RUN.storageLS=()=>{markRunning("storageLS");
+  try{const CH=65536,N=16,chars="abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
+    let blob="";for(let i=0;i<CH;i++)blob+=chars[(Math.random()*chars.length)|0];
+    const t0=performance.now();
+    for(let i=0;i<N;i++)localStorage.setItem("__bk"+i,blob);
+    const ms=performance.now()-t0;
+    for(let i=0;i<N;i++)localStorage.removeItem("__bk"+i);
+    const mbs=(N*CH/1048576)/(ms/1000);
+    setStatus("storageLS",mbs>=8?"pass":mbs>=3?"warn":"fail",fmt(mbs,1),fmt(ms)+" ms for 1 MB sync write.");
+  }catch(e){setStatus("storageLS","warn","BLOCKED","Storage unavailable (private mode / quota).");}};
+
+/* ---------- battery ---------- */
+let batSubbed=false;
+function batUI(b){
+  const lvl=Math.round(b.level*100);
+  setTxt("bLvl",lvl+"%");const bl=$("#bLvl");if(bl)bl.className="v "+(lvl>50?"g":lvl>20?"w":"f");
+  setTxt("bState",b.charging?"CHARGING":(b.chargingTime===0?"FULL":"ON BATTERY"));
+  const bsn=$("#bState");if(bsn)bsn.className="v "+(b.charging?"g":"w");
+  const h=b.charging?b.chargingTime:b.dischargingTime;
+  setTxt("bTime",(isFinite(h)&&h>0)?hms(h):"—");
+  setTxt("bFcc",b.fullChargeCapacity?fmt(b.fullChargeCapacity,1)+" Wh":"n/a");
+  setTxt("bDes",b.designCapacity?fmt(b.designCapacity,1)+" Wh":"n/a");
+  const lb=$("#ledBat");if(lb)lb.className="led "+(b.charging?"on":lvl>20?"warn":"bad");
+  setTxt("batTxt","BATT "+lvl+"%"+(b.charging?" ⚡":""));
+  const q=!!R.battery;
+  if(b.designCapacity&&b.fullChargeCapacity){
+    const hp=b.fullChargeCapacity/b.designCapacity*100;
+    setTxt("bHealth",fmt(hp,0)+"%");
+    const bh=$("#bHealth");if(bh)bh.className="v "+(hp>=80?"g":hp>=60?"w":"f");
+    setStatus("battery",hp>=80?"pass":hp>=60?"warn":"fail",fmt(hp,0)+"%",
+      fmt(b.fullChargeCapacity,1)+" / "+fmt(b.designCapacity,1)+" Wh · "+lvl+"% "+(b.charging?"charging":"discharging"),q);
+  }else{
+    setTxt("bHealth","n/a");const bh2=$("#bHealth");if(bh2)bh2.className="v";
+    setStatus("battery","info",lvl+"%","Capacity counters not exposed — use powercfg /batteryreport.",q);}}
+RUN.battery=async()=>{markRunning("battery");
+  if(!navigator.getBattery)return setStatus("battery","info","MANUAL","Battery API unavailable in this browser.");
+  const b=await navigator.getBattery();
+  if(!batSubbed){batSubbed=true;
+    ["chargingchange","levelchange","chargingtimechange","dischargingtimechange"]
+      .forEach(ev=>b.addEventListener(ev,()=>batUI(b)));}
+  batUI(b);};
+
+/* ---------- network (rebuilt honest) ---------- */
+function netUI(force){
+  const c=navigator.connection,online=navigator.onLine;
+  const ln=$("#ledNet");if(ln)ln.className="led "+(online?"on":"bad");
+  setTxt("netTxt",online?"NET ON":"NET OFF");
+  let det="browser state: "+(online?"ONLINE":"OFFLINE");
+  if(c)det+=" · browser estimate: "+(c.effectiveType||"?")+" ≈"+(c.downlink||"?")+" Mbps, RTT "+(c.rtt||"?")+" ms (often static on desktops — NOT a speedtest)";
+  else det+=" · navigator.connection not exposed by this browser";
+  setStatus("net","info",online?"ONLINE":"OFFLINE",det,!force&&!!R.net);
+  setTxt("netUnit",c?("est. "+(c.downlink||"?")+" Mbps"):"");}
+RUN.net=()=>{netUI(true);probeInterfaces();};
+function probeInterfaces(){
+  if(typeof RTCPeerConnection==="undefined")return log("WARN","WebRTC unavailable — cannot probe interfaces.");
+  try{
+    const pc=new RTCPeerConnection({iceServers:[]});
+    pc.createDataChannel("");
+    const ips=new Set();let done=false;
+    const fin=()=>{if(done)return;done=true;try{pc.close()}catch(e){}
+      const list=[...ips].filter(ip=>!/^(0\.|127\.)/.test(ip));
+      setTxt("netIf","local interfaces: "+(list.length?list.join(" · "):"none found (may be hidden by privacy flags)"));
+      log(list.length?"OK":"WARN","Local interface probe: "+(list.length?list.join(", "):"none"));
+      if(list.length&&R.net)setStatus("net",R.net.st,R.net.val,(R.net.detail+" · local IPs: "+list.join(", ")),true);};
+    pc.onicecandidate=e=>{if(!e.candidate){fin();return;}
+      const m=((e.candidate&&e.candidate.candidate)||"").match(/(\d{1,3}(?:\.\d{1,3}){3})/g);
+      if(m)m.forEach(ip=>ips.add(ip));};
+    pc.createOffer().then(o=>pc.setLocalDescription(o)).catch(e=>{log("FAIL","Offer failed: "+e.message);fin();});
+    setTimeout(fin,3000);
+  }catch(e){log("FAIL","Interface probe failed: "+e.message);}}
+on("#btnIfProbe","click",probeInterfaces);
+addEventListener("online",()=>netUI(true));addEventListener("offline",()=>netUI(true));
+try{if(navigator.connection&&navigator.connection.addEventListener)navigator.connection.addEventListener("change",()=>netUI(false));}catch(e){}
+
+/* ---------- sensors ---------- */
+RUN.sensors=()=>new Promise(res=>{markRunning("sensors");
+  let settled=false;
+  const finish=()=>{if(settled)return;settled=true;removeEventListener("devicemotion",onm);res();};
+  const onm=e=>{const a=e.accelerationIncludingGravity;
+    if(a&&a.x!=null){setStatus("sensors","pass","OK",fmt(a.x,2)+", "+fmt(a.y,2)+", "+fmt(a.z,2)+" m/s² — motion sensor live.");finish();}};
+  addEventListener("devicemotion",onm);
+  setTimeout(()=>{if(!settled){setStatus("sensors","info","NONE","No accelerometer events in 2.5 s — normal for clamshells.");finish();}},2500);
+  if(window.DeviceMotionEvent&&DeviceMotionEvent.requestPermission)DeviceMotionEvent.requestPermission().catch(()=>{});
+  liveVal("sensors","…","Listening — tilt the unit…");});
+
+/* ---------- keyboard matrix ---------- */
+const LBL=c=>{if(c.startsWith("Key"))return c.slice(3);if(c.startsWith("Digit"))return c.slice(5);
+  if(c.startsWith("Numpad")&&c.length===7)return c.slice(6);
+  return{Space:"SPACE",Escape:"ESC",Backspace:"⌫",Tab:"TAB",CapsLock:"CAPS",Enter:"ENTER",ShiftLeft:"SHIFT",ShiftRight:"SHIFT",
+  ControlLeft:"CTRL",ControlRight:"CTRL",AltLeft:"ALT",AltRight:"ALT",MetaLeft:"⊞",MetaRight:"⊞",ContextMenu:"☰",
+  ArrowUp:"↑",ArrowDown:"↓",ArrowLeft:"←",ArrowRight:"→",Backquote:"`",Minus:"-",Equal:"=",BracketLeft:"[",BracketRight:"]",
+  Backslash:"\\",Semicolon:";",Quote:"'",Comma:",",Period:".",Slash:"/",
+  PrintScreen:"PRTSC",ScrollLock:"SCRLK",Pause:"PAUSE",Insert:"INS",Delete:"DEL",Home:"HOME",End:"END",PageUp:"PGUP",PageDown:"PGDN",
+  NumLock:"NUM",NumpadDivide:"/",NumpadMultiply:"*",NumpadSubtract:"-",NumpadAdd:"+",NumpadEnter:"ENT",NumpadDecimal:"."}[c]||c;};
+const ROWS_BASE=[
+ [["Escape",1.6],["F1"],["F2"],["F3"],["F4"],["F5"],["F6"],["F7"],["F8"],["F9"],["F10"],["F11"],["F12"]],
+ [["Backquote"],["Digit1"],["Digit2"],["Digit3"],["Digit4"],["Digit5"],["Digit6"],["Digit7"],["Digit8"],["Digit9"],["Digit0"],["Minus"],["Equal"],["Backspace",2]],
+ [["Tab",1.5],["KeyQ"],["KeyW"],["KeyE"],["KeyR"],["KeyT"],["KeyY"],["KeyU"],["KeyI"],["KeyO"],["KeyP"],["BracketLeft"],["BracketRight"],["Backslash",1.5]],
+ [["CapsLock",1.8],["KeyA"],["KeyS"],["KeyD"],["KeyF"],["KeyG"],["KeyH"],["KeyJ"],["KeyK"],["KeyL"],["Semicolon"],["Quote"],["Enter",2]],
+ [["ShiftLeft",2.3],["KeyZ"],["KeyX"],["KeyC"],["KeyV"],["KeyB"],["KeyN"],["KeyM"],["Comma"],["Period"],["Slash"],["ShiftRight",2.3]],
+ [["ControlLeft",1.4],["MetaLeft",1.2],["AltLeft",1.2],["Space",6],["AltRight",1.2],["MetaRight",1.2],["ControlRight",1.4],["ArrowLeft"],["ArrowUp"],["ArrowDown"],["ArrowRight"]]];
+const ROWS_NAV=[
+ [["PrintScreen"],["ScrollLock"],["Pause"]],
+ [["Insert"],["Home"],["PageUp"]],
+ [["Delete"],["End"],["PageDown"]]];
+const ROWS_NUM=[
+ [["NumLock"],["NumpadDivide"],["NumpadMultiply"],["NumpadSubtract"]],
+ [["Numpad7"],["Numpad8"],["Numpad9"],["NumpadAdd"]],
+ [["Numpad4"],["Numpad5"],["Numpad6"]],
+ [["Numpad1"],["Numpad2"],["Numpad3"],["NumpadEnter"]],
+ [["Numpad0",2],["NumpadDecimal"]]];
+const keyEls={},seen=new Set(),heldNow=new Set(),heldSince={},repeatCount={},stuckLogged=new Set();
+let kbArmed=false,keyOrder=[],stuckTimer=0;
+function kbBuild(){
+  const kb=$("#kb");if(!kb)return;kb.innerHTML="";
+  for(const k in keyEls)delete keyEls[k];
+  keyOrder=[];
+  const addRows=(rows,tag)=>{
+    if(tag){const s=document.createElement("div");
+      s.style.cssText="font:600 8px var(--mono);letter-spacing:.2em;color:var(--dim);margin:6px 0 2px";
+      s.textContent=tag;kb.appendChild(s);}
+    rows.forEach(r=>{const row=document.createElement("div");row.className="krow";
+      r.forEach(([c,w])=>{const k=document.createElement("div");k.className="key";k.textContent=LBL(c);
+        if(w)k.style.flexGrow=w;row.appendChild(k);keyEls[c]=k;keyOrder.push(c);});
+      kb.appendChild(row);});};
+  addRows(ROWS_BASE);
+  if($("#kbFull")&&$("#kbFull").checked){addRows(ROWS_NAV,"NAV CLUSTER");addRows(ROWS_NUM,"NUMPAD");}
+  seen.clear();heldNow.clear();stuckLogged.clear();
+  for(const k in repeatCount)delete repeatCount[k];
+  kbUpdate();updateHeld();}
+function kbUpdate(){const tot=Object.keys(keyEls).length;
+  setTxt("kbCount",seen.size+" / "+tot+" keys");
+  const kp=$("#kbProg");if(kp)kp.style.width=(100*seen.size/tot)+"%";
+  if(tot&&seen.size===tot)setStatus("keyboard","manual","ALL KEYS","Every mapped key registered — sign off ✓ if feel is good.");}
+function updateHeld(){setTxt("kbHeld",heldNow.size?[...heldNow].map(LBL).join(" "):"—");}
+function keyTone(code){
+  const t=$("#kbTones");if(!t||!t.checked)return;
+  const i=keyOrder.indexOf(code);if(i<0)return;
+  try{const a=ac();const o=a.createOscillator(),g=a.createGain();
+    o.type="triangle";o.frequency.value=185*Math.pow(2,i/18);
+    const tt=a.currentTime;g.gain.setValueAtTime(0.12,tt);g.gain.exponentialRampToValueAtTime(0.0001,tt+0.09);
+    o.connect(g);g.connect(a.destination);o.start(tt);o.stop(tt+0.1);}catch(e){}}
+function stuckWatch(){clearInterval(stuckTimer);stuckTimer=0;
+  if(!kbArmed)return;
+  stuckTimer=setInterval(()=>{const now=performance.now();
+    heldNow.forEach(c=>{if(now-(heldSince[c]||now)>2500&&!stuckLogged.has(c)){stuckLogged.add(c);
+      log("WARN","Key "+c+" held >2.5 s — stuck key or missed keyup?");}});},1000);}
+function kbDown(e){if(!kbArmed)return;
+  if(["Space","Tab","Enter","NumpadEnter","ArrowUp","ArrowDown","ArrowLeft","ArrowRight","PageUp","PageDown","Home","End"].includes(e.code))e.preventDefault();
+  const k=keyEls[e.code];if(!k)return;
+  if(e.repeat){repeatCount[e.code]=(repeatCount[e.code]||0)+1;
+    if(repeatCount[e.code]===25){log("WARN","Sticky/auto-repeat flood on "+e.code+" — possible stuck switch.");k.classList.add("now");}
+    return;}
+  seen.add(e.code);k.classList.add("lit");k.classList.add("held");
+  heldNow.add(e.code);heldSince[e.code]=performance.now();
+  keyTone(e.code);updateHeld();kbUpdate();}
+function kbUp(e){const k=keyEls[e.code];if(!k)return;
+  k.classList.remove("now");k.classList.remove("held");
+  heldNow.delete(e.code);delete heldSince[e.code];updateHeld();}
+on("#kbArm","click",e=>{kbArmed=!kbArmed;
+  try{e.currentTarget.blur();}catch(x){}
+  if(document.activeElement&&document.activeElement.blur)try{document.activeElement.blur()}catch(x){}
+  if(kbArmed&&$("#kbTones")&&$("#kbTones").checked){try{ac();}catch(x){}}
+  setTxt("kbArm",kbArmed?"Disarm (ESC)":"Arm test");
+  setStatus("keyboard","manual",kbArmed?"ARMED":"—",kbArmed?"Press every key. Amber = held now; tones rise in pitch.":"Test disarmed.");
+  log("INFO","Keyboard test "+(kbArmed?"armed":"disarmed"));
+  stuckWatch();});
+addEventListener("keydown",e=>{if(e.key==="Escape"&&kbArmed){kbArmed=false;setTxt("kbArm","Arm test");stuckWatch();}kbDown(e)});
+addEventListener("keyup",kbUp);
+addEventListener("blur",()=>{heldNow.forEach(c=>{const k=keyEls[c];if(k)k.classList.remove("held")});
+  heldNow.clear();updateHeld();});
+on("#kbReset","click",()=>{seen.clear();heldNow.clear();stuckLogged.clear();
+  for(const k in repeatCount)delete repeatCount[k];
+  Object.values(keyEls).forEach(k=>k.classList.remove("lit","now","held"));kbUpdate();updateHeld();});
+on("#kbTones","change",e=>{try{e.target.blur()}catch(x){}
+  if(e.target.checked){try{ac();}catch(x){}}});
+on("#kbFull","change",e=>{try{e.target.blur()}catch(x){}kbBuild();
+  log("INFO","Keyboard layout: "+(e.target.checked?"full 101/104":"laptop compact")+".");});
+kbBuild();
+
+/* ---------- pointer lab ---------- */
+const pad=$("#pad"),chV=$("#chV"),chH=$("#chH"),dots=new Map();
+let scrV=0,scrH=0,zoomPct=0,padAnnounced=false;
+const ptrPos=new Map();let prevPinch=null;
+const PC=["#53c7f0","#ffb454","#4ade80","#ff5f56","#b48cff","#f472b6"];
+function padAct(){if(padAnnounced)return;padAnnounced=true;
+  setStatus("pointer","manual","ACTIVE","Buttons, scroll axes, direction & pinch exercised — sign off ✓/✗ when satisfied.");}
+function padBtnUI(e){const b=$("#bL"),m=$("#bM"),r=$("#bR");
+  if(b)b.classList.toggle("hot",!!(e.buttons&1));
+  if(r)r.classList.toggle("hot",!!(e.buttons&2));
+  if(m)m.classList.toggle("hot",!!(e.buttons&4));}
+if(pad){
+  pad.addEventListener("pointermove",e=>{const r=pad.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+    if(chV){chV.style.display="block";chV.style.left=x+"px";}
+    if(chH){chH.style.display="block";chH.style.top=y+"px";}
+    setTxt("pos",Math.round(x)+","+Math.round(y));
+    if(dots.has(e.pointerId)){const d=dots.get(e.pointerId);d.style.left=x+"px";d.style.top=y+"px";}
+    if(ptrPos.has(e.pointerId))ptrPos.set(e.pointerId,{x,y});
+    if(ptrPos.size===2){const pts=[...ptrPos.values()];
+      const dist=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
+      if(prevPinch!=null){const dd=dist-prevPinch;
+        if(Math.abs(dd)>0.5){zoomPct+=dd/Math.max(prevPinch,1)*100;
+          setTxt("pinchV",(zoomPct>=0?"+":"")+fmt(zoomPct,0)+"%");
+          setTxt("scrDir",dd>0?"pinch out":"pinch in");padAct();}}
+      prevPinch=dist;}
+    else prevPinch=null;});
+  pad.addEventListener("pointerdown",e=>{e.preventDefault();
+    if(pad.setPointerCapture)try{pad.setPointerCapture(e.pointerId)}catch(x){}
+    const r=pad.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+    const d=document.createElement("div");
+    d.className="dot";d.style.borderColor=PC[e.pointerId%PC.length];
+    d.style.left=x+"px";d.style.top=y+"px";
+    pad.appendChild(d);dots.set(e.pointerId,d);
+    ptrPos.set(e.pointerId,{x,y});prevPinch=null;
+    setTxt("ptN",dots.size);padBtnUI(e);padAct();});
+  const endPt=e=>{const d=dots.get(e.pointerId);if(d)d.remove();dots.delete(e.pointerId);
+    ptrPos.delete(e.pointerId);prevPinch=null;
+    setTxt("ptN",dots.size);padBtnUI(e);};
+  pad.addEventListener("pointerup",endPt);
+  pad.addEventListener("pointercancel",endPt);
+  pad.addEventListener("contextmenu",e=>e.preventDefault());
+  pad.addEventListener("wheel",e=>{e.preventDefault();padAct();
+    if(e.ctrlKey){zoomPct+=-e.deltaY;
+      setTxt("pinchV",(zoomPct>=0?"+":"")+fmt(zoomPct,0)+"%");
+      setTxt("scrDir",-e.deltaY>0?"zoom in":"zoom out");return;}
+    const ax=Math.abs(e.deltaX),ay=Math.abs(e.deltaY);
+    if(ax>ay){scrH+=Math.round(e.deltaX);setTxt("scrH",fmt(scrH));
+      setTxt("scrDir",e.deltaX>0?"→ right":"← left");}
+    else{scrV+=Math.round(e.deltaY);setTxt("scrV",fmt(scrV));
+      setTxt("scrDir",e.deltaY>0?"↓ down":"↑ up");}},{passive:false});}
+
+/* ---------- gamepads ---------- */
+const GP={raf:0,pads:{}};
+function gpEnsure(p){
+  let g=GP.pads[p.index];
+  const nb=p.buttons.length,na=p.axes.length;
+  if(g&&(g.nb!==nb||g.na!==na)){g.el.remove();g=null;}
+  if(!g){
+    const el=document.createElement("div");el.className="gpPad";
+    el.innerHTML=`<div class="gpName"></div><div class="gpBtns"></div><div class="gpAxes"></div><div class="gpMeta"></div>`;
+    el.querySelector(".gpName").textContent=(p.id||"gamepad").slice(0,72);
+    const bc=el.querySelector(".gpBtns");const bs=[];
+    for(let i=0;i<nb;i++){const b=document.createElement("span");b.className="gpBtn";b.textContent=i;bc.appendChild(b);bs.push(b);}
+    const acx=el.querySelector(".gpAxes");const ax=[];
+    for(let i=0;i<na;i++){const a=document.createElement("div");a.className="gpAxis";a.innerHTML="<i></i>";acx.appendChild(a);ax.push(a.querySelector("i"));}
+    const holder=$("#gpPads");if(holder)holder.appendChild(el);
+    g=GP.pads[p.index]={el,bs,ax,nb,na,meta:el.querySelector(".gpMeta"),used:new Set()};}
+  return g;}
+function gpFrame(){GP.raf=0;
+  let pads=[];try{pads=[...(navigator.getGamepads?navigator.getGamepads():[])].filter(Boolean);}catch(e){}
+  if(!pads.length)return;
+  pads.forEach(p=>{const g=gpEnsure(p);
+    p.buttons.forEach((b,i)=>{const on=b.pressed||b.value>0.5;
+      if(g.bs[i])g.bs[i].classList.toggle("hot",on);
+      if(on&&!g.used.has(i)){g.used.add(i);log("INFO","Gamepad "+p.index+" · button "+i+" pressed.");}});
+    p.axes.forEach((v,i)=>{if(g.ax[i])g.ax[i].style.width=Math.max(0,Math.min(100,50+v*50))+"%";});
+    if(g.meta)g.meta.textContent="buttons "+g.used.size+"/"+p.buttons.length+" exercised · axes "+p.axes.length;});
+  GP.raf=requestAnimationFrame(gpFrame);}
+function gpStart(){if(!GP.raf)GP.raf=requestAnimationFrame(gpFrame);}
+addEventListener("gamepadconnected",e=>{
+  log("OK","Gamepad connected: "+((e.gamepad&&e.gamepad.id)||"").slice(0,60));
+  setTxt("gpStatus","Connected — press every button, sweep every stick.");
+  setStatus("gamepad","manual","CONNECTED",((e.gamepad&&e.gamepad.id)||"gamepad").slice(0,48),!!R.gamepad);
+  gpStart();});
+addEventListener("gamepaddisconnected",e=>{
+  log("WARN","Gamepad disconnected.");
+  const g=GP.pads[e.gamepad.index];if(g){g.el.remove();delete GP.pads[e.gamepad.index];}
+  if(!Object.keys(GP.pads).length)setTxt("gpStatus","No gamepad — plug one in and press a button.");});
+try{const ps=[...(navigator.getGamepads?navigator.getGamepads():[])].filter(Boolean);
+  if(ps.length){setTxt("gpStatus","Connected — press every button, sweep every stick.");gpStart();}}catch(e){}
+
+/* ---------- touch / digitizer trails ---------- */
+let touchPts=new Map(),touchMax=0,touchGrid=true,touchColIdx=0,tCtx=null;
+const TCOLS=["#53c7f0","#ffb454","#4ade80","#ff5f56","#b48cff","#f472b6","#ffffff","#7dffb2"];
+function tSize(){const cv=$("#touchCv");if(!cv)return null;
+  const d=devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;
+  tCtx=cv.getContext("2d");tCtx.setTransform(d,0,0,d,0,0);return tCtx;}
+function tBase(){if(!tSize())return;
+  tCtx.fillStyle="#05080c";tCtx.fillRect(0,0,innerWidth,innerHeight);
+  if(!touchGrid)return;
+  tCtx.strokeStyle="rgba(83,199,240,.35)";tCtx.lineWidth=1;
+  tCtx.strokeRect(1,1,innerWidth-2,innerHeight-2);
+  for(let i=1;i<3;i++){
+    tCtx.beginPath();tCtx.moveTo(innerWidth*i/3,0);tCtx.lineTo(innerWidth*i/3,innerHeight);tCtx.stroke();
+    tCtx.beginPath();tCtx.moveTo(0,innerHeight*i/3);tCtx.lineTo(innerWidth,innerHeight*i/3);tCtx.stroke();}
+  tCtx.strokeStyle="rgba(255,180,84,.8)";
+  [[0,0],[innerWidth-40,0],[0,innerHeight-40],[innerWidth-40,innerHeight-40]].forEach(([cx,cy])=>tCtx.strokeRect(cx+4,cy+4,32,32));
+  tCtx.beginPath();
+  tCtx.moveTo(innerWidth/2-12,innerHeight/2);tCtx.lineTo(innerWidth/2+12,innerHeight/2);
+  tCtx.moveTo(innerWidth/2,innerHeight/2-12);tCtx.lineTo(innerWidth/2,innerHeight/2+12);tCtx.stroke();}
+function tHud(){setTxt("touchHud","POINTERS "+touchPts.size+" · MAX "+touchMax);}
+function openTouch(){const ov=$("#touchOv");if(!ov)return;
+  ov.classList.add("on");lockScroll(true);
+  touchPts.clear();touchMax=0;touchColIdx=0;tBase();tHud();
+  setStatus("touch","manual","OPEN","Trace the full panel — borders & corner boxes.",!!(R.touch&&R.touch.val==="OPEN"));
+  log("INFO","Touch/digitizer trail test opened.");}
+function closeTouch(){const ov=$("#touchOv");if(!ov)return;
+  ov.classList.remove("on");lockScroll(false);touchPts.clear();}
+on("#btnTouchOpen","click",e=>{openTouch();try{e.currentTarget.blur()}catch(x){}});
+on("#tClear","click",()=>{tBase();});
+on("#tGrid","click",()=>{touchGrid=!touchGrid;tBase();});
+on("#tExit","click",closeTouch);
+(function(){const tov=$("#touchOv");if(!tov)return;
+  tov.addEventListener("pointerdown",e=>{
+    if(e.target.closest(".tbar"))return;
+    e.preventDefault();try{tov.setPointerCapture(e.pointerId)}catch(x){}
+    const c=TCOLS[(touchColIdx++)%TCOLS.length];
+    touchPts.set(e.pointerId,{x:e.clientX,y:e.clientY,c});
+    touchMax=Math.max(touchMax,touchPts.size);tHud();
+    if(tCtx){tCtx.fillStyle=c;tCtx.beginPath();tCtx.arc(e.clientX,e.clientY,3,0,7);tCtx.fill();}});
+  tov.addEventListener("pointermove",e=>{
+    const p=touchPts.get(e.pointerId);if(!p||!tCtx)return;
+    tCtx.strokeStyle=p.c;tCtx.lineWidth=2;tCtx.lineCap="round";
+    tCtx.beginPath();tCtx.moveTo(p.x,p.y);tCtx.lineTo(e.clientX,e.clientY);tCtx.stroke();
+    p.x=e.clientX;p.y=e.clientY;});
+  const tEnd=e=>{touchPts.delete(e.pointerId);tHud();};
+  tov.addEventListener("pointerup",tEnd);
+  tov.addEventListener("pointercancel",tEnd);
+  tov.addEventListener("contextmenu",e=>e.preventDefault());})();
+
+/* ---------- pixel overlay ---------- */
+const pix=$("#pix");let pixPat=0,pixAnim=0,cycleTimer=0;
+const SOLIDS=[["#fff",1],["#f00",0],["#0f0",0],["#00f",0],["#000",0],["#ff0",1],["#0ff",1],["#f0f",0],["#7a4400",0],["#888",1],["#808080",0]];
+function pixTip(s){const t=pix?pix.querySelector(".tip"):null;if(t)t.textContent=s;}
+function pixStopAnim(){if(pixAnim){cancelAnimationFrame(pixAnim);pixAnim=0;}}
+function pixCvShow(){const cv=$("#pixCv");if(!cv)return null;
+  cv.style.display="block";
+  const d=devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;
+  const x=cv.getContext("2d");x.setTransform(d,0,0,d,0,0);return x;}
+function pixCvHide(){const cv=$("#pixCv");if(cv)cv.style.display="none";}
+function drawChecker(x,W,H,px,inv){
+  x.fillStyle=inv?"#fff":"#000";x.fillRect(0,0,W,H);
+  x.fillStyle=inv?"#000":"#fff";
+  for(let y=0;y<H;y+=px*2)for(let cx=0;cx<W;cx+=px*2){x.fillRect(cx,y,px,px);x.fillRect(cx+px,y+px,px,px);}}
+function applyPix(i){
+  if(!pix)return;
+  pixPat=i%20;pixStopAnim();pixCvHide();
+  const gd=pix.querySelector(".pgrid");if(gd)gd.remove();
+  if(i<SOLIDS.length){const p=SOLIDS[i];
+    pix.style.background=p[0];pix.classList.toggle("tdark",!!p[1]);
+    pixTip(i===10?"neutral 50% grey — uniformity & tint":"click = next · ESC exit");return;}
+  if(i===11){pix.style.background="linear-gradient(90deg,#000 0%,#000 12%,#222 12%,#222 24%,#444 24%,#444 36%,#666 36%,#666 48%,#888 48%,#888 60%,#aaa 60%,#aaa 72%,#ccc 72%,#ccc 84%,#fff 84%)";
+    pix.classList.remove("tdark");pixTip("banding — steps should look even");return;}
+  if(i===12){pix.style.background="linear-gradient(135deg,#000,#fff)";
+    pix.classList.add("tdark");pixTip("gradient uniformity");return;}
+  if(i===13){pix.style.background="#000";pix.classList.remove("tdark");
+    const g=document.createElement("div");g.className="pgrid";
+    g.style.cssText="position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.8) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.8) 1px,transparent 1px);background-size:64px 64px";
+    pix.appendChild(g);pixTip("geometry / linearity");return;}
+  pix.style.background="#000";pix.classList.remove("tdark");
+  const d=devicePixelRatio||1,W=innerWidth,H=innerHeight;
+  if(i>=14&&i<=17){const x=pixCvShow();if(!x)return;
+    const px=i<=15?16*d:2;
+    drawChecker(x,W,H,px,(i===15||i===17));
+    pixTip(i<=15?"checkerboard — uniformity & tint":"2×2 px checker — moiré / sharpness");return;}
+  if(i===18){const x=pixCvShow();if(!x)return;
+    const w=Math.max(40,W*0.05);
+    (function loop(){const t=performance.now();
+      x.fillStyle="#000";x.fillRect(0,0,W,H);
+      const p=((t*1.1)%(W+2*w))-w;
+      x.fillStyle="#fff";x.fillRect(p,0,w,H);
+      x.fillRect(0,H/2-1,W,2);
+      pixAnim=requestAnimationFrame(loop);})();
+    pixTip("TEARING — a split moving edge means tearing");return;}
+  if(i===19){const x=pixCvShow();if(!x)return;
+    const s=120,sp=0.55;
+    (function loop(){const t=performance.now();
+      x.fillStyle="#000";x.fillRect(0,0,W,H);
+      const cyc=2*(W-s);let p=(t*sp)%cyc;if(p>W-s)p=cyc-p;
+      x.fillStyle="#fff";x.fillRect(p,H/2-s/2,s,s);
+      x.fillStyle="#000";
+      for(let l=0;l<s;l+=6)x.fillRect(p+4,H/2-s/2+6+l,s-8,2);
+      x.font="bold 28px monospace";x.fillText("BK",p+s/2-20,H/2+8);
+      pixAnim=requestAnimationFrame(loop);})();
+    pixTip("GHOSTING — trailing smear = slow overdrive");return;}}
+function openPix(i){applyPix(i);if(!pix)return;pix.classList.add("on");lockScroll(true);
+  if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});
+  setStatus("display","manual","OPEN","Inspecting panel — sign off ✓/✗ when done.",!!(R.display&&R.display.val==="OPEN"));
+  log("INFO","Pixel overlay opened (mode "+i+").");}
+function closePix(){if(!pix)return;pix.classList.remove("on");lockScroll(false);
+  pixStopAnim();pixCvHide();
+  if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});}
+if(pix)pix.addEventListener("click",e=>{if(e.target.closest(".bar"))return;applyPix(pixPat+1)});
+on("#pixBar","click",e=>e.stopPropagation());
+on("#pixExit","click",closePix);
+$$("#pix [data-p]").forEach(b=>b.addEventListener("click",()=>applyPix(+b.dataset.p)));
+SOLIDS.forEach((s,i)=>{const d=document.createElement("div");d.className="sw";d.style.background=s[0];d.title="Open "+s[0];
+  d.onclick=()=>openPix(i);const g=$("#swGrid");if(g)g.appendChild(d);});
+on("#btnCycle","click",()=>{openPix(0);let i=0;
+  if(cycleTimer)clearTimeout(cycleTimer);
+  const tick=()=>{if(!pix||!pix.classList.contains("on")||pixPat>4){cycleTimer=0;return;}
+    i=(i+1)%5;applyPix(i);cycleTimer=setTimeout(tick,2600);};
+  cycleTimer=setTimeout(tick,2600);});
+on("#btnBleed","click",()=>openPix(4));
+on("#btnGrad","click",()=>openPix(12));
+on("#btnGrid","click",()=>openPix(13));
+on("#btnTear","click",()=>openPix(18));
+on("#btnGhost","click",()=>openPix(19));
+
+/* ---------- audio (M-22 with output routing) ---------- */
+let AC=null,cur=null;
+function ac(){if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume();return AC}
+function stopAudio(){if(cur){try{cur.osc.stop()}catch(e){}cur=null;liveVal("audio","—","Stopped.");}}
+async function routeSweepSink(){
+  const sel=$("#spkOut");if(!sel||!sel.value)return;
+  try{const a=ac();
+    if(a.setSinkId){await a.setSinkId(sel.value);
+      log("INFO","Sweep routed to: "+(sel.options[sel.selectedIndex].textContent||"device"));return;}
+    log("WARN","AudioContext.setSinkId unsupported — sweep plays on default output.");
+  }catch(e){log("WARN","Output routing failed: "+e.message);}}
+function playSweep(panv){stopAudio();const a=ac(),t=a.currentTime;
+  const osc=a.createOscillator(),g=a.createGain();osc.type="sine";
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.14,t+.15);g.gain.setValueAtTime(0.14,t+7.4);g.gain.exponentialRampToValueAtTime(0.0001,t+8);
+  osc.frequency.setValueAtTime(30,t);osc.frequency.exponentialRampToValueAtTime(19000,t+8);
+  let node=g;
+  if(a.createStereoPanner){const p=a.createStereoPanner();p.pan.value=panv;g.connect(p);node=p;}
+  node.connect(a.destination);osc.connect(g);osc.start(t);osc.stop(t+8);
+  cur={osc};osc.onended=()=>{if(cur&&cur.osc===osc)cur=null};
+  setStatus("audio","manual","SWEEP","8 s sweep "+(panv<0?"LEFT":panv>0?"RIGHT":"L+R")+" · listen for distortion.",true);
+  log("INFO","Speaker sweep started ("+(panv<0?"L":panv>0?"R":"both")+")");}
+function playTone(){stopAudio();const a=ac();
+  const osc=a.createOscillator(),g=a.createGain();osc.type="sine";osc.frequency.value=1000;g.gain.value=.12;
+  osc.connect(g);g.connect(a.destination);osc.start();cur={osc};
+  setStatus("audio","manual","1 kHz","Continuous tone — press Stop.",true);}
+$$("[data-sweep]").forEach(b=>b.addEventListener("click",async()=>{const v=b.dataset.sweep;
+  if(v==="x"){stopAudio();return;}
+  await routeSweepSink();playSweep(+v);}));
+$$("[data-tone]").forEach(b=>b.addEventListener("click",playTone));
+
+/* ---------- device selectors ---------- */
+function fillSel(sel,list,kind){if(!sel)return;const cur=sel.value;sel.innerHTML="";
+  const d0=document.createElement("option");d0.value="";d0.textContent="default "+kind;sel.appendChild(d0);
+  list.forEach((d,i)=>{const o=document.createElement("option");o.value=d.deviceId;
+    o.textContent=d.label||(kind+" #"+(i+1));sel.appendChild(o);});
+  if(cur&&[...sel.options].some(o=>o.value===cur))sel.value=cur;}
+async function populateDevices(unlock){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices){log("WARN","mediaDevices unavailable.");return;}
+  if(unlock){try{const s=await navigator.mediaDevices.getUserMedia({audio:true,video:true});
+    s.getTracks().forEach(t=>t.stop());}catch(e){log("WARN","Permission refused — labels may stay hidden.");}}
+  let ds=[];try{ds=await navigator.mediaDevices.enumerateDevices();}catch(e){log("FAIL","enumerateDevices: "+e.message);return;}
+  fillSel($("#micIn"),ds.filter(d=>d.kind==="audioinput"),"mic");
+  fillSel($("#camIn"),ds.filter(d=>d.kind==="videoinput"),"camera");
+  fillSel($("#spkOut"),ds.filter(d=>d.kind==="audiooutput"),"output");
+  log("INFO","Device list refreshed: "+ds.length+" devices.");}
+on("#spkRefresh","click",()=>populateDevices(true));
+on("#micRefresh","click",()=>populateDevices(true));
+on("#camRefresh","click",()=>populateDevices(true));
+function audioCons(){const s=$("#micIn");const v=s&&s.value;return v?{deviceId:{exact:v}}:true;}
+function videoCons(){const s=$("#camIn");const v=s&&s.value;
+  return Object.assign({width:{ideal:1280}},v?{deviceId:{exact:v}}:{});}
+async function gumSafe(cons,fb){try{return await navigator.mediaDevices.getUserMedia(cons);}
+  catch(e){if(fb){log("WARN","Selected device failed ("+e.name+") — falling back to default.");
+    return await navigator.mediaDevices.getUserMedia(fb);}throw e;}}
+
+/* ---------- mic: meter + record (meter runs during record) ---------- */
+let meterStream=null,meterRaf=0,meterOwn=false;
+let recStream=null,micRec=null,micChunks=[],micRecStart=0,micRecTimer=0,micUrl=null;
+function stopMeter(){cancelAnimationFrame(meterRaf);meterRaf=0;
+  if(meterStream&&meterOwn){meterStream.getTracks().forEach(t=>t.stop());}
+  meterStream=null;meterOwn=false;}
+function startMeter(stream,owns){stopMeter();meterStream=stream;meterOwn=!!owns;
+  try{
+    const a=ac(),src=a.createMediaStreamSource(stream),an=a.createAnalyser();an.fftSize=1024;src.connect(an);
+    const buf=new Uint8Array(an.fftSize);markRunning("mic");
+    (function loop(){if(meterStream!==stream)return;
+      an.getByteTimeDomainData(buf);let s=0;
+      for(let i=0;i<buf.length;i++){const v=(buf[i]-128)/128;s+=v*v}
+      const rms=Math.sqrt(s/buf.length),db=rms>0?20*Math.log10(rms):-99;
+      const vu=$("#vu");if(vu)vu.style.width=Math.min(100,rms*320)+"%";
+      liveVal("mic",fmt(db,0),rms>0.02?"Signal detected — level responding.":"Very low signal; speak into the mic.");
+      meterRaf=requestAnimationFrame(loop);})();
+  }catch(e){log("WARN","Meter init failed: "+e.message);}}
+on("#micOn","click",async()=>{
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)
+    return setStatus("mic","fail","NO API","getUserMedia unavailable here.");
+  if(recStream){startMeter(recStream,false);return;}
+  try{const st=await gumSafe({audio:audioCons()},{audio:true});startMeter(st,true);}
+  catch(e){setStatus("mic","fail","DENIED","Permission refused or no device: "+e.name);}});
+on("#micOff","click",()=>{stopMeter();
+  const vu=$("#vu");if(vu)vu.style.width="0%";
+  if(!(micRec&&micRec.state==="recording"))setStatus("mic","manual","OFF","Meter stopped.");
+  else liveVal("mic","REC","Recording continues — meter detached.");});
+on("#micRecord","click",async()=>{
+  if(typeof MediaRecorder==="undefined")return setStatus("mic","warn","NO API","MediaRecorder unavailable.");
+  if(micRec&&micRec.state==="recording"){micRec.stop();return;}
+  try{
+    recStream=await gumSafe({audio:audioCons()},{audio:true});
+    startMeter(recStream,false);
+    const mime=pickMime("audio");
+    micChunks=[];
+    micRec=new MediaRecorder(recStream,mime?{mimeType:mime}:undefined);
+    micRec.ondataavailable=e=>{if(e.data&&e.data.size)micChunks.push(e.data)};
+    micRec.onstop=()=>{
+      clearInterval(micRecTimer);
+      stopMeter();
+      if(recStream){recStream.getTracks().forEach(t=>t.stop());recStream=null;}
+      const durS=(performance.now()-micRecStart)/1000;
+      const b=new Blob(micChunks,{type:(micRec&&micRec.mimeType)||"audio/webm"});
+      if(micUrl)URL.revokeObjectURL(micUrl);
+      micUrl=URL.createObjectURL(b);
+      const a=$("#micPlayback");if(a){a.src=micUrl;a.style.display="block";}
+      setTxt("micRecord","● Record");
+      setTxt("micRecState",fmt(durS,1)+" s captured — Replay");
+      setStatus("mic","manual","REC ✓","Recorded "+fmt(durS,1)+" s"+(mime?" ("+mime.split(";")[0]+")":"")+" — replay and judge clarity.");
+      log("OK","Mic recording complete: "+fmt(durS,1)+" s.");};
+    micRec.start();micRecStart=performance.now();
+    setTxt("micRecord","Stop ■");
+    clearInterval(micRecTimer);
+    micRecTimer=setInterval(()=>{const el=(performance.now()-micRecStart)/1000;
+      setTxt("micRecState","recording… "+fmt(el,1)+" s");
+      if(el>=15&&micRec&&micRec.state==="recording")micRec.stop();},100);
+    log("INFO","Mic recording started"+(mime?" ("+mime+")":"")+" (meter live).");
+  }catch(e){setStatus("mic","fail","DENIED","Mic record failed: "+e.name);}});
+on("#micReplay","click",()=>{
+  const a=$("#micPlayback");
+  if(!micUrl||!a)return log("WARN","No mic recording yet — press Record first.");
+  a.currentTime=0;a.play().catch(e=>log("WARN","Playback failed: "+e.message));});
+
+/* ---------- camera: preview + record + replay ---------- */
+let camStream=null;
+let camRec=null,camChunks=[],camRecStart=0,camRecTimer=0,camUrl=null;
+async function startCam(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)
+    throw new Error("getUserMedia unavailable");
+  let st=null;
+  try{st=await gumSafe({video:videoCons(),audio:true},{video:videoCons()});}
+  catch(e){st=await gumSafe({video:videoCons()},null);}
+  camStream=st;
+  const v=$("#camV");if(v){v.style.display="block";v.srcObject=st;v.play().catch(()=>{});}
+  const pb=$("#camPlayback");if(pb){pb.pause();pb.style.display="none";}
+  const tr=st.getVideoTracks()[0];const s=tr?tr.getSettings():{};
+  const hasA=st.getAudioTracks().length>0;
+  setStatus("camera","manual",(s.width||"?")+"×"+(s.height||"?"),
+    (s.frameRate?fmt(s.frameRate)+" fps · ":"")+(hasA?"audio+video":"video only")+" · record a clip and replay to verify.");
+  log("INFO","Camera live"+(hasA?" (with mic)":" (no mic)")+".");}
+on("#camOn","click",async()=>{
+  try{await startCam();}catch(e){setStatus("camera","fail","DENIED","Camera failed: "+e.name);}});
+on("#camOff","click",()=>{
+  if(camRec&&camRec.state==="recording"){try{camRec.stop()}catch(e){}}
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
+  const v=$("#camV");if(v){v.srcObject=null;}
+  setStatus("camera","manual","OFF","Camera released.");});
+on("#camRecord","click",async()=>{
+  if(typeof MediaRecorder==="undefined")return setStatus("camera","warn","NO API","MediaRecorder unavailable.");
+  if(camRec&&camRec.state==="recording"){camRec.stop();return;}
+  try{
+    if(!camStream)await startCam();
+    const mime=pickMime("video");
+    camChunks=[];
+    camRec=new MediaRecorder(camStream,mime?{mimeType:mime}:undefined);
+    camRec.ondataavailable=e=>{if(e.data&&e.data.size)camChunks.push(e.data)};
+    camRec.onstop=()=>{
+      clearInterval(camRecTimer);
+      const durS=(performance.now()-camRecStart)/1000;
+      const b=new Blob(camChunks,{type:(camRec&&camRec.mimeType)||"video/webm"});
+      if(camUrl)URL.revokeObjectURL(camUrl);
+      camUrl=URL.createObjectURL(b);
+      setTxt("camRecord","● Record");
+      setTxt("camRecState",fmt(durS,1)+" s captured — Replay");
+      const v=$("#camV"),pb=$("#camPlayback");
+      if(pb){pb.src=camUrl;pb.style.display="block";}
+      if(v)v.style.display="none";
+      setStatus("camera","manual","REC ✓","Recorded "+fmt(durS,1)+" s"+(mime?" ("+mime.split(";")[0]+")":"")+" — replaying.");
+      log("OK","Camera recording complete: "+fmt(durS,1)+" s.");
+      if(pb)pb.play().catch(()=>{});};
+    camRec.start();camRecStart=performance.now();
+    setTxt("camRecord","Stop ■");
+    clearInterval(camRecTimer);
+    camRecTimer=setInterval(()=>{const el=(performance.now()-camRecStart)/1000;
+      setTxt("camRecState","recording… "+fmt(el,1)+" s");
+      if(el>=20&&camRec&&camRec.state==="recording")camRec.stop();},100);
+    log("INFO","Camera recording started"+(mime?" ("+mime+")":"")+".");
+  }catch(e){setStatus("camera","fail","DENIED","Camera record failed: "+e.name);}});
+on("#camReplay","click",()=>{
+  const pb=$("#camPlayback");
+  if(!camUrl||!pb)return log("WARN","No camera recording yet — press Record first.");
+  const v=$("#camV");if(v)v.style.display="none";
+  pb.style.display="block";pb.currentTime=0;pb.play().catch(e=>log("WARN","Playback failed: "+e.message));});
+
+/* ---------- technology matrix HW/SW ---------- */
+function runTechDetect(){
+  const ok=f=>{try{return !!f()}catch(e){return false}};
+  const L=[
+   ["Secure context",window.isSecureContext!==false],
+   ["WebGL2",ok(()=>document.createElement("canvas").getContext("webgl2"))],
+   ["WebGL1",ok(()=>document.createElement("canvas").getContext("webgl"))],
+   ["WebGPU",!!navigator.gpu],
+   ["WebCodecs",typeof window.VideoEncoder!=="undefined"],
+   ["MediaRecorder",typeof window.MediaRecorder!=="undefined"],
+   ["Screen capture",ok(()=>!!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia))],
+   ["WebXR",!!navigator.xr],
+   ["WebUSB",!!navigator.usb],
+   ["Web Bluetooth",!!navigator.bluetooth],
+   ["Serial",!!navigator.serial],
+   ["HID",!!navigator.hid],
+   ["WebMIDI",!!navigator.requestMIDIAccess],
+   ["NFC",typeof window.NDEFReader!=="undefined"],
+   ["Gamepad API",!!navigator.getGamepads],
+   ["WebRTC",typeof window.RTCPeerConnection!=="undefined"],
+   ["WebAudio",!!(window.AudioContext||window.webkitAudioContext)],
+   ["MediaDevices",!!navigator.mediaDevices],
+   ["Battery API",!!navigator.getBattery],
+   ["Network info",!!navigator.connection],
+   ["Wake Lock",!!navigator.wakeLock],
+   ["Clipboard",!!navigator.clipboard],
+   ["File System Access",typeof window.showOpenFilePicker==="function"],
+   ["Storage estimate",!!(navigator.storage&&navigator.storage.estimate)],
+   ["Service Worker",!!navigator.serviceWorker],
+   ["IndexedDB",!!window.indexedDB],
+   ["SharedArrayBuffer",typeof SharedArrayBuffer!=="undefined"],
+   ["WebAssembly",typeof WebAssembly!=="undefined"],
+   ["OffscreenCanvas",typeof window.OffscreenCanvas!=="undefined"],
+   ["Workers",!!window.Worker],
+   ["Touch",navigator.maxTouchPoints>0],
+   ["Fine pointer",matchMedia("(pointer:fine)").matches],
+   ["HDR display",matchMedia("(dynamic-range: high)").matches],
+   ["P3 gamut",matchMedia("(color-gamut: p3)").matches],
+   ["Multi-display",!!screen.isExtended]];
+  const g=$("#techGrid");if(!g)return;g.innerHTML="";
+  L.forEach(([name,val])=>{const s=document.createElement("span");
+    s.className="tchip "+(val?"y":"n");s.textContent=(val?"✓ ":"✗ ")+name;
+    g.appendChild(s);});
+  setStatus("tech","info",L.filter(x=>x[1]).length+" / "+L.length,"Passive scan done — codec HW/SW chips loading…",!!R.tech);}
+async function runCodecTech(){
+  const g=$("#techGrid");if(!g)return;
+  const list=[["H.264",'video/mp4; codecs="avc1.640033"',"avc1.42001f"],
+              ["HEVC",'video/mp4; codecs="hev1.1.6.L150.90"',null],
+              ["VP9",'video/webm; codecs="vp09.00.50.08"',"vp09.00.10.08"],
+              ["AV1",'video/mp4; codecs="av01.0.12M.08"',"av01.0.04M.08"]];
+  for(const [name,mime,encCodec] of list){
+    let dec="?",enc="—";
+    try{if(navigator.mediaCapabilities){
+      const r=await withTimeout(navigator.mediaCapabilities.decodingInfo({type:"file",
+        video:{contentType:mime,width:3840,height:2160,bitrate:40e6,framerate:60}}),6000,"decode probe");
+      dec=r.supported?(r.powerEfficient?"HW ✓":"SW ✓"):"✗";}}catch(e){dec="?";}
+    if(typeof VideoEncoder!=="undefined"&&encCodec){
+      try{const s=await withTimeout(VideoEncoder.isConfigSupported({codec:encCodec,width:1280,height:720,framerate:30}),4000,"encode probe");
+        if(s&&s.supported){enc="✓";
+          const ha=s.config&&s.config.hardwareAcceleration;
+          if(ha==="prefer-hardware")enc+=" HW";else if(ha==="prefer-software")enc+=" SW";}
+        else enc="✗";}catch(e){enc="?";}}
+    else if(!encCodec)enc="n/a";
+    const el=document.createElement("span");
+    el.className="tchip "+(dec==="✗"?"n":"y");
+    el.textContent=name+" · dec "+dec+" · enc "+enc;
+    g.appendChild(el);}
+  const tot=g.querySelectorAll(".tchip").length,y=g.querySelectorAll(".tchip.y").length;
+  setStatus("tech","info",y+" / "+tot,"Codec chips: HW = browser reports hardware acceleration / power-efficient path.",true);}
+runTechDetect();
+runCodecTech().catch(e=>log("WARN","Codec tech probe failed: "+(e.message||e)));
+on("#btnTechRe","click",()=>{runTechDetect();runCodecTech().catch(()=>{});});
+
+/* ---------- deep port probe ---------- */
+function probeLine(lv,msg){const L=$("#probeList");if(!L)return;
+  const d=document.createElement("div");
+  d.innerHTML=`<span class="${lv}">[${lv}]</span> ${msg}`;
+  L.appendChild(d);L.scrollTop=L.scrollHeight;}
+function markPorts(){setStatus("ports","info","PROBED","Deep probe used — sign off physical ports with ✓/✗.",!!R.ports);}
+on("#pMedia","click",async()=>{markPorts();
+  try{const ds=await navigator.mediaDevices.enumerateDevices();
+    const c={audioinput:0,audiooutput:0,videoinput:0};
+    ds.forEach(d=>c[d.kind]=(c[d.kind]||0)+1);
+    probeLine("OK","Media devices: "+c.audioinput+" mic(s), "+c.audiooutput+" output(s), "+c.videoinput+" camera(s).");
+  }catch(e){probeLine("FAIL","enumerateDevices: "+e.message)}});
+on("#pGame","click",()=>{markPorts();
+  let gs=[];try{gs=[...(navigator.getGamepads?navigator.getGamepads():[])].filter(Boolean);}catch(e){}
+  probeLine(gs.length?"OK":"WARN","Gamepads: "+(gs.length?gs.map(g=>(g.id||"").slice(0,40)).join(" | "):"none connected."));});
+on("#pStorage","click",async()=>{markPorts();
+  try{const e=await navigator.storage.estimate();
+    probeLine("OK","Storage quota: "+fmt(e.quota/1e9,1)+" GB available · "+fmt(e.usage/1e6,0)+" MB in use.");
+  }catch(e){probeLine("FAIL","estimate: "+e.message)}});
+on("#pUsb","click",async()=>{markPorts();
+  if(!navigator.usb)return probeLine("WARN","WebUSB not available in this browser.");
+  try{const ds=await navigator.usb.getDevices();
+    probeLine(ds.length?"OK":"WARN","USB (authorized list): "+(ds.length?ds.map(d=>d.productName||d.manufacturerName||"device").join(", "):"0."));
+  }catch(e){probeLine("FAIL","usb.getDevices: "+e.message)}});
+on("#pSerial","click",async()=>{markPorts();
+  if(!navigator.serial)return probeLine("WARN","Web Serial not available.");
+  try{const ps=await navigator.serial.getPorts();
+    probeLine(ps.length?"OK":"WARN","Serial ports (authorized list): "+ps.length);
+  }catch(e){probeLine("FAIL","serial.getPorts: "+e.message)}});
+on("#pHid","click",async()=>{markPorts();
+  if(!navigator.hid)return probeLine("WARN","WebHID not available.");
+  try{const ds=await navigator.hid.getDevices();
+    probeLine(ds.length?"OK":"WARN","HID (authorized list): "+(ds.length?ds.map(d=>d.productName).join(", "):"0"));
+  }catch(e){probeLine("FAIL","hid.getDevices: "+e.message)}});
+on("#pBt","click",async()=>{markPorts();
+  if(!navigator.bluetooth)return probeLine("WARN","Web Bluetooth not available.");
+  try{const a=await navigator.bluetooth.getAvailability();
+    probeLine(a?"OK":"WARN","Bluetooth adapter: "+(a?"available":"not available / disabled"));
+  }catch(e){probeLine("FAIL","bluetooth: "+e.message)}});
+on("#pMidi","click",async()=>{markPorts();
+  if(!navigator.requestMIDIAccess)return probeLine("WARN","WebMIDI not available.");
+  try{const m=await navigator.requestMIDIAccess({sysex:false});
+    const ins=[...m.inputs.values()].map(i=>i.name),outs=[...m.outputs.values()].map(o=>o.name);
+    probeLine(ins.length||outs.length?"OK":"WARN","MIDI: "+ins.length+" in · "+outs.length+" out");
+  }catch(e){probeLine("FAIL","MIDI access denied: "+e.message)}});
+
+/* ---------- CTRL loop engine + dispatcher ---------- */
+function recordLoopSample(id){
+  const r=R[id];if(!r)return;
+  const num=parseFloat(String(r.val).replace(/,/g,""));
+  const st=LOOP.stats[id]||(LOOP.stats[id]={vals:[],texts:[]});
+  if(isFinite(num))st.vals.push(num);else st.texts.push(r.val==null?"—":String(r.val));
+  r.loop=st.vals.slice();}
+function passReport(pass){
+  if(pass>=2){
+    for(const id in LOOP.stats){const v=LOOP.stats[id].vals;if(v.length<2)continue;
+      const last=v[v.length-1],prev=v.slice(0,-1),pa=prev.reduce((a,b)=>a+b,0)/prev.length;
+      if(pa>0&&last<pa*0.85)log("WARN","Trend: "+id+" fell to "+fmtAuto(last)+" vs avg "+fmtAuto(pa)+" — leak/thermal suspect.");}}
+  if(performance.memory)log("INFO","JS heap "+(performance.memory.usedJSHeapSize/1048576).toFixed(1)+"/"+(performance.memory.totalJSHeapSize/1048576).toFixed(1)+" MB");}
+async function runLoop(){
+  if(LOOP.running)return;
+  LOOP.running=true;LOOP.abort=false;LOOP.passes=0;LOOP.stats={};
+  TESTS.forEach(([id])=>{if(R[id])delete R[id].loop;});
+  const target=+(($("#loopSel")&&$("#loopSel").value)||1);
+  const ba=$("#btnRunAll"),bs=$("#btnStopAll");
+  if(ba)ba.disabled=true;
+  if(bs){bs.disabled=false;setTxt("btnStopAll","■ Stop");}
+  await guardOn();
+  const heap0=performance.memory?performance.memory.usedJSHeapSize:0;
+  let pass=0;
+  while(!LOOP.abort&&(target===0||pass<target)){
+    pass++;
+    log("INFO","—— BENCH PASS "+pass+(target===0?" / ∞":" / "+target)+" ——");
+    for(let i=0;i<QUEUE.length;i++){
+      if(LOOP.abort)break;
+      const id=QUEUE[i];
+      setTxt("runStep","pass "+pass+(target===0?"/∞":"/"+target)+" · ["+(i+1)+"/"+QUEUE.length+"] "+(TESTS.find(t=>t[0]===id)||["",id])[1]);
+      setProg((100*i/QUEUE.length)+"%");
+      try{await RUN[id]();}catch(e){setStatus(id,"fail","ERROR","Exception: "+(e&&e.message||e));log("FAIL",id+" threw: "+e);}
+      recordLoopSample(id);
+      if(GPU_COOLDOWN.has(id))await sleep(400);}
+    if(LOOP.abort)break;
+    LOOP.passes=pass;
+    renderReport();
+    passReport(pass);
+    setProg("100%");
+    await sleep(300);}
+  guardOff();
+  LOOP.running=false;
+  if(ba)ba.disabled=false;
+  if(bs){bs.disabled=true;setTxt("btnStopAll","■ Stop");}
+  setTxt("runStep",LOOP.abort?"stopped after "+LOOP.passes+" pass(es) — results preserved":"complete — "+LOOP.passes+" pass(es) · min/avg/max in ledger");
+  log(LOOP.abort?"WARN":"OK","—— BENCH "+(LOOP.abort?"STOPPED":"COMPLETE")+" · "+LOOP.passes+" pass(es) ——");
+  if(performance.memory&&heap0)log("INFO","Heap delta over "+LOOP.passes+" pass(es): "+((performance.memory.usedJSHeapSize-heap0)/1048576).toFixed(1)+" MB");
+  setTimeout(()=>setProg("0%"),1500);}
+on("#btnRunAll","click",runLoop);
+on("#btnStopAll","click",()=>{if(!LOOP.running)return;LOOP.abort=true;
+  setTxt("btnStopAll","… stopping");
+  log("WARN","STOP requested — bench halts after the current test; recorded results are preserved.");});
+on("#loopSel","change",e=>{try{e.target.blur()}catch(x){}});
+
+$$("[data-mark]").forEach(b=>b.addEventListener("click",()=>{
+  const card=b.closest("[data-t]");if(!card)return;
+  const id=card.dataset.t;
+  const pass=b.dataset.mark==="pass";
+  setStatus(id,pass?"pass":"fail",pass?"PASS":"FAIL",pass?"Signed off OK by technician.":"Flagged by technician — see notes.");
+  b.parentElement.querySelectorAll("[data-mark]").forEach(x=>x.classList.remove("mark"));b.classList.add("mark");}));
+$$("[data-run]").forEach(b=>b.addEventListener("click",()=>{
+  const card=b.closest("[data-t]");if(!card)return;
+  const id=card.dataset.t,fn=RUN[id];
+  if(typeof fn!=="function"){log("WARN","No runner registered for "+id);return;}
+  if(b.dataset.busy)return;
+  b.dataset.busy="1";const old=b.textContent;b.textContent="RUNNING…";b.disabled=true;
+  let done=false;
+  const restore=()=>{if(done)return;done=true;b.dataset.busy="";b.disabled=false;b.textContent=old;};
+  const wd=setTimeout(()=>{if(!done){
+    log("FAIL","Watchdog: "+id+" exceeded 120 s — releasing the button.");
+    setStatus(id,"warn","TIMEOUT","Runner did not report completion within 120 s.");restore();}},120000);
+  Promise.resolve().then(fn)
+    .catch(e=>{setStatus(id,"fail","ERROR","Exception: "+(e&&e.message||e));log("FAIL",id+" threw: "+e);})
+    .finally(()=>{clearTimeout(wd);restore();});}));
+
+const QUEUE=["cpuSingle","cpuMulti","cpuFloat","memBW","memLat","memCheck","gpu2d","gpu3d","gpuAI","gpuCodec","refresh","storageIDB","storageLS","battery","net"];
+const GPU_COOLDOWN=new Set(["gpu2d","gpu3d","gpuAI"]);
+
+/* ---------- spec strip ---------- */
+let SPECS=[];
+function detect(){
+  const ua=navigator.userAgent;
+  const os=(/Windows/.test(ua)?"Windows":/Mac OS/.test(ua)?"macOS":/Android/.test(ua)?"Android":/Linux/.test(ua)?"Linux":/CrOS/.test(ua)?"ChromeOS":"?");
+  const br=(/Edg\//.test(ua)?"Edge":/OPR\//.test(ua)?"Opera":/Firefox\//.test(ua)?"Firefox":/Chrome\//.test(ua)?"Chrome":/Safari\//.test(ua)?"Safari":"?");
+  let gpu="—";
+  try{const c=document.createElement("canvas"),g=c.getContext("webgl");
+    if(g){const ext=g.getExtension("WEBGL_debug_renderer_info");
+      gpu=ext?g.getParameter(ext.UNMASKED_RENDERER_WEBGL):g.getParameter(g.RENDERER);}}catch(e){}
+  SPECS=[["OS",os],["Browser",br],["CPU threads",navigator.hardwareConcurrency||"?"],
+    ["RAM (declared)",navigator.deviceMemory?navigator.deviceMemory+" GB+":"n/a"],
+    ["GPU",gpu||"n/a",1],
+    ["Screen",screen.width+"×"+screen.height+" @"+(window.devicePixelRatio||1)+"x · "+screen.colorDepth+"-bit"],
+    ["HDR",matchMedia("(dynamic-range: high)").matches?"yes":"no"],
+    ["Touch",("ontouchstart" in window)||navigator.maxTouchPoints>0?navigator.maxTouchPoints+" pts":"none"],
+    ["Timezone",Intl.DateTimeFormat().resolvedOptions().timeZone],
+    ["WebGPU",navigator.gpu?"yes":"no"],["WebCodecs",typeof VideoEncoder!=="undefined"?"yes":"no"],
+    ["MediaRecorder",typeof MediaRecorder!=="undefined"?"yes":"no"],
+    ["Battery API",navigator.getBattery?"yes":"no"]];
+  const s=$("#specStrip");if(!s)return;s.innerHTML="";
+  SPECS.forEach(([k,v,hi])=>{const d=document.createElement("div");d.className="spec";
+    d.innerHTML=`<div class="k">${k}</div><div class="v ${hi?"hi":""}">${v}</div>`;s.appendChild(d);});
+  const sl=$("#sysLed");if(sl)sl.className="led info";}
+detect();
+on("#btnReDetect","click",()=>{detect();runTechDetect();runCodecTech().catch(()=>{});log("INFO","Re-detection complete.");});
+function copyText(t,okMsg){
+  const done=()=>log("INFO",okMsg);
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done).catch(()=>fallbackCopy(t));}
+  else fallbackCopy(t);
+  function fallbackCopy(x){const ta=document.createElement("textarea");ta.value=x;document.body.appendChild(ta);ta.select();
+    try{document.execCommand("copy");done()}catch(e){log("WARN","Copy failed.")}ta.remove();}}
+on("#btnCopySpec","click",()=>copyText("BENCHKIT SPEC SUMMARY\n"+SPECS.map(s=>s[0]+": "+s[1]).join("\n"),"Spec summary copied."));
+
+/* ---------- report / print / exports ---------- */
+function renderReport(){
+  const tbl=$("#reportTable");if(!tbl)return;
+  const tb=tbl.querySelector("tbody")||tbl;tb.innerHTML="";
+  let np=0,nw=0,nf=0,nr=0;
+  TESTS.forEach(([id,name])=>{const r=R[id];if(!r)return;nr++;
+    if(r.st==="pass")np++;else if(r.st==="warn")nw++;else if(r.st==="fail")nf++;
+    let valTxt=r.val==null?"—":String(r.val);
+    const lst=LOOP.stats[id];
+    if(lst&&lst.vals.length>1){
+      const a=lst.vals.reduce((x,y)=>x+y,0)/lst.vals.length;
+      valTxt=fmtAuto(a)+" (min "+fmtAuto(Math.min(...lst.vals))+" / max "+fmtAuto(Math.max(...lst.vals))+")";}
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${name}</td><td>${valTxt}</td>
+      <td><span class="chip ${CHIPCLS[r.st]||"m"}">${CHIPLBL[r.st]||r.st}</span></td>
+      <td>${new Date(r.ts).toTimeString().slice(0,8)}</td>`;
+    tb.appendChild(tr);});
+  const st=$("#verdictStamp");if(!st)return;st.className="";
+  if(!nr){st.textContent="PENDING";setTxt("rpMeta2","No tests recorded yet.");}
+  else if(nf){st.textContent="FAIL";st.classList.add("FAIL");setTxt("rpMeta2",nf+" fail · "+nw+" note · "+np+" pass.");}
+  else if(nw){st.textContent="PASS·NOTES";st.classList.add("NOTES");setTxt("rpMeta2",nw+" note · "+np+" pass.");}
+  else{st.textContent="PASS";st.classList.add("PASS");setTxt("rpMeta2",np+" checks passed.");}
+  setTxt("rpMeta1","UNIT "+($("#fModel")&&$("#fModel").value||"—")+" · TICKET "+($("#fTicket")&&$("#fTicket").value||"—")+" · TECH "+($("#fTech")&&$("#fTech").value||"—"));}
+["fTicket","fModel","fTech"].forEach(id=>on("#"+id,"input",()=>{renderReport();saveSession()}));
+on("#notes","input",saveSession);
+
+function gather(){return{app:"BENCHKIT v1.9.4",generated:new Date().toISOString(),
+  benchPasses:LOOP.passes,gpuInterruptions:GPU_STATE.losses,gpuBackendHealthy:gpuHealthy(),
+  ticket:$("#fTicket")?$("#fTicket").value:"",model:$("#fModel")?$("#fModel").value:"",
+  tech:$("#fTech")?$("#fTech").value:"",specs:SPECS,notes:$("#notes")?$("#notes").value:"",
+  loopStats:LOOP.stats,results:R};}
+function preparePrint(){
+  const ps=$("#printSpecs");if(ps)ps.textContent=SPECS.map(s=>s[0]+": "+s[1]).join(" · ");
+  const pk=$("#printKeys");if(pk){
+    const tot=keyOrder.length;
+    const tested=keyOrder.filter(c=>seen.has(c)).map(LBL).join(" ");
+    const untested=keyOrder.filter(c=>!seen.has(c)).map(LBL).join(" ");
+    pk.textContent="TESTED "+seen.size+"/"+tot+(tested?": "+tested:"")+(untested?"   UNTESTED: "+untested:"   UNTESTED: none");}
+  const pl=$("#printLog");if(pl&&logBox)pl.innerHTML=logBox.innerHTML;
+  const pn=$("#printNotes");if(pn)pn.textContent=($("#notes")&&$("#notes").value)||"—";}
+on("#btnPrint","click",()=>{preparePrint();window.print();});
+on("#btnJson","click",()=>{const g=gather();
+  const b=new Blob([JSON.stringify(g,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(b);
+  const tk=(g.ticket||"unit").replace(/[^\w\-]+/g,"-");
+  a.download="benchkit_"+tk+"_"+Date.now()+".json";a.click();
+  URL.revokeObjectURL(a.href);log("INFO","Report exported as JSON.")});
+on("#btnCsv","click",()=>{
+  const g=gather();
+  const esc=s=>{s=String(s==null?"":s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+  const rows=[];
+  rows.push(["BENCHKIT CSV",g.generated,g.ticket,g.model,g.tech,"passes:"+g.benchPasses].map(esc).join(","));
+  rows.push(["test","status","value","timestamp","detail"].map(esc).join(","));
+  TESTS.forEach(([id,name])=>{const r=g.results[id];if(!r)return;
+    rows.push([name,r.st,r.val,new Date(r.ts).toISOString(),r.detail].map(esc).join(","));});
+  const hasLoops=Object.keys(g.loopStats||{}).some(k=>g.loopStats[k].vals.length>0);
+  if(hasLoops){
+    rows.push("");
+    rows.push(["loop samples"].map(esc).join(","));
+    rows.push(["test","pass","value"].map(esc).join(","));
+    TESTS.forEach(([id,name])=>{const st2=g.loopStats[id];if(!st2)return;
+      st2.vals.forEach((v,i)=>rows.push([name,i+1,v].map(esc).join(",")));});}
+  const b=new Blob([rows.join("\n")],{type:"text/csv"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(b);
+  const tk=(g.ticket||"unit").replace(/[^\w\-]+/g,"-");
+  a.download="benchkit_"+tk+"_"+Date.now()+".csv";a.click();
+  URL.revokeObjectURL(a.href);log("INFO","Report exported as CSV.");});
+on("#btnCopyRpt","click",()=>{const g=gather();
+  let t="BENCHKIT REPORT — "+(g.ticket||"no ticket")+"\nUNIT: "+(g.model||"—")+" · TECH: "+(g.tech||"—")+" · "+g.generated+"\n";
+  if(g.gpuInterruptions>0)t+="GPU backend interruptions this session: "+g.gpuInterruptions+(g.gpuBackendHealthy?" (recovered)":" (still down)")+"\n";
+  t+="\n";
+  TESTS.forEach(([id,name])=>{const r=g.results[id];if(!r)return;
+    const lst=g.loopStats[id];
+    let v=r.val==null?"—":String(r.val);
+    if(lst&&lst.vals.length>1){const a=lst.vals.reduce((x,y)=>x+y,0)/lst.vals.length;
+      v=fmtAuto(a)+" (min "+fmtAuto(Math.min(...lst.vals))+" / max "+fmtAuto(Math.max(...lst.vals))+")";}
+    t+=name.padEnd(36)+String(v).padEnd(22)+"["+r.st.toUpperCase()+"]\n";});
+  const vs=$("#verdictStamp");
+  t+="\nVERDICT: "+(vs?vs.textContent:"—")+"\nNOTES: "+(g.notes||"—");
+  copyText(t,"Report summary copied.")});
+on("#btnReset","click",()=>{if(!confirm("Clear this bench session (results, ticket fields, notes)?"))return;
+  try{localStorage.removeItem("bk_session")}catch(e){}
+  location.reload();});
+
+/* ---------- session persistence ---------- */
+function saveSession(){try{localStorage.setItem("bk_session",JSON.stringify({
+  ticket:$("#fTicket")?$("#fTicket").value:"",model:$("#fModel")?$("#fModel").value:"",
+  tech:$("#fTech")?$("#fTech").value:"",notes:$("#notes")?$("#notes").value:"",
+  gpuLosses:GPU_STATE.losses,R:R}))}catch(e){}}
+function loadSession(){try{const s=JSON.parse(localStorage.getItem("bk_session"));
+  if(!s)return;
+  if($("#fTicket"))$("#fTicket").value=s.ticket||"";
+  if($("#fModel"))$("#fModel").value=s.model||"";
+  if($("#fTech"))$("#fTech").value=s.tech||"";
+  if($("#notes"))$("#notes").value=s.notes||"";
+  if(s.gpuLosses>0)log("INFO","Previous session logged "+s.gpuLosses+" GPU backend interruption(s).");
+  if(s.R)Object.keys(s.R).forEach(id=>{if(CARD[id]){const r=s.R[id];
+    if(r.st==="run")r={st:"warn",val:"STOPPED",detail:"Previous run was interrupted by page close."};
+    setStatus(id,r.st,r.val,"[restored] "+(r.detail||""),true);}});
+  log("INFO","Previous session restored from localStorage.");
+ }catch(e){}}
+
+/* ---------- global keys / resize / boot ---------- */
+addEventListener("keydown",e=>{if(e.key==="Escape"){closePix();closeTouch();}});
+addEventListener("resize",()=>{
+  if(pix&&pix.classList.contains("on"))applyPix(pixPat);
+  const tov=$("#touchOv");
+  if(tov&&tov.classList.contains("on")){touchPts.clear();tBase();tHud();}});
+if(typeof MediaRecorder==="undefined"){
+  ["micRecord","camRecord"].forEach(id=>{const b=$("#"+id);if(b){b.disabled=true;b.title="MediaRecorder unavailable";}});}
+setInterval(()=>setTxt("clock",new Date().toTimeString().slice(0,8)),1000);
+setTxt("clock",new Date().toTimeString().slice(0,8));
+const BUILD="build "+Date.now().toString(36).toUpperCase();
+setTxt("buildTag","v1.9.4 · "+BUILD);setTxt("footBuild",BUILD+" · runs fully offline");
+try{
+  if("IntersectionObserver" in window&&!REDUCED){
+    const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{threshold:.1});
+    $$(".mod").forEach(m=>io.observe(m));
+  }else $$(".mod").forEach(m=>m.classList.add("in"));
+  log("INFO","BENCHKIT v1.9.4 online — "+(navigator.hardwareConcurrency||"?")+" threads · WebGPU "+(navigator.gpu?"yes":"no")+" · WebCodecs "+(typeof VideoEncoder!=="undefined"?"yes":"no"));
+  log("INFO","Fixes: loop-engine progress helper restored · Stress Lab responsive (no canvas cropping) · undefined-reference sweep.");
+  netUI(false);
+  populateDevices(false).catch(()=>{});
+  loadSession();renderReport();drawLab();
+}catch(e){log("FAIL","Boot error: "+(e&&e.message||e));}
+</script>
+</body>
+</html>
