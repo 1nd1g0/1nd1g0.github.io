@@ -99,6 +99,109 @@
   #bar button.sel{background:#577;color:#031003;font-weight:bold;}
   #bar button.zero{opacity:.45;}
   #bar button:active{transform:translateY(1px);}
+
+  /* =========================================
+     Landscape Mobile Layout Modifications
+     ========================================= */
+  @media (orientation: landscape) and (max-height: 600px), 
+         (orientation: landscape) and (pointer: coarse) {
+    
+    body {
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
+      overflow: hidden !important;
+    }
+
+    #top {
+      position: absolute !important;
+      top: 0; left: 0; right: 0;
+      z-index: 50 !important;
+      background: rgba(0,0,0,0.85) !important;
+      padding: 2px 6px !important;
+      border-bottom: 1px solid #345 !important;
+      gap: 4px !important;
+      font-size: 10px !important;
+    }
+    
+    #top .box { display: none !important; } /* Hide seed/grid inputs to save space */
+    #hud { font-size: 11px !important; gap: 8px !important; }
+
+    #stage {
+      flex: 1 1 auto !important;
+      height: 100vh !important;
+      width: auto !important;
+      margin-top: 0 !important;
+      padding-top: 26px !important; /* Space for absolute top bar */
+      box-sizing: border-box !important;
+    }
+
+    #bar {
+      flex: 0 0 120px !important;
+      width: 120px !important;
+      height: 100vh !important;
+      flex-direction: column !important;
+      flex-wrap: nowrap !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      border-top: none !important;
+      border-left: 1px solid #345 !important;
+      padding: 4px !important;
+      gap: 4px !important;
+      align-items: stretch !important;
+      justify-content: flex-start !important;
+      box-sizing: border-box !important;
+      background: rgba(0,0,0,0.95) !important;
+    }
+
+    .group {
+      flex-direction: column !important;
+      flex-wrap: nowrap !important;
+      gap: 4px !important;
+      margin-left: 0 !important;
+      padding-left: 0 !important;
+      border-left: none !important;
+      border-bottom: 1px solid #345 !important;
+      padding-bottom: 4px !important;
+      width: 100% !important;
+    }
+    
+    .group:last-child {
+      border-bottom: none !important;
+    }
+
+    #bar button {
+      width: 100% !important;
+      min-height: 32px !important;
+      font-size: 10px !important;
+      padding: 4px 6px !important;
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 6px !important;
+      box-sizing: border-box !important;
+    }
+    
+    #bar button.icon-btn img.skill-icon {
+      width: 24px !important;
+      height: 24px !important;
+      image-rendering: pixelated !important;
+      flex-shrink: 0 !important;
+    }
+    
+    #bar button .btn-text {
+      font-size: 10px !important;
+      line-height: 1.1 !important;
+      text-align: left !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+    
+    #cheat {
+      display: none !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -1176,9 +1279,6 @@ function blockerAhead(L){
   return false;
 }
 
-// Fixed wall detection:
-// check every tile row currently overlapped by the lemming body,
-// not just an approximate center row.
 function wallAhead(L){
   const tx = currentTx(L);
   const ftx = tx + L.dir;
@@ -1658,19 +1758,6 @@ function updateDig(L){
   }
 }
 
-// =========================================================
-// Fixed climb
-//
-// phase 0: climb upward while the wall intersects the body
-// phase 1: move over the top in the original direction
-//
-// Important fixes:
-// - wall detection checks all body rows, so the climber does not
-//   stop too early while still overlapping the wall top
-// - when the top is reached, the lemming aligns to the top support
-//   row and then moves forward onto it
-// - direction is preserved
-// =========================================================
 function updateClimb(L){
   const tx = currentTx(L);
   const ftx = tx + L.dir;
@@ -1700,8 +1787,6 @@ function updateClimb(L){
 
         L.y = ny;
 
-        // Stop climbing as soon as the wall no longer intersects
-        // any row of the body.
         if(!wallAhead(L)){
           L.yAcc = 0;
           break;
@@ -1714,7 +1799,6 @@ function updateClimb(L){
         L.xAcc = 0;
         L.yAcc = 0;
 
-        // Align to the top support row of the wall if needed.
         const gy = findGroundY(L.targetX, L.y, 0, 1);
         if(gy !== null && !bodyCollides(L.targetX, gy)){
           L.y = gy;
@@ -1735,7 +1819,6 @@ function updateClimb(L){
     return;
   }
 
-  // phase 1: move over the top
   if(L.targetX === null){
     L.targetX = tileCenterX(ftx);
   }
@@ -1758,7 +1841,6 @@ function updateClimb(L){
 
     if(!bodyCollides(L.x, L.y) && supportAt(L.x, L.y)){
       L.st = ST_WALK;
-      // L.dir is intentionally unchanged.
     }else{
       startFall(L);
     }
@@ -1830,7 +1912,6 @@ function assignSkill(L, sk){
     if(L.canClimb) return false;
     L.canClimb = true;
 
-    // If already against a wall, engage climbing immediately.
     if(L.st === ST_WALK && wallAhead(L)){
       beginAction(L, ST_CLIMB);
     }
@@ -2203,7 +2284,16 @@ function updateSkillButtons(){
   document.querySelectorAll("#bar button[data-sk]").forEach(btn=>{
     const sk = btn.dataset.sk;
     const count = skillCounts[sk] ?? 0;
-    btn.textContent = `${sk.toUpperCase()} ${count}`;
+    
+    const textSpan = btn.querySelector('.btn-text');
+    const txt = `${sk.toUpperCase()} ${count}`;
+    
+    if(textSpan) {
+        textSpan.textContent = txt;
+    } else {
+        btn.textContent = txt;
+    }
+    
     btn.classList.toggle("sel", selectedSkill === sk);
     btn.classList.toggle("zero", count <= 0);
   });
@@ -2946,8 +3036,97 @@ function frame(now){
 }
 
 // =========================================================
+// Graphical Skill Icons Injection
+// =========================================================
+function createSkillIcon(skill) {
+    const c = document.createElement('canvas');
+    c.width = 32; c.height = 32;
+    const g = c.getContext('2d');
+    g.imageSmoothingEnabled = false;
+
+    const s = 2;
+    const draw = (x, y, w, h, color) => {
+        g.fillStyle = color;
+        g.fillRect(x*s, y*s, w*s, h*s);
+    };
+
+    // Hair
+    draw(3, 1, 4, 1, '#e05a2a');
+    // Head
+    draw(3, 2, 4, 2, '#ffd8a8');
+    // Eye
+    draw(5, 2, 1, 1, '#111');
+    // Body
+    draw(3, 4, 4, 3, '#3cc04c');
+    // Pants
+    draw(3, 7, 4, 2, '#2a80d8');
+    // Legs
+    draw(3, 9, 1, 2, '#2a80d8');
+    draw(5, 9, 1, 2, '#2a80d8');
+
+    // Arms default
+    draw(2, 4, 1, 2, '#ffd8a8');
+    draw(7, 4, 1, 2, '#ffd8a8');
+
+    if (skill === 'climb') {
+        draw(2, 2, 1, 2, '#ffd8a8');
+        draw(7, 2, 1, 2, '#ffd8a8');
+    } else if (skill === 'float') {
+        draw(2, 0, 6, 1, '#d85a9a');
+        draw(3, 1, 4, 1, '#d85a9a');
+        draw(4, 2, 2, 2, '#bbb');
+    } else if (skill === 'bomb') {
+        draw(8, 4, 2, 2, '#333');
+        draw(9, 3, 1, 1, '#f04038');
+    } else if (skill === 'block') {
+        draw(1, 4, 1, 1, '#ffd8a8');
+        draw(8, 4, 1, 1, '#ffd8a8');
+        draw(0, 5, 1, 2, '#ffd8a8');
+        draw(9, 5, 1, 2, '#ffd8a8');
+    } else if (skill === 'bash') {
+        draw(8, 3, 1, 1, '#888');
+        draw(9, 2, 2, 1, '#c8d0d8');
+        draw(8, 4, 1, 2, '#888');
+    } else if (skill === 'dig') {
+        draw(4, 9, 2, 1, '#c8d0d8');
+        draw(4, 10, 2, 2, '#888');
+    } else if (skill === 'mine') {
+        draw(8, 5, 1, 1, '#888');
+        draw(9, 6, 1, 1, '#888');
+        draw(10, 7, 2, 1, '#c8d0d8');
+    } else if (skill === 'build') {
+        draw(8, 6, 3, 2, '#c8783c');
+    }
+
+    return c.toDataURL();
+}
+
+function injectSkillIcons() {
+    document.querySelectorAll("#bar button[data-sk]").forEach(btn => {
+        const sk = btn.dataset.sk;
+        if (!sk) return;
+        const iconUrl = createSkillIcon(sk);
+        
+        const img = document.createElement('img');
+        img.src = iconUrl;
+        img.className = 'skill-icon';
+        img.style.pointerEvents = 'none';
+        
+        const textSpan = document.createElement('span');
+        textSpan.className = 'btn-text';
+        textSpan.textContent = btn.textContent; 
+        
+        btn.innerHTML = '';
+        btn.appendChild(img);
+        btn.appendChild(textSpan);
+        btn.classList.add('icon-btn');
+    });
+}
+
+// =========================================================
 // Boot
 // =========================================================
+injectSkillIcons();
 computeMetrics();
 updateCanvasSize();
 loadLevel(1, false);
