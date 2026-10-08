@@ -21,7 +21,7 @@ h1{margin:0;font-size:min(11vw,58px);letter-spacing:.12em;color:var(--acc);
 .sub{color:var(--dim);letter-spacing:.28em;font-size:12px;margin:4px 0 22px}
 .btn{display:block;min-width:min(78vw,300px);margin:6px auto;padding:13px 18px;font:inherit;font-weight:700;
  letter-spacing:.14em;color:var(--ink);background:linear-gradient(#4a2c14,#33200f);border:2px solid var(--line);
- border-radius:12px;cursor:pointer;text-shadow:0 1px 0 #000}
+ border-radius:12px;cursor:pointer;text-shadow:0 1px 0 #000;text-decoration:none;text-align:center}
 .btn:active{transform:translateY(2px);background:linear-gradient(#5a3a1c,#3a2412)}
 .btn.acc{border-color:#b4691f;background:linear-gradient(#a35a17,#6f3a0c)}
 .btn.grn{border-color:#2c7a3a;background:linear-gradient(#2f8a41,#1d5a2a)}
@@ -59,7 +59,16 @@ textarea{width:100%;min-height:120px;font-family:ui-monospace,Consolas,monospace
 #mBox h3{margin:0 0 10px;color:var(--acc);letter-spacing:.12em}
 .kv{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;font-size:14px;margin:8px 0}
 .kv b{color:var(--acc2)}
-@media(max-width:640px){ .kv{grid-template-columns:1fr} }
+@media(max-width:640px){ 
+  .kv{grid-template-columns:1fr} 
+  .btn { min-width: min(85vw, 260px); padding: 10px 14px; font-size: 14px; margin: 5px auto; letter-spacing: .08em; }
+  h1 { font-size: min(14vw, 48px); letter-spacing: .08em; }
+  .sub { font-size: 11px; margin-bottom: 14px; }
+  #hudTop .pill { font-size: 11px; padding: 4px 8px; }
+  #hudTop .ic { width: 32px; height: 28px; padding: 4px 0; font-size: 14px; }
+  #hint { font-size: 11px; padding: 4px 10px; }
+  #powWrap { width: min(70vw, 200px); height: 10px; }
+}
 </style>
 </head>
 <body>
@@ -74,6 +83,7 @@ textarea{width:100%;min-height:120px;font-family:ui-monospace,Consolas,monospace
     <button class="btn" id="bEdit">LEVEL EDITOR</button>
     <button class="btn" id="bHelp">HOW TO PLAY</button>
     <button class="btn" id="bSet">SETTINGS</button>
+    <button class="btn" id="bHome">🏠 HOME</button>
     <div class="sub" id="bestLine" style="margin-top:18px"></div>
   </div>
   <div id="hud" class="hide">
@@ -310,8 +320,6 @@ function buildCourse(l){
  for(i=0;i<parts.length;i++){p=parts[i];
   if(p.t==='g')prism(BV,p.x,p.z,p.w/2,p.d/2,[p.y,p.y,p.y,p.y],p.y-2,p.c||0);
   else if(p.t==='r'){
-   /* corners A(minx,minz) B(maxx,minz) C(maxx,maxz) D(minx,maxz):
-      x-ramp rises toward +x -> [y0,y1,y1,y0]; z-ramp rises toward +z -> [y0,y0,y1,y1] */
    var ys=p.a==='x'?[p.y0,p.y1,p.y1,p.y0]:[p.y0,p.y0,p.y1,p.y1];
    prism(BV,p.x,p.z,p.w/2,p.d/2,ys,Math.min(p.y0,p.y1)-2,p.c!==undefined?p.c:5)}
   else if(p.t==='w')prism(BV,p.x,p.z,p.w/2,p.d/2,[p.y+p.h,p.y+p.h,p.y+p.h,p.y+p.h],p.y,p.c!==undefined?p.c:1);
@@ -439,8 +447,6 @@ function genLevels(seedStr,count,diff){
    x+=DX[dir]*len;z+=DZ[dir]*len;lenTot+=len};
   flatCorr(5+rnd()*2,true);
   for(var s=1;s<segs;s++){
-   /* no junction pad here: pads flatten ramps into hidden steps.
-      Corner pieces are added only inside the turn branch. */
    var r0=rnd();
    if(r0<.38){
     var nd=(dir+(rnd()<.5?1:3))%4;
@@ -605,11 +611,6 @@ function physStep(st,lvl,dt,mills,fx){
    if(sp<.14&&Math.abs(n[1])>.97){st.vx=0;st.vz=0}}
   st.airT=0}
  else st.airT+=dt;
- /* windmills: blade line at angle a is (cos a, sin a) — rendering uses mRotY(-a)
-    so the visible blade matches this collision blade exactly.
-    Leading face (sweeping toward the ball) sweeps it along the blade motion;
-    trailing face (receding) acts as a moving wall and only reflects a ball
-    that is catching up to it. */
  for(i=0;i<mills.length;i++){var m=mills[i];
   var hubY=topAt(parts,m.x,m.z)+(m.hub||.55);
   if(st.y>hubY+(m.bh||.9)/2+R_BALL||st.y<hubY-(m.bh||.9)/2-R_BALL)continue;
@@ -692,6 +693,27 @@ function restartHole(){
  resetBall();strokes=0;sinkT=-1;lockT=.35;updateHUD();toast("RESTARTED")}
 
 /* ============================ camera / picking ============================ */
+function getBallScreenPos() {
+    if (!VP) return null;
+    var x = ball.x, y = ball.y, z = ball.z;
+    var cx = VP[0]*x + VP[4]*y + VP[8]*z + VP[12];
+    var cy = VP[1]*x + VP[5]*y + VP[9]*z + VP[13];
+    var cw = VP[3]*x + VP[7]*y + VP[11]*z + VP[15];
+    if (cw <= 0.1) return null;
+    var sx = (cx / cw + 1) * 0.5 * innerWidth;
+    var sy = (1 - cy / cw) * 0.5 * innerHeight;
+    return {x: sx, y: sy};
+}
+function panCamera(dx, dy) {
+    var sy=Math.sin(cam.yaw), cyw=Math.cos(cam.yaw);
+    var sp=Math.sin(cam.pitch), cp=Math.cos(cam.pitch);
+    var rx = -cyw, rz = sy;
+    var ux = sp*sy, uy = -cp, uz = sp*cyw;
+    var panSpeed = 0.015 * cam.dist / 10;
+    cam.tx -= (dx * rx - dy * ux) * panSpeed;
+    cam.ty -= (dx * 0  - dy * uy) * panSpeed;
+    cam.tz -= (dx * rz - dy * uz) * panSpeed;
+}
 function lookMat(){
  var cp=Math.cos(cam.pitch),sp=Math.sin(cam.pitch),sy=Math.sin(cam.yaw),cyw=Math.cos(cam.yaw);
  var ex=cam.tx+cam.dist*cp*sy,ey=cam.ty+cam.dist*sp+1,ez=cam.tz+cam.dist*cp*cyw;
@@ -718,7 +740,7 @@ function rayY(cssX,cssY,yy){
  var t=(yy-r.o[1])/r.d[1];if(t<0)return null;
  return[r.o[0]+r.d[0]*t,r.o[2]+r.d[2]*t]}
 function computeAim(){
- if(!drag||drag.orbit)return null;
+ if(!drag||drag.orbit||drag.pan)return null;
  var dx=drag.cx-drag.x0,dy=drag.cy-drag.y0,len=Math.hypot(dx,dy);
  var maxLen=Math.min(innerWidth,innerHeight)*.42;
  var pow=clamp(len/maxLen,0,1);
@@ -734,17 +756,21 @@ function buildPreview(){
  var gy=topAt(lv.parts,ball.x,ball.z);
  for(i=0;i<8;i++){var t=i/7*1.4*a.pow+.35;
   pts.push(ball.x+a.dx*t,gy+.08,ball.z+a.dz*t)}
- var st={x:ball.x,y:ball.y,z:ball.z,vx:a.dx*a.spd,vy:.4,vz:a.dz*a.spd,gh:ball.y-R_BALL};
+ var st={x:ball.x,y:ball.y,z:ball.z,vx:a.dx*a.spd,vy:.3,vz:a.dz*a.spd,gh:ball.y-R_BALL,airT:0};
  var mills=[];
  for(i=0;i<course.mills.length;i++){var m0=course.mills[i];
   mills.push({x:m0.x,z:m0.z,r:m0.r,n:m0.n,w:m0.w,s:m0.s,hub:m0.hub,bh:m0.bh,ang:m0.ang})}
  var fx={};
- for(i=0;i<110;i++){
-  physStep(st,lv,1/50,mills,fx);
-  for(var k=0;k<mills.length;k++)mills[k].ang+=mills[k].s/50;
-  if(fx.water||fx.oob||fx.sink)break;
+ var maxSteps = 4 * 120;
+ for(i=0;i<maxSteps;i++){
+  physStep(st,lv,STEP,mills,fx);
+  for(var k=0;k<mills.length;k++)mills[k].ang=(mills[k].ang+mills[k].s*STEP)%TAU;
+  if(fx.water||fx.oob||fx.sink){ pts.push(st.x,st.y,st.z); break; }
   if(i%3===0)pts.push(st.x,st.y,st.z);
-  if(i>40&&Math.hypot(st.vx,st.vz)<.3)break}
+  var spd=Math.hypot(st.vx,st.vz);
+  var moving=spd>.12||Math.abs(st.vy)>.2||st.airT>.25;
+  if(!moving && i>30) break;
+ }
  dotArr=new Float32Array(pts);updMesh(dotBuf,dotArr)}
 var previewAcc=0;
 
@@ -769,7 +795,6 @@ function render(){
   var hubY=topAt(lv.parts,m.x,m.z)+(m.hub||.55);
   for(b=0;b<m.n;b++){
    var a=m.ang+b*TAU/m.n;
-   /* mRotY(-a) makes the drawn blade coincide with the collision blade (cos a, sin a) */
    var mod=mMul(mMul(mTrans(m.x,hubY,m.z),mRotY(-a)),mScale(m.r,m.bh,m.w));
    gl.uniformMatrix4fv(LU.uM,false,new Float32Array(mod));
    bindMain(meshBlade);gl.drawArrays(gl.TRIANGLES,0,meshBlade.n)}}
@@ -819,7 +844,7 @@ function frame(t){
   cam.tx+=(ball.x-cam.tx)*Math.min(1,dt*6);
   cam.ty+=(ball.y-cam.ty)*Math.min(1,dt*6);
   cam.tz+=(ball.z-cam.tz)*Math.min(1,dt*6);
-  if(drag&&!drag.orbit&&(previewAcc-=dt)<=0){previewAcc=.08;buildPreview()}}
+  if(drag&&!drag.orbit&&!drag.pan&&(previewAcc-=dt)<=0){previewAcc=.08;buildPreview()}}
  else if(mode==='edit'&&course){
   for(var j=0;j<course.mills.length;j++){var m2=course.mills[j];m2.ang=(m2.ang+(m2.s||1.5)*dt)%TAU}}
  else if(mode==='menu')cam.yaw+=dt*.06;
@@ -834,16 +859,29 @@ var twoF=false,pinch0=1,dist0=13,lastMid=null;
 cv.addEventListener('contextmenu',function(e){e.preventDefault()});
 
 function pDown(id,x,y,btn){
- ptrs.set(id,{x:x,y:y,sx:x,sy:y,t:performance.now()});
+ ptrs.set(id,{x:x,y:y,sx:x,sy:y,t:performance.now(),btn:btn});
  if(ptrs.size===2){
   twoF=true;drag=null;aim=null;dotArr=new Float32Array(0);
   var a=[];ptrs.forEach(function(p){a.push(p)});
   pinch0=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1;dist0=cam.dist;
   lastMid={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2}}
  else if(ptrs.size===1){
-  var canAim=(mode==='play'||mode==='editTest')&&round&&sinkT<0&&lockT<=0&&!ball.moving&&(btn===0||btn===undefined);
-  if(canAim)drag={x0:x,y0:y,cx:x,cy:y,id:id,orbit:false};
-  else drag={x0:x,y0:y,cx:x,cy:y,id:id,orbit:true,yaw0:cam.yaw,pit0:cam.pitch}}}
+  if (btn === 2) {
+      drag={x0:x,y0:y,cx:x,cy:y,id:id,orbit:false,pan:true};
+      lastMid={x:x,y:y};
+  } else {
+      var canAim=(mode==='play'||mode==='editTest')&&round&&sinkT<0&&lockT<=0&&!ball.moving;
+      var bsp = getBallScreenPos();
+      var nearBall = bsp && Math.hypot(x - bsp.x, y - bsp.y) < 80;
+      
+      if(canAim && nearBall) {
+          drag={x0:x,y0:y,cx:x,cy:y,id:id,orbit:false,pan:false};
+      } else {
+          drag={x0:x,y0:y,cx:x,cy:y,id:id,orbit:true,pan:false,yaw0:cam.yaw,pit0:cam.pitch};
+      }
+  }
+ }
+}
 function pMove(id,x,y){
  var p=ptrs.get(id);if(!p)return;
  p.x=x;p.y=y;
@@ -852,15 +890,24 @@ function pMove(id,x,y){
   var d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1;
   cam.dist=clamp(dist0*pinch0/d,5,45);
   var mx=(a[0].x+a[1].x)/2,my=(a[0].y+a[1].y)/2;
-  if(lastMid){cam.yaw-=(mx-lastMid.x)*.006;
-   cam.pitch=clamp(cam.pitch+(my-lastMid.y)*.004,.18,1.25)}
+  if(lastMid){
+      panCamera(mx - lastMid.x, my - lastMid.y);
+  }
   lastMid={x:mx,y:my};return}
+ 
  if(!drag||drag.id!==id)return;
  drag.cx=x;drag.cy=y;
- if(drag.orbit){
+ 
+ if(drag.pan){
+     panCamera(x - lastMid.x, y - lastMid.y);
+     lastMid={x:x,y:y};
+ } else if(drag.orbit){
   cam.yaw=drag.yaw0-(x-drag.x0)*.008;
   cam.pitch=clamp(drag.pit0+(y-drag.y0)*.005,.18,1.25)}
- else aim=computeAim()}
+ else {
+     aim=computeAim();
+ }
+}
 function pUp(id){
  var p=ptrs.get(id);
  ptrs.delete(id);
@@ -869,9 +916,11 @@ function pUp(id){
  var dtms=p?performance.now()-p.t:999,dist=p?Math.hypot(p.x-p.sx,p.y-p.sy):999;
  var isTap=dtms<350&&dist<9;
  if(mode==='edit'&&isTap&&p)editorTap(p.x,p.y);
- else if((mode==='play'||mode==='editTest')&&!drag.orbit){
+ else if((mode==='play'||mode==='editTest')&&!drag.orbit && !drag.pan){
   aim=computeAim();
-  if(aim&&aim.pow>.05&&sinkT<0&&round){
+  var bsp = getBallScreenPos();
+  var nearBall = bsp && Math.hypot(p.x - bsp.x, p.y - bsp.y) < 50;
+  if(aim&&aim.pow>.03&&!nearBall&&sinkT<0&&round){
    shotOrigin={x:ball.x,y:ball.y,z:ball.z};
    ball.vx=aim.dx*aim.spd;ball.vz=aim.dz*aim.spd;ball.vy=.3;
    ball.moving=true;strokes++;updateHUD();AU.putt(aim.pow)}}
@@ -945,6 +994,7 @@ $('bCustom').onclick=function(){AU.click();customModal()};
 $('bGen').onclick=function(){AU.click();genModal()};
 $('bHelp').onclick=function(){AU.click();helpModal()};
 $('bSet').onclick=function(){AU.click();setModal()};
+$('bHome').onclick=function(){window.open('https://1nd1g0.github.io/', '_blank')};
 $('bRestart').onclick=function(){AU.click();restartHole()};
 $('bMute').onclick=function(){AU.on=!AU.on;settings.snd=AU.on;store('pc.set',settings);updateHUD()};
 $('bCam').onclick=function(){if(!lv)return;
