@@ -13,12 +13,12 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
 canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
 .hide{display:none!important}
 #ui{position:fixed;inset:0;pointer-events:none;z-index:5}
-.scr,#card,#modal,#hudTop,#edTop,#edPanel{pointer-events:auto}
+.scr,#card,#modal,#hudTop,#hudBot,#edTop,#edPanel{pointer-events:auto}
 .scr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
- background:radial-gradient(120% 90% at 50% 20%,rgba(46,24,10,.55),rgba(10,5,3,.82));text-align:center;padding:20px}
+ background:radial-gradient(120% 90% at 50% 20%,rgba(46,24,10,.55),rgba(10,5,3,.82));text-align:center;padding:14px}
 h1{margin:0;font-size:min(11vw,58px);letter-spacing:.12em;color:var(--acc);
  text-shadow:0 3px 0 #7a3c10,0 6px 18px rgba(0,0,0,.6)}
-.sub{color:var(--dim);letter-spacing:.28em;font-size:12px;margin:4px 0 22px}
+.sub{color:var(--dim);letter-spacing:.28em;font-size:12px;margin:4px 0 18px}
 .btn{display:block;min-width:min(78vw,300px);margin:6px auto;padding:13px 18px;font:inherit;font-weight:700;
  letter-spacing:.14em;color:var(--ink);background:linear-gradient(#4a2c14,#33200f);border:2px solid var(--line);
  border-radius:12px;cursor:pointer;text-shadow:0 1px 0 #000;text-decoration:none;text-align:center}
@@ -26,14 +26,15 @@ h1{margin:0;font-size:min(11vw,58px);letter-spacing:.12em;color:var(--acc);
 .btn.acc{border-color:#b4691f;background:linear-gradient(#a35a17,#6f3a0c)}
 .btn.grn{border-color:#2c7a3a;background:linear-gradient(#2f8a41,#1d5a2a)}
 .btn.sm{padding:8px 10px;font-size:13px;min-width:0;display:inline-block;margin:3px}
+.btn.ic{min-width:0;display:inline-block;width:42px;height:34px;padding:5px 0;margin:0;font-size:15px;border-radius:10px}
 #hud{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;
- padding:calc(8px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom))}
-#hudTop{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.pill{background:rgba(20,10,5,.72);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px;letter-spacing:.08em}
+ padding:calc(8px + env(safe-area-inset-top)) 10px calc(8px + env(safe-area-inset-bottom))}
+#hudTop{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pill{background:rgba(20,10,5,.72);border:1px solid var(--line);border-radius:10px;padding:5px 9px;font-size:13px;letter-spacing:.08em}
 .pill b{color:var(--acc)}
-.ic{width:38px;height:34px;text-align:center;padding:6px 0}
-#hint{align-self:center;background:rgba(20,10,5,.6);border-radius:10px;padding:5px 12px;font-size:12px;color:var(--dim);max-width:92vw}
-#powWrap{align-self:center;width:min(60vw,260px);height:12px;border:1px solid var(--line);border-radius:8px;background:rgba(0,0,0,.5);overflow:hidden}
+#hudBot{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap}
+#hint{position:absolute;bottom:56px;left:50%;transform:translateX(-50%);background:rgba(20,10,5,.6);border-radius:10px;padding:5px 12px;font-size:12px;color:var(--dim);max-width:92vw;text-align:center;pointer-events:none;z-index:6}
+#powWrap{width:min(46vw,220px);height:12px;border:1px solid var(--line);border-radius:8px;background:rgba(0,0,0,.5);overflow:hidden;margin:0}
 #pow{height:100%;width:0%;background:linear-gradient(90deg,#5ad068,#ffd23c,#ff5a3c)}
 #card{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(8,4,2,.55)}
 #cardIn{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:26px 34px;text-align:center;min-width:min(80vw,320px)}
@@ -59,15 +60,15 @@ textarea{width:100%;min-height:120px;font-family:ui-monospace,Consolas,monospace
 #mBox h3{margin:0 0 10px;color:var(--acc);letter-spacing:.12em}
 .kv{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;font-size:14px;margin:8px 0}
 .kv b{color:var(--acc2)}
-@media(max-width:640px){ 
-  .kv{grid-template-columns:1fr} 
-  .btn { min-width: min(85vw, 260px); padding: 10px 14px; font-size: 14px; margin: 5px auto; letter-spacing: .08em; }
-  h1 { font-size: min(14vw, 48px); letter-spacing: .08em; }
-  .sub { font-size: 11px; margin-bottom: 14px; }
-  #hudTop .pill { font-size: 11px; padding: 4px 8px; }
-  #hudTop .ic { width: 32px; height: 28px; padding: 4px 0; font-size: 14px; }
-  #hint { font-size: 11px; padding: 4px 10px; }
-  #powWrap { width: min(70vw, 200px); height: 10px; }
+@media(max-width:640px){
+ .kv{grid-template-columns:1fr}
+ .btn{min-width:min(88vw,250px);padding:10px 14px;font-size:14px;margin:4px auto;letter-spacing:.08em}
+ h1{font-size:min(13vw,46px);letter-spacing:.08em}
+ .sub{font-size:10px;margin-bottom:10px;letter-spacing:.2em}
+ .pill{font-size:11px;padding:4px 7px}
+ .btn.ic{width:38px;height:30px;padding:4px 0;font-size:14px}
+ #hint{font-size:11px;padding:4px 10px;bottom:48px}
+ #powWrap{width:min(38vw,150px);height:10px}
 }
 </style>
 </head>
@@ -84,21 +85,22 @@ textarea{width:100%;min-height:120px;font-family:ui-monospace,Consolas,monospace
     <button class="btn" id="bHelp">HOW TO PLAY</button>
     <button class="btn" id="bSet">SETTINGS</button>
     <button class="btn" id="bHome">🏠 HOME</button>
-    <div class="sub" id="bestLine" style="margin-top:18px"></div>
+    <div class="sub" id="bestLine" style="margin-top:14px"></div>
   </div>
   <div id="hud" class="hide">
     <div id="hudTop">
       <span class="pill" id="hudHole"></span><span class="pill" id="hudPar"></span>
       <span class="pill">STROKES <b id="hudStr">0</b></span><span class="pill">TOTAL <b id="hudTot">0</b></span>
-      <span style="flex:1"></span>
+    </div>
+    <div id="hint"></div>
+    <div id="hudBot">
+      <div id="powWrap"><div id="pow"></div></div>
       <button class="btn ic" id="bRestart" title="Restart hole (R)">↺</button>
       <button class="btn ic" id="bMute" title="Sound (M)">♪</button>
       <button class="btn ic" id="bCam" title="Recenter camera">◎</button>
       <button class="btn ic" id="bHelpHud" title="Help">?</button>
       <button class="btn ic" id="bMenu" title="Menu">☰</button>
     </div>
-    <div id="powWrap"><div id="pow"></div></div>
-    <div id="hint"></div>
   </div>
   <div id="card" class="hide"><div id="cardIn"></div></div>
   <div id="ed" class="hide">
@@ -111,7 +113,7 @@ textarea{width:100%;min-height:120px;font-family:ui-monospace,Consolas,monospace
     </div>
     <div id="edPanel">
       <div class="row" id="edTools"></div>
-      <div class="lbl">PARTS — tap scene to move selected · drag = orbit · pinch = zoom</div>
+      <div class="lbl">PARTS — tap scene to move selected · drag = orbit · two fingers / right-drag = pan</div>
       <div id="edList"></div>
       <div class="row" id="edProps"></div>
       <div class="row">
@@ -389,87 +391,117 @@ LV("Grand Finale",5,[0,1.7],[0,19.2],[G(0,7.55,6,16.1),G(0,18.8,6,2.4),Q(0,16.6,
  Wc(0,4,1.8,1.3,1,0,4),M(0,8.6,{r:2.4,s:1.9}),S(0,13.2,5.4,3)])
 ];
 
-/* ============================ procedural (3D) ============================ */
-function genLevels(seedStr,count,diff){
- var rnd=mulberry(hashStr(String(seedStr)));var out=[];
+/* ============================ procedural ============================ */
+var NA=["Dusty","Crooked","Rusty","Sunny","Echo","Mesa","Cactus","Coyote","Red","Whisper","Broken","Golden"];
+var NB=["Run","Bend","Hollow","Ridge","Trail","Gulch","Bluff","Draw","Pass","Arroyo"];
+function genOne(key,diff,hIdx){
+ var rnd=mulberry(hashStr(key));
+ var dlvl=clamp(.25+diff*.18+hIdx*.04,.2,1);
+ var w=4.2,o=w/2+.3,hwN=1.15;
  var DX=[1,0,-1,0],DZ=[0,1,0,-1];
- var NA=["Dusty","Crooked","Rusty","Sunny","Echo","Mesa","Cactus","Coyote","Red","Whisper","Broken","Golden"];
- var NB=["Run","Bend","Hollow","Ridge","Trail","Gulch","Bluff","Draw","Pass","Arroyo"];
- for(var h=0;h<count;h++){
-  var dlvl=clamp(.25+diff*.18+h*.04,.2,1);
-  var parts=[],w=4.2,segs=3+Math.floor(rnd()*2+dlvl*2);
-  var dir=1,x=0,z=0,parAcc=2,lenTot=0,elev=0;
-  var wallSeg=function(cx,cz,len,e){
-   if(DX[dir]!==0)parts.push(W(cx,cz-w/2-.3,len+.6,.5,1.3,e),W(cx,cz+w/2+.3,len+.6,.5,1.3,e));
-   else parts.push(W(cx-w/2-.3,cz,.5,len+.6,1.3,e),W(cx+w/2+.3,cz,.5,len+.6,1.3,e))};
-  var feature=function(cx,cz,len){
-   var f=rnd();
-   if(f<.3){parts.push(Wc(cx+(rnd()-.5)*1.2,cz+(rnd()-.5)*1.2,1.1,1.1,1,elev,4));parAcc+=.5}
-   else if(f<.55){parts.push(S(cx,cz,w-.8,Math.min(4,len-2)));parAcc+=.5}
-   else if(f<.8){parts.push(M(cx,cz,{r:1.7,s:(rnd()<.5?-1:1)*(1.4+rnd()),n:4}));parAcc+=1}};
-  var flatCorr=function(len,feat){
-   var cx=x+DX[dir]*len/2,cz=z+DZ[dir]*len/2;
-   parts.push(G(cx,cz,DX[dir]!==0?len+.6:w+.6,DZ[dir]!==0?len+.6:w+.6,elev));
-   wallSeg(cx,cz,len,elev);
-   if(feat&&len>5)feature(cx,cz,len);
-   x+=DX[dir]*len;z+=DZ[dir]*len;lenTot+=len};
-  var waterCorr=function(len){
-   var gap=2.8,g1=(len-gap)/2;
-   var c1x=x+DX[dir]*g1/2,c1z=z+DZ[dir]*g1/2;
-   var c2x=x+DX[dir]*(g1+gap+g1/2),c2z=z+DZ[dir]*(g1+gap+g1/2);
-   var mw=x+DX[dir]*(g1+gap/2),mz=z+DZ[dir]*(g1+gap/2);
-   if(DX[dir]!==0){
-    parts.push(G(c1x,c1z,g1+.3,w,elev),G(c2x,c2z,g1+.3,w,elev),Q(mw,mz,gap+.4,w+.6,elev-.55));
-    wallSeg(c1x,c1z,g1,elev);wallSeg(c2x,c2z,g1,elev);
-    if(rnd()<.55)parts.push(G(mw,mz,1.4,gap+.8,elev));
-   }else{
-    parts.push(G(c1x,c1z,w,g1+.3,elev),G(c2x,c2z,w,g1+.3,elev),Q(mw,mz,w+.6,gap+.4,elev-.55));
-    wallSeg(c1x,c1z,g1,elev);wallSeg(c2x,c2z,g1,elev);
-    if(rnd()<.55)parts.push(G(mw,mz,gap+.8,1.4,elev));
-   }
-   parAcc+=1;
-   x+=DX[dir]*len;z+=DZ[dir]*len;lenTot+=len};
-  var rampCorr=function(amt){
-   var len=3.2,cx=x+DX[dir]*len/2,cz=z+DZ[dir]*len/2;
-   var yA=elev,yB=elev+amt,y0,y1;
-   if(DX[dir]===1){y0=yA;y1=yB}
-   else if(DX[dir]===-1){y0=yB;y1=yA}
-   else if(DZ[dir]===1){y0=yA;y1=yB}
-   else{y0=yB;y1=yA}
-   parts.push(R(cx,cz,DX[dir]!==0?len:w,DZ[dir]!==0?len:w,y0,y1,DX[dir]!==0?'x':'z'));
-   wallSeg(cx,cz,len,elev);
-   elev=yB;parAcc+=.6;
-   x+=DX[dir]*len;z+=DZ[dir]*len;lenTot+=len};
-  var pathCorr=function(len){
-   var cx=x+DX[dir]*len/2,cz=z+DZ[dir]*len/2;
-   parts.push(G(cx,cz,DX[dir]!==0?len+.6:2.2,DZ[dir]!==0?len+.6:2.2,elev));
-   parAcc+=1;
-   x+=DX[dir]*len;z+=DZ[dir]*len;lenTot+=len};
-  flatCorr(5+rnd()*2,true);
-  for(var s=1;s<segs;s++){
-   var r0=rnd();
-   if(r0<.38){
-    var nd=(dir+(rnd()<.5?1:3))%4;
-    var cx2=x+(DX[dir]+DX[nd])*(w/2),cz2=z+(DZ[dir]+DZ[nd])*(w/2);
-    parts.push(G(cx2,cz2,w+.3,w+.3,elev));
-    if(rnd()<dlvl*.6){parts.push(Wc(cx2,cz2,.9,.9,.9,elev,4));parAcc+=.5}
-    dir=nd;x=cx2;z=cz2;parAcc+=.6;lenTot+=w;
-    flatCorr(4.5+rnd()*2.5,true)}
-   else{
-    var r2=rnd();
-    if(r2<dlvl*.22&&elev<1.6)rampCorr(.7+rnd()*.5);
-    else if(r2<dlvl*.42&&elev>.6)rampCorr(-Math.min(elev,.7+rnd()*.5));
-    else if(r2<dlvl*.6){pathCorr(2.6+rnd()*1.8)}
-    else if(r2<dlvl*.72)waterCorr(8+rnd()*2);
-    else flatCorr(4.5+rnd()*2.5,true)}}
-  if(elev>.5)rampCorr(-elev*.8);
-  flatCorr(3,false);
-  parts.push(G(x+DX[dir]*2.2,z+DZ[dir]*2.2,w+.6,w+.6,elev));
-  var cup=[x+DX[dir]*2.6,z+DZ[dir]*2.6];
-  if(DX[dir]!==0)parts.push(W(x+DX[dir]*4.5,z,.6,w+1.2,1,elev));
-  else parts.push(W(x,z+DZ[dir]*4.5,w+1.2,.6,1,elev));
-  var par=clamp(Math.round(parAcc+lenTot/14),2,6);
-  out.push(LV(NA[Math.floor(rnd()*NA.length)]+" "+NB[Math.floor(rnd()*NB.length)],par,[0,0],cup,parts))}
+ function perp(d){return[DZ[d],-DX[d]]}
+ var parts=[],Jx=[0],Jz=[0],dirs=[],lens=[],e0s=[],e1s=[],types=[],frnd=[];
+ var dir=1,elev=0,x=0,z=0,parAcc=2,lenTot=0,s;
+ var nSeg=3+Math.floor(rnd()*2+dlvl*2);
+ for(s=0;s<nSeg;s++){
+  if(s>0){
+   if(rnd()<.36){dir=(dir+(rnd()<.5?1:3))%4;parAcc+=.6}
+   Jx.push(x);Jz.push(z)}
+  var t='flat',L=4.5+rnd()*2.5,amt=0,f=rnd(),r2=rnd();
+  if(s>0&&r2<dlvl*.2&&elev<1.6){t='ramp';amt=.7+rnd()*.5;L=3.2;parAcc+=.6}
+  else if(s>0&&r2<dlvl*.4&&elev>.6){t='ramp';amt=-Math.min(elev,.7+rnd()*.5);L=3.2;parAcc+=.6}
+  else if(s>0&&r2<dlvl*.58){t='path';L=2.6+rnd()*1.8;parAcc+=1}
+  else if(s>0&&s<nSeg-1&&r2<dlvl*.72){t='water';L=8+rnd()*2;parAcc+=1}
+  if(t==='flat'){if(f<.55)parAcc+=.5;else if(f<.8)parAcc+=1}
+  dirs.push(dir);lens.push(L);e0s.push(elev);e1s.push(elev+amt);types.push(t);frnd.push(f);
+  x+=DX[dir]*L;z+=DZ[dir]*L;lenTot+=L;elev+=amt}
+ Jx.push(x);Jz.push(z);
+ var i,d,ax,az,L2,gw,cx,cz,along;
+ for(i=0;i<nSeg;i++){ /* grounds / ramps / water / features */
+  d=dirs[i];ax=Jx[i];az=Jz[i];L2=lens[i];gw=types[i]==='path'?hwN:o;
+  cx=ax+DX[d]*L2/2;cz=az+DZ[d]*L2/2;along=L2;
+  if(types[i]==='ramp')
+   parts.push(R(cx,cz,DX[d]!==0?along:gw*2,DX[d]!==0?gw*2:along,e0s[i],e1s[i],DX[d]!==0?'x':'z'));
+  else if(types[i]==='water'){
+   var gap=2.8,g1=(L2-gap)/2,c1=g1/2,c2=g1+gap+g1/2;
+   parts.push(G(ax+DX[d]*c1,az+DZ[d]*c1,DX[d]!==0?g1:gw*2,DX[d]!==0?gw*2:g1,e0s[i]));
+   parts.push(G(ax+DX[d]*c2,az+DZ[d]*c2,DX[d]!==0?g1:gw*2,DX[d]!==0?gw*2:g1,e0s[i]));
+   parts.push(Q(ax+DX[d]*L2/2,az+DZ[d]*L2/2,DX[d]!==0?gap+.4:gw*2+.6,DX[d]!==0?gw*2+.6:gap+.4,e0s[i]-.55));
+   if(rnd()<.55)parts.push(G(ax+DX[d]*L2/2,az+DZ[d]*L2/2,DX[d]!==0?gap+.8:1.4,DX[d]!==0?1.4:gap+.8,e0s[i]))}
+  else parts.push(G(cx,cz,DX[d]!==0?along:gw*2,DX[d]!==0?gw*2:along,e0s[i]));
+  if(types[i]==='flat'){var ff=frnd[i];
+   if(ff<.3)parts.push(Wc(cx+(rnd()-.5)*1.2,cz+(rnd()-.5)*1.2,1.1,1.1,1,e0s[i],4));
+   else if(ff<.55)parts.push(S(cx,cz,gw*2-.8,Math.min(4,L2-2)));
+   else if(ff<.8)parts.push(M(cx,cz,{r:1.7,s:(rnd()<.5?-1:1)*(1.4+rnd()),n:4}))}}
+ for(i=1;i<nSeg;i++){ /* corner pads seal every turn */
+  if(dirs[i]!==dirs[i-1]){var d0=dirs[i-1];
+   parts.push(G(Jx[i]+DX[d0]*(w/2),Jz[i]+DZ[d0]*(w/2),o*2,o*2,e0s[i]))}}
+ for(i=0;i<nSeg;i++){ /* walls: trimmed / extended so bars meet flush at corners */
+  d=dirs[i];ax=Jx[i];az=Jz[i];L2=lens[i];
+  var off=types[i]==='path'?hwN+.3:o,p0=perp(d),sd;
+  for(sd=-1;sd<=1;sd+=2){
+   var a=0,b=L2;
+   if(i===0)a=-.6;else a=(types[i]==='path'?.4:-o);
+   if(i===nSeg-1)b=L2+3.2;
+   else if(dirs[i+1]!==d){
+    var c=DZ[d]*DX[dirs[i+1]]-DX[d]*DZ[dirs[i+1]];
+    if(sd===-c)b=L2+w/2+o;else b=L2-.3}
+   var mx=ax+DX[d]*(a+b)/2+p0[0]*off*sd,mz=az+DZ[d]*(a+b)/2+p0[1]*off*sd,alen=b-a;
+   parts.push(W(mx,mz,DX[d]!==0?alen:.5,DX[d]!==0?.5:alen,1.3,e0s[i]))}}
+ var dS=dirs[0],dE=dirs[nSeg-1];
+ parts.push(W(Jx[0]-DX[dS]*.85,Jz[0]-DZ[dS]*.85,DX[dS]!==0?.5:o*2+1,DX[dS]!==0?o*2+1:.5,1.3,e0s[0]));
+ var Ex=Jx[nSeg-1]+DX[dE]*(lens[nSeg-1]+3.2),Ez=Jz[nSeg-1]+DZ[dE]*(lens[nSeg-1]+3.2);
+ parts.push(W(Ex+DX[dE]*.3,Ez+DZ[dE]*.3,DX[dE]!==0?.5:o*2+1,DX[dE]!==0?o*2+1:.5,1.3,e1s[nSeg-1]));
+ var tee=[Jx[0]+DX[dS]*1.6,Jz[0]+DZ[dS]*1.6];
+ var cup=[Ex-DX[dE]*1.0,Ez-DZ[dE]*1.0];
+ var par=clamp(Math.round(parAcc+lenTot/14),2,6);
+ return LV(NA[Math.floor(rnd()*NA.length)]+" "+NB[Math.floor(rnd()*NB.length)],par,tee,cup,parts)}
+function validateLevel(l){
+ var tee=l.tee, cup=l.cup;
+ var dx=cup[0]-tee[0], dz=cup[1]-tee[1];
+ var dist=Math.hypot(dx,dz);
+ if(dist<0.1) return true;
+ var dirX=dx/dist, dirZ=dz/dist;
+ for(var i=0; i<9; i++){
+  var pow=0.4 + i*0.07;
+  var spd=3 + 12.5*pow;
+  var angOff=(i-4)*0.06;
+  var vx=dirX*Math.cos(angOff) - dirZ*Math.sin(angOff);
+  var vz=dirX*Math.sin(angOff) + dirZ*Math.cos(angOff);
+  var sx=tee[0], sz=tee[1];
+  var sy=topAt(l.parts,sx,sz)+R_BALL;
+  var svx=vx*spd, svy=0.3, svz=vz*spd;
+  var sgh=sy-R_BALL, sairT=0;
+  var stopped=false, died=false, sunk=false;
+  for(var s=0; s<900; s++){
+   var st={x:sx,y:sy,z:sz,vx:svx,vy:svy,vz:svz,gh:sgh,airT:sairT};
+   var fx={};
+   physStep(st,l,1/120,[],fx);
+   sx=st.x; sy=st.y; sz=st.z; svx=st.vx; svy=st.vy; svz=st.vz; sgh=st.gh; sairT=st.airT;
+   if(fx.water||fx.oob){died=true; break;}
+   if(fx.sink){sunk=true; break;}
+   var spd2=Math.hypot(svx,svz);
+   if(s>200 && spd2<0.12 && Math.abs(svy)<0.2 && sairT<0.25){stopped=true; break;}
+  }
+  if(sunk) return true;
+  if(stopped){
+   var distToCup=Math.hypot(sx-cup[0], sz-cup[1]);
+   if(distToCup<3.5) return true;
+  }
+ }
+ return false;}
+function fallbackHole(h){
+ return LV("Safe Trail "+(h+1),3,[0,1.6],[0,13.4],
+  [G(0,7,5.4,16),W(-2.7,7,.5,16.6),W(2.7,7,.5,16.6),W(0,-1.1,5.9,.5),W(0,15.1,5.9,.5)])}
+function genLevels(seedStr,count,diff){
+ var out=[],h;
+ for(h=0;h<count;h++){
+  var lv=null,att;
+  for(att=0;att<30;att++){
+   var cand=genOne(String(seedStr)+"#"+h+"#"+att,diff,h);
+   if(cand && validateLevel(cand)){lv=cand;break}}
+  if(!lv) lv=fallbackHole(h);
+  out.push(lv)}
  return out}
 
 /* ============================ sanitize / io ============================ */
@@ -509,7 +541,7 @@ function parseImport(txt){
 
 /* ============================ game state ============================ */
 var mode='menu',round=null,lv=null,course=null;
-var R_BALL=.4,GRAV=22,STEP=1/120,MAXSPD=24,STEPTOL=.25;
+var R_BALL=.4,GRAV=22,STEP=1/120,MAXSPD=24,STEPTOL=.25,CATCH=.22;
 var ball={x:0,y:1,z:0,vx:0,vy:0,vz:0,gh:0,airT:0,moving:false,rest:null};
 var strokes=0,holeIdx=0,shotOrigin=null,sinkT=-1,lockT=0,acc=0;
 var cam={yaw:0,pitch:.66,dist:13,tx:0,ty:0,tz:0};
@@ -539,8 +571,8 @@ function startHole(i){
  hideCard();updateHUD();
  toast("HOLE "+(i+1)+" · "+lv.name.toUpperCase()+" · PAR "+lv.par,2200);
  $('hint').textContent=isTouch?
-  "drag back & release to putt · two fingers: camera":
-  "drag back & release to putt · right-drag / Q E orbit · scroll zoom · R restart"}
+  "drag FROM BALL & release to putt · drag elsewhere: orbit · 2 fingers: pan":
+  "drag FROM BALL to putt · drag elsewhere orbit · right-drag pan · Q E orbit · scroll zoom · R restart"}
 function resetBall(){
  ball.x=lv.tee[0];ball.z=lv.tee[1];
  ball.y=topAt(lv.parts,ball.x,ball.z)+R_BALL;
@@ -548,24 +580,32 @@ function resetBall(){
  ball.airT=0;ball.moving=false;ball.rest=null;shotOrigin=null}
 
 /* ============================ physics ============================ */
+function surfH(p,x,z){
+ if(p.t==='g')return p.y;
+ var t=p.a==='x'?(x-(p.x-p.w/2))/p.w:(z-(p.z-p.d/2))/p.d;t=clamp(t,0,1);
+ return p.y0+(p.y1-p.y0)*t}
 function groundQuery(st,parts){
  var x=st.x,z=st.z,y=st.y,sup=st.gh,vy=st.vy;
  var gh=null,blockers=[],i,p,t,h2,ok;
  for(i=0;i<parts.length;i++){p=parts[i];
-  if(p.t==='g'){
-   if(Math.abs(x-p.x)<=p.w/2&&Math.abs(z-p.z)<=p.d/2){
-    ok=(p.y<=sup+STEPTOL)||(vy<=0&&y-R_BALL>=p.y-.12);
-    if(p.y<=y+.3&&ok){if(!gh||p.y>gh.h)gh={h:p.y,n:[0,1,0]}}
-    else blockers.push({x:p.x,z:p.z,w:p.w,d:p.d,top:p.y})}}
-  else if(p.t==='r'){
-   if(Math.abs(x-p.x)<=p.w/2&&Math.abs(z-p.z)<=p.d/2){
-    t=p.a==='x'?(x-(p.x-p.w/2))/p.w:(z-(p.z-p.d/2))/p.d;t=clamp(t,0,1);
-    h2=p.y0+(p.y1-p.y0)*t;
-    ok=(h2<=sup+STEPTOL)||(vy<=0&&y-R_BALL>=h2-.12);
-    if(h2<=y+.3&&ok){var run=p.a==='x'?p.w:p.d,rise=p.y1-p.y0,il=1/(Math.hypot(run,rise)||1);
+  if(p.t!=='g'&&p.t!=='r')continue;
+  var hw=p.w/2,hd=p.d/2;
+  if(Math.abs(x-p.x)<=hw&&Math.abs(z-p.z)<=hd){
+   if(p.t==='g')h2=p.y;
+   else{t=(p.a==='x'?(x-(p.x-hw))/p.w:(z-(p.z-hd))/p.d);t=clamp(t,0,1);h2=p.y0+(p.y1-p.y0)*t}
+   ok=(h2<=sup+STEPTOL)||(vy<=0&&y-R_BALL>=h2-CATCH);
+   if(h2<=y+.3&&ok){
+    if(p.t==='g'){if(!gh||h2>gh.h)gh={h:h2,n:[0,1,0]}}
+    else{var run=p.a==='x'?p.w:p.d,rise=p.y1-p.y0,il=1/(Math.hypot(run,rise)||1);
      var n2=p.a==='x'?[-rise*il,run*il,0]:[0,run*il,-rise*il];
-     if(!gh||h2>gh.h)gh={h:h2,n:n2}}
-    else blockers.push({x:p.x,z:p.z,w:p.w,d:p.d,top:Math.max(p.y0,p.y1)})}}}
+     if(!gh||h2>gh.h)gh={h:h2,n:n2}}}
+   else blockers.push({x:p.x,z:p.z,w:p.w,d:p.d,top:h2})}
+  else{ /* side collider */
+   var ex=clamp(x,p.x-hw,p.x+hw),ez=clamp(z,p.z-hd,p.z+hd);
+   var dx2=x-ex,dz2=z-ez;
+   if(dx2*dx2+dz2*dz2<R_BALL*R_BALL){
+    var hE=surfH(p,ex,ez);
+    if(y-R_BALL<hE-.08)blockers.push({x:p.x,z:p.z,w:p.w,d:p.d,top:hE})}}}
  return{gh:gh,blockers:blockers}}
 function inSand(x,z,y,parts){
  for(var i=0;i<parts.length;i++){var s=parts[i];
@@ -693,27 +733,22 @@ function restartHole(){
  resetBall();strokes=0;sinkT=-1;lockT=.35;updateHUD();toast("RESTARTED")}
 
 /* ============================ camera / picking ============================ */
-function getBallScreenPos() {
-    if (!VP) return null;
-    var x = ball.x, y = ball.y, z = ball.z;
-    var cx = VP[0]*x + VP[4]*y + VP[8]*z + VP[12];
-    var cy = VP[1]*x + VP[5]*y + VP[9]*z + VP[13];
-    var cw = VP[3]*x + VP[7]*y + VP[11]*z + VP[15];
-    if (cw <= 0.1) return null;
-    var sx = (cx / cw + 1) * 0.5 * innerWidth;
-    var sy = (1 - cy / cw) * 0.5 * innerHeight;
-    return {x: sx, y: sy};
-}
-function panCamera(dx, dy) {
-    var sy=Math.sin(cam.yaw), cyw=Math.cos(cam.yaw);
-    var sp=Math.sin(cam.pitch), cp=Math.cos(cam.pitch);
-    var rx = -cyw, rz = sy;
-    var ux = sp*sy, uy = -cp, uz = sp*cyw;
-    var panSpeed = 0.015 * cam.dist / 10;
-    cam.tx -= (dx * rx - dy * ux) * panSpeed;
-    cam.ty -= (dx * 0  - dy * uy) * panSpeed;
-    cam.tz -= (dx * rz - dy * uz) * panSpeed;
-}
+function getBallScreenPos(){
+ if(!VP)return null;
+ var x=ball.x,y=ball.y,z=ball.z;
+ var cx=VP[0]*x+VP[4]*y+VP[8]*z+VP[12];
+ var cy=VP[1]*x+VP[5]*y+VP[9]*z+VP[13];
+ var cw=VP[3]*x+VP[7]*y+VP[11]*z+VP[15];
+ if(cw<=.1)return null;
+ return{x:(cx/cw+1)*.5*innerWidth,y:(1-cy/cw)*.5*innerHeight}}
+function panCamera(dx,dy){
+ var sy=Math.sin(cam.yaw),cyw=Math.cos(cam.yaw);
+ var sp=Math.sin(cam.pitch),cp=Math.cos(cam.pitch);
+ var rx=-cyw,rz=sy,ux=sp*sy,uy=-cp,uz=sp*cyw;
+ var k=.0016*cam.dist;
+ cam.tx-=(dx*rx-dy*ux)*k;
+ cam.ty+=(dy*uy)*k;
+ cam.tz-=(dx*rz-dy*uz)*k}
 function lookMat(){
  var cp=Math.cos(cam.pitch),sp=Math.sin(cam.pitch),sy=Math.sin(cam.yaw),cyw=Math.cos(cam.yaw);
  var ex=cam.tx+cam.dist*cp*sy,ey=cam.ty+cam.dist*sp+1,ez=cam.tz+cam.dist*cp*cyw;
@@ -742,9 +777,9 @@ function rayY(cssX,cssY,yy){
 function computeAim(){
  if(!drag||drag.orbit||drag.pan)return null;
  var dx=drag.cx-drag.x0,dy=drag.cy-drag.y0,len=Math.hypot(dx,dy);
+ if(len<6)return{pow:0}; // true zero/tap cancels
  var maxLen=Math.min(innerWidth,innerHeight)*.42;
  var pow=clamp(len/maxLen,0,1);
- if(pow<.03)return{pow:0};
  var fx=-Math.sin(cam.yaw),fz=-Math.cos(cam.yaw),rx=-fz,rz=fx;
  var wx=rx*(-dx)+fx*dy,wz=rz*(-dx)+fz*dy;
  var wl=Math.hypot(wx,wz)||1;
@@ -754,23 +789,20 @@ function buildPreview(){
  if(!a||a.pow<=0){dotArr=new Float32Array(0);return}
  var pts=[],i;
  var gy=topAt(lv.parts,ball.x,ball.z);
- for(i=0;i<8;i++){var t=i/7*1.4*a.pow+.35;
-  pts.push(ball.x+a.dx*t,gy+.08,ball.z+a.dz*t)}
+ for(i=1;i<=5;i++){var tb=i/5*1.3*a.pow;
+  pts.push(ball.x-a.dx*tb,gy+.06,ball.z-a.dz*tb)}
  var st={x:ball.x,y:ball.y,z:ball.z,vx:a.dx*a.spd,vy:.3,vz:a.dz*a.spd,gh:ball.y-R_BALL,airT:0};
  var mills=[];
  for(i=0;i<course.mills.length;i++){var m0=course.mills[i];
   mills.push({x:m0.x,z:m0.z,r:m0.r,n:m0.n,w:m0.w,s:m0.s,hub:m0.hub,bh:m0.bh,ang:m0.ang})}
- var fx={};
- var maxSteps = 4 * 120;
- for(i=0;i<maxSteps;i++){
+ var fx={},sample=0;
+ for(i=0;i<720;i++){
   physStep(st,lv,STEP,mills,fx);
   for(var k=0;k<mills.length;k++)mills[k].ang=(mills[k].ang+mills[k].s*STEP)%TAU;
-  if(fx.water||fx.oob||fx.sink){ pts.push(st.x,st.y,st.z); break; }
-  if(i%3===0)pts.push(st.x,st.y,st.z);
+  if(fx.water||fx.oob||fx.sink){pts.push(st.x,st.y,st.z);break}
+  if((sample+=STEP)>=.05){sample=0;pts.push(st.x,st.y,st.z)}
   var spd=Math.hypot(st.vx,st.vz);
-  var moving=spd>.12||Math.abs(st.vy)>.2||st.airT>.25;
-  if(!moving && i>30) break;
- }
+  if(i>24&&spd<=.12&&Math.abs(st.vy)<=.2&&st.airT<=.25)break}
  dotArr=new Float32Array(pts);updMesh(dotBuf,dotArr)}
 var previewAcc=0;
 
@@ -849,7 +881,9 @@ function frame(t){
   for(var j=0;j<course.mills.length;j++){var m2=course.mills[j];m2.ang=(m2.ang+(m2.s||1.5)*dt)%TAU}}
  else if(mode==='menu')cam.yaw+=dt*.06;
  if(sinkT>=0)sinkT+=dt*2.2;
- $('pow').style.width=(drag&&aim)?Math.round(aim.pow*100)+'%':'0%';
+ var pw=0;
+ if(drag&&aim&&aim.pow>0){var sp=aim.spd;pw=clamp((sp*sp-9)/(15.5*15.5-9),0,1)}
+ $('pow').style.width=Math.round(pw*100)+'%';
  render()}
 requestAnimationFrame(frame);
 
@@ -857,7 +891,6 @@ requestAnimationFrame(frame);
 var ptrs=new Map();
 var twoF=false,pinch0=1,dist0=13,lastMid=null;
 cv.addEventListener('contextmenu',function(e){e.preventDefault()});
-
 function pDown(id,x,y,btn){
  ptrs.set(id,{x:x,y:y,sx:x,sy:y,t:performance.now(),btn:btn});
  if(ptrs.size===2){
@@ -866,22 +899,13 @@ function pDown(id,x,y,btn){
   pinch0=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1;dist0=cam.dist;
   lastMid={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2}}
  else if(ptrs.size===1){
-  if (btn === 2) {
-      drag={x0:x,y0:y,cx:x,cy:y,id:id,orbit:false,pan:true};
-      lastMid={x:x,y:y};
-  } else {
-      var canAim=(mode==='play'||mode==='editTest')&&round&&sinkT<0&&lockT<=0&&!ball.moving;
-      var bsp = getBallScreenPos();
-      var nearBall = bsp && Math.hypot(x - bsp.x, y - bsp.y) < 80;
-      
-      if(canAim && nearBall) {
-          drag={x0:x,y0:y,cx:x,cy:y,id:id,orbit:false,pan:false};
-      } else {
-          drag={x0:x,y0:y,cx:x,cy:y,id:id,orbit:true,pan:false,yaw0:cam.yaw,pit0:cam.pitch};
-      }
-  }
- }
-}
+  if(btn===2){drag={x0:x,y0:y,cx:x,cy:y,id:id,orbit:false,pan:true};lastMid={x:x,y:y}}
+  else{
+   var canAim=(mode==='play'||mode==='editTest')&&round&&sinkT<0&&lockT<=0&&!ball.moving;
+   var bsp=getBallScreenPos();
+   var nearBall=bsp&&Math.hypot(x-bsp.x,y-bsp.y)<90;
+   if(canAim&&nearBall)drag={x0:x,y0:y,cx:x,cy:y,id:id,orbit:false,pan:false};
+   else drag={x0:x,y0:y,cx:x,cy:y,id:id,orbit:true,pan:false,yaw0:cam.yaw,pit0:cam.pitch}}}}
 function pMove(id,x,y){
  var p=ptrs.get(id);if(!p)return;
  p.x=x;p.y=y;
@@ -890,24 +914,15 @@ function pMove(id,x,y){
   var d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1;
   cam.dist=clamp(dist0*pinch0/d,5,45);
   var mx=(a[0].x+a[1].x)/2,my=(a[0].y+a[1].y)/2;
-  if(lastMid){
-      panCamera(mx - lastMid.x, my - lastMid.y);
-  }
+  if(lastMid)panCamera(mx-lastMid.x,my-lastMid.y);
   lastMid={x:mx,y:my};return}
- 
  if(!drag||drag.id!==id)return;
  drag.cx=x;drag.cy=y;
- 
- if(drag.pan){
-     panCamera(x - lastMid.x, y - lastMid.y);
-     lastMid={x:x,y:y};
- } else if(drag.orbit){
+ if(drag.pan){panCamera(x-lastMid.x,y-lastMid.y);lastMid={x:x,y:y}}
+ else if(drag.orbit){
   cam.yaw=drag.yaw0-(x-drag.x0)*.008;
   cam.pitch=clamp(drag.pit0+(y-drag.y0)*.005,.18,1.25)}
- else {
-     aim=computeAim();
- }
-}
+ else aim=computeAim()}
 function pUp(id){
  var p=ptrs.get(id);
  ptrs.delete(id);
@@ -916,16 +931,16 @@ function pUp(id){
  var dtms=p?performance.now()-p.t:999,dist=p?Math.hypot(p.x-p.sx,p.y-p.sy):999;
  var isTap=dtms<350&&dist<9;
  if(mode==='edit'&&isTap&&p)editorTap(p.x,p.y);
- else if((mode==='play'||mode==='editTest')&&!drag.orbit && !drag.pan){
+ else if((mode==='play'||mode==='editTest')&&!drag.orbit&&!drag.pan){
   aim=computeAim();
-  var bsp = getBallScreenPos();
-  var nearBall = bsp && Math.hypot(p.x - bsp.x, p.y - bsp.y) < 50;
-  if(aim&&aim.pow>.03&&!nearBall&&sinkT<0&&round){
+  var bsp=getBallScreenPos();
+  var atBall=bsp&&Math.hypot(p.x-bsp.x,p.y-bsp.y)<55;
+  if(aim && aim.pow > 0 && !atBall && sinkT<0 && round){
    shotOrigin={x:ball.x,y:ball.y,z:ball.z};
    ball.vx=aim.dx*aim.spd;ball.vz=aim.dz*aim.spd;ball.vy=.3;
-   ball.moving=true;strokes++;updateHUD();AU.putt(aim.pow)}}
+   ball.moving=true;strokes++;updateHUD();AU.putt(aim.pow)}
+  /* zero power or release on the ball → silent cancel, no stroke */}
  drag=null;aim=null;dotArr=new Float32Array(0)}
-
 if(window.PointerEvent){
  cv.addEventListener('pointerdown',function(e){e.preventDefault();
   try{cv.setPointerCapture(e.pointerId)}catch(err){}
@@ -994,7 +1009,7 @@ $('bCustom').onclick=function(){AU.click();customModal()};
 $('bGen').onclick=function(){AU.click();genModal()};
 $('bHelp').onclick=function(){AU.click();helpModal()};
 $('bSet').onclick=function(){AU.click();setModal()};
-$('bHome').onclick=function(){window.open('https://1nd1g0.github.io/', '_blank')};
+$('bHome').onclick=function(){window.open('https://1nd1g0.github.io/','_blank')};
 $('bRestart').onclick=function(){AU.click();restartHole()};
 $('bMute').onclick=function(){AU.on=!AU.on;settings.snd=AU.on;store('pc.set',settings);updateHUD()};
 $('bCam').onclick=function(){if(!lv)return;
@@ -1013,14 +1028,14 @@ function hideModal(){$('modal').classList.add('hide')}
 window.hideModal=hideModal;
 $('modal').addEventListener('pointerdown',function(e){if(e.target===$('modal'))hideModal()});
 if(!window.PointerEvent)$('modal').addEventListener('touchstart',function(e){if(e.target===$('modal'))hideModal()});
-
 function helpModal(){showModal('<h3>HOW TO PLAY</h3><div class="kv">'+
- '<div><b>DRAG</b> — pull back & release to putt (slingshot). Dots preview your shot.</div>'+
+ '<div><b>PUTT</b> — press ON THE BALL, drag back, release. Dots = exact simulated flight/roll.</div>'+
+ '<div><b>CAMERA</b> — drag anywhere else to orbit the ball. Two fingers / right-drag = pan. Pinch / scroll = zoom.</div>'+
+ '<div><b>CANCEL</b> — release with ~zero power or on the ball: no stroke counted. Low power still counts as a shot!</div>'+
  '<div><b>SLOPES</b> — real physics: under-hit a ramp and you roll back down.</div>'+
  '<div><b>WATER</b> — splash = +1 penalty, back to your last spot.</div>'+
  '<div><b>SAND</b> — thick! hit hard to escape.</div>'+
- '<div><b>WINDMILL</b> — blades sweep the ball along; time your putt between them.</div>'+
- '<div><b>CAMERA</b> — '+(isTouch?'two-finger drag orbits, pinch zooms.':'right-drag / Q E orbit, scroll zoom, W S camera height.')+'</div>'+
+ '<div><b>WINDMILL</b> — blades sweep the ball along; time your putt.</div>'+
  '<div><b>R</b> restart hole · <b>M</b> sound</div>'+
  '<div><b>EDITOR</b> — build holes, share them as JSON.</div></div>'+
  '<button class="btn acc" onclick="hideModal()">BACK</button>')}
@@ -1035,7 +1050,6 @@ function setModal(){showModal('<h3>SETTINGS</h3>'+
  $('sndBtn').onclick=function(){AU.on=!AU.on;settings.snd=AU.on;store('pc.set',settings);this.textContent=AU.on?'ON':'OFF'};
  $('wipeBtn').onclick=function(){if(confirm('Erase all saved courses & best scores?')){try{localStorage.clear()}catch(e){}location.reload()}}}
 window.setQ=function(i){settings.q=i;store('pc.set',settings);autoScale=1;resize();setModal()};
-
 function genModal(){showModal('<h3>PROCEDURAL ROUNDS</h3>'+
  '<div class="row"><span class="lbl">SEED</span><input type="text" id="gSeed" value="'+Math.floor(Math.random()*99999)+'" style="width:130px">'+
  '<button class="btn sm" id="gDie">🎲</button></div>'+
@@ -1043,7 +1057,7 @@ function genModal(){showModal('<h3>PROCEDURAL ROUNDS</h3>'+
  '<span class="lbl">DIFFICULTY</span><select id="gD"><option value="0">Mellow</option><option value="1" selected>Normal</option><option value="2">Spicy</option></select></div>'+
  '<div class="row"><button class="btn sm grn" id="gPlay">▶ PLAY</button>'+
  '<button class="btn sm" id="gAdd">＋ SAVE TO MY COURSES</button></div>'+
- '<div class="lbl">Seeded — the same seed always builds the same course.</div>'+
+ '<div class="lbl">Seeded & physically validated — impossible layouts are re-rolled automatically.</div>'+
  '<button class="btn acc" onclick="hideModal()">BACK</button>');
  function gen(){return genLevels($('gSeed').value,clamp(+$('gN').value||9,1,30),+$('gD').value||0)}
  $('gDie').onclick=function(){$('gSeed').value=Math.floor(Math.random()*99999)};
@@ -1074,7 +1088,6 @@ function customModal(){
 window.playOne=function(i){hideModal();showScr('hud');mode='play';newRound([load('pc.custom',[])[i]],'Custom')};
 window.delOne=function(i){var c=load('pc.custom',[]);c.splice(i,1);store('pc.custom',c);customModal()};
 window.editOne=function(i){hideModal();openEditor(load('pc.custom',[])[i],i)};
-
 function ioModal(data){
  showModal('<h3>IMPORT / EXPORT (JSON)</h3>'+
  '<textarea id="ioTa" spellcheck="false">'+(data?JSON.stringify(data,null,1):'')+'</textarea>'+
