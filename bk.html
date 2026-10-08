@@ -124,7 +124,6 @@ canvas.fit{width:100%;display:block;border:1px solid var(--line);border-radius:4
 .ro .k{font:600 8.5px var(--mono);letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
 .ro .v{font:800 16px var(--mono);margin-top:2px}
 .ro .s{font:600 9.5px var(--mono);color:var(--dim)}
-/* Stress Lab responsive layout */
 .labWrap{display:flex;gap:18px;flex-wrap:wrap}
 .labLeft{flex:1 1 300px;max-width:380px;display:flex;flex-direction:column;min-width:0}
 .labRight{flex:2 1 300px;min-width:0;display:flex;flex-direction:column;gap:8px}
@@ -310,37 +309,37 @@ max-height:none;overflow:visible;color:#000}
 <div class="mod" data-t="cpuSingle" style="--ac:var(--amber)">
 <header><span class="code">M-01</span><h3 data-i18n="cpu_single">CPU · Single-core int</h3><span class="led"></span></header>
 <div class="val"><span data-val>—</span><small>Mop/s</small></div>
-<p class="hint" data-detail>200 ms untimed warm-up, then a 900 ms pinned-core window.</p>
+<p class="hint" data-detail data-i18n="cpu_single_hint">200 ms untimed warm-up, then a 900 ms pinned-core window.</p>
 <div class="actions"><button class="btn" data-run data-i18n="run">Run</button></div>
 </div>
 <div class="mod" data-t="cpuMulti" style="--ac:var(--amber)">
 <header><span class="code">M-02</span><h3 data-i18n="cpu_multi">CPU · Multi-core</h3><span class="led"></span></header>
 <div class="val"><span data-val>—</span><small>Gop/s</small></div>
-<p class="hint" data-detail>Warm-up burst, then one busy worker per logical core for 1.3 s.</p>
+<p class="hint" data-detail data-i18n="cpu_multi_hint">Warm-up burst, then one busy worker per logical core for 1.3 s.</p>
 <div class="actions"><button class="btn" data-run data-i18n="run">Run</button></div>
 </div>
 <div class="mod" data-t="cpuFloat" style="--ac:var(--amber)">
 <header><span class="code">M-03</span><h3 data-i18n="cpu_float">CPU · FP math</h3><span class="led"></span></header>
 <div class="val"><span data-val>—</span><small>Mflop/s</small></div>
-<p class="hint" data-detail>FP64 sqrt + sin throughput after a warm-up pass.</p>
+<p class="hint" data-detail data-i18n="cpu_float_hint">FP64 sqrt + sin throughput after a warm-up pass.</p>
 <div class="actions"><button class="btn" data-run data-i18n="run">Run</button></div>
 </div>
 <div class="mod" data-t="memBW" style="--ac:var(--amber)">
 <header><span class="code">M-04</span><h3 data-i18n="mem_bw">Memory · Bandwidth</h3><span class="led"></span></header>
 <div class="val"><span data-val>—</span><small>GB/s</small></div>
-<p class="hint" data-detail>Untimed warm copy, then timed 64 MB copies.</p>
+<p class="hint" data-detail data-i18n="mem_bw_hint">Untimed warm copy, then timed 64 MB copies.</p>
 <div class="actions"><button class="btn" data-run data-i18n="run">Run</button></div>
 </div>
 <div class="mod" data-t="memLat" style="--ac:var(--amber)">
 <header><span class="code">M-28</span><h3 data-i18n="mem_lat">RAM · Random latency</h3><span class="led"></span></header>
 <div class="val"><span data-val>—</span><small>ns/hop</small></div>
-<p class="hint" data-detail>8M random hops across an 8 MB cycle.</p>
+<p class="hint" data-detail data-i18n="mem_lat_hint">8M random hops across an 8 MB cycle.</p>
 <div class="actions"><button class="btn" data-run data-i18n="run">Run</button></div>
 </div>
 <div class="mod" data-t="memCheck" style="--ac:var(--amber)">
 <header><span class="code">M-29</span><h3 data-i18n="mem_check">RAM · Pattern check</h3><span class="led"></span></header>
-<div class="val"><span data-val>—</span><small>errors</small></div>
-<p class="hint" data-detail>00/FF/AA/55 + LCG patterns on 32 MB. Any error = suspect RAM.</p>
+<div class="val"><span data-val>—</span><small data-i18n="errors">errors</small></div>
+<p class="hint" data-detail data-i18n="mem_check_hint">00/FF/AA/55 + LCG patterns on 32 MB. Any error = suspect RAM.</p>
 <div class="actions"><button class="btn" data-run data-i18n="run">Run</button></div>
 </div>
 </div>
@@ -349,39 +348,39 @@ max-height:none;overflow:visible;color:#000}
 <div class="mod w6" data-t="gpu2d" style="--ac:var(--cyan)">
 <header><span class="code">M-05</span><h3 data-i18n="gpu_2d">GPU · Canvas 2D</h3><span class="led"></span></header>
 <div class="val"><span data-val>—</span><small>fps</small></div>
-<p class="hint" data-detail>600 ms warm-up, then 3 s measured particle storm.</p>
+<p class="hint" data-detail data-i18n="gpu_2d_hint">600 ms warm-up, then 3 s measured particle storm.</p>
 <canvas class="fit" id="cv2d" height="170" style="height:170px"></canvas>
 </div>
 <div class="mod w6" data-t="gpu3d" style="--ac:var(--cyan)">
 <header><span class="code">M-06</span><h3 data-i18n="gpu_3d">GPU · 3D scene</h3><span class="led"></span></header>
 <div class="val"><span data-val>—</span><small>fps</small></div>
-<p class="hint" data-detail>33k-triangle lit torus via WebGL2 (falls back to WebGL1); recovery-aware.</p>
+<p class="hint" data-detail data-i18n="gpu_3d_hint">33k-triangle lit torus via WebGL2 (falls back to WebGL1); recovery-aware.</p>
 <canvas class="fit" id="cvGL" height="170" style="height:170px"></canvas>
 </div>
 <div class="mod w4" data-t="gpuAI" style="--ac:var(--cyan)">
 <header><span class="code">M-07</span><h3 data-i18n="gpu_ai">AI / matrix compute</h3><span class="led"></span></header>
 <div class="val"><span data-val>—</span><small>GFLOP/s</small></div>
-<p class="hint" data-detail>256×256 matmul on WebGPU; CPU FP32 fallback.</p>
+<p class="hint" data-detail data-i18n="gpu_ai_hint">256×256 matmul on WebGPU; CPU FP32 fallback.</p>
 <div class="actions"><button class="btn" data-run data-i18n="run">Run</button></div>
 </div>
 <div class="mod w8" data-t="gpuCodec" style="--ac:var(--cyan)">
 <header><span class="code">M-08</span><h3 data-i18n="codecs">Codecs · encode / decode engine</h3><span class="led"></span></header>
 <div class="val"><span data-val>—</span><small>enc / dec fps @720p</small></div>
-<p class="hint" data-detail>Hardware encoder first, automatic software fallback; timeout-bounded everywhere.</p>
+<p class="hint" data-detail data-i18n="codecs_hint">Hardware encoder first, automatic software fallback; timeout-bounded everywhere.</p>
 <div id="codecCaps" class="actions" style="margin-bottom:9px"></div>
-<div class="actions"><button class="btn" data-run data-i18n="run">Run codec bench</button></div>
+<div class="actions"><button class="btn" data-run data-i18n="run_codec">Run codec bench</button></div>
 </div>
 <div class="mod" data-t="refresh" style="--ac:var(--cyan)">
 <header><span class="code">M-11</span><h3 data-i18n="display_refresh">Display · Refresh</h3><span class="led"></span></header>
 <div class="val"><span data-val>—</span><small>Hz</small></div>
-<p class="hint" data-detail>rAF timing, median of stabilized frames.</p>
+<p class="hint" data-detail data-i18n="display_refresh_hint">rAF timing, median of stabilized frames.</p>
 <div class="actions"><button class="btn" data-run data-i18n="measure">Measure</button></div>
 </div>
 <div class="mod w5" data-t="latency" style="--ac:var(--cyan)">
 <header><span class="code">M-12</span><h3 data-i18n="input_latency">Input · Click-to-frame latency</h3><span class="led"></span></header>
 <div class="val"><span data-val>—</span><small>ms avg</small></div>
-<p class="hint" data-detail>Click the pad 5+ times.</p>
-<div id="latPad" style="height:58px;border:1px dashed var(--line2);border-radius:4px;display:flex;align-items:center;justify-content:center;font:700 10px var(--mono);letter-spacing:.2em;color:var(--dim);cursor:pointer;user-select:none;background:#0a1016">CLICK HERE REPEATEDLY</div>
+<p class="hint" data-detail data-i18n="input_latency_hint">Click the pad 5+ times.</p>
+<div id="latPad" style="height:58px;border:1px dashed var(--line2);border-radius:4px;display:flex;align-items:center;justify-content:center;font:700 10px var(--mono);letter-spacing:.2em;color:var(--dim);cursor:pointer;user-select:none;background:#0a1016" data-i18n="click_here">CLICK HERE REPEATEDLY</div>
 </div>
 </div>
 <section class="sec print-hide"><span class="no">03</span><h2 data-i18n="sec_03">Stress Lab · Hybrid Stability</h2><div class="rule"></div><span class="tag" data-i18n="presets">PRESETS SAFE → EXTREME · ∞ ENDLESS</span></section>
@@ -397,33 +396,33 @@ max-height:none;overflow:visible;color:#000}
 <span id="labElapsed" style="font:700 10px var(--mono);color:var(--cyan);margin-left:auto"></span>
 </div>
 <div class="actions" style="margin-bottom:8px">
-<select id="labDur"><option value="30000">30 s</option><option value="60000" selected>1 min</option><option value="120000">2 min</option><option value="300000">5 min</option><option value="0">∞ endless</option></select>
+<select id="labDur"><option value="30000">30 s</option><option value="60000" selected>1 min</option><option value="120000">2 min</option><option value="300000">5 min</option><option value="0" data-i18n="inf_endless">∞ endless</option></select>
 <select id="labThreads" title="CPU threads to pin"></select>
 <button class="btn primary" id="btnLabStart" data-i18n="start_stress">Start stress</button>
 <button class="btn bad" id="btnLabAbort" data-i18n="abort">Abort</button>
 </div>
 <div class="actions" style="margin-bottom:8px">
-<label class="ck" id="lbG3d"><input type="checkbox" id="chG3d" checked> GPU 3D storm</label>
-<label class="ck" id="lbG2d"><input type="checkbox" id="chG2d"> GPU 2D storm</label>
-<label class="ck" id="lbAi"><input type="checkbox" id="chAi"> AI matrix</label>
+<label class="ck" id="lbG3d"><input type="checkbox" id="chG3d" checked> <span data-i18n="gpu_3d_storm">GPU 3D storm</span></label>
+<label class="ck" id="lbG2d"><input type="checkbox" id="chG2d"> <span data-i18n="gpu_2d_storm">GPU 2D storm</span></label>
+<label class="ck" id="lbAi"><input type="checkbox" id="chAi"> <span data-i18n="ai_matrix">AI matrix</span></label>
 </div>
 <div class="actions" style="margin-bottom:8px">
-<label class="ck" id="lbRam"><input type="checkbox" id="chRam"> RAM churn</label>
-<label class="ck" id="lbRamP"><input type="checkbox" id="chRamP"> RAM pattern</label>
-<label class="ck" id="lbIo"><input type="checkbox" id="chIo"> Storage I/O</label>
-<label class="ck" id="lbCodec"><input type="checkbox" id="chCodec"> Codec encode</label>
+<label class="ck" id="lbRam"><input type="checkbox" id="chRam"> <span data-i18n="ram_churn">RAM churn</span></label>
+<label class="ck" id="lbRamP"><input type="checkbox" id="chRamP"> <span data-i18n="ram_pattern">RAM pattern</span></label>
+<label class="ck" id="lbIo"><input type="checkbox" id="chIo"> <span data-i18n="storage_io">Storage I/O</span></label>
+<label class="ck" id="lbCodec"><input type="checkbox" id="chCodec"> <span data-i18n="codec_encode">Codec encode</span></label>
 </div>
 <div class="rogrid">
-<div class="ro"><div class="k">CPU load</div><div class="v" id="roCpu">—</div><div class="s" id="roCpuS">min — · stab —</div></div>
-<div class="ro"><div class="k">GPU fps</div><div class="v" id="roGpu">—</div><div class="s" id="roGpuS">min — · stab —</div></div>
-<div class="ro"><div class="k">AI GFLOP/s</div><div class="v" id="roAi">—</div><div class="s">matrix churn</div></div>
-<div class="ro"><div class="k">RAM GB/s</div><div class="v" id="roRam">—</div><div class="s">copy churn</div></div>
-<div class="ro"><div class="k">RAM pattern</div><div class="v" id="roRamP">—</div><div class="s" id="roRamPS">errors —</div></div>
-<div class="ro"><div class="k">Storage</div><div class="v" id="roIo">—</div><div class="s">MB written</div></div>
-<div class="ro"><div class="k">Codec enc</div><div class="v" id="roCodec">—</div><div class="s">frames</div></div>
+<div class="ro"><div class="k" data-i18n="cpu_load">CPU load</div><div class="v" id="roCpu">—</div><div class="s" id="roCpuS" data-i18n="min_stab">min — · stab —</div></div>
+<div class="ro"><div class="k" data-i18n="gpu_fps">GPU fps</div><div class="v" id="roGpu">—</div><div class="s" id="roGpuS" data-i18n="min_stab">min — · stab —</div></div>
+<div class="ro"><div class="k" data-i18n="ai_gflops">AI GFLOP/s</div><div class="v" id="roAi">—</div><div class="s" data-i18n="matrix_churn">matrix churn</div></div>
+<div class="ro"><div class="k" data-i18n="ram_gbs">RAM GB/s</div><div class="v" id="roRam">—</div><div class="s" data-i18n="copy_churn">copy churn</div></div>
+<div class="ro"><div class="k" data-i18n="ram_pattern">RAM pattern</div><div class="v" id="roRamP">—</div><div class="s" id="roRamPS" data-i18n="errors_dash">errors —</div></div>
+<div class="ro"><div class="k" data-i18n="storage">Storage</div><div class="v" id="roIo">—</div><div class="s" data-i18n="mb_written">MB written</div></div>
+<div class="ro"><div class="k" data-i18n="codec_enc">Codec enc</div><div class="v" id="roCodec">—</div><div class="s" data-i18n="frames">frames</div></div>
 </div>
 <div class="meter"><i id="labProg" style="background:var(--amber)"></i></div>
-<p class="hint" data-detail style="margin-top:8px;margin-bottom:0">EXTREME may force throttling or a GPU reset. RAM pattern errors = instant FAIL. Plug in AC & keep this tab focused.</p>
+<p class="hint" data-detail style="margin-top:8px;margin-bottom:0" data-i18n="stress_hint">EXTREME may force throttling or a GPU reset. RAM pattern errors = instant FAIL. Plug in AC & keep this tab focused.</p>
 </div>
 <div class="labRight">
 <div class="labCvRow">
@@ -432,7 +431,7 @@ max-height:none;overflow:visible;color:#000}
 </div>
 <canvas class="fit" id="labChart" height="150" style="height:150px"></canvas>
 <div style="font:600 9px var(--mono);letter-spacing:.14em;color:var(--dim)">
-<span style="color:var(--amber)">■</span> CPU Mop/s &nbsp; <span style="color:var(--cyan)">■</span> GPU fps</div>
+<span style="color:var(--amber)">■</span> <span data-i18n="cpu_mops">CPU Mop/s</span> &nbsp; <span style="color:var(--cyan)">■</span> <span data-i18n="gpu_fps">GPU fps</span></div>
 </div>
 </div>
 </div>
@@ -442,13 +441,13 @@ max-height:none;overflow:visible;color:#000}
 <div class="mod w6" data-t="storageIDB" style="--ac:var(--green)">
 <header><span class="code">M-14</span><h3 data-i18n="idb_rw">IndexedDB · write / read</h3><span class="led"></span></header>
 <div class="val"><span data-val>—</span><small>MB/s</small></div>
-<p class="hint" data-detail>16 × 1 MB blobs written, read back, deleted.</p>
+<p class="hint" data-detail data-i18n="idb_rw_hint">16 × 1 MB blobs written, read back, deleted.</p>
 <div class="actions"><button class="btn" data-run data-i18n="run">Run</button></div>
 </div>
 <div class="mod w6" data-t="storageLS" style="--ac:var(--green)">
 <header><span class="code">M-15</span><h3 data-i18n="ls_sync">localStorage · synchronous write</h3><span class="led"></span></header>
 <div class="val"><span data-val>—</span><small>MB/s</small></div>
-<p class="hint" data-detail>1 MB string persistence — sync I/O path.</p>
+<p class="hint" data-detail data-i18n="ls_sync_hint">1 MB string persistence — sync I/O path.</p>
 <div class="actions"><button class="btn" data-run data-i18n="run">Run</button></div>
 </div>
 </div>
@@ -457,15 +456,15 @@ max-height:none;overflow:visible;color:#000}
 <div class="mod w8" data-t="battery" style="--ac:var(--green)">
 <header><span class="code">M-16</span><h3 data-i18n="battery_health">Battery · health & state</h3><span class="led"></span></header>
 <div class="batgrid">
-<div class="batcell"><div class="k">Charge</div><div class="v" id="bLvl">—</div></div>
-<div class="batcell"><div class="k">Health</div><div class="v" id="bHealth">—</div></div>
-<div class="batcell"><div class="k">State</div><div class="v" id="bState" style="font-size:14px">—</div></div>
-<div class="batcell"><div class="k">Time est.</div><div class="v" id="bTime" style="font-size:14px">—</div></div>
-<div class="batcell"><div class="k">Full charge cap.</div><div class="v" id="bFcc" style="font-size:14px">—</div></div>
-<div class="batcell"><div class="k">Design cap.</div><div class="v" id="bDes" style="font-size:14px">—</div></div>
+<div class="batcell"><div class="k" data-i18n="charge">Charge</div><div class="v" id="bLvl">—</div></div>
+<div class="batcell"><div class="k" data-i18n="health">Health</div><div class="v" id="bHealth">—</div></div>
+<div class="batcell"><div class="k" data-i18n="state">State</div><div class="v" id="bState" style="font-size:14px">—</div></div>
+<div class="batcell"><div class="k" data-i18n="time_est">Time est.</div><div class="v" id="bTime" style="font-size:14px">—</div></div>
+<div class="batcell"><div class="k" data-i18n="full_charge_cap">Full charge cap.</div><div class="v" id="bFcc" style="font-size:14px">—</div></div>
+<div class="batcell"><div class="k" data-i18n="design_cap">Design cap.</div><div class="v" id="bDes" style="font-size:14px">—</div></div>
 </div>
 <div class="actions" style="margin-top:12px"><button class="btn" data-run data-i18n="read_battery">Read battery</button></div>
-<p class="hint" data-detail style="margin-top:8px">Health = full-charge ÷ design capacity (when exposed).</p>
+<p class="hint" data-detail style="margin-top:8px" data-i18n="battery_hint">Health = full-charge ÷ design capacity (when exposed).</p>
 </div>
 </div>
 <section class="sec print-hide"><span class="no">06</span><h2 data-i18n="sec_06">Display Inspection</h2><div class="rule"></div><span class="tag" data-i18n="pixels_grey">PIXELS · GREY · CHECKERS · TEARING · GHOSTING</span></section>
@@ -494,11 +493,11 @@ max-height:none;overflow:visible;color:#000}
 <div id="kbBar">
 <button class="btn" id="kbArm" data-i18n="arm_test">Arm test</button>
 <button class="btn" id="kbReset" data-i18n="reset">Reset</button>
-<label class="ck"><input type="checkbox" id="kbTones" checked> Key tones</label>
-<label class="ck"><input type="checkbox" id="kbFull" checked> Full 101/104</label>
-<span style="font:700 11px var(--mono)" id="kbCount">0 / 0 keys</span>
+<label class="ck"><input type="checkbox" id="kbTones" checked> <span data-i18n="key_tones">Key tones</span></label>
+<label class="ck"><input type="checkbox" id="kbFull" checked> <span data-i18n="full_101">Full 101/104</span></label>
+<span style="font:700 11px var(--mono)" id="kbCount">0 / 0 <span data-i18n="keys">keys</span></span>
 <div class="meter" style="min-width:80px"><i id="kbProg"></i></div>
-<span style="font:700 10px var(--mono);color:var(--mut)">HELD: <b id="kbHeld" style="color:var(--amber)">—</b></span>
+<span style="font:700 10px var(--mono);color:var(--mut)"><span data-i18n="held">HELD</span>: <b id="kbHeld" style="color:var(--amber)">—</b></span>
 <span style="flex:1"></span>
 <button class="btn tiny ok" data-mark="pass" data-i18n="pass">✓ Pass</button>
 <button class="btn tiny bad" data-mark="fail" data-i18n="fail">✗ Fail</button>
@@ -524,7 +523,7 @@ max-height:none;overflow:visible;color:#000}
 </div>
 <div class="mod w6" data-t="gamepad" style="--ac:var(--amber)">
 <header><span class="code">M-20</span><h3 data-i18n="gamepad_ctrl">Gamepad · controllers</h3><span class="led"></span></header>
-<div id="gpStatus" style="font:600 10.5px var(--mono);color:var(--dim)">No gamepad yet — plug one in and press a button.</div>
+<div id="gpStatus" style="font:600 10.5px var(--mono);color:var(--dim)" data-i18n="no_gamepad">No gamepad yet — plug one in and press a button.</div>
 <div id="gpPads"></div>
 <div class="actions" style="margin-top:10px">
 <button class="btn tiny ok" data-mark="pass" data-i18n="pass">✓ Pass</button>
@@ -551,9 +550,9 @@ max-height:none;overflow:visible;color:#000}
 <button class="btn tiny" id="spkRefresh" title="Refresh device list">↻</button>
 </div>
 <div class="actions">
-<button class="btn tiny" data-sweep="-1">Sweep L</button>
-<button class="btn tiny" data-sweep="0">Both</button>
-<button class="btn tiny" data-sweep="1">Sweep R</button>
+<button class="btn tiny" data-sweep="-1" data-i18n="sweep_l">Sweep L</button>
+<button class="btn tiny" data-sweep="0" data-i18n="both">Both</button>
+<button class="btn tiny" data-sweep="1" data-i18n="sweep_r">Sweep R</button>
 <button class="btn tiny" data-tone="1">1 kHz</button>
 <button class="btn tiny bad" data-sweep="x" data-i18n="stop">Stop</button>
 <button class="btn tiny ok" data-mark="pass" data-i18n="pass">✓</button>
@@ -570,11 +569,11 @@ max-height:none;overflow:visible;color:#000}
 <div class="vumeter"><i id="vu"></i></div>
 <audio id="micPlayback" class="rec" controls preload="metadata" style="display:none"></audio>
 <div class="actions">
-<button class="btn tiny" id="micOn">Meter</button>
+<button class="btn tiny" id="micOn" data-i18n="meter">Meter</button>
 <button class="btn tiny bad" id="micOff" data-i18n="stop">Stop</button>
-<button class="btn tiny" id="micRecord">● Record</button>
-<button class="btn tiny" id="micReplay">Replay</button>
-<span id="micRecState" style="font:600 9px var(--mono);color:var(--dim)">idle</span>
+<button class="btn tiny" id="micRecord" data-i18n="record">● Record</button>
+<button class="btn tiny" id="micReplay" data-i18n="replay">Replay</button>
+<span id="micRecState" style="font:600 9px var(--mono);color:var(--dim)" data-i18n="idle">idle</span>
 <span style="flex:1"></span>
 <button class="btn tiny ok" data-mark="pass" data-i18n="pass">✓</button>
 <button class="btn tiny bad" data-mark="fail" data-i18n="fail">✗</button>
@@ -589,11 +588,11 @@ max-height:none;overflow:visible;color:#000}
 <video class="cam" id="camV" muted playsinline></video>
 <video class="cam" id="camPlayback" controls playsinline preload="metadata" style="display:none"></video>
 <div class="actions" style="margin-top:8px">
-<button class="btn tiny" id="camOn">Live</button>
+<button class="btn tiny" id="camOn" data-i18n="live">Live</button>
 <button class="btn tiny bad" id="camOff" data-i18n="stop">Stop</button>
-<button class="btn tiny" id="camRecord">● Record</button>
-<button class="btn tiny" id="camReplay">Replay</button>
-<span id="camRecState" style="font:600 9px var(--mono);color:var(--dim)">idle</span>
+<button class="btn tiny" id="camRecord" data-i18n="record">● Record</button>
+<button class="btn tiny" id="camReplay" data-i18n="replay">Replay</button>
+<span id="camRecState" style="font:600 9px var(--mono);color:var(--dim)" data-i18n="idle">idle</span>
 <span style="flex:1"></span>
 <button class="btn tiny ok" data-mark="pass" data-i18n="pass">✓</button>
 <button class="btn tiny bad" data-mark="fail" data-i18n="fail">✗</button>
@@ -619,19 +618,19 @@ max-height:none;overflow:visible;color:#000}
 <div class="mod w5" data-t="ports" style="--ac:var(--blue)">
 <header><span class="code">M-30</span><h3 data-i18n="deep_port">Deep port probe</h3><span class="led"></span></header>
 <div class="actions">
-<button class="btn tiny" id="pMedia">Media devices</button>
-<button class="btn tiny" id="pGame">Gamepads</button>
-<button class="btn tiny" id="pStorage">Storage quota</button>
+<button class="btn tiny" id="pMedia" data-i18n="media_devices">Media devices</button>
+<button class="btn tiny" id="pGame" data-i18n="gamepads">Gamepads</button>
+<button class="btn tiny" id="pStorage" data-i18n="storage_quota">Storage quota</button>
 <button class="btn tiny" id="pUsb">USB</button>
-<button class="btn tiny" id="pSerial">Serial</button>
+<button class="btn tiny" id="pSerial" data-i18n="serial">Serial</button>
 <button class="btn tiny" id="pHid">HID</button>
-<button class="btn tiny" id="pBt">Bluetooth</button>
+<button class="btn tiny" id="pBt" data-i18n="bluetooth">Bluetooth</button>
 <button class="btn tiny" id="pMidi">MIDI</button>
 <span style="flex:1"></span>
-<button class="btn tiny ok" data-mark="pass" data-i18n="pass">✓ Ports OK</button>
-<button class="btn tiny bad" data-mark="fail" data-i18n="fail">✗ Ports fail</button>
+<button class="btn tiny ok" data-mark="pass" data-i18n="ports_ok">✓ Ports OK</button>
+<button class="btn tiny bad" data-mark="fail" data-i18n="ports_fail">✗ Ports fail</button>
 </div>
-<div id="probeList">USB / Serial / HID list only previously-authorized devices (sandbox). Physical checks need a plug-in test.</div>
+<div id="probeList" data-i18n="probe_list_hint">USB / Serial / HID list only previously-authorized devices (sandbox). Physical checks need a plug-in test.</div>
 </div>
 </div>
 <section class="sec print-hide"><span class="no">10</span><h2 data-i18n="sec_10">Network</h2><div class="rule"></div><span class="tag" data-i18n="state_local">STATE · LOCAL INTERFACES</span></section>
@@ -640,7 +639,7 @@ max-height:none;overflow:visible;color:#000}
 <header><span class="code">M-31</span><h3 data-i18n="net_status">Network status & interfaces</h3><span class="led"></span></header>
 <div class="val"><span data-val>—</span><small id="netUnit"></small></div>
 <div class="actions"><button class="btn tiny" data-run data-i18n="read">Read</button><button class="btn tiny" id="btnIfProbe" data-i18n="probe_local">Probe local interfaces</button></div>
-<div id="netIf" style="font:600 10px var(--mono);color:var(--mut);margin-top:8px;word-break:break-all">local interfaces: not probed yet</div>
+<div id="netIf" style="font:600 10px var(--mono);color:var(--mut);margin-top:8px;word-break:break-all" data-i18n="local_interfaces_hint">local interfaces: not probed yet</div>
 </div>
 </div>
 <section class="sec" id="sec-report"><span class="no">11</span><h2 data-i18n="sec_11">Bench Report</h2><div class="rule"></div><span class="tag" data-i18n="export_print">EXPORT · PRINT · LOG</span></section>
@@ -651,12 +650,12 @@ max-height:none;overflow:visible;color:#000}
 <span id="verdictStamp">PENDING</span>
 <div style="font:600 11px var(--mono);color:var(--mut)">
 <div id="rpMeta1">UNIT — · TICKET — · TECH —</div>
-<div id="rpMeta2" style="color:var(--dim)">No tests recorded yet.</div>
+<div id="rpMeta2" style="color:var(--dim)" data-i18n="no_tests_yet">No tests recorded yet.</div>
 </div>
 </div>
 <table id="reportTable"><tbody></tbody></table>
 <label style="font:600 9px var(--mono);letter-spacing:.16em;color:var(--dim);display:block;margin:14px 0 5px" for="notes" data-i18n="tech_notes">TECHNICIAN NOTES</label>
-<textarea id="notes" placeholder="Findings, parts required, customer-visible condition…"></textarea>
+<textarea id="notes" placeholder="Findings, parts required, customer-visible condition…" data-i18n-ph="notes_ph"></textarea>
 <div class="actions" style="margin-top:11px">
 <button class="btn primary" id="btnPrint" data-i18n="print_report">Print report</button>
 <button class="btn" id="btnJson" data-i18n="export_json">Export JSON</button>
@@ -665,10 +664,10 @@ max-height:none;overflow:visible;color:#000}
 <button class="btn bad" id="btnReset" data-i18n="reset_session">Reset session</button>
 </div>
 <div class="print-only" id="printArea">
-<div class="secl">Unit</div><div id="printSpecs" class="small"></div>
-<div class="secl">Keyboard matrix</div><div id="printKeys" class="small"></div>
-<div class="secl">Technician notes</div><div id="printNotes" class="small"></div>
-<div class="secl">Event log (full)</div><div id="printLog"></div>
+<div class="secl" data-i18n="unit">Unit</div><div id="printSpecs" class="small"></div>
+<div class="secl" data-i18n="kb_matrix">Keyboard matrix</div><div id="printKeys" class="small"></div>
+<div class="secl" data-i18n="tech_notes">Technician notes</div><div id="printNotes" class="small"></div>
+<div class="secl" data-i18n="event_log_full">Event log (full)</div><div id="printLog"></div>
 </div>
 </div>
 <div class="mod w4 print-hide" style="--ac:var(--dim)">
@@ -678,13 +677,13 @@ max-height:none;overflow:visible;color:#000}
 </div>
 </main>
 <footer class="print-hide">
-<span>BENCHKIT · single-file diagnostics · no network calls · no dependencies</span>
+<span data-i18n="footer_1">BENCHKIT · single-file diagnostics · no network calls · no dependencies</span>
 <span id="footBuild"></span>
-<span>SCREENING TOOL — VERIFY FAILURES WITH NATIVE TESTERS</span>
+<span data-i18n="footer_2">SCREENING TOOL — VERIFY FAILURES WITH NATIVE TESTERS</span>
 </footer>
 <div id="pix">
 <canvas id="pixCv"></canvas>
-<div class="tip">click = next pattern · esc = exit</div>
+<div class="tip" data-i18n="pix_tip">click = next pattern · esc = exit</div>
 <div class="bar" id="pixBar">
 <button class="btn tiny" data-p="0">W</button><button class="btn tiny" data-p="1">R</button>
 <button class="btn tiny" data-p="2">G</button><button class="btn tiny" data-p="3">B</button>
@@ -694,23 +693,22 @@ max-height:none;overflow:visible;color:#000}
 <button class="btn tiny" data-p="15">CHK16i</button><button class="btn tiny" data-p="16">CHK2</button>
 <button class="btn tiny" data-p="17">CHK2i</button><button class="btn tiny" data-p="18">TEAR</button>
 <button class="btn tiny" data-p="19">GHOST</button>
-<button class="btn tiny bad" id="pixExit">EXIT</button>
+<button class="btn tiny bad" id="pixExit" data-i18n="exit">EXIT</button>
 </div>
 </div>
 <div id="touchOv">
 <canvas id="touchCv"></canvas>
 <div class="thud" id="touchHud">POINTERS 0 · MAX 0</div>
 <div class="tbar" id="touchBar">
-<button class="btn tiny" id="tClear">CLEAR</button>
+<button class="btn tiny" id="tClear" data-i18n="clear">CLEAR</button>
 <button class="btn tiny" id="tGrid">GRID</button>
-<span class="thint">drag everywhere — trace borders &amp; corners · ESC exits</span>
-<button class="btn tiny bad" id="tExit">EXIT</button>
+<span class="thint" data-i18n="touch_hint">drag everywhere — trace borders & corners · ESC exits</span>
+<button class="btn tiny bad" id="tExit" data-i18n="exit">EXIT</button>
 </div>
 </div>
 <noscript><p style="padding:30px;font-family:monospace">BENCHKIT needs JavaScript — enable it and reload.</p></noscript>
 <script>
 "use strict";
-/* BENCHKIT v1.9.4 — Universal Browser Benchmark & Diagnostics */
 
 /* ---------- i18n ---------- */
 const I18N = {
@@ -730,17 +728,41 @@ const I18N = {
     sec_01: "Compute & RAM", warmup_gap: "WARM-UP → STABILIZED WINDOW · GAP-FREE LOOPS",
     cpu_single: "CPU · Single-core int", cpu_multi: "CPU · Multi-core", cpu_float: "CPU · FP math",
     mem_bw: "Memory · Bandwidth", mem_lat: "RAM · Random latency", mem_check: "RAM · Pattern check", run: "Run",
+    errors: "errors",
+    cpu_single_hint: "200 ms untimed warm-up, then a 900 ms pinned-core window.",
+    cpu_multi_hint: "Warm-up burst, then one busy worker per logical core for 1.3 s.",
+    cpu_float_hint: "FP64 sqrt + sin throughput after a warm-up pass.",
+    mem_bw_hint: "Untimed warm copy, then timed 64 MB copies.",
+    mem_lat_hint: "8M random hops across an 8 MB cycle.",
+    mem_check_hint: "00/FF/AA/55 + LCG patterns on 32 MB. Any error = suspect RAM.",
     sec_02: "GPU Bench & Codecs", webgl_first: "WEBGL2-FIRST · 2D · 3D · AI · ENCODE/DECODE",
     gpu_2d: "GPU · Canvas 2D", gpu_3d: "GPU · 3D scene", gpu_ai: "AI / matrix compute",
     codecs: "Codecs · encode / decode engine", display_refresh: "Display · Refresh",
-    input_latency: "Input · Click-to-frame latency", measure: "Measure",
+    input_latency: "Input · Click-to-frame latency", measure: "Measure", run_codec: "Run codec bench",
+    gpu_2d_hint: "600 ms warm-up, then 3 s measured particle storm.",
+    gpu_3d_hint: "33k-triangle lit torus via WebGL2 (falls back to WebGL1); recovery-aware.",
+    gpu_ai_hint: "256×256 matmul on WebGPU; CPU FP32 fallback.",
+    codecs_hint: "Hardware encoder first, automatic software fallback; timeout-bounded everywhere.",
+    display_refresh_hint: "rAF timing, median of stabilized frames.",
+    input_latency_hint: "Click the pad 5+ times.",
+    click_here: "CLICK HERE REPEATEDLY",
     sec_03: "Stress Lab · Hybrid Stability", presets: "PRESETS SAFE → EXTREME · ∞ ENDLESS",
     hybrid_stress: "Hybrid stress / stability run", safe: "SAFE", standard: "STANDARD", extreme: "EXTREME",
-    start_stress: "Start stress", abort: "Abort",
+    start_stress: "Start stress", abort: "Abort", inf_endless: "∞ endless",
+    gpu_3d_storm: "GPU 3D storm", gpu_2d_storm: "GPU 2D storm", ai_matrix: "AI matrix",
+    ram_churn: "RAM churn", ram_pattern: "RAM pattern", storage_io: "Storage I/O", codec_encode: "Codec encode",
+    cpu_load: "CPU load", gpu_fps: "GPU fps", ai_gflops: "AI GFLOP/s", ram_gbs: "RAM GB/s", storage: "Storage", codec_enc: "Codec enc",
+    min_stab: "min — · stab —", matrix_churn: "matrix churn", copy_churn: "copy churn", errors_dash: "errors —", mb_written: "MB written", frames: "frames",
+    stress_hint: "EXTREME may force throttling or a GPU reset. RAM pattern errors = instant FAIL. Plug in AC & keep this tab focused.",
+    cpu_mops: "CPU Mop/s",
     sec_04: "Storage Throughput", sandbox_approx: "SANDBOX-APPROXIMATED",
     idb_rw: "IndexedDB · write / read", ls_sync: "localStorage · synchronous write",
+    idb_rw_hint: "16 × 1 MB blobs written, read back, deleted.",
+    ls_sync_hint: "1 MB string persistence — sync I/O path.",
     sec_05: "Power & Battery", live_telemetry: "LIVE TELEMETRY",
     battery_health: "Battery · health & state", read_battery: "Read battery",
+    charge: "Charge", health: "Health", state: "State", time_est: "Time est.", full_charge_cap: "Full charge cap.", design_cap: "Design cap.",
+    battery_hint: "Health = full-charge ÷ design capacity (when exposed).",
     sec_06: "Display Inspection", pixels_grey: "PIXELS · GREY · CHECKERS · TEARING · GHOSTING",
     panel_suite: "Panel inspection suite", auto_cycle: "▶ Auto cycle solids",
     black_bleed: "Black · bleed", gradient_banding: "Gradient · banding", grid_geometry: "Grid · geometry",
@@ -749,68 +771,119 @@ const I18N = {
     kb_matrix: "Keyboard matrix test", arm_test: "Arm test", reset: "Reset",
     pointer_mouse: "Pointer · mouse / trackpad / gestures", gamepad_ctrl: "Gamepad · controllers",
     touch_digitizer: "Touch · digitizer trail test", open_trail: "Open trail test",
+    key_tones: "Key tones", full_101: "Full 101/104", keys: "keys", held: "HELD",
+    no_gamepad: "No gamepad yet — plug one in and press a button.",
     sec_08: "Audio / Visual", per_device: "PER-DEVICE SELECTORS · RECORD → REPLAY",
     speakers_sweep: "Speakers · sweep", mic_meter: "Microphone · meter + record",
     camera_preview: "Camera · preview + record", motion_sensors: "Motion sensors", test: "Test",
+    sweep_l: "Sweep L", both: "Both", sweep_r: "Sweep R", meter: "Meter", record: "● Record", replay: "Replay", idle: "idle", live: "Live",
     sec_09: "Interfaces, Ports & Technologies", hw_sw_diff: "HW/SW DIFFERENTIATION",
     tech_matrix: "Technology matrix (HW/SW aware)", deep_port: "Deep port probe",
+    media_devices: "Media devices", gamepads: "Gamepads", storage_quota: "Storage quota", serial: "Serial", bluetooth: "Bluetooth",
+    ports_ok: "✓ Ports OK", ports_fail: "✗ Ports fail",
+    probe_list_hint: "USB / Serial / HID list only previously-authorized devices (sandbox). Physical checks need a plug-in test.",
     sec_10: "Network", state_local: "STATE · LOCAL INTERFACES",
     net_status: "Network status & interfaces", read: "Read", probe_local: "Probe local interfaces",
+    local_interfaces_hint: "local interfaces: not probed yet",
     sec_11: "Bench Report", export_print: "EXPORT · PRINT · LOG",
     verdict_results: "Verdict & results ledger", tech_notes: "TECHNICIAN NOTES",
     print_report: "Print report", export_json: "Export JSON", export_csv: "Export CSV",
     copy_summary: "Copy summary", reset_session: "Reset session", event_console: "Event console",
-    export_settings: "Export Settings", import_settings: "Import Settings", language: "Language"
+    export_settings: "Export Settings", import_settings: "Import Settings", language: "Language",
+    no_tests_yet: "No tests recorded yet.", notes_ph: "Findings, parts required, customer-visible condition…",
+    unit: "Unit", event_log_full: "Event log (full)",
+    footer_1: "BENCHKIT · single-file diagnostics · no network calls · no dependencies",
+    footer_2: "SCREENING TOOL — VERIFY FAILURES WITH NATIVE TESTERS",
+    pix_tip: "click = next pattern · esc = exit", exit: "EXIT",
+    clear: "CLEAR", touch_hint: "drag everywhere — trace borders & corners · ESC exits"
   },
   ru: {
-    app_title: "BENCHKIT v1.9.4 — Универсальный браузерный тест и диагностика",
-    app_subtitle: "Универсальный браузерный тест и диагностика",
-    home: "Главная", ticket: "Тикет #", model: "Модель / Серийный №", tech: "Техник",
-    pwr: "ПИТ", net: "СЕТЬ", batt: "БАТ",
-    sec_00: "Идентификация устройства", auto_detected: "АВТООПРЕДЕЛЕНИЕ", detected_hw: "Обнаруженное оборудование и среда",
-    copy_spec: "Копировать спецификацию", re_detect: "Повторить определение",
+    app_title: "1nd1g0 Benchmark v1.9.4 — набор диагностических инструментов",
+    app_subtitle: "Творческий способ спалить устройство браузером",
+    home: "Главная", ticket: "Заявка #", model: "Модель / Серийный №", tech: "Специалист",
+    pwr: "Б/П", net: "СЕТЬ", batt: "БАТ",
+    sec_00: "СИСТЕМА", auto_detected: "АВТООПРЕДЕЛЕНИЕ", detected_hw: "Браузер определил следующее",
+    copy_spec: "Копировать в буфер", re_detect: "Переопределить",
     gpu_note: "Имя GPU через WebGL.debug ext — может быть скрыто браузером.",
-    ctrl: "Автоматический приемочный тест", bench_passes: "Проходы теста",
+    ctrl: "Автоматический тест", bench_passes: "Кол-во повторов",
     "1_pass": "1 проход", "3_passes": "3 прохода", "5_passes": "5 проходов", "10_passes": "10 проходов", "inf_passes": "∞ до остановки",
     run_bench: "▶ Запустить тест", stop: "■ Стоп",
     idle_tests: "ожидание — 15 тестов · мин / сред / макс",
-    multi_pass_hint: "Многопроходный режим выявляет утечки и перегрев: каждый проход оценивается, падения ниже −15% отмечаются. Стоп останавливает между тестами, сохраняя результаты.",
+    multi_pass_hint: "Многопроходный режим выявляет нестабильность: каждый проход оценивается, падения ниже −15% отмечаются. Стоп останавливает между тестами, сохраняя результаты.",
     sec_01: "Вычисления и ОЗУ", warmup_gap: "РАЗОГРЕВ → СТАБИЛЬНОЕ ОКНО · НЕПРЕРЫВНЫЕ ЦИКЛЫ",
-    cpu_single: "CPU · Однопоточный int", cpu_multi: "CPU · Многопоточный", cpu_float: "CPU · FP math",
-    mem_bw: "Память · Пропускная способность", mem_lat: "ОЗУ · Случайная задержка", mem_check: "ОЗУ · Проверка паттернов", run: "Запуск",
-    sec_02: "GPU Тест и Кодеки", webgl_first: "WEBGL2 · 2D · 3D · AI · КОДЕКИ",
-    gpu_2d: "GPU · Canvas 2D", gpu_3d: "GPU · 3D сцена", gpu_ai: "AI / матричные вычисления",
+    cpu_single: "CPU · Однопоточный целые", cpu_multi: "CPU · Многопоточный целые", cpu_float: "CPU · дробные",
+    mem_bw: "Память · Пропускная способность", mem_lat: "ОЗУ · задержки", mem_check: "ОЗУ · проверка ячеек", run: "Запуск",
+    errors: "ошибки",
+    cpu_single_hint: "200 мс разогрев, затем 900 мс на одном ядре.",
+    cpu_multi_hint: "Разогрев, затем по одному воркеру на логическое ядро на 1.3 с.",
+    cpu_float_hint: "Пропускная способность FP64 sqrt + sin после разогрева.",
+    mem_bw_hint: "Копирование 64 МБ после разогрева.",
+    mem_lat_hint: "8M случайных обращений в цикле 8 МБ.",
+    mem_check_hint: "Паттерны 00/FF/AA/55 + LCG на 32 МБ. Любая ошибка = подозрение на ОЗУ.",
+    sec_02: "GPU и Кодеки", webgl_first: "WEBGL2 · 2D · 3D · AI · КОДЕКИ",
+    gpu_2d: "GPU · 2D", gpu_3d: "GPU · 3D", gpu_ai: "AI / матричные вычисления",
     codecs: "Кодеки · движок кодирования/декодирования", display_refresh: "Дисплей · Частота обновления",
-    input_latency: "Ввод · Задержка клика", measure: "Измерить",
-    sec_03: "Лаборатория стресса · Гибридная стабильность", presets: "ПРЕСЕТЫ БЕЗОПАСНЫЙ → ЭКСТРИМ · ∞ БЕСКОНЕЧНО",
+    input_latency: "Ввод · Задержка клика", measure: "Измерить", run_codec: "Тест кодеков",
+    gpu_2d_hint: "600 мс разогрев, затем 3 с тест частиц.",
+    gpu_3d_hint: "33k треугольников (тор) через WebGL2 (фоллбек на WebGL1); учет восстановления.",
+    gpu_ai_hint: "Матричное умножение 256×256 на WebGPU; фоллбек на CPU FP32.",
+    codecs_hint: "Сначала аппаратный энкодер, затем софтверный фоллбек; везде с таймаутами.",
+    display_refresh_hint: "Тайминг rAF, медиана стабилизированных кадров.",
+    input_latency_hint: "Кликните по области 5+ раз.",
+    click_here: "КЛИКАЙТЕ ЗДЕСЬ МНОГОКРАТНО",
+    sec_03: "Тесты стабильности · гибридная нагрузка", presets: "ПРЕСЕТЫ БЕЗОПАСНЫЙ → ЭКСТРИМ · ∞ БЕСКОНЕЧНО",
     hybrid_stress: "Гибридный стресс-тест / стабильность", safe: "БЕЗОПАСНЫЙ", standard: "СТАНДАРТ", extreme: "ЭКСТРИМ",
-    start_stress: "Начать стресс", abort: "Прервать",
-    sec_04: "Пропускная способность накопителя", sandbox_approx: "ПРИБЛИЖЕННО В ПЕСОЧНИЦЕ",
+    start_stress: "Нагрузить", abort: "Прервать", inf_endless: "∞ бесконечно",
+    gpu_3d_storm: "нагрузка GPU 3D", gpu_2d_storm: "нагрузка GPU 2D", ai_matrix: "Матрицы (ИИ)",
+    ram_churn: "ОЗУ нагрузка", ram_pattern: "ОЗУ паттерн", storage_io: "Накопитель в/в", codec_encode: "Кодир. видео",
+    cpu_load: "Нагрузка CPU", gpu_fps: "GPU fps", ai_gflops: "AI GFLOP/s", ram_gbs: "ОЗУ ГБ/с", storage: "Накопитель", codec_enc: "Кодек видео",
+    min_stab: "мин — · стаб —", matrix_churn: "матрицы", copy_churn: "копирование", errors_dash: "ошибки —", mb_written: "МБ записано", frames: "кадры",
+    stress_hint: "ЭКСТРИМ может вызвать троттлинг, перезапуск драйвера или вкладки. Ошибки паттерна ОЗУ = провал теста. Подключите питание и держите вкладку активной.",
+    cpu_mops: "CPU Mop/s",
+    sec_04: "Пропускная способность накопителя", sandbox_approx: "СРЕДНЯЯ СКОРОСТЬ ХРАНИЛИЩА БРАУЗЕРА",
     idb_rw: "IndexedDB · запись / чтение", ls_sync: "localStorage · синхронная запись",
-    sec_05: "Питание и Батарея", live_telemetry: "ТЕЛЕМЕТРИЯ В РЕАЛЬНОМ ВРЕМЕНИ",
-    battery_health: "Батарея · здоровье и состояние", read_battery: "Считать батарею",
-    sec_06: "Инспекция дисплея", pixels_grey: "ПИКСЕЛИ · СЕРЫЙ · ШАШКИ · РАЗРЫВЫ · ШЛЕЙФЫ",
-    panel_suite: "Набор инспекции панели", auto_cycle: "▶ Авто-цикл сплошных",
+    idb_rw_hint: "16 × 1 МБ блобов записано, прочитано, удалено.",
+    ls_sync_hint: "Синхронная запись 1 МБ строки в localStorage.",
+    sec_05: "Питание и Батарея", live_telemetry: "ТЕКУЩЕЕ СОСТОЯНИЕ ПИТАНИЯ",
+    battery_health: "Батарея · здоровье и состояние", read_battery: "Опросить батарею",
+    charge: "Заряд", health: "Здоровье", state: "Состояние", time_est: "Время (оцен.)", full_charge_cap: "Макс. емкость", design_cap: "Проектная емкость",
+    battery_hint: "Здоровье = макс. емкость ÷ проектная емкость (если доступно).",
+    sec_06: "Проверка дисплея", pixels_grey: "ПИКСЕЛИ · СЕРЫЙ · УЗОРЫ · РАЗРЫВЫ (ТИРИНГ) · ШЛЕЙФЫ (ГОСТИНГ)",
+    panel_suite: "Набор тестов экрана", auto_cycle: "▶ Автоперебор тестов",
     black_bleed: "Черный · засветы", gradient_banding: "Градиент · бандинг", grid_geometry: "Сетка · геометрия",
-    tearing: "Разрывы", ghosting: "Шлейфы", pass: "✓ Прошел", fail: "✗ Провал",
-    sec_07: "Лаборатория ввода", kb_pointer: "КЛАВИАТУРА · КУРСОР · ЖЕСТЫ · ГЕЙМПАД · ДИГИТАЙЗЕР",
+    tearing: "Разрывы", ghosting: "Шлейфы", pass: "✓ Прошел", fail: "✗ Провалил",
+    sec_07: "Устройства ввода", kb_pointer: "КЛАВИАТУРА · КУРСОР · ЖЕСТЫ · ГЕЙМПАД · ДИГИТАЙЗЕР",
     kb_matrix: "Тест матрицы клавиатуры", arm_test: "Активировать тест", reset: "Сброс",
     pointer_mouse: "Курсор · мышь / тачпад / жесты", gamepad_ctrl: "Геймпад · контроллеры",
-    touch_digitizer: "Сенсор · тест следа дигитайзера", open_trail: "Открыть тест следа",
+    touch_digitizer: "Сенсор · тест дигитайзера", open_trail: "Открыть тест",
+    key_tones: "Звук клавиш", full_101: "Полная 101/104", keys: "клавиши", held: "УДЕРЖИВАЕТСЯ",
+    no_gamepad: "Геймпад не найден — подключите и нажмите кнопку.",
     sec_08: "Аудио / Видео", per_device: "ВЫБОР УСТРОЙСТВ · ЗАПИСЬ → ВОСПРОИЗВЕДЕНИЕ",
-    speakers_sweep: "Динамики · свип", mic_meter: "Микрофон · индикатор + запись",
+    speakers_sweep: "Динамики · диапазон", mic_meter: "Микрофон · индикатор + запись",
     camera_preview: "Камера · предпросмотр + запись", motion_sensors: "Датчики движения", test: "Тест",
-    sec_09: "Интерфейсы, Порты и Технологии", hw_sw_diff: "DIFF HW/SW",
-    tech_matrix: "Матрица технологий (учет HW/SW)", deep_port: "Глубокая проверка портов",
+    sweep_l: "Левый канал", both: "Оба", sweep_r: "Правый канал", meter: "Индикатор", record: "● Запись", replay: "Воспр.", idle: "ожидание", live: "Вживую",
+    sec_09: "Интерфейсы, Порты и Технологии", hw_sw_diff: "РАЗДЕЛЕНИЕ HW/SW",
+    tech_matrix: "Матрица технологий (HW/SW)", deep_port: "Глубокая проверка портов",
+    media_devices: "Медиа устройства", gamepads: "Геймпады", storage_quota: "Квота хранилища", serial: "COM/RS232", bluetooth: "Bluetooth",
+    ports_ok: "✓ Порты ОК", ports_fail: "✗ Порты отказ",
+    probe_list_hint: "USB / Serial / HID показывают только ранее авторизованные устройства (песочница). Физические проверки требуют подключения.",
     sec_10: "Сеть", state_local: "СОСТОЯНИЕ · ЛОКАЛЬНЫЕ ИНТЕРФЕЙСЫ",
     net_status: "Статус сети и интерфейсы", read: "Считать", probe_local: "Проверить локальные интерфейсы",
+    local_interfaces_hint: "локальные интерфейсы: еще не проверены",
     sec_11: "Отчет о тесте", export_print: "ЭКСПОРТ · ПЕЧАТЬ · ЛОГ",
-    verdict_results: "Вердикт и журнал результатов", tech_notes: "ЗАМЕТКИ ТЕХНИКА",
+    verdict_results: "Вердикт и журнал результатов", tech_notes: "ЗАМЕТКИ СПЕЦИАЛИСТА",
     print_report: "Печать отчета", export_json: "Экспорт JSON", export_csv: "Экспорт CSV",
     copy_summary: "Копировать сводку", reset_session: "Сбросить сессию", event_console: "Консоль событий",
-    export_settings: "Экспорт настроек", import_settings: "Импорт настроек", language: "Язык"
+    export_settings: "Экспорт настроек", import_settings: "Импорт настроек", language: "Язык",
+    no_tests_yet: "Тесты еще не записаны.", notes_ph: "Находки, требуемые запчасти, видимое состояние…",
+    unit: "Устройство", event_log_full: "Журнал событий (полный)",
+    footer_1: "1nd1g0 benchmark - тестируем оборудование браузером",
+    footer_2: "ВОЗМОЖНОСТИ БРАУЗЕРА ОГРАНИЧЕНЫ, ДОПОЛНЯЙТЕ ДРУГИМИ ИНСТРУМЕНТАМИ",
+    pix_tip: "клик = след. паттерн · esc = выход", exit: "ВЫХОД",
+    clear: "ОЧИСТИТЬ", touch_hint: "водите по экрану — особено краям и углам · ESC для выхода"
   }
 };
+
 let currentLang = 'en';
 function t(key) { return (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key; }
 function applyTranslations() {
@@ -818,31 +891,45 @@ function applyTranslations() {
     const key = el.getAttribute('data-i18n');
     const translated = t(key);
     if (!translated) return;
-    if (el.tagName === 'INPUT' && el.type !== 'button' && el.type !== 'submit') { el.placeholder = translated; }
-    else if (el.tagName === 'OPTION') { el.textContent = translated; }
-    else {
-      if (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3) { el.textContent = translated; }
-      else if (['H1','H2','H3','H4','LABEL','SMALL','TITLE','SPAN'].includes(el.tagName)) {
-        if(!el.querySelector('*')) el.textContent = translated;
-        else { for(let node of el.childNodes) { if(node.nodeType === 3 && node.textContent.trim().length > 0) { node.textContent = translated; break; } } }
-      } else if (el.tagName === 'BUTTON' || el.tagName === 'A') {
-        if(!el.querySelector('svg') && !el.querySelector('span') && !el.querySelector('b')) el.textContent = translated;
-        else { for(let node of el.childNodes) { if(node.nodeType === 3 && node.textContent.trim().length > 0) { node.textContent = translated; break; } } }
-      } else { el.textContent = translated; }
+    const tag = el.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') {
+      if (el.hasAttribute('data-i18n-ph')) el.placeholder = t(el.getAttribute('data-i18n-ph'));
+      else if (el.type === 'button' || el.type === 'submit') el.value = translated;
+      else el.placeholder = translated;
+    } else if (tag === 'OPTION') {
+      el.textContent = translated;
+    } else if (tag === 'IMG' || tag === 'SVG') {
+      // skip
+    } else {
+      if (['H1','H2','H3','H4','LABEL','BUTTON','A','SMALL','P'].includes(tag) || el.children.length === 0) {
+         el.textContent = translated;
+      } else {
+         for (let node of el.childNodes) {
+            if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0) {
+               node.textContent = translated;
+               break;
+            }
+         }
+      }
     }
   });
   document.title = t('app_title');
 }
 function initLang() {
   const saved = localStorage.getItem('bk_lang');
-  if (saved) { currentLang = saved; }
-  else {
+  if (saved) {
+    currentLang = saved;
+  } else {
     const browserLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
-    if (browserLang.startsWith('ru') || browserLang.includes('ru')) currentLang = 'ru';
-    else currentLang = 'en';
+    if (browserLang.startsWith('ru') || browserLang.includes('ru') || browserLang.startsWith('be') || browserLang.startsWith('uk') || browserLang.startsWith('kk')) {
+      currentLang = 'ru';
+    } else {
+      currentLang = 'en';
+    }
     localStorage.setItem('bk_lang', currentLang);
   }
-  $("#langSel").value = currentLang;
+  const sel = document.getElementById('langSel');
+  if (sel) sel.value = currentLang;
   applyTranslations();
 }
 
@@ -918,69 +1005,68 @@ if(gpuHealthy())return res(true);
 if(Date.now()-t0>timeoutMs)return res(false);
 setTimeout(poll,150);})();});}
 /* ---------- worker source ---------- */
-const WSRC=[
-"onmessage=function(e){var d=e.data;",
-"if(d.cmd==='int'){var end=performance.now()+d.ms,x=(Math.random()*4294967295)>>>0,ops=0;",
-"while(performance.now()<end){for(var i=0;i<20000;i++){x^=x<<13;x^=x>>>17;x^=x<<5;x=(x+0x9e3779b9)>>>0;}ops+=20000;}",
-"postMessage({cmd:'int',ops:ops});}",
-"else if(d.cmd==='float'){var end2=performance.now()+d.ms,n=1<<18,a=new Float64Array(n),ops2=0;",
-"for(var k=0;k<n;k++)a[k]=Math.random()+0.5;",
-"while(performance.now()<end2){for(var j=0;j<n;j++){a[j]=Math.sqrt(a[j])*1.0000001;a[j]=Math.sin(a[j])+1.0000001;}ops2+=n*2;}",
-"postMessage({cmd:'float',ops:ops2});}",
-"else if(d.cmd==='mem'){var size=d.bytes,A=new Uint8Array(size),B=new Uint8Array(size);A.fill(101);",
-"var reps=Math.max(2,Math.ceil(3e8/size));B.set(A);A.set(B);",
-"var t0=performance.now();",
-"for(var r=0;r<reps;r++){B.set(A);A.set(B);}",
-"var ms=performance.now()-t0;postMessage({cmd:'mem',gbps:(size*2*reps)/(ms/1000)/1e9,ms:ms});}",
-"else if(d.cmd==='memlat'){var n=1<<21,arr=new Int32Array(n);",
-"var step=(((Math.random()*(n/4))|0)*2+1)+1001;if(step%2===0)step++;",
-"var idx=0;for(var f=0;f<n;f++){arr[f]=idx;idx=(idx+step)&(n-1);}",
-"var p=0;for(var w=0;w<n*2;w++)p=arr[p];",
-"var hops=8000000,t1=performance.now();",
-"for(var h=0;h<hops;h++)p=arr[p];",
-"var ms2=performance.now()-t1;",
-"postMessage({cmd:'memlat',ns:(ms2*1e6)/hops,hops:hops,p:p});}",
-"else if(d.cmd==='memcheck'){var size3=1<<25,U=new Uint32Array(size3/4),errs=0,t0c=performance.now();",
-"var pats=[0,4294967295,2863311530,1431655765];",
-"for(var q=0;q<pats.length;q++){U.fill(pats[q]);for(var v=0;v<U.length;v++){if(U[v]!==pats[q])errs++;}}",
-"var seed=12345;for(var r2=0;r2<U.length;r2++){seed=(Math.imul(seed,1103515245)+12345)>>>0;U[r2]=seed;}",
-"var seed2=12345;for(var v2=0;v2<U.length;v2++){seed2=(Math.imul(seed2,1103515245)+12345)>>>0;if(U[v2]!==seed2)errs++;}",
-"var msc=performance.now()-t0c;",
-"postMessage({cmd:'memcheck',errors:errs,mb:(size3*10)/1048576,ms:msc,gbps:(size3*10)/(msc/1000)/1e9});}",
-"else if(d.cmd==='memstress'){var end6=performance.now()+d.ms,U6=new Uint32Array(1<<20);",
-"var pats6=[0,4294967295,2863311530,1431655765],bad6=0,win6=performance.now(),wb6=0;",
-"while(true){",
-"for(var q6=0;q6<4;q6++){U6.fill(pats6[q6]);",
-"for(var v6=0;v6<U6.length;v6++){if(U6[v6]!==pats6[q6])bad6++;}}",
-"wb6+=U6.length*8;",
-"var nw6=performance.now();",
-"if(nw6-win6>=1000){postMessage({cmd:'prog',ops:wb6,bad:bad6});wb6=0;bad6=0;win6=nw6;}",
-"if(nw6>=end6)break;}",
-"postMessage({cmd:'done',ops:wb6,bad:bad6,ms:performance.now()-(end6-d.ms)});}",
-"else if(d.cmd==='sustain'){var st=performance.now(),end3=st+d.ms,x3=(Math.random()*4294967295)>>>0,win=st,wop=0;",
-"while(true){",
-"for(var i3=0;i3<131072;i3++){x3^=x3<<13;x3^=x3>>>17;x3^=x3<<5;x3=(x3+0x9e3779b9)>>>0;}",
-"wop+=131072;var nw=performance.now();",
-"if(nw-win>=1000){postMessage({cmd:'prog',ops:wop});wop=0;win=nw;}",
-"if(nw>=end3)break;}",
-"postMessage({cmd:'done',ops:wop,ms:performance.now()-st});}",
-"else if(d.cmd==='aimul'){var end4=performance.now()+d.ms,m=64,AA=new Float32Array(m*m),BB=new Float32Array(m*m),CC=new Float32Array(m*m);",
-"for(var q0=0;q0<m*m;q0++){AA[q0]=Math.random();BB[q0]=Math.random();}",
-"var win4=performance.now(),w4=0;",
-"while(true){",
-"for(var b4=0;b4<40;b4++){for(var i4=0;i4<m;i4++){var ci=i4*m;for(var j4=0;j4<m;j4++){var s4=0;for(var k4=0;k4<m;k4++)s4+=AA[ci+k4]*BB[k4*m+j4];CC[ci+j4]=s4;}}}",
-"w4+=40;var nw4=performance.now();",
-"if(nw4-win4>=1000){postMessage({cmd:'prog',ops:w4*(2*m*m*m)});w4=0;win4=nw4;}",
-"if(nw4>=end4)break;}",
-"postMessage({cmd:'done',ops:w4*(2*m*m*m),ms:performance.now()-(end4-d.ms)});}",
-"else if(d.cmd==='memloop'){var end5=performance.now()+d.ms,sz=1<<24,X=new Uint8Array(sz),Y=new Uint8Array(sz);X.fill(77);",
-"var win5=performance.now(),wb=0;",
-"while(true){Y.set(X);X.set(Y);wb+=sz*2;var nw5=performance.now();",
-"if(nw5-win5>=1000){postMessage({cmd:'prog',ops:wb});wb=0;win5=nw5;}",
-"if(nw5>=end5)break;}",
-"postMessage({cmd:'done',ops:wb,ms:performance.now()-(end5-d.ms)});}",
-"};"].join("
-");
+const WSRC = `
+onmessage=function(e){var d=e.data;
+if(d.cmd==='int'){var end=performance.now()+d.ms,x=(Math.random()*4294967295)>>>0,ops=0;
+while(performance.now()<end){for(var i=0;i<20000;i++){x^=x<<13;x^=x>>>17;x^=x<<5;x=(x+0x9e3779b9)>>>0;}ops+=20000;}
+postMessage({cmd:'int',ops:ops});}
+else if(d.cmd==='float'){var end2=performance.now()+d.ms,n=1<<18,a=new Float64Array(n),ops2=0;
+for(var k=0;k<n;k++)a[k]=Math.random()+0.5;
+while(performance.now()<end2){for(var j=0;j<n;j++){a[j]=Math.sqrt(a[j])*1.0000001;a[j]=Math.sin(a[j])+1.0000001;}ops2+=n*2;}
+postMessage({cmd:'float',ops:ops2});}
+else if(d.cmd==='mem'){var size=d.bytes,A=new Uint8Array(size),B=new Uint8Array(size);A.fill(101);
+var reps=Math.max(2,Math.ceil(3e8/size));B.set(A);A.set(B);
+var t0=performance.now();
+for(var r=0;r<reps;r++){B.set(A);A.set(B);}
+var ms=performance.now()-t0;postMessage({cmd:'mem',gbps:(size*2*reps)/(ms/1000)/1e9,ms:ms});}
+else if(d.cmd==='memlat'){var n=1<<21,arr=new Int32Array(n);
+var step=(((Math.random()*(n/4))|0)*2+1)+1001;if(step%2===0)step++;
+var idx=0;for(var f=0;f<n;f++){arr[f]=idx;idx=(idx+step)&(n-1);}
+var p=0;for(var w=0;w<n*2;w++)p=arr[p];
+var hops=8000000,t1=performance.now();
+for(var h=0;h<hops;h++)p=arr[p];
+var ms2=performance.now()-t1;
+postMessage({cmd:'memlat',ns:(ms2*1e6)/hops,hops:hops,p:p});}
+else if(d.cmd==='memcheck'){var size3=1<<25,U=new Uint32Array(size3/4),errs=0,t0c=performance.now();
+var pats=[0,4294967295,2863311530,1431655765];
+for(var q=0;q<pats.length;q++){U.fill(pats[q]);for(var v=0;v<U.length;v++){if(U[v]!==pats[q])errs++;}}
+var seed=12345;for(var r2=0;r2<U.length;r2++){seed=(Math.imul(seed,1103515245)+12345)>>>0;U[r2]=seed;}
+var seed2=12345;for(var v2=0;v2<U.length;v2++){seed2=(Math.imul(seed2,1103515245)+12345)>>>0;if(U[v2]!==seed2)errs++;}
+var msc=performance.now()-t0c;
+postMessage({cmd:'memcheck',errors:errs,mb:(size3*10)/1048576,ms:msc,gbps:(size3*10)/(msc/1000)/1e9});}
+else if(d.cmd==='memstress'){var end6=performance.now()+d.ms,U6=new Uint32Array(1<<20);
+var pats6=[0,4294967295,2863311530,1431655765],bad6=0,win6=performance.now(),wb6=0;
+while(true){
+for(var q6=0;q6<4;q6++){U6.fill(pats6[q6]);
+for(var v6=0;v6<U6.length;v6++){if(U6[v6]!==pats6[q6])bad6++;}}
+wb6+=U6.length*8;
+var nw6=performance.now();
+if(nw6-win6>=1000){postMessage({cmd:'prog',ops:wb6,bad:bad6});wb6=0;bad6=0;win6=nw6;}
+if(nw6>=end6)break;}
+postMessage({cmd:'done',ops:wb6,bad:bad6,ms:performance.now()-(end6-d.ms)});}
+else if(d.cmd==='sustain'){var st=performance.now(),end3=st+d.ms,x3=(Math.random()*4294967295)>>>0,win=st,wop=0;
+while(true){
+for(var i3=0;i3<131072;i3++){x3^=x3<<13;x3^=x3>>>17;x3^=x3<<5;x3=(x3+0x9e3779b9)>>>0;}
+wop+=131072;var nw=performance.now();
+if(nw-win>=1000){postMessage({cmd:'prog',ops:wop});wop=0;win=nw;}
+if(nw>=end3)break;}
+postMessage({cmd:'done',ops:wop,ms:performance.now()-st});}
+else if(d.cmd==='aimul'){var end4=performance.now()+d.ms,m=64,AA=new Float32Array(m*m),BB=new Float32Array(m*m),CC=new Float32Array(m*m);
+for(var q0=0;q0<m*m;q0++){AA[q0]=Math.random();BB[q0]=Math.random();}
+var win4=performance.now(),w4=0;
+while(true){
+for(var b4=0;b4<40;b4++){for(var i4=0;i4<m;i4++){var ci=i4*m;for(var j4=0;j4<m;j4++){var s4=0;for(var k4=0;k4<m;k4++)s4+=AA[ci+k4]*BB[k4*m+j4];CC[ci+j4]=s4;}}}
+w4+=40;var nw4=performance.now();
+if(nw4-win4>=1000){postMessage({cmd:'prog',ops:w4*(2*m*m*m)});w4=0;win4=nw4;}
+if(nw4>=end4)break;}
+postMessage({cmd:'done',ops:w4*(2*m*m*m),ms:performance.now()-(end4-d.ms)});}
+else if(d.cmd==='memloop'){var end5=performance.now()+d.ms,sz=1<<24,X=new Uint8Array(sz),Y=new Uint8Array(sz);X.fill(77);
+var win5=performance.now(),wb=0;
+while(true){Y.set(X);X.set(Y);wb+=sz*2;var nw5=performance.now();
+if(nw5-win5>=1000){postMessage({cmd:'prog',ops:wb});wb=0;win5=nw5;}
+if(nw5>=end5)break;}
+postMessage({cmd:'done',ops:wb,ms:performance.now()-(end5-d.ms)});}
+};`;
 function mkWorker(){try{return new Worker(URL.createObjectURL(new Blob([WSRC],{type:"text/javascript"})))}catch(e){return null}}
 function workerAvailable(){const w=mkWorker();if(w){try{w.terminate()}catch(e){}return true}return false}
 function wTask(cmd,ms,extra){return new Promise(res=>{
@@ -1264,26 +1350,18 @@ if(!ad)throw new Error("no-adapter");
 const dev=await withTimeout(ad.requestDevice(),8000,"WebGPU device");
 try{dev.lost.then(info=>{if(info&&info.reason!=="destroyed")log("WARN","WebGPU device lost — GPU backend hiccup.");}).catch(()=>{});}catch(e){}
 const N=256,K=24;
-const code="const N: u32 = 256u;
-"+
-"@group(0) @binding(0) var<storage, read> A: array<f32>;
-"+
-"@group(0) @binding(1) var<storage, read> B: array<f32>;
-"+
-"@group(0) @binding(2) var<storage, read_write> C: array<f32>;
-"+
-"@compute @workgroup_size(8, 8)
-"+
-"fn main(@builtin(global_invocation_id) g: vec3<u32>) {
-"+
-"  let r = g.x; let c = g.y;
-if (r >= N || c >= N) { return; }
-"+
-"  var s = 0.0;
-for (var k = 0u; k < N; k = k + 1u) { s = s + A[r * N + k] * B[k * N + c]; }
-"+
-"  C[r * N + c] = s;
-}";
+const code = `const N: u32 = 256u;
+@group(0) @binding(0) var<storage, read> A: array<f32>;
+@group(0) @binding(1) var<storage, read> B: array<f32>;
+@group(0) @binding(2) var<storage, read_write> C: array<f32>;
+@compute @workgroup_size(8, 8)
+fn main(@builtin(global_invocation_id) g: vec3<u32>) {
+  let r = g.x; let c = g.y;
+  if (r >= N || c >= N) { return; }
+  var s = 0.0;
+  for (var k = 0u; k < N; k = k + 1u) { s = s + A[r * N + k] * B[k * N + c]; }
+  C[r * N + c] = s;
+}`;
 const mod=dev.createShaderModule({code});
 const pipe=dev.createComputePipeline({layout:"auto",compute:{module:mod,entryPoint:"main"}});
 const bytes=N*N*4,rnd=()=>{const a=new Float32Array(N*N);for(let i=0;i<a.length;i++)a[i]=Math.random();return a};
@@ -1704,7 +1782,7 @@ setStatus("battery",hp>=80?"pass":hp>=60?"warn":"fail",fmt(hp,0)+"%",
 fmt(b.fullChargeCapacity,1)+" / "+fmt(b.designCapacity,1)+" Wh · "+lvl+"% "+(b.charging?"charging":"discharging"),q);
 }else{
 setTxt("bHealth","n/a");const bh2=$("#bHealth");if(bh2)bh2.className="v";
-setStatus("battery","info",lvl+"%","Capacity counters not exposed — use native battery tools.",q);}}
+setStatus("battery","info",lvl+"%","Capacity counters not exposed — use powercfg /batteryreport.",q);}}
 RUN.battery=async()=>{markRunning("battery");
 if(!navigator.getBattery)return setStatus("battery","info","MANUAL","Battery API unavailable in this browser.");
 const b=await navigator.getBattery();
@@ -2441,12 +2519,10 @@ let gpu="—";
 try{const c=document.createElement("canvas"),g=c.getContext("webgl");
 if(g){const ext=g.getExtension("WEBGL_debug_renderer_info");
 gpu=ext?g.getParameter(ext.UNMASKED_RENDERER_WEBGL):g.getParameter(g.RENDERER);}}catch(e){}
-
 let cpuThreads = navigator.hardwareConcurrency;
 if (!cpuThreads || cpuThreads === 0) {
-    cpuThreads = "—"; // Graceful fallback for mobile browsers that hide this property
+    cpuThreads = "n/a"; 
 }
-
 SPECS=[["OS",os],["Browser",br],["CPU threads",cpuThreads],
 ["RAM (declared)",navigator.deviceMemory?navigator.deviceMemory+" GB+":"n/a"],
 ["GPU",gpu||"n/a",1],
@@ -2469,9 +2545,7 @@ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.write
 else fallbackCopy(t);
 function fallbackCopy(x){const ta=document.createElement("textarea");ta.value=x;document.body.appendChild(ta);ta.select();
 try{document.execCommand("copy");done()}catch(e){log("WARN","Copy failed.")}ta.remove();}}
-on("#btnCopySpec","click",()=>copyText("BENCHKIT SPEC SUMMARY
-"+SPECS.map(s=>s[0]+": "+s[1]).join("
-"),"Spec summary copied."));
+on("#btnCopySpec","click",()=>copyText("BENCHKIT SPEC SUMMARY\n"+SPECS.map(s=>s[0]+": "+s[1]).join("\n"),"Spec summary copied."));
 /* ---------- report / print / exports ---------- */
 function renderReport(){
 const tbl=$("#reportTable");if(!tbl)return;
@@ -2490,7 +2564,7 @@ tr.innerHTML=`<td>${name}</td><td>${valTxt}</td>
 <td>${new Date(r.ts).toTimeString().slice(0,8)}</td>`;
 tb.appendChild(tr);});
 const st=$("#verdictStamp");if(!st)return;st.className="";
-if(!nr){st.textContent="PENDING";setTxt("rpMeta2","No tests recorded yet.");}
+if(!nr){st.textContent="PENDING";setTxt("rpMeta2",t("no_tests_yet"));}
 else if(nf){st.textContent="FAIL";st.classList.add("FAIL");setTxt("rpMeta2",nf+" fail · "+nw+" note · "+np+" pass.");}
 else if(nw){st.textContent="PASS·NOTES";st.classList.add("NOTES");setTxt("rpMeta2",nw+" note · "+np+" pass.");}
 else{st.textContent="PASS";st.classList.add("PASS");setTxt("rpMeta2",np+" checks passed.");}
@@ -2520,8 +2594,7 @@ a.download="benchkit_"+tk+"_"+Date.now()+".json";a.click();
 URL.revokeObjectURL(a.href);log("INFO","Report exported as JSON.")});
 on("#btnCsv","click",()=>{
 const g=gather();
-const esc=s=>{s=String(s==null?"":s);return /[",
-]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+const esc=s=>{s=String(s==null?"":s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
 const rows=[];
 rows.push(["BENCHKIT CSV",g.generated,g.ticket,g.model,g.tech,"passes:"+g.benchPasses].map(esc).join(","));
 rows.push(["test","status","value","timestamp","detail"].map(esc).join(","));
@@ -2534,31 +2607,23 @@ rows.push(["loop samples"].map(esc).join(","));
 rows.push(["test","pass","value"].map(esc).join(","));
 TESTS.forEach(([id,name])=>{const st2=g.loopStats[id];if(!st2)return;
 st2.vals.forEach((v,i)=>rows.push([name,i+1,v].map(esc).join(",")));});}
-const b=new Blob([rows.join("
-")],{type:"text/csv"});
+const b=new Blob([rows.join("\n")],{type:"text/csv"});
 const a=document.createElement("a");a.href=URL.createObjectURL(b);
 const tk=(g.ticket||"unit").replace(/[^\w\-]+/g,"-");
 a.download="benchkit_"+tk+"_"+Date.now()+".csv";a.click();
 URL.revokeObjectURL(a.href);log("INFO","Report exported as CSV.");});
 on("#btnCopyRpt","click",()=>{const g=gather();
-let t="BENCHKIT REPORT — "+(g.ticket||"no ticket")+"
-UNIT: "+(g.model||"—")+" · TECH: "+(g.tech||"—")+" · "+g.generated+"
-";
-if(g.gpuInterruptions>0)t+="GPU backend interruptions this session: "+g.gpuInterruptions+(g.gpuBackendHealthy?" (recovered)":" (still down)")+"
-";
-t+="
-";
+let t="BENCHKIT REPORT — "+(g.ticket||"no ticket")+"\nUNIT: "+(g.model||"—")+" · TECH: "+(g.tech||"—")+" · "+g.generated+"\n";
+if(g.gpuInterruptions>0)t+="GPU backend interruptions this session: "+g.gpuInterruptions+(g.gpuBackendHealthy?" (recovered)":" (still down)")+"\n";
+t+="\n";
 TESTS.forEach(([id,name])=>{const r=g.results[id];if(!r)return;
 const lst=g.loopStats[id];
 let v=r.val==null?"—":String(r.val);
 if(lst&&lst.vals.length>1){const a=lst.vals.reduce((x,y)=>x+y,0)/lst.vals.length;
 v=fmtAuto(a)+" (min "+fmtAuto(Math.min(...lst.vals))+" / max "+fmtAuto(Math.max(...lst.vals))+")";}
-t+=name.padEnd(36)+String(v).padEnd(22)+"["+r.st.toUpperCase()+"]
-";});
+t+=name.padEnd(36)+String(v).padEnd(22)+"["+r.st.toUpperCase()+"]\n";});
 const vs=$("#verdictStamp");
-t+="
-VERDICT: "+(vs?vs.textContent:"—")+"
-NOTES: "+(g.notes||"—");
+t+="\nVERDICT: "+(vs?vs.textContent:"—")+"\nNOTES: "+(g.notes||"—");
 copyText(t,"Report summary copied.")});
 on("#btnReset","click",()=>{if(!confirm("Clear this bench session (results, ticket fields, notes)?"))return;
 try{localStorage.removeItem("bk_session")}catch(e){}
