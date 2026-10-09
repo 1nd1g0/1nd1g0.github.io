@@ -13,7 +13,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
 canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
 .hide{display:none!important}
 #ui{position:fixed;inset:0;pointer-events:none;z-index:5}
-.scr,#card,#modal,#hudTop,#hudBot,#edTop,#edPanel{pointer-events:auto}
+.scr,#card,#modal,#hudTop,#hudBotW,#edTop,#edPanel{pointer-events:auto}
 .scr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
  background:radial-gradient(120% 90% at 50% 20%,rgba(46,24,10,.55),rgba(10,5,3,.82));text-align:center;padding:14px}
 h1{margin:0;font-size:min(11vw,58px);letter-spacing:.12em;color:var(--acc);
@@ -32,8 +32,9 @@ h1{margin:0;font-size:min(11vw,58px);letter-spacing:.12em;color:var(--acc);
 #hudTop{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .pill{background:rgba(20,10,5,.72);border:1px solid var(--line);border-radius:10px;padding:5px 9px;font-size:13px;letter-spacing:.08em}
 .pill b{color:var(--acc)}
+#hudBotW{display:flex;flex-direction:column;align-items:center;gap:6px}
 #hudBot{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap}
-#hint{position:absolute;bottom:56px;left:50%;transform:translateX(-50%);background:rgba(20,10,5,.6);border-radius:10px;padding:5px 12px;font-size:12px;color:var(--dim);max-width:92vw;text-align:center;pointer-events:none;z-index:6}
+#hint{background:rgba(20,10,5,.6);border-radius:10px;padding:5px 12px;font-size:12px;color:var(--dim);max-width:92vw;text-align:center;pointer-events:none}
 #powWrap{width:min(46vw,220px);height:12px;border:1px solid var(--line);border-radius:8px;background:rgba(0,0,0,.5);overflow:hidden;margin:0}
 #pow{height:100%;width:0%;background:linear-gradient(90deg,#5ad068,#ffd23c,#ff5a3c)}
 #card{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(8,4,2,.55)}
@@ -67,8 +68,8 @@ textarea{width:100%;min-height:120px;font-family:ui-monospace,Consolas,monospace
  .sub{font-size:10px;margin-bottom:10px;letter-spacing:.2em}
  .pill{font-size:11px;padding:4px 7px}
  .btn.ic{width:38px;height:30px;padding:4px 0;font-size:14px}
- #hint{font-size:11px;padding:4px 10px;bottom:48px}
- #powWrap{width:min(38vw,150px);height:10px}
+ #hint{font-size:11px;padding:4px 10px}
+ #powWrap{width:min(60vw,200px);height:10px}
 }
 </style>
 </head>
@@ -92,14 +93,16 @@ textarea{width:100%;min-height:120px;font-family:ui-monospace,Consolas,monospace
       <span class="pill" id="hudHole"></span><span class="pill" id="hudPar"></span>
       <span class="pill">STROKES <b id="hudStr">0</b></span><span class="pill">TOTAL <b id="hudTot">0</b></span>
     </div>
-    <div id="hint"></div>
-    <div id="hudBot">
+    <div id="hudBotW">
+      <div id="hint"></div>
       <div id="powWrap"><div id="pow"></div></div>
-      <button class="btn ic" id="bRestart" title="Restart hole (R)">↺</button>
-      <button class="btn ic" id="bMute" title="Sound (M)">♪</button>
-      <button class="btn ic" id="bCam" title="Recenter camera">◎</button>
-      <button class="btn ic" id="bHelpHud" title="Help">?</button>
-      <button class="btn ic" id="bMenu" title="Menu">☰</button>
+      <div id="hudBot">
+        <button class="btn ic" id="bRestart" title="Restart hole (R)">↺</button>
+        <button class="btn ic" id="bMute" title="Sound (M)">♪</button>
+        <button class="btn ic" id="bCam" title="Recenter camera">◎</button>
+        <button class="btn ic" id="bHelpHud" title="Help">?</button>
+        <button class="btn ic" id="bMenu" title="Menu">☰</button>
+      </div>
     </div>
   </div>
   <div id="card" class="hide"><div id="cardIn"></div></div>
@@ -206,10 +209,17 @@ var DOT_FS='precision mediump float;uniform vec4 uCol;varying float vF;'+
 'gl_FragColor=vec4(mix(uCol.rgb,vec3(0.98,0.82,0.62),vF*0.8),uCol.a);}';
 var PM=prog(MAIN_VS,MAIN_FS),PD=prog(DOT_VS,DOT_FS);
 var LU={};
-LU.aP=gl.getAttribLocation(PM,'aP');LU.aN=gl.getAttribLocation(PM,'aN');LU.aC=gl.getAttribLocation(PM,'aC');
-LU.uVP=gl.getUniformLocation(PM,'uVP');LU.uM=gl.getUniformLocation(PM,'uM');LU.uL=gl.getUniformLocation(PM,'uL');
-var DU={aP:gl.getAttribLocation(PD,'aP'),uVP:gl.getUniformLocation(PD,'uVP'),
- uS:gl.getUniformLocation(PD,'uS'),uCol:gl.getUniformLocation(PD,'uCol')};
+LU.aP=gl.getAttribLocation(PM,'aP');
+LU.aN=gl.getAttribLocation(PM,'aN');
+LU.aC=gl.getAttribLocation(PM,'aC');
+LU.uVP=gl.getUniformLocation(PM,'uVP');
+LU.uM=gl.getUniformLocation(PM,'uM');
+LU.uL=gl.getUniformLocation(PM,'uL');
+var DU={};
+DU.aP=gl.getAttribLocation(PD,'aP');
+DU.uVP=gl.getUniformLocation(PD,'uVP');
+DU.uS=gl.getUniformLocation(PD,'uS');
+DU.uCol=gl.getUniformLocation(PD,'uCol');
 gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
 gl.clearColor(0.99,0.84,0.63,1);
 
@@ -391,7 +401,7 @@ LV("Grand Finale",5,[0,1.7],[0,19.2],[G(0,7.55,6,16.1),G(0,18.8,6,2.4),Q(0,16.6,
  Wc(0,4,1.8,1.3,1,0,4),M(0,8.6,{r:2.4,s:1.9}),S(0,13.2,5.4,3)])
 ];
 
-/* ============================ procedural (structurally sound + connectivity-validated) ============================ */
+/* ============================ procedural ============================ */
 var NA=["Dusty","Crooked","Rusty","Sunny","Echo","Mesa","Cactus","Coyote","Red","Whisper","Broken","Golden"];
 var NB=["Run","Bend","Hollow","Ridge","Trail","Gulch","Bluff","Draw","Pass","Arroyo"];
 function genOne(key,diff,hIdx){
@@ -400,69 +410,94 @@ function genOne(key,diff,hIdx){
  var w=4.2,o=w/2+.3;
  var DX=[1,0,-1,0],DZ=[0,1,0,-1];
  function perp(d){return[DZ[d],-DX[d]]}
- var parts=[],Jx=[0],Jz=[0],dirs=[],lens=[],e0s=[],e1s=[],types=[],frnd=[];
+ var parts=[],Jx=[0],Jz=[0],dirs=[],lens=[],e0s=[],e1s=[],types=[],frnd=[],extras=[];
  var dir=1,elev=0,x=0,z=0,parAcc=2,lenTot=0,s;
  var nSeg=3+Math.floor(rnd()*2+dlvl*2);
  for(s=0;s<nSeg;s++){
   if(s>0){
    if(rnd()<.36){dir=(dir+(rnd()<.5?1:3))%4;parAcc+=.6}
    Jx.push(x);Jz.push(z)}
-  var t='flat',L=4.5+rnd()*2.5,amt=0,f=rnd(),r2=rnd();
+  var t='flat',L=4.5+rnd()*2.5,amt=0,f=rnd(),r2=rnd(),ex=null;
   if(s>0&&r2<dlvl*.2&&elev<1.6){t='ramp';amt=.7+rnd()*.5;L=3.2;parAcc+=.6}
   else if(s>0&&r2<dlvl*.4&&elev>.6){t='ramp';amt=-Math.min(elev,.7+rnd()*.5);L=3.2;parAcc+=.6}
-  else if(s>0&&s<nSeg-1&&r2<dlvl*.66){t='water';L=8+rnd()*2;parAcc+=1}
+  else if(s>0&&s<nSeg-1&&r2<dlvl*.66){
+   t='water';parAcc+=1;
+   var br=rnd()<.6;
+   if(br){ex={br:true,gap:2.4};L=8+rnd()*2}
+   else{ex={br:false,gap:2.0};amt=-.5;L=6+rnd()*2}}
   if(t==='flat'){if(f<.55)parAcc+=.5;else if(f<.8)parAcc+=1}
-  dirs.push(dir);lens.push(L);e0s.push(elev);e1s.push(elev+amt);types.push(t);frnd.push(f);
+  dirs.push(dir);lens.push(L);e0s.push(elev);e1s.push(elev+amt);types.push(t);frnd.push(f);extras.push(ex);
   x+=DX[dir]*L;z+=DZ[dir]*L;lenTot+=L;elev+=amt}
  Jx.push(x);Jz.push(z);
  var i,d,ax,az,L2,gw,cx,cz,along;
- for(i=0;i<nSeg;i++){ /* floors: flat / ramp / water-with-bridges / features */
+ for(i=0;i<nSeg;i++){
   d=dirs[i];ax=Jx[i];az=Jz[i];L2=lens[i];gw=o;
   cx=ax+DX[d]*L2/2;cz=az+DZ[d]*L2/2;along=L2;
   if(types[i]==='ramp')
    parts.push(R(cx,cz,DX[d]!==0?along:gw*2,DX[d]!==0?gw*2:along,e0s[i],e1s[i],DX[d]!==0?'x':'z'));
   else if(types[i]==='water'){
-   var gap=2.4,g1=(L2-gap)/2,c1=g1/2,c2=g1+gap+g1/2;
+   var exw=extras[i]||{br:true,gap:2.4};
+   var gap=exw.gap,g1=(L2-gap)/2,c1=g1/2,c2=g1+gap+g1/2,e2=e1s[i];
    parts.push(G(ax+DX[d]*c1,az+DZ[d]*c1,DX[d]!==0?g1:gw*2,DX[d]!==0?gw*2:g1,e0s[i]));
-   parts.push(G(ax+DX[d]*c2,az+DZ[d]*c2,DX[d]!==0?g1:gw*2,DX[d]!==0?gw*2:g1,e0s[i]));
+   parts.push(G(ax+DX[d]*c2,az+DZ[d]*c2,DX[d]!==0?g1:gw*2,DX[d]!==0?gw*2:g1,e2));
    parts.push(Q(ax+DX[d]*L2/2,az+DZ[d]*L2/2,DX[d]!==0?gap+.4:gw*2+.6,DX[d]!==0?gw*2+.6:gap+.4,e0s[i]-.55));
-   if(rnd()<.55)parts.push(G(ax+DX[d]*L2/2,az+DZ[d]*L2/2,DX[d]!==0?gap+.8:1.4,DX[d]!==0?1.4:gap+.8,e0s[i]))}
+   if(exw.br)parts.push(G(ax+DX[d]*L2/2,az+DZ[d]*L2/2,DX[d]!==0?gap+.8:1.4,DX[d]!==0?1.4:gap+.8,e0s[i]))}
   else parts.push(G(cx,cz,DX[d]!==0?along:gw*2,DX[d]!==0?gw*2:along,e0s[i]));
   if(types[i]==='flat'){var ff=frnd[i];
    if(ff<.3)parts.push(Wc(cx+(rnd()-.5)*1.2,cz+(rnd()-.5)*1.2,1.1,1.1,1,e0s[i],4));
    else if(ff<.55)parts.push(S(cx,cz,gw*2-.8,Math.min(4,L2-2)));
    else if(ff<.8)parts.push(M(cx,cz,{r:1.7,s:(rnd()<.5?-1:1)*(1.4+rnd()),n:4}))}}
- for(i=1;i<nSeg;i++){ /* corner pads seal every turn, flush with both corridors */
-  if(dirs[i]!==dirs[i-1]){var d0=dirs[i-1];
-   parts.push(G(Jx[i]+DX[d0]*(w/2),Jz[i]+DZ[d0]*(w/2),o*2,o*2,e0s[i]))}}
- /* ending green: real surface under the cup, overlapping the last segment */
- var dE=dirs[nSeg-1],Llast=lens[nSeg-1];
+ var cJ=[],aS=[],bS=[];
+ for(i=0;i<nSeg;i++){aS.push([0,0]);bS.push([lens[i],lens[i]])}
+ aS[0]=[-.6,-.6];
+ bS[nSeg-1]=[lens[nSeg-1]+3.2,lens[nSeg-1]+3.2];
+ for(i=0;i<nSeg-1;i++){
+  var d0=dirs[i],d1=dirs[i+1];
+  if(d0!==d1){
+   var cc=DZ[d0]*DX[d1]-DX[d0]*DZ[d1];
+   var p0=perp(d0),p1=perp(d1);
+   var pcx=Jx[i+1]-(cc*o/2)*(p0[0]+p1[0]);
+   var pcz=Jz[i+1]-(cc*o/2)*(p0[1]+p1[1]);
+   parts.push(G(pcx,pcz,o+.6,o+.6,e0s[i+1]));
+   cJ[i]=cc;
+   var kO=cc<0?1:0,kI=cc<0?0:1;
+   bS[i][kO]=lens[i]+o; bS[i][kI]=lens[i]-o;
+   aS[i+1][kO]=-o;      aS[i+1][kI]=o;
+  }else{
+   cJ[i]=0;
+   bS[i]=[lens[i]+.3,lens[i]+.3];
+   aS[i+1]=[-.3,-.3];
+  }}
+ function emitWall(axx,azz,dd,pp,sd,a,b,base){
+  var alen=b-a;if(alen<=0)return;
+  var mx=axx+DX[dd]*(a+b)/2+pp[0]*o*sd,mz=azz+DZ[dd]*(a+b)/2+pp[1]*o*sd;
+  parts.push(W(mx,mz,DX[dd]!==0?alen:.5,DX[dd]!==0?.5:alen,1.3,base))}
+ for(i=0;i<nSeg;i++){
+  d=dirs[i];ax=Jx[i];az=Jz[i];
+  var pp=perp(d),sd;
+  for(sd=-1;sd<=1;sd+=2){
+   var kk=sd<0?0:1,aa=aS[i][kk],bb=bS[i][kk];
+   if(types[i]==='water'){
+    var ex2=extras[i]||{br:true,gap:2.4};
+    var gp2=ex2.gap,g1b=(L2-gp2)/2;
+    if(ex2.br){emitWall(ax,az,d,pp,sd,aa,bb,e0s[i])}
+    else{
+     emitWall(ax,az,d,pp,sd,aa,Math.min(bb,g1b),e0s[i]);
+     emitWall(ax,az,d,pp,sd,Math.max(aa,g1b+gp2),bb,e1s[i]);
+    }
+   }else emitWall(ax,az,d,pp,sd,aa,bb,e0s[i])}}
+ var dS=dirs[0],dE=dirs[nSeg-1],Llast=lens[nSeg-1];
+ parts.push(W(Jx[0]-DX[dS]*.85,Jz[0]-DZ[dS]*.85,DX[dS]!==0?.5:o*2+1,DX[dS]!==0?o*2+1:.5,1.3,e0s[0]));
  var Ex=Jx[nSeg-1]+DX[dE]*Llast,Ez=Jz[nSeg-1]+DZ[dE]*Llast;
  parts.push(G(Ex+DX[dE]*1.3,Ez+DZ[dE]*1.3,DX[dE]!==0?3.8:o*2,DX[dE]!==0?o*2:3.8,e1s[nSeg-1]));
- for(i=0;i<nSeg;i++){ /* walls: trimmed / extended so bars meet flush at corners */
-  d=dirs[i];ax=Jx[i];az=Jz[i];L2=lens[i];
-  var off=o,p0=perp(d),sd;
-  for(sd=-1;sd<=1;sd+=2){
-   var a=0,b=L2;
-   if(i===0)a=-.6;else a=-o;
-   if(i===nSeg-1)b=L2+3.2;
-   else if(dirs[i+1]!==d){
-    var c=DZ[d]*DX[dirs[i+1]]-DX[d]*DZ[dirs[i+1]];
-    if(sd===-c)b=L2+w/2+o;else b=L2-.3}
-   var mx=ax+DX[d]*(a+b)/2+p0[0]*off*sd,mz=az+DZ[d]*(a+b)/2+p0[1]*off*sd,alen=b-a;
-   parts.push(W(mx,mz,DX[d]!==0?alen:.5,DX[d]!==0?.5:alen,1.3,e0s[i]))}}
- var dS=dirs[0];
- parts.push(W(Jx[0]-DX[dS]*.85,Jz[0]-DZ[dS]*.85,DX[dS]!==0?.5:o*2+1,DX[dS]!==0?o*2+1:.5,1.3,e0s[0]));
  parts.push(W(Ex+DX[dE]*3.5,Ez+DZ[dE]*3.5,DX[dE]!==0?.5:o*2+1,DX[dE]!==0?o*2+1:.5,1.3,e1s[nSeg-1]));
  var tee=[Jx[0]+DX[dS]*1.6,Jz[0]+DZ[dS]*1.6];
  var cup=[Ex+DX[dE]*1.6,Ez+DZ[dE]*1.6];
  var par=clamp(Math.round(parAcc+lenTot/14),2,6);
  return LV(NA[Math.floor(rnd()*NA.length)]+" "+NB[Math.floor(rnd()*NB.length)],par,tee,cup,parts)}
 function validateLevel(l){
- /* 1) tee & cup must sit on real ground */
  if(topAt(l.parts,l.tee[0],l.tee[1],true)===null)return false;
  if(topAt(l.parts,l.cup[0],l.cup[1],true)===null)return false;
- /* 2) grid BFS: rollable steps, free drops, jumps only across gaps <= 3 units */
  var i,p,mnx=1e9,mxx=-1e9,mnz=1e9,mxz=-1e9;
  for(i=0;i<l.parts.length;i++){p=l.parts[i];
   if(p.t!=='g'&&p.t!=='r')continue;
@@ -493,14 +528,14 @@ function validateLevel(l){
    seen[ni]=1;q.push(ni)}
   for(dd=0;dd<4;dd++){
    var k=1,gap=0,cx2=cx,cz2=cz;
-   while(k<=6){cx2+=D4[dd][0];cz2+=D4[dd][1];
+   while(k<=5){cx2+=D4[dd][0];cz2+=D4[dd][1];
     if(cx2<0||cz2<0||cx2>=NX||cz2>=NZ){gap=99;break}
     var ii=cz2*NX+cx2;
     if(H[ii]>-99)break;
     gap=k;k++}
-   if(gap>=2&&gap<=6&&cx2>=0&&cz2>=0&&cx2<NX&&cz2<NZ){
+   if(gap>=2&&gap<=5&&cx2>=0&&cz2>=0&&cx2<NX&&cz2<NZ){
     var li=cz2*NX+cx2,lh=H[li];
-    if(lh>-99&&lh-ch<=.6&&!seen[li]){seen[li]=1;q.push(li)}}}}
+    if(lh>-99&&lh-ch<=-.25&&!seen[li]){seen[li]=1;q.push(li)}}}}
  return seen[ti]===1}
 function fallbackHole(h){
  return LV("Safe Trail "+(h+1),3,[0,1.6],[0,13.4],
@@ -553,7 +588,7 @@ function parseImport(txt){
 
 /* ============================ game state ============================ */
 var mode='menu',round=null,lv=null,course=null;
-var R_BALL=.4,GRAV=22,STEP=1/120,MAXSPD=24,STEPTOL=.25,CATCH=.22;
+var R_BALL=.4,GRAV=22,STEP=1/120,MAXSPD=24,STEPTOL=.25,CATCH=.22,LEDGE=.3;
 var ball={x:0,y:1,z:0,vx:0,vy:0,vz:0,gh:0,airT:0,moving:false,rest:null};
 var strokes=0,holeIdx=0,shotOrigin=null,sinkT=-1,lockT=0,acc=0;
 var cam={yaw:0,pitch:.66,dist:13,tx:0,ty:0,tz:0};
@@ -591,7 +626,7 @@ function resetBall(){
  ball.vx=0;ball.vy=0;ball.vz=0;ball.gh=ball.y-R_BALL;
  ball.airT=0;ball.moving=false;ball.rest=null;shotOrigin=null}
 
-/* ============================ physics (slabs have solid sides) ============================ */
+/* ============================ physics ============================ */
 function surfH(p,x,z){
  if(p.t==='g')return p.y;
  var t=p.a==='x'?(x-(p.x-p.w/2))/p.w:(z-(p.z-p.d/2))/p.d;t=clamp(t,0,1);
@@ -613,11 +648,13 @@ function groundQuery(st,parts){
      if(!gh||h2>gh.h)gh={h:h2,n:n2}}}
    else blockers.push({x:p.x,z:p.z,w:p.w,d:p.d,top:h2})}
   else{
+   /* side collider ONLY for real ledges (>= LEDGE above the ball underside);
+      gentle concave seams (ramp↔flat contact lines) stay passable */
    var ex=clamp(x,p.x-hw,p.x+hw),ez=clamp(z,p.z-hd,p.z+hd);
    var dx2=x-ex,dz2=z-ez;
    if(dx2*dx2+dz2*dz2<R_BALL*R_BALL){
     var hE=surfH(p,ex,ez);
-    if(y-R_BALL<hE-.08)blockers.push({x:p.x,z:p.z,w:p.w,d:p.d,top:hE})}}}
+    if(y-R_BALL<hE-LEDGE)blockers.push({x:p.x,z:p.z,w:p.w,d:p.d,top:hE})}}}
  return{gh:gh,blockers:blockers}}
 function inSand(x,z,y,parts){
  for(var i=0;i<parts.length;i++){var s=parts[i];
@@ -789,7 +826,7 @@ function rayY(cssX,cssY,yy){
 function computeAim(){
  if(!drag||drag.orbit||drag.pan)return null;
  var dx=drag.cx-drag.x0,dy=drag.cy-drag.y0,len=Math.hypot(dx,dy);
- if(len<6)return{pow:0}; /* true zero / tap cancels; any real drag counts */
+ if(len<6)return{pow:0};
  var maxLen=Math.min(innerWidth,innerHeight)*.42;
  var pow=clamp(len/maxLen,0,1);
  var fx=-Math.sin(cam.yaw),fz=-Math.cos(cam.yaw),rx=-fz,rz=fx;
@@ -950,8 +987,7 @@ function pUp(id){
   if(aim&&aim.pow>0&&!atBall&&sinkT<0&&round){
    shotOrigin={x:ball.x,y:ball.y,z:ball.z};
    ball.vx=aim.dx*aim.spd;ball.vz=aim.dz*aim.spd;ball.vy=.3;
-   ball.moving=true;strokes++;updateHUD();AU.putt(aim.pow)}
-  /* zero power or release on the ball → silent cancel, no stroke */}
+   ball.moving=true;strokes++;updateHUD();AU.putt(aim.pow)}}
  drag=null;aim=null;dotArr=new Float32Array(0)}
 if(window.PointerEvent){
  cv.addEventListener('pointerdown',function(e){e.preventDefault();
@@ -1044,8 +1080,7 @@ function helpModal(){showModal('<h3>HOW TO PLAY</h3><div class="kv">'+
  '<div><b>PUTT</b> — press ON THE BALL, drag back, release. Dots = exact simulated flight/roll.</div>'+
  '<div><b>CAMERA</b> — drag anywhere else to orbit the ball. Two fingers / right-drag = pan. Pinch / scroll = zoom.</div>'+
  '<div><b>CANCEL</b> — release with zero power or on the ball: no stroke. Any real drag counts, even low power.</div>'+
- '<div><b>SLOPES</b> — real physics: under-hit a ramp and you roll back down.</div>'+
- '<div><b>WATER</b> — splash = +1 penalty, back to your last spot.</div>'+
+ '<div><b>WATER</b> — cross via bridge or a hard jump to the lower bank; splash = +1.</div>'+
  '<div><b>SAND</b> — thick! hit hard to escape.</div>'+
  '<div><b>WINDMILL</b> — blades sweep the ball along; time your putt.</div>'+
  '<div><b>R</b> restart hole · <b>M</b> sound</div>'+
@@ -1069,7 +1104,7 @@ function genModal(){showModal('<h3>PROCEDURAL ROUNDS</h3>'+
  '<span class="lbl">DIFFICULTY</span><select id="gD"><option value="0">Mellow</option><option value="1" selected>Normal</option><option value="2">Spicy</option></select></div>'+
  '<div class="row"><button class="btn sm grn" id="gPlay">▶ PLAY</button>'+
  '<button class="btn sm" id="gAdd">＋ SAVE TO MY COURSES</button></div>'+
- '<div class="lbl">Seeded & validated — every hole is checked for a connected, walkable path from tee to cup.</div>'+
+ '<div class="lbl">Seeded & validated — corners sealed, paths connected, cups on real ground.</div>'+
  '<button class="btn acc" onclick="hideModal()">BACK</button>');
  function gen(){return genLevels($('gSeed').value,clamp(+$('gN').value||9,1,30),+$('gD').value||0)}
  $('gDie').onclick=function(){$('gSeed').value=Math.floor(Math.random()*99999)};
