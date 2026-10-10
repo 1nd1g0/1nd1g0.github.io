@@ -26,6 +26,8 @@ body{
   user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;
   touch-action:none;
 }
+/* frame is pointer-transparent so dragging works anywhere on screen;
+   every interactive child re-enables pointer events explicitly */
 #frame{position:relative;font-size:16px;
   box-shadow:0 0 0 1px #23295a,0 0 46px rgba(30,40,120,.45),0 0 140px rgba(140,70,170,.14);
   pointer-events:none;
@@ -36,88 +38,90 @@ canvas{display:block;width:100%;height:100%;background:#070919;touch-action:none
 .ovl.hide{display:none}
 .panel{position:relative;background:linear-gradient(180deg,rgba(16,18,44,.96),rgba(9,10,26,.96));
   border:1px solid rgba(242,193,78,.35);padding:1.6em 1.9em;max-width:34em;width:100%;
-  box-shadow:0 0 0 4px rgba(6,7,18,.6),0 20px 60px rgba(0,0,0,.6),inset 0 0 40px rgba(40,50,140,.12)}
+  box-shadow:0 0 0 4px rgba(6,7,18,.6),0 20px 60px rgba(0,0,0,.6),inset:0 0 40px rgba(40,50,140,.12)}
+.panel{box-shadow:0 0 0 4px rgba(6,7,18,.6),0 20px 60px rgba(0,0,0,.6),inset 0 0 40px rgba(40,50,140,.12)}
 .panel::before,.panel::after{content:"";position:absolute;width:1.2em;height:1.2em;border:2px solid var(--gold)}
 .panel::before{top:-2px;left:-2px;border-right:none;border-bottom:none}
 .panel::after{bottom:-2px;right:-2px;border-left:none;border-top:none}
-.eyebrow{font-family:var(--mono);font-size:.72em;letter-spacing:.42em;color:var(--gold);opacity:.9}
+/* px floors keep text readable even when the frame's em base gets tiny */
+.eyebrow{font-family:var(--mono);font-size:max(10px,.72em);letter-spacing:.42em;color:var(--gold);opacity:.9}
 h1{font-family:var(--display);font-weight:700;line-height:.92;color:#fff;
-  font-size:3.1em;letter-spacing:.02em;margin:.12em 0 .1em;text-shadow:0 0 24px rgba(242,193,78,.35)}
+  font-size:max(27px,3.1em);letter-spacing:.02em;margin:.12em 0 .1em;text-shadow:0 0 24px rgba(242,193,78,.35)}
 h1 em{display:block;font-style:italic;color:var(--gold);font-size:.94em;margin-left:.9em}
 .kanji{position:absolute;top:1.1em;right:.9em;writing-mode:vertical-rl;font-family:var(--display);
-  color:rgba(242,193,78,.5);font-size:1.15em;letter-spacing:.5em}
-.flavor{font-size:.9em;color:#aab3d8;max-width:30em;margin:.4em 0 1em;line-height:1.5}
+  color:rgba(242,193,78,.5);font-size:max(13px,1.15em);letter-spacing:.5em}
+.flavor{font-size:max(12px,.9em);color:#aab3d8;max-width:30em;margin:.4em 0 1em;line-height:1.5}
 .row{display:flex;flex-wrap:wrap;gap:.45em;align-items:center;margin:.5em 0}
-.lbl{font-family:var(--mono);font-size:.72em;letter-spacing:.3em;color:#8b93c0;margin-right:.3em}
-.chip{font-family:var(--mono);font-size:.78em;letter-spacing:.08em;cursor:pointer;
+.lbl{font-family:var(--mono);font-size:max(10px,.72em);letter-spacing:.3em;color:#8b93c0;margin-right:.3em}
+.chip{font-family:var(--mono);font-size:max(11px,.78em);letter-spacing:.08em;cursor:pointer;
   background:#10132a;border:1px solid #2c3260;color:#aab3d8;padding:.5em .9em;transition:.15s;touch-action:manipulation}
 .chip small{display:block;font-size:.78em;color:var(--gold);letter-spacing:.2em}
 .chip:hover{border-color:var(--gold-dim);color:#fff}
 .chip.on{background:linear-gradient(180deg,#4a1526,#2a0d18);border-color:var(--red);color:#fff;
   box-shadow:0 0 14px rgba(255,84,112,.35)}
-.btn{font-family:var(--display);font-size:1.05em;letter-spacing:.14em;cursor:pointer;color:var(--gold);
+.btn{font-family:var(--display);font-size:max(13px,1.05em);letter-spacing:.14em;cursor:pointer;color:var(--gold);
   background:linear-gradient(180deg,#1c2145,#10132a);border:1px solid var(--gold-dim);
   padding:.65em 1.8em;margin-top:.9em;transition:.15s;text-transform:uppercase;touch-action:manipulation;text-decoration:none;display:inline-block;text-align:center}
 .btn:hover{background:var(--gold);color:#151021;box-shadow:0 0 22px rgba(242,193,78,.55);transform:translateY(-1px)}
 .btn:active{transform:translateY(1px)}
-.btn.big{font-size:1.2em;padding:.75em 2.4em}
+.btn.big{font-size:max(15px,1.2em);padding:.75em 2.4em}
 .btn.ghost{background:transparent}
 .btn.warn{border-color:var(--red);color:var(--red)}
 .btn:disabled{opacity:.4;cursor:default}
-.seed{font-family:var(--mono);color:var(--cyan);letter-spacing:.25em}
-.pw{font-family:var(--mono);color:var(--cyan);letter-spacing:.05em;font-size:.72em;word-break:break-all;
+.seed{font-family:var(--mono);color:var(--cyan);letter-spacing:.25em;font-size:max(12px,1em)}
+.pw{font-family:var(--mono);color:var(--cyan);letter-spacing:.05em;font-size:max(10px,.72em);word-break:break-all;
   background:#0a0c1e;padding:.4em .6em;border:1px solid #2c3260;max-height:4em;overflow:auto;margin-top:.5em}
 #seedNew,#btnPwSave,#btnPwLoad{cursor:pointer;border:1px solid #2c3260;background:#10132a;color:var(--gold);
-  font-family:var(--mono);padding:.35em .65em;font-size:.75em;touch-action:manipulation}
+  font-family:var(--mono);padding:.35em .65em;font-size:max(11px,.75em);touch-action:manipulation}
 .ctls{display:grid;grid-template-columns:1fr 1fr;gap:1em;margin-top:1.1em;
   border-top:1px solid rgba(242,193,78,.2);padding-top:.9em}
-.ctls h4{font-family:var(--mono);font-size:.68em;letter-spacing:.35em;color:var(--gold);margin-bottom:.4em}
-.ctls p{font-size:.75em;color:#aab3d8;line-height:1.65}
+.ctls h4{font-family:var(--mono);font-size:max(10px,.68em);letter-spacing:.35em;color:var(--gold);margin-bottom:.4em}
+.ctls p{font-size:max(11px,.75em);color:#aab3d8;line-height:1.65}
 .ctls b{color:#fff;font-weight:600}
-.hiline{font-family:var(--mono);font-size:.78em;color:#8b93c0;margin-top:1em;letter-spacing:.15em}
+.hiline{font-family:var(--mono);font-size:max(10px,.78em);color:#8b93c0;margin-top:1em;letter-spacing:.15em}
 .hiline b{color:var(--gold)}
-h2{font-family:var(--display);font-size:2em;color:#fff;letter-spacing:.03em}
+h2{font-family:var(--display);font-size:max(20px,2em);color:#fff;letter-spacing:.03em}
 h2 span{color:var(--gold);font-style:italic}
-.sub{font-size:.82em;color:#aab3d8;letter-spacing:.12em;margin:.3em 0 1em}
-#cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(9em,1fr));gap:.8em}
+.sub{font-size:max(11px,.82em);color:#aab3d8;letter-spacing:.12em;margin:.3em 0 1em}
+/* boon cards: readable description text with a real pixel floor */
+#cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.8em}
 .card{position:relative;background:linear-gradient(180deg,#161a3a,#0d0f26);border:1px solid #33395f;
   padding:1.1em .9em 1.3em;cursor:pointer;text-align:center;transition:.15s;touch-action:manipulation}
 .card:hover{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 8px 24px rgba(0,0,0,.5),0 0 18px rgba(242,193,78,.25)}
-.card .glyph{font-size:2.2em;display:block;margin-bottom:.3em;text-shadow:0 0 14px currentColor}
-.card .nm{font-family:var(--display);color:#fff;font-size:1em;letter-spacing:.04em}
-.card .ds{font-size:.72em;color:#aab3d8;line-height:1.45;margin:.5em 0;min-height:2.6em}
-.card .pips{font-family:var(--mono);font-size:.7em;color:var(--gold);letter-spacing:.2em}
-.card .key{position:absolute;top:.35em;left:.5em;font-family:var(--mono);font-size:.72em;color:#5d6494}
-.hint{font-family:var(--mono);font-size:.72em;color:#5d6494;letter-spacing:.3em;margin-top:.9em;text-align:center}
-.stats{display:grid;grid-template-columns:auto auto;gap:.4em 1.6em;margin:1em 0;font-family:var(--mono);font-size:.9em}
+.card .glyph{font-size:max(22px,2.2em);display:block;margin-bottom:.3em;text-shadow:0 0 14px currentColor}
+.card .nm{font-family:var(--display);color:#fff;font-size:max(12px,1em);letter-spacing:.04em}
+.card .ds{font-size:max(11px,.85em);color:#aab3d8;line-height:1.45;margin:.5em 0;min-height:2.6em}
+.card .pips{font-family:var(--mono);font-size:max(10px,.7em);color:var(--gold);letter-spacing:.2em}
+.card .key{position:absolute;top:.35em;left:.5em;font-family:var(--mono);font-size:max(10px,.72em);color:#5d6494}
+.hint{font-family:var(--mono);font-size:max(10px,.72em);color:#5d6494;letter-spacing:.3em;margin-top:.9em;text-align:center}
+.stats{display:grid;grid-template-columns:auto auto;gap:.4em 1.6em;margin:1em 0;font-family:var(--mono);font-size:max(11px,.9em)}
 .stats dt{color:#8b93c0;letter-spacing:.15em}
 .stats dd{color:#fff;text-align:right}
 .stats dd.gold{color:var(--gold)}
-.newrec{color:var(--red);font-family:var(--display);font-style:italic;letter-spacing:.1em;font-size:1.1em}
+.newrec{color:var(--red);font-family:var(--display);font-style:italic;letter-spacing:.1em;font-size:max(12px,1.1em)}
+/* pause + touch buttons: re-enable pointer events (frame is pointer-transparent) */
 #btnPause{position:absolute;top:.45em;left:50%;transform:translateX(-50%);z-index:4;display:none;font-family:var(--mono);
   background:rgba(10,12,30,.6);border:1px solid rgba(242,193,78,.4);color:var(--gold);
-  font-size:.9em;padding:.4em .9em;letter-spacing:.2em;cursor:pointer;touch-action:manipulation}
+  font-size:max(13px,.9em);padding:max(7px,.4em) max(12px,.9em);letter-spacing:.2em;cursor:pointer;
+  touch-action:manipulation;pointer-events:auto}
 .tbtn{position:absolute;z-index:4;display:none;align-items:center;justify-content:center;
-  width:5.4em;height:5.4em;border-radius:50%;font-family:var(--mono);font-size:1em;letter-spacing:.12em;
-  border:1px solid rgba(242,193,78,.5);color:var(--gold);background:rgba(14,16,40,.4);touch-action:manipulation}
+  width:max(56px,5.4em);height:max(56px,5.4em);border-radius:50%;font-family:var(--mono);
+  font-size:max(12px,1em);letter-spacing:.12em;
+  border:1px solid rgba(242,193,78,.5);color:var(--gold);background:rgba(14,16,40,.4);
+  touch-action:manipulation;pointer-events:auto}
 .tbtn:active,.tbtn.on{background:rgba(242,193,78,.28);color:#fff}
-#btnFocus{right:1em;bottom:6.4em;border-color:rgba(110,231,255,.55);color:var(--cyan)}
+#btnFocus{right:max(12px,1em);bottom:max(112px,6.4em);border-color:rgba(110,231,255,.55);color:var(--cyan)}
 #btnFocus:active,#btnFocus.on{background:rgba(110,231,255,.25)}
-#btnBomb{right:6.8em;bottom:1.6em;border-color:rgba(255,84,112,.6);color:var(--red)}
+#btnBomb{right:max(68px,6.8em);bottom:max(14px,1.6em);border-color:rgba(255,84,112,.6);color:var(--red)}
 #btnBomb:active{background:rgba(255,84,112,.3)}
 body.touch .tbtn{display:flex}
 body.playing #btnPause{display:block}
-body.left-controls #btnFocus{right:auto;left:1em;}
-body.left-controls #btnBomb{right:auto;left:6.8em;}
+body.left-controls #btnFocus{right:auto;left:max(12px,1em);}
+body.left-controls #btnBomb{right:auto;left:max(68px,6.8em);}
 @media (max-height:560px){.ctls{display:none}}
 @media (max-width:420px){
   .panel{padding:1.2em 1.3em}
-  h1{font-size:2.3em}
-  h2{font-size:1.5em}
-  .btn{font-size:.95em;padding:.55em 1.3em}
-  #cards{grid-template-columns:repeat(auto-fit,minmax(7em,1fr))}
-  .card .ds{font-size:.66em}
-  .tbtn{width:5em;height:5em;font-size:.9em}
+  .ctls{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -257,7 +261,10 @@ try {
 } catch(e){}
 if(leftControls) document.body.classList.add('left-controls');
 
-let dispScale = 1;
+/* HUD scaling: fonts grow (in canvas units) when the frame is small so they
+   keep a minimum physical size — but capped, and all HUD boxes are laid out
+   from these sizes so nothing can overlap or overflow. */
+let hudS = 1, frameH = 720;
 let quality=0; const qRes=[1,.85,.7], qPart=[340,200,110], qCap=[1000,860,700];
 let RS=1;
 function resize(){
@@ -266,7 +273,8 @@ function resize(){
   if(w>vw){w=vw;h=w/ar}
   frame.style.width=w+'px';
   frame.style.height=h+'px';
-  dispScale = Math.max(1, Math.min(1.8, 720/h * 1.3));
+  frameH=h;
+  hudS = clamp(720/h, 1, 1.5);
   frame.style.fontSize=(h/720*16)+'px';
   const dpr=Math.min(devicePixelRatio||1,2);
   let rs=dpr; if(W*rs*H*rs>920000)rs=Math.sqrt(920000/(W*H));
@@ -325,11 +333,9 @@ const sfx={
   beam(){tone('sawtooth',220,90,.4,.12)},
 };
 
-/* =====================================================================
-   MUSIC ENGINE — bullet-hell style original soundtrack generator
-   Boss fights: lead switches to OVERDRIVEN GUITAR and tempo rises.
-   No extra voices are added — everything else stays identical.
-   ===================================================================== */
+/* =================== MUSIC ENGINE ===================
+   Curated minor progressions, composed chord-tone melodies, long lead notes.
+   Boss: lead switches to overdriven guitar + tempo up. No extra voices. */
 const DEG_SEMI={i:0,II:2,III:3,iv:5,V:7,VI:8,VII:10};
 const PROGRESSIONS=[
   {n:'Aeolian Rise',     ch:['i','VI','III','VII']},
@@ -473,7 +479,6 @@ function genMusicForWave(wave, R){
   mTotalStep=0;
 }
 
-/* ---- instruments ---- */
 function playKick(t,vol){
   if(!AC||!isFinite(t))return;
   const o=AC.createOscillator(), g=AC.createGain();
@@ -550,7 +555,6 @@ function playArp16(f,dur,t){
   g.gain.exponentialRampToValueAtTime(0.001,t+dur);
   o.connect(lp);lp.connect(g);g.connect(musG);o.start(t);o.stop(t+dur+.02);
 }
-/* LEAD VOICE — long sustained note with slow vibrato + filter swell */
 function playLeadNote(f,dur,t,vol,type){
   if(!AC||!isFinite(t)||!isFinite(f))return;
   const o=AC.createOscillator();o.type=type||'sawtooth';o.frequency.value=f;
@@ -572,8 +576,6 @@ function playLeadNote(f,dur,t,vol,type){
   o.start(t);o.stop(t+dur+.05);
   vib.start(t);vib.stop(t+dur+.05);
 }
-/* OVERDRIVEN GUITAR VOICE — boss fights only.
-   Dual detuned saws -> soft-clip waveshaper -> voiced filter, with vibrato. */
 let distCurve=null;
 function getDistCurve(){
   if(distCurve) return distCurve;
@@ -614,7 +616,6 @@ function musicTick(){
   try{
     if(!isFinite(mTempo)||mTempo<90||mTempo>220) mTempo=150;
     if(!mLead) return;
-    /* Boss: tempo up. Lead timbre handled below. Nothing else changes. */
     const effTempo = bossMusic ? Math.min(200, mTempo*1.13) : mTempo;
     const spb=60/effTempo/4;
     const now=AC.currentTime;
@@ -635,7 +636,6 @@ function musicTick(){
         mLeadType=(mCurVar==='timbre')?'square':'sawtooth';
       }
       
-      /* ---- DRUMS (identical with or without boss) ---- */
       if(step16===0||step16===4||step16===8||step16===12) playKick(mNext,1);
       else if(bar%4===3&&step16===14) playKick(mNext,.65);
       if(step16===4||step16===12) playSnare(mNext,1);
@@ -644,25 +644,21 @@ function musicTick(){
       else if(effTempo>155) playHat(mNext,.16,true);
       if(step16===14) playHat(mNext,.5,true);
       
-      /* ---- BASS (eighths) ---- */
       if(step16%2===0){
         const bc=mBassChords[bar%4];
         const iv=mBassPat[(step16>>1)%mBassPat.length];
         playBass8(55*Math.pow(2,(bc.root+iv)/12), spb*1.7, mNext, .5);
       }
       
-      /* ---- PAD (bar starts) ---- */
       if(step16===0){
         const pc=mPadChords[bar%4];
         for(const tn of pc.tones) playPad(220*Math.pow(2,tn/12), spb*15.5, mNext);
       }
       
-      /* ---- ARP (sixteenths) ---- */
       const at=mPadChords[bar%4].tones;
       const ai=ARP_SEQ[s%ARP_SEQ.length];
       playArp16(220*Math.pow(2,(at[ai%at.length]+12)/12), spb*.9, mNext);
       
-      /* ---- LEAD THEME: guitar on boss, synth otherwise ---- */
       const ev=mLead[s];
       if(ev){
         let oct=0;
@@ -1200,7 +1196,9 @@ function applyUpgrade(u){
     case 'ascGraze':P.ascGraze++;P.grazeMul*=1.1;break;
     case 'ascFort':P.ascFort++;break;
     case 'ascSpeed':P.ascSpeed++;P.spdMul+=.05;break;
-    case 'tempBerserk':P.berserkT=15;P.dmgMul*=2;setTimeout(()=>{P.dmgMul/=2;P.bombs=Math.min(6,P.bombs+1)},15000);break;
+    /* FIXED: no setTimeout — expiry handled once in updatePlay,
+       so dmgMul is never halved twice and never leaks across runs */
+    case 'tempBerserk':P.berserkT=15;P.dmgMul*=2;break;
     case 'tempTime':P.tempTimeT=8;break;
     case 'tempMagnet':P.tempMagnetT=10;score+=2000;break;
     case 'metaScore':score+=10000;break;
@@ -1359,7 +1357,9 @@ function playerFire(dt){
 
 function updatePlay(dt){
   runTime+=dt;waveT+=dt;
-  if(P.berserkT>0){P.berserkT-=dt;if(P.berserkT<=0)P.dmgMul/=2}
+  /* berserk expiry handled exactly once here (was double-handled before) */
+  if(P.berserkT>0){P.berserkT-=dt;
+    if(P.berserkT<=0){P.dmgMul/=2;P.bombs++;floatText(P.x,P.y-26,'BERSERK ENDS · BOMB +1','#ff8a5c');}}
   if(P.tempTimeT>0)P.tempTimeT-=dt;
   if(P.tempMagnetT>0)P.tempMagnetT-=dt;
   if(P.dashT>0){
@@ -1777,7 +1777,7 @@ function render(dt){
       ctx.fillStyle=gr;ctx.beginPath();ctx.arc(P.x,P.y,r,0,TAU);ctx.fill();
       ctx.globalCompositeOperation='source-over';
     }
-    ctx.textAlign='center';ctx.font='bold 14px Consolas,monospace';
+    ctx.textAlign='center';ctx.font=`bold ${Math.max(13,Math.round(12*hudS))}px Consolas,monospace`;
     for(const t of texts){ctx.globalAlpha=clamp(1.6-t.t,0,1);
       ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillText(t.str,t.x+1,t.y+1);
       ctx.fillStyle=t.col;ctx.fillText(t.str,t.x,t.y);}
@@ -1789,19 +1789,19 @@ function render(dt){
   if(worldVisible)renderHUD(dt);
 }
 
-/* =================== HUD — rebuilt, no overlapping zones ===================
-   Layout map (480x720):
-   top-left  x 0..130  : LIFE row, BOMB row, WAVE row
-   top-mid   x 132..344: boss bar / spell diamonds / spell name (boss only)
-   top-right x 346..480: score panel
-   bottom    : power bar + measured trailing labels; buff stack above it    */
+/* =================== HUD — every region sized from the font metrics ===================
+   top-left  : LIFE/BOMB/WAVE rows (labels left, icons right, +N overflow inline)
+   top-right : score panel (width derived from the score font)
+   top-mid   : boss bar zone, whatever space remains between the two clusters
+   bottom    : power bar + measured trailing labels; buff stack above it       */
 function renderHUD(dt){
   ctx.textBaseline='alphabetic';
   ctx.textAlign='left';
-  const FS = Math.max(14, 16*dispScale);
-  const FS_SM = Math.max(10, 10*dispScale);
+  const FS = 16*hudS;                          // main numbers / icons
+  const FS_SM = Math.max(11, 6480/frameH);   // labels — keeps ~9 CSS px minimum
+  const icSp = Math.max(16, FS*0.95);        // icon spacing follows font size
   
-  /* ---- top-left cluster: labels left, icons right, clean rows ---- */
+  /* ---- top-left cluster ---- */
   ctx.font = `${FS_SM}px Consolas,monospace`;
   ctx.fillStyle='rgba(232,228,216,.6)';
   ctx.fillText('LIFE',12,20);
@@ -1810,71 +1810,87 @@ function renderHUD(dt){
   ctx.font = `${FS}px Georgia,serif`;
   ctx.fillStyle='#ff5470';
   const livesShow=Math.min(P.lives,5);
-  for(let i=0;i<livesShow;i++) ctx.fillText('♥',46+i*16,21);
+  for(let i=0;i<livesShow;i++) ctx.fillText('♥',46+i*icSp,21);
   if(P.lives>5){
     ctx.font=`bold ${FS_SM}px Consolas,monospace`;
-    ctx.fillText('+'+(P.lives-5), 50+livesShow*16, 20);
+    ctx.fillText('+'+(P.lives-5), 50+livesShow*icSp, 20);
     ctx.font=`${FS}px Georgia,serif`;
   }
   ctx.fillStyle='#f2c14e';
   const bombsShow=Math.min(P.bombs,5);
-  for(let i=0;i<bombsShow;i++) ctx.fillText('✦',46+i*15,41);
+  const icSpB=Math.max(15,FS*0.85);
+  for(let i=0;i<bombsShow;i++) ctx.fillText('✦',46+i*icSpB,41);
   if(P.bombs>5){
     ctx.font=`bold ${FS_SM}px Consolas,monospace`;
-    ctx.fillText('+'+(P.bombs-5), 50+bombsShow*15, 40);
+    ctx.fillText('+'+(P.bombs-5), 50+bombsShow*icSpB, 40);
   }
   ctx.font=`bold ${FS_SM}px Consolas,monospace`;
   ctx.fillStyle='rgba(242,193,78,.9)';
   ctx.fillText('WAVE '+wave,12,58);
+  const leftEnd = 46 + 4*icSp + FS + 18;
   
-  /* ---- top-right score panel (narrow, ends flush right) ---- */
-  const panelW=128;
-  const px=W-panelW;
-  ctx.fillStyle='rgba(8,10,26,.55)';ctx.fillRect(px-6,8,panelW+6,100);
-  ctx.fillStyle='rgba(242,193,78,.5)';ctx.fillRect(px-6,8,2,100);
+  /* ---- top-right score panel (width derived from font) ---- */
+  const panelW=Math.round(FS*6.1+16);
+  const px0=W-panelW;
+  const rHi=10+FS_SM, rHiN=rHi+0.85*FS, rSc=rHiN+FS_SM+4, rScN=rSc+FS,
+        rGr=rScN+FS_SM+4, rMu=rGr+FS_SM+2, panelH=rMu+12-8;
+  ctx.fillStyle='rgba(8,10,26,.55)';ctx.fillRect(px0-6,8,panelW+6,panelH);
+  ctx.fillStyle='rgba(242,193,78,.5)';ctx.fillRect(px0-6,8,2,panelH);
   ctx.font=`${FS_SM}px Consolas,monospace`;
   ctx.fillStyle='#8b93c0';
-  ctx.fillText('HI SCORE',px,22);
-  ctx.fillText('SCORE',px,50);
-  ctx.font='12px Consolas,monospace';
+  ctx.fillText('HI SCORE',px0,rHi);
+  ctx.fillText('SCORE',px0,rSc);
+  ctx.font=`${0.85*FS}px Consolas,monospace`;
   ctx.fillStyle='#e8e4d8';
-  ctx.fillText(fmt(hiscore),px,36);
+  ctx.fillText(fmt(hiscore),px0,rHiN);
   ctx.font=`bold ${FS}px Consolas,monospace`;
   ctx.fillStyle='#f2c14e';
-  ctx.fillText(fmt(score),px,66);
+  ctx.fillText(fmt(score),px0,rScN);
   ctx.font=`${FS_SM}px Consolas,monospace`;
   ctx.fillStyle='#8b93c0';
-  ctx.fillText('GRAZE '+graze,px,84);
+  ctx.fillText('GRAZE '+graze,px0,rGr);
   ctx.fillStyle=mult>3?'#ff5470':mult>1.5?'#f2c14e':'#aab3d8';
-  ctx.fillText('MULTI ×'+mult.toFixed(2),px,98);
+  ctx.fillText('MULTI ×'+mult.toFixed(2),px0,rMu);
   
-  /* ---- boss HUD: sized to fit the free center zone ---- */
+  /* ---- boss HUD, filling the free center zone ---- */
   if(boss&&boss.ph!=='enter'){
-    const bw=210, bx=(W-bw)/2;            // x 135..345, clear of both clusters
-    ctx.fillStyle='rgba(8,10,26,.6)';ctx.fillRect(bx-3,42,bw+6,10);
-    ctx.fillStyle='#3a0d18';ctx.fillRect(bx,44,bw,6);
-    ctx.fillStyle='#ff5470';
-    if(boss.ph==='spell')ctx.fillRect(bx,44,bw*clamp(boss.hp/boss.spells[boss.i].hp,0,1),6);
-    /* spell diamonds: centered row under the bar */
-    ctx.fillStyle='#f2c14e';ctx.font='10px Georgia,serif';ctx.textAlign='center';
-    const n=boss.spells.length;
-    for(let i=0;i<n;i++){
-      ctx.globalAlpha=i<boss.i?.25:i===boss.i?1:.6;
-      ctx.fillText('◆', W/2+(i-(n-1)/2)*13, 63);
-    }
-    ctx.globalAlpha=1;ctx.textAlign='left';
-    if(boss.ph==='spell'){
-      const sp=boss.spells[boss.i];
-      ctx.font=`italic ${Math.max(13,FS*.9)}px Georgia,serif`;
-      ctx.textAlign='center';ctx.fillStyle='#f2c14e';
-      ctx.fillText(sp.nm,W/2,79);
-      ctx.fillStyle='rgba(242,193,78,.3)';ctx.fillRect(W/2-90,84,180,2);
-      ctx.fillStyle='#f2c14e';ctx.fillRect(W/2-90,84,180*clamp(1-sp.t/sp.tm,0,1),2);
+    const zoneL=Math.max(132, leftEnd+6);
+    const zoneR=px0-12;
+    const bw=zoneR-zoneL;
+    if(bw>70){
+      ctx.fillStyle='rgba(8,10,26,.6)';ctx.fillRect(zoneL-3,76,bw+6,10);
+      ctx.fillStyle='#3a0d18';ctx.fillRect(zoneL,78,bw,6);
+      ctx.fillStyle='#ff5470';
+      if(boss.ph==='spell')ctx.fillRect(zoneL,78,bw*clamp(boss.hp/boss.spells[boss.i].hp,0,1),6);
+      const cx=zoneL+bw/2;
+      ctx.fillStyle='#f2c14e';
+      ctx.font=`${Math.max(10,Math.round(10*hudS))}px Georgia,serif`;
+      ctx.textAlign='center';
+      const n=boss.spells.length;
+      for(let i=0;i<n;i++){
+        ctx.globalAlpha=i<boss.i?.25:i===boss.i?1:.6;
+        ctx.fillText('◆', cx+(i-(n-1)/2)*13, 95);
+      }
+      ctx.globalAlpha=1;
+      if(boss.ph==='spell'){
+        const sp=boss.spells[boss.i];
+        /* spell name shrinks until it fits the zone */
+        let nmF=Math.max(12,FS*.85);
+        ctx.font=`italic ${nmF}px Georgia,serif`;
+        while(ctx.measureText(sp.nm).width>bw+26 && nmF>9){
+          nmF-=1;ctx.font=`italic ${nmF}px Georgia,serif`;
+        }
+        ctx.fillStyle='#f2c14e';
+        ctx.fillText(sp.nm,cx,110);
+        const tw=Math.min(180,bw);
+        ctx.fillStyle='rgba(242,193,78,.3)';ctx.fillRect(cx-tw/2,115,tw,2);
+        ctx.fillStyle='#f2c14e';ctx.fillRect(cx-tw/2,115,tw*clamp(1-sp.t/sp.tm,0,1),2);
+      }
       ctx.textAlign='left';
     }
   }
   
-  /* ---- bottom row: power bar, then labels placed with measured widths ---- */
+  /* ---- bottom row: power bar, then measured trailing labels ---- */
   ctx.fillStyle='rgba(8,10,26,.55)';ctx.fillRect(10,H-28,150,18);
   ctx.fillStyle='rgba(242,193,78,.25)';ctx.fillRect(12,H-24,130,8);
   ctx.fillStyle=power>=100?'#ff5470':'#f2c14e';ctx.fillRect(12,H-24,130*power/100,8);
@@ -1893,7 +1909,7 @@ function renderHUD(dt){
     ctx.fillText(fragStr,nx,H-15);
   }
   
-  /* ---- active buffs: vertical stack, never side by side ---- */
+  /* ---- active buffs: vertical stack ---- */
   let by=H-40;
   if(P.berserkT>0){ctx.fillStyle='#ff4444';ctx.fillText('BERSERK '+Math.ceil(P.berserkT)+'s',10,by);by-=14;}
   if(P.tempTimeT>0){ctx.fillStyle='#66ccff';ctx.fillText('FREEZE '+Math.ceil(P.tempTimeT)+'s',10,by);by-=14;}
@@ -1911,9 +1927,9 @@ function renderHUD(dt){
       ctx.fillStyle='rgba(8,10,26,.72)';ctx.fillRect(0,168,W,58);
       ctx.fillStyle=bn.col;ctx.fillRect(0,168,W,1.5);ctx.fillRect(0,224.5,W,1.5);
       ctx.textAlign='center';
-      ctx.font=`italic bold ${Math.max(18,24*dispScale)}px Georgia,serif`;
+      ctx.font=`italic bold ${Math.round(24*hudS)}px Georgia,serif`;
       ctx.fillStyle=bn.col;ctx.fillText(bn.txt,W/2,198);
-      if(bn.sub){ctx.font=`${Math.max(11,12*dispScale)}px Consolas,monospace`;ctx.fillStyle='#aab3d8';
+      if(bn.sub){ctx.font=`${Math.max(11,Math.round(12*hudS))}px Consolas,monospace`;ctx.fillStyle='#aab3d8';
         ctx.fillText(bn.sub.toUpperCase(),W/2,216);}
       ctx.textAlign='left';ctx.globalAlpha=1;
     }
@@ -1971,11 +1987,12 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>{keys[e.code]=false});
 addEventListener('blur',()=>{if(state==='play')pauseGame()});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='play')pauseGame()});
-cv.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('contextmenu',e=>e.preventDefault());
 
 let lastPX=0,lastPY=0,moveId=null;
 document.addEventListener('pointerdown', e=>{
-  if(e.target.closest('.ovl') || e.target.closest('.tbtn') || e.target.closest('#btnPause')) return;
+  /* ignore interactive elements — they have their own handlers */
+  if(e.target.closest('.ovl') || e.target.closest('.tbtn') || e.target.closest('#btnPause') || e.target.closest('button') || e.target.closest('a')) return;
   if(state!=='play') return;
   
   audioInit();if(AC&&AC.state==='suspended')AC.resume();
@@ -2039,6 +2056,9 @@ function pollGamepad(){
   
   const pressed=i=>!!(gp.buttons[i]&&gp.buttons[i].pressed);
   const hit=i=>pressed(i)&&!gpState.prev[i];
+  
+  /* any press unlocks audio (gamepad-only sessions) */
+  for(let i=0;i<gp.buttons.length;i++){ if(pressed(i)){ audioInit(); if(AC&&AC.state==='suspended')AC.resume(); break; } }
   
   let ax=gp.axes[0]||0, ay=gp.axes[1]||0;
   if(Math.abs(ax)<.25)ax=0;
@@ -2216,8 +2236,6 @@ function loadPassword(){
   seedTxt = data.s || newSeedStr();
   diffKey = data.df || 'normal';
   D = DIFFS[diffKey];
-  wave = Math.max(0, data.w || 0);
-  score = data.sc || 0;
   boons = data.bn || 0;
   maxMult = data.mm || 1;
   mult = 1;
@@ -2232,6 +2250,7 @@ function loadPassword(){
   P.bombs = data.bo || 3;
   P.up = data.up || {};
   power = data.pw || 20;
+  score = data.sc || 0;
   
   for(const id in P.up){
     const lvl = P.up[id];
@@ -2271,8 +2290,13 @@ function loadPassword(){
   }
   
   bullets.length=0;shots.length=0;enemies.length=0;items.length=0;parts.length=0;texts.length=0;spawnQ.length=0;
-  boss=null;bn=null;shake=0;flashA=0;bombT=0;timeScale=1;interT=0.8;
-  genMusicForWave(wave+1, rngRun);
+  boss=null;bn=null;shake=0;flashA=0;bombT=0;timeScale=1;
+  /* FIXED: step back one wave so the armed interT regenerates the saved
+     wave itself instead of skipping ahead to the next one */
+  const savedW = Math.max(0, data.w || 0);
+  wave = savedW>0 ? savedW-1 : 0;
+  interT=0.8;
+  genMusicForWave(savedW+1, rngRun);
   musicOn=musicEnabled;bossMusic=false;
   if(AC){mNext=AC.currentTime+.1;}
   state='play';
@@ -2280,7 +2304,7 @@ function loadPassword(){
   hideAll();
   $('seedVal').textContent=seedTxt;
   $('hiTitle').textContent=fmt(hiscore);
-  banner('LOADED','wave '+wave+' resumes', 2);
+  banner('LOADED','wave '+savedW+' resumes', 2);
   setDiff(diffKey);
 }
 $('btnPwSave').addEventListener('click', savePasswordFromTitle);
