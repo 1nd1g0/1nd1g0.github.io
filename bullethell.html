@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#070919">
-<title>Starfall Reverie — procedural bullet heaven</title>
+<title>BULLET Heaven — procedural bullet heaven</title>
 <link rel="icon" href="data:,">
 <style>
 :root{
@@ -47,21 +47,21 @@ h1 em{display:block;font-style:italic;color:var(--gold);font-size:.94em;margin-l
 .row{display:flex;flex-wrap:wrap;gap:.45em;align-items:center;margin:.5em 0}
 .lbl{font-family:var(--mono);font-size:.62em;letter-spacing:.3em;color:#8b93c0;margin-right:.3em}
 .chip{font-family:var(--mono);font-size:.72em;letter-spacing:.08em;cursor:pointer;
-  background:#10132a;border:1px solid #2c3260;color:#aab3d8;padding:.42em .8em;transition:.15s}
+  background:#10132a;border:1px solid #2c3260;color:#aab3d8;padding:.42em .8em;transition:.15s;touch-action:manipulation}
 .chip small{display:block;font-size:.78em;color:var(--gold);letter-spacing:.2em}
 .chip:hover{border-color:var(--gold-dim);color:#fff}
 .chip.on{background:linear-gradient(180deg,#4a1526,#2a0d18);border-color:var(--red);color:#fff;
   box-shadow:0 0 14px rgba(255,84,112,.35)}
 .btn{font-family:var(--display);font-size:1em;letter-spacing:.14em;cursor:pointer;color:var(--gold);
   background:linear-gradient(180deg,#1c2145,#10132a);border:1px solid var(--gold-dim);
-  padding:.6em 1.7em;margin-top:.9em;transition:.15s;text-transform:uppercase}
+  padding:.6em 1.7em;margin-top:.9em;transition:.15s;text-transform:uppercase;touch-action:manipulation;text-decoration:none;display:inline-block;text-align:center}
 .btn:hover{background:var(--gold);color:#151021;box-shadow:0 0 22px rgba(242,193,78,.55);transform:translateY(-1px)}
 .btn:active{transform:translateY(1px)}
 .btn.big{font-size:1.15em;padding:.7em 2.2em}
 .btn.ghost{background:transparent}
 .seed{font-family:var(--mono);color:var(--cyan);letter-spacing:.25em}
 #seedNew{cursor:pointer;border:1px solid #2c3260;background:#10132a;color:var(--gold);
-  font-family:var(--mono);padding:.3em .6em;font-size:.7em}
+  font-family:var(--mono);padding:.3em .6em;font-size:.7em;touch-action:manipulation}
 .ctls{display:grid;grid-template-columns:1fr 1fr;gap:1em;margin-top:1.1em;
   border-top:1px solid rgba(242,193,78,.2);padding-top:.9em}
 .ctls h4{font-family:var(--mono);font-size:.6em;letter-spacing:.35em;color:var(--gold);margin-bottom:.4em}
@@ -74,7 +74,7 @@ h2 span{color:var(--gold);font-style:italic}
 .sub{font-size:.72em;color:#aab3d8;letter-spacing:.12em;margin:.3em 0 1em}
 #cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5em,1fr));gap:.8em}
 .card{position:relative;background:linear-gradient(180deg,#161a3a,#0d0f26);border:1px solid #33395f;
-  padding:1em .8em 1.2em;cursor:pointer;text-align:center;transition:.15s}
+  padding:1em .8em 1.2em;cursor:pointer;text-align:center;transition:.15s;touch-action:manipulation}
 .card:hover{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 8px 24px rgba(0,0,0,.5),0 0 18px rgba(242,193,78,.25)}
 .card .glyph{font-size:2em;display:block;margin-bottom:.3em;text-shadow:0 0 14px currentColor}
 .card .nm{font-family:var(--display);color:#fff;font-size:.95em;letter-spacing:.04em}
@@ -89,10 +89,10 @@ h2 span{color:var(--gold);font-style:italic}
 .newrec{color:var(--red);font-family:var(--display);font-style:italic;letter-spacing:.1em}
 #btnPause{position:absolute;top:.5em;right:.5em;z-index:4;display:none;font-family:var(--mono);
   background:rgba(10,12,30,.55);border:1px solid rgba(242,193,78,.4);color:var(--gold);
-  font-size:.8em;padding:.3em .7em;letter-spacing:.2em;cursor:pointer}
+  font-size:.8em;padding:.3em .7em;letter-spacing:.2em;cursor:pointer;touch-action:manipulation}
 .tbtn{position:absolute;z-index:4;display:none;align-items:center;justify-content:center;
   width:4.8em;height:4.8em;border-radius:50%;font-family:var(--mono);font-size:.9em;letter-spacing:.12em;
-  border:1px solid rgba(242,193,78,.5);color:var(--gold);background:rgba(14,16,40,.4);touch-action:none}
+  border:1px solid rgba(242,193,78,.5);color:var(--gold);background:rgba(14,16,40,.4);touch-action:manipulation}
 .tbtn:active,.tbtn.on{background:rgba(242,193,78,.28);color:#fff}
 #btnFocus{right:1em;bottom:5.6em;border-color:rgba(110,231,255,.55);color:var(--cyan)}
 #btnFocus:active,#btnFocus.on{background:rgba(110,231,255,.25)}
@@ -100,6 +100,8 @@ h2 span{color:var(--gold);font-style:italic}
 #btnBomb:active{background:rgba(255,84,112,.3)}
 body.touch .tbtn{display:flex}
 body.playing #btnPause{display:block}
+body.left-controls #btnFocus{right:auto;left:1em;}
+body.left-controls #btnBomb{right:auto;left:5.9em;}
 @media (max-height:560px){.ctls{display:none}}
 </style>
 </head>
@@ -112,9 +114,9 @@ body.playing #btnPause{display:block}
 
   <div class="ovl" id="ovTitle">
     <div class="panel">
-      <div class="kanji">星降幻想曲</div>
+      <div class="kanji">弾幕天国</div>
       <div class="eyebrow">PROCEDURAL BULLET HEAVEN · ENDLESS NIGHT</div>
-      <h1>STARFALL<em>Reverie</em></h1>
+      <h1>BULLET<em>Heaven</em></h1>
       <p class="flavor">Fly a shrine-craft into a night that is never the same twice. Waves, foes and spell
         cards are woven from your seed — graze the storm, gather boons, and outlive the dawn.</p>
       <div class="row"><span class="lbl">DIFFICULTY</span>
@@ -125,7 +127,13 @@ body.playing #btnPause{display:block}
       </div>
       <div class="row"><span class="lbl">SEED</span><span class="seed" id="seedVal">——————</span>
         <button id="seedNew" title="new seed">↻ NEW</button></div>
-      <button class="btn big" id="btnStart">Begin the Night</button>
+      <div class="row" style="justify-content:center;gap:1em;margin-top:0.9em">
+        <button class="btn big" id="btnStart">Begin the Night</button>
+      </div>
+      <div class="row" style="justify-content:center;gap:1em;margin-top:0.5em">
+        <a href="https://1nd1g0.github.io/" class="btn ghost" id="btnHome">Home</a>
+        <button class="btn ghost" id="btnFullscreenTitle">Fullscreen</button>
+      </div>
       <div class="ctls">
         <div><h4>KEYBOARD</h4><p><b>WASD / Arrows</b> move · <b>Z / Space</b> shoot<br>
           <b>Shift</b> focus (slow + shows hitbox) · <b>X</b> bomb<br>
@@ -152,9 +160,20 @@ body.playing #btnPause{display:block}
     <div class="panel" style="text-align:center">
       <div class="eyebrow">THE STORM HOLDS ITS BREATH</div>
       <h2>Paused</h2>
-      <div>
+      <div class="row" style="justify-content:center;gap:.5em">
         <button class="btn" id="btnResume">Resume</button>
         <button class="btn ghost" id="btnRestart">Restart Seed</button>
+      </div>
+      <div class="row" style="justify-content:center;gap:.5em;margin-top:.5em">
+        <button class="btn ghost" id="btnMusic">Music: ON</button>
+        <button class="btn ghost" id="btnSfx">Sound: ON</button>
+      </div>
+      <div class="row" style="justify-content:center;gap:.5em;margin-top:.5em">
+        <button class="btn ghost" id="btnRegenSeed">Regen Seed</button>
+        <button class="btn ghost" id="btnLeftCtrls">Controls: RIGHT</button>
+      </div>
+      <div class="row" style="justify-content:center;gap:.5em;margin-top:.5em">
+        <button class="btn ghost" id="btnFullscreen">Fullscreen</button>
         <button class="btn ghost" id="btnQuit">Title</button>
       </div>
       <div class="hint" id="pauseInfo">M — sound · P — resume</div>
@@ -202,12 +221,19 @@ const frame=$('frame');
 const isTouch=matchMedia('(pointer:coarse)').matches||('ontouchstart' in window);
 if(isTouch)document.body.classList.add('touch');
 
+let leftControls = false;
+try { leftControls = localStorage.getItem('bh_left_ctls') === '1'; } catch(e){}
+if(leftControls) document.body.classList.add('left-controls');
+
 let quality=0; const qRes=[1,.85,.7], qPart=[340,200,110], qCap=[1000,860,700];
 let RS=1;
 function resize(){
-  const vw=innerWidth,vh=innerHeight,ar=W/H;let h=vh,w=h*ar;
+  // Preserve aspect ratio 480:720 = 2:3, letterbox/pillarbox to fit viewport
+  const vw=innerWidth,vh=innerHeight,ar=W/H;
+  let h=vh,w=h*ar;
   if(w>vw){w=vw;h=w/ar}
-  frame.style.width=w+'px';frame.style.height=h+'px';
+  frame.style.width=w+'px';
+  frame.style.height=h+'px';
   frame.style.fontSize=(h/720*16)+'px';
   const dpr=Math.min(devicePixelRatio||1,2);
   let rs=dpr; if(W*rs*H*rs>920000)rs=Math.sqrt(920000/(W*H));
@@ -216,15 +242,16 @@ function resize(){
 }
 addEventListener('resize',resize);
 
-let AC=null,master,sfxG,musG,noiseBuf,muted=false;
+let AC=null,master,sfxG,musG,noiseBuf;
+let musicEnabled = true, sfxEnabled = true;
 let activeNodes=0;const MAX_AUDIO_NODES=32;
 function audioInit(){
   if(AC)return;
   try{
     AC=new (window.AudioContext||window.webkitAudioContext)();
-    master=AC.createGain();master.gain.value=muted?0:.5;master.connect(AC.destination);
-    sfxG=AC.createGain();sfxG.gain.value=.9;sfxG.connect(master);
-    musG=AC.createGain();musG.gain.value=.34;musG.connect(master);
+    master=AC.createGain();master.gain.value=1;master.connect(AC.destination);
+    sfxG=AC.createGain();sfxG.gain.value=sfxEnabled?0.9:0;sfxG.connect(master);
+    musG=AC.createGain();musG.gain.value=musicEnabled?0.34:0;musG.connect(master);
     noiseBuf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);
     const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
   }catch(e){AC=null}
@@ -268,14 +295,134 @@ const sfx={
   warn(){tone('square',110,110,.5,.12);tone('square',110,110,.5,.12,AC?AC.currentTime+.6:0)},
   beam(){tone('sawtooth',220,90,.4,.12)},
 };
-const SCALE=[0,3,5,7,10,12,15];let mPat=[],mStep=0,mNext=0,musicOn=false,bossMusic=false;
-function genMusicPat(R){mPat=[];for(let i=0;i<16;i++)mPat.push(R()<.28?-1:SCALE[(R()*7)|0])}
+
+/* === ENHANCED MUSIC SYSTEM ===
+ * - 8-chord progression (bass loops over 128 steps ≈ 68s)
+ * - 3 unique melody sections (A, B, C), each 128 steps
+ * - Song structure sequences them: 16 sections × 128 steps ≈ 9 minutes unique melody
+ * - Melody regenerates after each full cycle for effectively infinite variety
+ * - Bass rhythm can repeat; melody stays unique
+ */
+const SCALE=[0,3,5,7,10,12,15]; // minor-ish scale in semitones
+let mChords = [];          // 8 chord objects {root, notes}
+let mMelodySections = [];  // array of 3 arrays, each 128 notes
+let mSongOrder = [];       // sequence of section indices (0,1,2)
+let mTotalStep = 0;        // global step counter
+let mSectionIdx = 0;       // position in song order
+let mSectionStep = 0;      // step within current section (0-127)
+let mNext = 0;
+let musicOn = false, bossMusic = false;
+
+function genMelodySection(R){
+  // Generate 128 steps of unique melody following the chord progression
+  const mel = [];
+  const scaleNotes = [];
+  for(let oct = 0; oct <= 1; oct++){
+    for(const s of SCALE) scaleNotes.push(s + oct*12);
+  }
+  
+  let prev = scaleNotes[(R()*scaleNotes.length)|0];
+  
+  for(let i = 0; i < 128; i++){
+    const chordIdx = Math.floor(i/16) % mChords.length;
+    const chord = mChords[chordIdx];
+    
+    // Rhythm: more notes on strong beats (0, 4, 8, 12)
+    const beatPos = i % 4;
+    const restProb = beatPos === 0 ? 0.05 : beatPos === 2 ? 0.25 : 0.4;
+    
+    if(R() < restProb){
+      mel.push(-1); // rest
+      continue;
+    }
+    
+    // Sometimes hold previous note (creates longer sustained notes)
+    if(R() < 0.12 && mel.length > 0 && mel[mel.length-1] >= 0){
+      mel.push(mel[mel.length-1]);
+      continue;
+    }
+    
+    // Pick candidates: chord tones (preferred) or scale tones
+    let candidates = [];
+    if(R() < 0.72){
+      for(const n of chord.notes){
+        candidates.push(n);
+        if(R() < 0.55) candidates.push(n + 12);
+        if(R() < 0.25) candidates.push(n - 12);
+      }
+    } else {
+      candidates = scaleNotes;
+    }
+    
+    if(candidates.length === 0) candidates = [0];
+    
+    // Smooth voice leading: prefer notes close to previous
+    let best = candidates[0];
+    let bestDist = Math.abs(candidates[0] - prev);
+    for(const c of candidates){
+      const d = Math.abs(c - prev);
+      if(d < bestDist){ bestDist = d; best = c; }
+    }
+    
+    // Occasionally make a larger leap for musical interest
+    if(R() < 0.08){
+      best = candidates[(R()*candidates.length)|0];
+    }
+    
+    mel.push(best);
+    prev = best;
+  }
+  
+  return mel;
+}
+
+function genMusicPat(R){
+  // Chord progression: 8 chords, each lasting 16 steps (total 128 steps ≈ 68s)
+  mChords = [
+    {root: 0, notes: [0, 3, 7, 12]},    // i
+    {root: 5, notes: [5, 8, 12, 17]},   // iv
+    {root: 3, notes: [3, 7, 10, 15]},   // III
+    {root: -2, notes: [-2, 1, 5, 10]},  // VII
+    {root: 5, notes: [5, 8, 12, 17]},   // iv
+    {root: 7, notes: [7, 10, 14, 19]},  // v (using 14 instead of 15 for variation)
+    {root: -2, notes: [-2, 1, 5, 10]},  // VII
+    {root: 0, notes: [0, 3, 7, 12]},    // i
+  ];
+  
+  // Slight shuffle for variety
+  for(let i = mChords.length - 1; i > 0; i--){
+    if(R() < 0.25){
+      const j = (R() * (i+1))|0;
+      const tmp = mChords[i];
+      mChords[i] = mChords[j];
+      mChords[j] = tmp;
+    }
+  }
+  
+  // Generate 3 unique melody sections (A, B, C)
+  mMelodySections = [
+    genMelodySection(R),
+    genMelodySection(R),
+    genMelodySection(R),
+  ];
+  
+  // Song structure: 16 sections × 128 steps = 2048 steps ≈ 9.15 minutes of unique melody
+  // Pattern: A A B A C A B C A B A C B A C A
+  mSongOrder = [0, 0, 1, 0, 2, 0, 1, 2, 0, 1, 0, 2, 1, 0, 2, 0];
+  
+  mTotalStep = 0;
+  mSectionIdx = 0;
+  mSectionStep = 0;
+}
+
 function mNote(type,f,dur,vol,t){
+  if(!AC) return;
   const o=AC.createOscillator(),ga=AC.createGain(),fl=AC.createBiquadFilter();
   o.type=type;o.frequency.value=f;fl.type='lowpass';fl.frequency.value=2400;
   ga.gain.setValueAtTime(vol,t);ga.gain.exponentialRampToValueAtTime(.0001,t+dur);
   o.connect(fl);fl.connect(ga);ga.connect(musG);o.start(t);o.stop(t+dur+.02);
 }
+
 function musicTick(){
   if(!AC||!musicOn)return;
   try{
@@ -284,14 +431,95 @@ function musicTick(){
     if(mNext<now-.5)mNext=now+.05;
     let n=0;
     while(mNext<now+.15&&n<4){
-      const s=mStep%16;
-      if(s%4===0){const bd=[0,-2,3,0,5,3,-2,0][(s>>2)%8];mNote('triangle',55*Math.pow(2,bd/12),spb*1.8,.2,mNext)}
-      const deg=mPat[s];if(deg>=0)mNote('square',220*Math.pow(2,deg/12),spb*.9,.05,mNext);
-      if(bossMusic&&s%2===0){const o=AC.createOscillator(),ga=AC.createGain();o.type='sine';
-        o.frequency.setValueAtTime(130,mNext);o.frequency.exponentialRampToValueAtTime(42,mNext+.12);
-        ga.gain.setValueAtTime(.3,mNext);ga.gain.exponentialRampToValueAtTime(.0001,mNext+.14);
-        o.connect(ga);ga.connect(musG);o.start(mNext);o.stop(mNext+.16);}
-      mStep++;mNext+=spb;n++;
+      const chordIdx = Math.floor(mTotalStep/16) % mChords.length;
+      const chord = mChords[chordIdx];
+      const bassStep = mTotalStep % 16;
+      
+      // === BASS: chord-root based, rhythmic pattern repeats (allowed per user req) ===
+      if(bassStep % 4 === 0){
+        // Root on downbeats
+        const bassNote = 55 * Math.pow(2, chord.root/12);
+        mNote('triangle', bassNote, spb*2, .18, mNext);
+      } else if(bassStep % 4 === 2){
+        // Fifth on beat 3
+        const bassNote = 55 * Math.pow(2, (chord.root+7)/12);
+        mNote('triangle', bassNote, spb*1.2, .11, mNext);
+      } else if(Math.random() < 0.12){
+        // Ghost notes on off-beats for rhythmic interest
+        const bassNote = 55 * Math.pow(2, chord.notes[(Math.random()*chord.notes.length)|0]/12);
+        mNote('triangle', bassNote, spb*0.5, .05, mNext);
+      }
+      
+      // === PAD: sustained chord tones on chord changes (every 16 steps) ===
+      if(bassStep === 0){
+        // Root + third as long sustained pad
+        mNote('sine', 110 * Math.pow(2, chord.notes[0]/12), spb*14, .028, mNext);
+        if(chord.notes.length > 1){
+          mNote('sine', 110 * Math.pow(2, chord.notes[1]/12), spb*14, .022, mNext);
+        }
+      }
+      
+      // === MELODY: from current song section, UNIQUE for ~9+ minutes ===
+      if(mSongOrder.length > 0 && mMelodySections.length > 0){
+        const sectionIdx = mSongOrder[mSectionIdx % mSongOrder.length];
+        const sectionArr = mMelodySections[sectionIdx % mMelodySections.length];
+        if(sectionArr && sectionArr.length > 0){
+          const deg = sectionArr[mSectionStep % sectionArr.length];
+          if(deg >= 0){
+            const vel = 0.035 + (Math.random() * 0.025);
+            const dur = spb * (0.7 + Math.random() * 0.3);
+            mNote('square', 220 * Math.pow(2, deg/12), dur, vel, mNext);
+            // Add subtle octave doubling on downbeats for shimmer
+            if(bassStep % 4 === 0 && Math.random() < 0.3){
+              mNote('square', 440 * Math.pow(2, deg/12), spb*0.5, vel*0.35, mNext);
+            }
+          }
+        }
+      }
+      
+      // === BOSS MUSIC: more aggressive additions ===
+      if(bossMusic){
+        if(bassStep % 2 === 0){
+          // Aggressive drone
+          const o=AC.createOscillator(),ga=AC.createGain();
+          o.type='sine';
+          o.frequency.setValueAtTime(130,mNext);
+          o.frequency.exponentialRampToValueAtTime(42,mNext+.12);
+          ga.gain.setValueAtTime(.22,mNext);
+          ga.gain.exponentialRampToValueAtTime(.0001,mNext+.14);
+          o.connect(ga);ga.connect(musG);
+          o.start(mNext);o.stop(mNext+.16);
+        }
+        // Tension arpeggio on beat 1
+        if(bassStep === 0){
+          for(let k = 0; k < 4; k++){
+            const n = chord.notes[k % chord.notes.length];
+            mNote('triangle', 330 * Math.pow(2, n/12), spb*0.4, .04, mNext + k*spb*0.12);
+          }
+        }
+      }
+      
+      // Advance step counters
+      mTotalStep++;
+      mSectionStep++;
+      if(mSectionStep >= 128){
+        mSectionStep = 0;
+        mSectionIdx++;
+        if(mSectionIdx >= mSongOrder.length){
+          mSectionIdx = 0;
+          // REGENERATE melody sections for continuous variety!
+          // This ensures melody never truly repeats over long play sessions
+          const newR = mulberry32(Date.now() ^ (mTotalStep * 7919));
+          mMelodySections = [
+            genMelodySection(newR),
+            genMelodySection(newR),
+            genMelodySection(newR),
+          ];
+        }
+      }
+      
+      mNext += spb;
+      n++;
     }
     if(mNext<now+.15)mNext=now+.15;
   }catch(e){}
@@ -446,12 +674,10 @@ let bullets=[],shots=[],enemies=[],items=[],parts=[],texts=[],spawnQ=[];
 const bpool=[],spool=[],epool=[],ipool=[],ppool=[];
 let boss=null,bn=null,shake=0,flashA=0,flashC='255,255,255',bombT=0,timeScale=1,bgT=0,gFlash=0;
 let P={};
-try{hiscore=parseInt(localStorage.getItem('sfr_hi'))||0}catch(e){}
+try{hiscore=parseInt(localStorage.getItem('bh_hi'))||0}catch(e){}
 function rngw(){return mulberry32(xmur3(seedTxt+':'+wave)())}
 
-/* EXPANDED UPGRADES - 28 total, with infinite scaling and late-game variety */
 const UPG=[
- /* Core damage */
  {id:'pow',n:'Scarlet Power',d:'All shots deal +25% damage.',max:5,g:'✹',c:'#ff5470'},
  {id:'spread',n:'Petal Spread',d:'Your volley fans wider.',max:4,g:'❁',c:'#ffc2e2'},
  {id:'focus',n:'Piercing Focus',d:'Focus shot +35% damage, tighter stream.',max:3,g:'➤',c:'#6ee7ff'},
@@ -468,16 +694,13 @@ const UPG=[
  {id:'fortune',n:"Fortune's Favor",d:'Richer drops, faster score multi.',max:3,g:'✤',c:'#ffe08a'},
  {id:'pierce',n:'Rending Talisman',d:'Shots pierce +1 enemy.',max:2,g:'↯',c:'#c0c8ff'},
  {id:'slow',n:'Time Drip',d:'Focus slows nearby enemy bullets.',max:2,g:'◔',c:'#b0a0ff'},
- /* NEW: Infinite scaling ascension boons */
  {id:'ascPow',n:'Ascending Power',d:'Permanent +15% damage, infinite.',max:99,g:'⬆',c:'#ff6b9d'},
  {id:'ascGraze',n:'Graze Mastery',d:'+10% graze radius, infinite.',max:99,g:'⬆',c:'#a8e6ff'},
  {id:'ascFort',n:"Fortune's Ascent",d:'+8% score multiplier gain, infinite.',max:99,g:'⬆',c:'#ffd700'},
  {id:'ascSpeed',n:'Swifter Wings',d:'+5% speed, infinite.',max:99,g:'⬆',c:'#98d8c8'},
- /* NEW: Consumable/temporary boons */
  {id:'tempBerserk',n:'Berserk Surge',d:'2x damage for 15s, then +1 bomb.',max:99,g:'⚡',c:'#ff4444',consumable:true},
  {id:'tempTime',n:'Frozen Moment',d:'All bullets freeze 8s, +500 score.',max:99,g:'❄',c:'#66ccff',consumable:true},
  {id:'tempMagnet',n:'Vacuum Seal',d:'Pull all items for 10s, +2000 score.',max:99,g:'🧲',c:'#ffaa00',consumable:true},
- /* NEW: Meta-progression */
  {id:'metaScore',n:'Score Overflow',d:'Instant +10000 score.',max:99,g:'💎',c:'#00ffcc'},
  {id:'metaPower',n:'Power Surge',d:'+50 power instantly.',max:99,g:'⚡',c:'#ffff00'},
  {id:'metaGrace',n:'Grace Period',d:'+2 invulnerability seconds.',max:99,g:'✨',c:'#ffffff'},
@@ -488,9 +711,7 @@ function resetPlayer(){
   P={x:W/2,y:H-90,lives:3,bombs:3,up:{},dmgMul:1,spread:0,focusLvl:0,homing:0,drones:0,rear:0,side:0,
      grazeMul:1,magnet:0,spdMul:1,shield:0,shReady:false,shT:0,fort:0,pierce:0,slow:0,
      inv:2,invB:0,dead:0,fireT:0,drA:0,
-     /* NEW: ascension tracking */
      ascPow:0,ascGraze:0,ascFort:0,ascSpeed:0,
-     /* NEW: temp buff tracking */
      berserkT:0,tempTimeT:0,tempMagnetT:0};
 }
 function upLvl(id){return P.up[id]||0}
@@ -505,8 +726,8 @@ function resetRun(seed,diff){
   score=0;mult=1;maxMult=1;graze=0;power=20;bombFrag=0;boons=0;
   wave=0;runTime=0;boss=null;bn=null;shake=0;flashA=0;bombT=0;timeScale=1;interT=1.4;
   bullets.length=0;shots.length=0;enemies.length=0;items.length=0;parts.length=0;texts.length=0;spawnQ.length=0;
-  resetPlayer();genMusicPat(rngRun);musicOn=true;bossMusic=false;
-  if(AC){mNext=AC.currentTime+.1;mStep=0;}
+  resetPlayer();genMusicPat(rngRun);musicOn=musicEnabled;bossMusic=false;
+  if(AC){mNext=AC.currentTime+.1;}
   state='play';document.body.classList.add('playing');
   hideAll();banner('THE NIGHT BEGINS','seed '+seed,2.4);
 }
@@ -627,7 +848,6 @@ const BA=['Hollow','Scarlet','Twilight','Silent','Gilded','Frostbound','Wanderin
 const BB=['Empress','Witch','Warden','Oracle','Herald','Sister','Doll','Spirit'];
 const BN=['Yueliang','Reiha','Sana','Kyou','Lilis','Vatra','Yura','Mio','Tsuki','Nephara'];
 const SPELL_T=[
- /* FIXED: Use Math.random() instead of R in init */
  {tm:24,b(R){return{c1:R()<.5?'r':'v',c2:R()<.5?'b':'c',arms:2+(R()*3|0),rs:(R()<.5?-1:1)*(1.1+R()*.8),iv:.115}},
   init(b,s){b.rot=Math.random()*TAU;b.ft=0;b.sp_=s},
   up(b,dt){const s=b.sp_;b.rot+=s.rs*dt;b.ft-=dt;
@@ -756,7 +976,6 @@ function finishBoss(){
 
 let choices=[];
 function rollChoices(){
-  /* FIXED: Include infinite-scaling boons even after maxing core upgrades */
   const cand=UPG.filter(u=>upLvl(u.id)<u.max);
   for(let i=cand.length-1;i>0;i--){const j=(rngRun()*(i+1))|0;const t=cand[i];cand[i]=cand[j];cand[j]=t}
   return cand.slice(0,3);
@@ -780,16 +999,13 @@ function applyUpgrade(u){
     case 'fortune':P.fort++;break;
     case 'pierce':P.pierce++;break;
     case 'slow':P.slow++;break;
-    /* NEW: Ascension boons */
     case 'ascPow':P.ascPow++;P.dmgMul+=.15;break;
     case 'ascGraze':P.ascGraze++;P.grazeMul*=1.1;break;
     case 'ascFort':P.ascFort++;break;
     case 'ascSpeed':P.ascSpeed++;P.spdMul+=.05;break;
-    /* NEW: Consumable boons */
     case 'tempBerserk':P.berserkT=15;P.dmgMul*=2;setTimeout(()=>{P.dmgMul/=2;P.bombs=Math.min(6,P.bombs+1)},15000);break;
     case 'tempTime':P.tempTimeT=8;break;
     case 'tempMagnet':P.tempMagnetT=10;score+=2000;break;
-    /* NEW: Meta boons */
     case 'metaScore':score+=10000;break;
     case 'metaPower':power=Math.min(100,power+50);break;
     case 'metaGrace':P.inv+=2;break;
@@ -891,7 +1107,6 @@ function playerFire(dt){
   if(P.fireT>0)return;
   P.fireT+=iv;
   sfx.shoot();
-  /* FIXED: Include ascension damage bonus */
   const dmgBase=3*(1+power/160)*P.dmgMul*(focusing()?(1+.35*P.focusLvl):1);
   const up=-Math.PI/2;
   const angles=[-8,8];
@@ -919,7 +1134,6 @@ function playerFire(dt){
 
 function updatePlay(dt){
   runTime+=dt;waveT+=dt;
-  /* NEW: Update temp buff timers */
   if(P.berserkT>0){P.berserkT-=dt;if(P.berserkT<=0)P.dmgMul/=2}
   if(P.tempTimeT>0)P.tempTimeT-=dt;
   if(P.tempMagnetT>0)P.tempMagnetT-=dt;
@@ -929,7 +1143,6 @@ function updatePlay(dt){
     for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];const dx=b.x-P.x,dy=b.y-P.y;
       if(dx*dx+dy*dy<170*170){pAdd(b.x,b.y,0,-40,.4,2.5,'255,255,255');bullets.splice(i,1);}}}}
   else if(P.lives>=0){
-    /* FIXED: Include ascension speed bonus */
     const spd=(focusing()?112:265)*P.spdMul;
     let ax=(keys.ArrowRight||keys.KeyD?1:0)-(keys.ArrowLeft||keys.KeyA?1:0);
     let ay=(keys.ArrowDown||keys.KeyS?1:0)-(keys.ArrowUp||keys.KeyW?1:0);
@@ -1018,7 +1231,6 @@ function updatePlay(dt){
       const dx=boss.x-P.x,dy=boss.y-P.y;
       if(dx*dx+dy*dy<(boss.r+HITR)*(boss.r+HITR))hitPlayer();}
   }
-  /* FIXED: Temp time freeze slows bullets */
   const slowOn=P.slow>0&&focusing(),slR=90+30*P.slow,slF=P.slow>1?.38:.55;
   const timeFreeze=P.tempTimeT>0;
   for(let i=bullets.length-1;i>=0;i--){
@@ -1035,7 +1247,6 @@ function updatePlay(dt){
     if(P.inv<=0&&P.invB<=0&&d2<(b.r+HITR)*(b.r+HITR)){
       hitPlayer();bullets.splice(i,1);bpool.push(b);continue}
     if(!b.gr&&P.inv<=0&&P.invB<=0){
-      /* FIXED: Include ascension graze bonus */
       const gr=grazeR()+b.r;
       if(d2<gr*gr){b.gr=true;graze++;score+=Math.round(15*mult);
         mult=Math.min(9.99,mult+.004*(1+.4*P.fort+.08*P.ascFort));if(mult>maxMult)maxMult=mult;
@@ -1086,7 +1297,7 @@ function gameOver(){
   state='over';document.body.classList.remove('playing');musicOn=false;bossMusic=false;
   let rec=false;
   if(score>hiscore){hiscore=Math.floor(score);rec=true;
-    try{localStorage.setItem('sfr_hi',hiscore)}catch(e){}}
+    try{localStorage.setItem('bh_hi',hiscore)}catch(e){}}
   $('stScore').textContent=fmt(score);
   $('stBest').textContent=fmt(hiscore);
   $('stWave').textContent=wave;
@@ -1328,7 +1539,6 @@ function renderHUD(dt){
   ctx.fillText('POWER '+(power|0)+(power>=100?' MAX':''),136,H-14);
   if(focusing()){ctx.fillStyle='#6ee7ff';ctx.fillText('FOCUS',172,H-14)}
   if(bombFrag>0){ctx.fillStyle='#f2c14e';ctx.fillText('✦'.repeat(bombFrag),210,H-14)}
-  /* NEW: Show active temp buffs */
   if(P.berserkT>0){ctx.fillStyle='#ff4444';ctx.fillText('BERSERK '+Math.ceil(P.berserkT)+'s',250,H-14)}
   if(P.tempTimeT>0){ctx.fillStyle='#66ccff';ctx.fillText('FREEZE '+Math.ceil(P.tempTimeT)+'s',250,H-4)}
   if(P.tempMagnetT>0){ctx.fillStyle='#ffaa00';ctx.fillText('MAGNET '+Math.ceil(P.tempMagnetT)+'s',250,H-24)}
@@ -1379,7 +1589,11 @@ addEventListener('keydown',e=>{
   if(e.repeat)return;
   keys[e.code]=true;
   audioInit();if(AC&&AC.state==='suspended')AC.resume();
-  if(e.code==='KeyM'){muted=!muted;if(master)master.gain.value=muted?0:.5}
+  if(e.code==='KeyM'){
+    sfxEnabled = !sfxEnabled;
+    if(sfxG) sfxG.gain.value = sfxEnabled ? 0.9 : 0;
+    if($('btnSfx')) $('btnSfx').textContent = 'Sound: ' + (sfxEnabled ? 'ON' : 'OFF');
+  }
   if(state==='title'){
     if(e.code==='Enter')$('btnStart').click();
     if(e.code==='Digit1')setDiff('easy');if(e.code==='Digit2')setDiff('normal');
@@ -1442,6 +1656,41 @@ $('btnQuit').addEventListener('click',toTitle);
 $('btnQuit2').addEventListener('click',toTitle);
 $('btnRetry').addEventListener('click',()=>{hideAll();resetRun(seedTxt,diffKey)});
 $('btnNew').addEventListener('click',()=>{seedTxt=newSeedStr();$('seedVal').textContent=seedTxt;hideAll();resetRun(seedTxt,diffKey)});
+
+const toggleFullscreen = () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(err => {});
+  } else {
+    document.exitFullscreen();
+  }
+};
+$('btnFullscreen').addEventListener('click', toggleFullscreen);
+$('btnFullscreenTitle').addEventListener('click', toggleFullscreen);
+
+$('btnMusic').addEventListener('click', () => {
+  musicEnabled = !musicEnabled;
+  musicOn = musicEnabled;
+  if(musG) musG.gain.value = musicEnabled ? 0.34 : 0;
+  $('btnMusic').textContent = 'Music: ' + (musicEnabled ? 'ON' : 'OFF');
+});
+$('btnSfx').addEventListener('click', () => {
+  sfxEnabled = !sfxEnabled;
+  if(sfxG) sfxG.gain.value = sfxEnabled ? 0.9 : 0;
+  $('btnSfx').textContent = 'Sound: ' + (sfxEnabled ? 'ON' : 'OFF');
+});
+$('btnRegenSeed').addEventListener('click', () => {
+  seedTxt = newSeedStr();
+  $('seedVal').textContent = seedTxt;
+  hideAll();
+  resetRun(seedTxt, diffKey);
+});
+$('btnLeftCtrls').addEventListener('click', () => {
+  leftControls = !leftControls;
+  document.body.classList.toggle('left-controls', leftControls);
+  try { localStorage.setItem('bh_left_ctls', leftControls ? '1' : '0'); } catch(e){}
+  $('btnLeftCtrls').textContent = 'Controls: ' + (leftControls ? 'LEFT' : 'RIGHT');
+});
+
 function pauseGame(){if(state!=='play')return;state='pause';$('ovPause').classList.remove('hide');if(AC)AC.suspend()}
 function resumeGame(){if(state!=='pause')return;state='play';$('ovPause').classList.add('hide');if(AC)AC.resume()}
 function toTitle(){state='title';document.body.classList.remove('playing');musicOn=false;bossMusic=false;
@@ -1451,6 +1700,8 @@ function toTitle(){state='title';document.body.classList.remove('playing');music
 
 buildSprites();buildBackground();buildStars();resize();
 $('seedVal').textContent=seedTxt;$('hiTitle').textContent=fmt(hiscore);
+if($('btnLeftCtrls')) $('btnLeftCtrls').textContent = 'Controls: ' + (leftControls ? 'LEFT' : 'RIGHT');
+
 let last=performance.now(),ftAcc=0,ftN=0,qCool=0,errN=0;
 function loop(ts){
   requestAnimationFrame(loop);
