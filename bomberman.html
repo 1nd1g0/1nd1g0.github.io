@@ -89,6 +89,9 @@
   button.alt{background:linear-gradient(180deg,#6b7a94,#39445c);
     box-shadow:0 4px 0 #222a3c,0 8px 16px rgba(0,0,0,.4)}
   button.alt:active,button.alt:focus-visible{box-shadow:0 1px 0 #222a3c}
+  button.home{background:linear-gradient(180deg,#ffb24d,#cc6a00);
+    box-shadow:0 4px 0 #804000,0 8px 16px rgba(200,80,0,.4)}
+  button.home:active,button.home:focus-visible{box-shadow:0 1px 0 #804000}
   .row2{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
   .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
   .row4{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
@@ -148,6 +151,17 @@
     border-color:rgba(255,120,255,0.55);background:rgba(200,60,200,0.32)}
   #p2bombRow button.small.act{background:rgba(230,90,230,0.72)}
   .err{padding:20px;font-size:13px;line-height:1.8;color:#ff9aa9}
+  #pauseBtn{position:fixed;top:6px;right:6px;z-index:9;
+    width:40px;height:40px;border-radius:8px;
+    background:rgba(4,7,14,0.88);border:1px solid rgba(120,180,255,0.42);
+    color:#dfe8ff;font-size:18px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-family:inherit;padding:0;margin:0;line-height:1;
+    box-shadow:0 2px 8px rgba(0,0,0,0.55);
+    -webkit-tap-highlight-color:transparent;
+    transition:background .15s,transform .06s}
+  #pauseBtn:hover{background:rgba(20,40,80,0.9)}
+  #pauseBtn:active{background:rgba(40,70,140,0.95);transform:scale(0.94)}
 </style>
 </head>
 <body>
@@ -155,6 +169,7 @@
 <div id="hud"></div>
 <div id="arrows"></div>
 <div id="ticker"><div id="tickerStrip"></div></div>
+<button id="pauseBtn" type="button" aria-label="Pause" title="Pause (Esc)">⏸</button>
 <div id="touch">
   <div id="dpad1">
     <button data-d="0">▲</button><button data-d="3">◀</button>
@@ -777,7 +792,8 @@ var Audio_=(function(){
     pickup:function(){tone(680,0.07,'square',0.16,900);setTimeout(function(){tone(1020,0.09,'square',0.13,1300);},60);},
     die:function(){tone(420,0.5,'sawtooth',0.22,55);noise(0.35,0.18,900,80);},
     win:function(){[523.25,659.25,783.99,1046.5].forEach(function(f,i){setTimeout(function(){tone(f,0.18,'triangle',0.18);},i*80);});},
-    hurt:function(){tone(180,0.18,'square',0.18,90);}
+    hurt:function(){tone(180,0.18,'square',0.18,90);},
+    prizeBreak:function(){tone(320,0.12,'square',0.12,180);noise(0.18,0.12,1200,400);}
   };
 })();
 
@@ -1065,10 +1081,7 @@ function applyCanvasSize(){
   gl.uniform2f(U_RES,w,h);
 }
 
-/* Decide the grid dimensions GW,GH. Called ONLY when a new level is built.
-   This is the fix: resize() must not touch GW/GH, otherwise the flat grid
-   array is reinterpreted with a different stride and tiles appear to "wrap". */
-function computeLevelDimensions(){
+function computeLevelDimension(){
   var w=canvas.width, h=canvas.height;
   var availW=w-16*DPR;
   var availH=h-16*DPR;
@@ -1082,8 +1095,6 @@ function computeLevelDimensions(){
   }
 }
 
-/* Decide the tile pixel size ts from current GW,GH and canvas size.
-   Called on every resize and after every level generation. */
 function computeTileSize(){
   var w=canvas.width, h=canvas.height;
   var availW=w-16*DPR;
@@ -1152,11 +1163,8 @@ function ensureSpawnEscape(spawnI,spawnJ){
   }
 }
 function buildLevel(resume){
-  /* 1. Sync canvas pixel size from CSS. */
   applyCanvasSize();
-  /* 2. Decide GW and GH for this level only. */
-  computeLevelDimensions();
-  /* 3. Build the grid with the fixed GW/GH. */
+  computeLevelDimension();
   var rng=mulberry32(hashStr(seedStr+'|'+level+'|'+GW+'x'+GH+'|'+playerMode+'|'+cpuHostile));
   grid=new Uint8Array(GW*GH);
   for(var y=0;y<GH;y++)for(var x=0;x<GW;x++){
@@ -1263,9 +1271,7 @@ function buildLevel(resume){
   for(var pc=0;pc<PART_MAX;pc++) particlePool[pc].life=0;
   allocBuffers();
   buildHudStructure();
-  /* 4. Compute tile pixel size for the new level. */
   computeTileSize();
-  /* 5. Refresh canvas layout (HUD height may have changed). */
   updateCanvasLayout();
   applyCanvasSize();
   computeTileSize();
@@ -1280,7 +1286,11 @@ function canWalkPlayer(i,j,pl){
   if(gv===1)return false;
   if(gv===2&&!pl.wallPass)return false;
   var b=bombAt(i,j);
-  if(b){ if(pl.bombPass||pl.glove)return true; return false; }
+  if(b){
+    if(b.isLandMine && b.owner===pl) return true;
+    if(pl.bombPass||pl.glove)return true;
+    return false;
+  }
   return true;
 }
 function canWalkEnemy(i,j,en){
@@ -1289,7 +1299,10 @@ function canWalkEnemy(i,j,en){
   if(gv===1)return false;
   if(gv===2&&!en.type.throughBricks)return false;
   var b=bombAt(i,j);
-  if(b&&!en.type.throughBombs)return false;
+  if(b){
+    if(b.isLandMine) return true;
+    if(!en.type.throughBombs)return false;
+  }
   return true;
 }
 function tileOfPl(pl){return {i:Math.round(pl.px-0.5),j:Math.round(pl.py-0.5)};}
@@ -1316,14 +1329,14 @@ function destroyBrick(i,j,owner){
 }
 
 /* ============== EXPLOSION ============== */
-function blastDestroysPowerups(tiles,protectedSet){
+function blastDestroysPowerups(tiles){
   for(var i=powerups.length-1;i>=0;i--){
     var p=powerups[i];
-    if(protectedSet && protectedSet.indexOf(p)>=0) continue;
     if(p.spawnGrace>0) continue;
     for(var j=0;j<tiles.length;j++){
       if(tiles[j].i===p.i && tiles[j].j===p.j){
-        spawnParticles(p.i,p.j,6,1.0,0.5,0.5);
+        spawnParticles(p.i,p.j,8,1.0,0.7,0.3);
+        Audio_.prizeBreak();
         powerups.splice(i,1);
         break;
       }
@@ -1362,7 +1375,6 @@ function spawnEnemiesFromPortal(count){
 }
 function detonateSingle(bomb,queue){
   var owner=bomb.owner;
-  var protectedSet=powerups.slice();
   var tiles=[];
   var cx=bomb.i,cy=bomb.j;
   tiles.push({i:cx,j:cy,d:-1});
@@ -1398,7 +1410,7 @@ function detonateSingle(bomb,queue){
   spawnParticles(cx,cy,8,1.0,0.8,0.35);
   Audio_.boom();
   shake=Math.min(1,shake+0.6);
-  blastDestroysPowerups(tiles,protectedSet);
+  blastDestroysPowerups(tiles);
   if(exitPos.active && exitPos.hitCooldown<=0){
     var hitExit=false;
     for(var ti=0;ti<tiles.length;ti++){
@@ -1418,7 +1430,6 @@ function detonateSingle(bomb,queue){
       (function(ni,nj,own){
         setTimeout(function(){
           if(state!=='playing')return;
-          var protectedSet2=powerups.slice();
           var small=[{i:ni,j:nj,d:-1}];
           for(var dd=0;dd<4;dd++){
             var sx=ni+DIRS[dd][0],sy=nj+DIRS[dd][1];
@@ -1432,7 +1443,7 @@ function detonateSingle(bomb,queue){
           }
           blasts.push({tiles:small,t:0.28,max:0.28,owner:own});
           spawnParticles(ni,nj,5,1.0,0.5,0.2);
-          blastDestroysPowerups(small,protectedSet2);
+          blastDestroysPowerups(small);
           Audio_.boom();
         },140);
       })(cnx,cny,owner);
@@ -1486,7 +1497,7 @@ function lineDrop(pl){
   }
 }
 function detonateRemote(pl){
-  if(!pl || pl.cpu) return;
+  if(!pl) return;
   var oldest=null,oldestAge=-1;
   for(var i=0;i<bombs.length;i++){
     var b=bombs[i];
@@ -1701,7 +1712,7 @@ function updateBomb(b,dt){
     for(var e=0;e<enemies.length;e++){
       var en=enemies[e];
       if(!en.alive)continue;
-      if(Math.abs(en.px-(b.i+0.5))<0.4&&Math.abs(en.py-(b.j+0.5))<0.4){detonate(b);return;}
+      if(Math.abs(en.px-(b.i+0.5))<0.45&&Math.abs(en.py-(b.j+0.5))<0.45){detonate(b);return;}
     }
   }
   if(b.kickVX||b.kickVY){
@@ -2371,7 +2382,10 @@ function killPlayer(pl){
         '<div class="big">TOTAL '+totalScore()+'</div>'+
         '<div class="hint">Reached level '+level+'</div>'+
         '<button data-act="retry">TRY AGAIN</button>'+
-        '<button class="alt" data-act="menu">MAIN MENU</button>');
+        '<div class="row2">'+
+        '<button class="alt" data-act="menu">MAIN MENU</button>'+
+        '<button class="home" data-act="home">HOME</button>'+
+        '</div>');
     },650);
   }
 }
@@ -2581,7 +2595,7 @@ function update(dt){
     pa.x+=pa.vx*dt;pa.y+=pa.vy*dt;
     pa.vx*=0.93;pa.vy*=0.93;pa.vy+=dt*1.4;
   }
-  if(state!=='playing'){Audio_.updateMusic();return;}
+  if(state!=='playing'){Audio_.updateMusic();updatePauseBtn();return;}
   for(var pi=0;pi<players.length;pi++){
     var pl=players[pi];
     if(pl.alive){
@@ -2666,7 +2680,8 @@ function update(dt){
           showPanel('<h1>LEVEL<span> CLEAR</span></h1>'+
             '<div class="sub">COURSE '+cap+' COMPLETE</div>'+
             '<div class="big">TOTAL '+totalScore()+'</div>'+
-            '<button data-act="next">NEXT COURSE</button>');
+            '<button data-act="next">NEXT COURSE</button>'+
+            '<button class="home" data-act="home" style="margin-top:5px">HOME</button>');
         },550);
         break;
       }
@@ -2676,6 +2691,7 @@ function update(dt){
   updateCameras(dt);
   updateHud();
   Audio_.updateMusic();
+  updatePauseBtn();
 }
 function shouldSplitScreen(){
   if(playerMode!=='2p') return false;
@@ -2876,9 +2892,16 @@ function render(){
 }
 
 /* ============== UI PANEL ============== */
+function updatePauseBtn(){
+  var pb=document.getElementById('pauseBtn');
+  if(!pb) return;
+  var show=(state==='playing'||state==='paused') && overlay.style.display!=='flex';
+  if(pb.style.display!==(show?'flex':'none')) pb.style.display=show?'flex':'none';
+}
 function showPanel(html){
   panel.innerHTML=html;
   overlay.style.display='flex';
+  updatePauseBtn();
   panel.querySelectorAll('.pick').forEach(function(btn){
     btn.addEventListener('click',function(){
       var grp=btn.getAttribute('data-grp');
@@ -2896,7 +2919,7 @@ function showPanel(html){
     else if(btn) btn.focus();
   }catch(e){}
 }
-function hidePanel(){overlay.style.display='none';}
+function hidePanel(){overlay.style.display='none';updatePauseBtn();}
 
 function showMenu(){
   state='menu';
@@ -2930,6 +2953,7 @@ function showMenu(){
     '<div class="lbl">CPU RELATIONS</div>'+
     '<div class="row2">'+relBtns+'</div>'+
     '<button data-act="play" style="margin-top:12px">START NEW GAME</button>'+
+    '<button class="home" data-act="home" style="margin-top:8px">HOME</button>'+
     '<div class="lbl">CONTINUE FROM PASSCODE</div>'+
     '<input id="codeIn" class="code" placeholder="paste passcode here" value="'+savedCode+'">'+
     '<button class="alt" data-act="continue">CONTINUE</button>'+
@@ -2967,7 +2991,10 @@ function showPause(){
     '<div class="lbl">PASSCODE</div>'+
     '<input id="pauseCode" class="code" readonly value="'+code+'">'+
     '<button class="alt" data-act="copyCode">SAVE &amp; COPY PASSCODE</button>'+
-    '<button class="alt" data-act="menu2" style="margin-top:10px">MAIN MENU</button>'+
+    '<div class="row2" style="margin-top:10px">'+
+    '<button class="alt" data-act="menu2">MAIN MENU</button>'+
+    '<button class="home" data-act="home">HOME</button>'+
+    '</div>'+
     '<div class="hint">ESC to resume</div>');
   var pc=document.getElementById('pauseCode');
   if(pc) pc.addEventListener('click',function(){pc.select();});
@@ -2992,8 +3019,6 @@ function startGame(seed,resume){
     level=1;
   }
   players=[];
-  /* Sync canvas pixel size to CSS first so computeLevelDimensions sees
-     up-to-date dims. Then buildLevel picks GW/GH and sets ts. */
   updateCanvasLayout();
   applyCanvasSize();
   buildLevel(resume);
@@ -3049,6 +3074,8 @@ panel.addEventListener('click',function(ev){
     startGame(seedStr);
   } else if(act==='menu'||act==='menu2'){
     showMenu();
+  } else if(act==='home'){
+    try{ window.location.href='https://1nd1g0.github.io/'; }catch(e){}
   } else if(act==='continue'){
     var ci=document.getElementById('codeIn');
     var code=ci?ci.value.trim():'';
@@ -3085,6 +3112,20 @@ panel.addEventListener('click',function(ev){
     }
   }
 },false);
+
+/* Pause button binding */
+(function(){
+  var pb=document.getElementById('pauseBtn');
+  if(!pb) return;
+  function toggle(){
+    Audio_.resume();
+    if(state==='playing') showPause();
+    else if(state==='paused'){hidePanel();state='playing';last=performance.now();}
+  }
+  pb.addEventListener('click',function(ev){ev.preventDefault();toggle();});
+  pb.addEventListener('touchstart',function(ev){ev.preventDefault();toggle();},{passive:false});
+})();
+
 window.addEventListener('keydown',function(ev){
   if(overlay.style.display!=='flex') return;
   var code=ev.keyCode;
@@ -3381,6 +3422,7 @@ applyCanvasSize();
 computeTileSize();
 showMenu();
 updateHud();
+updatePauseBtn();
 requestAnimationFrame(function(){
   updateCanvasLayout();
   applyCanvasSize();
