@@ -46,10 +46,10 @@
     text-shadow:4px 0 var(--red),-4px 0 #2ec5ff,0 8px 0 rgba(0,0,0,.35)}
   @keyframes pop{0%{transform:scale(2.1);opacity:0}25%{opacity:1}100%{transform:scale(1);opacity:1}}
   .pop{animation:pop .5s ease-out}
-  #menu{position:fixed;inset:0;z-index:50;display:flex;align-items:center;padding:4vmin;pointer-events:none}
-  #panel{pointer-events:auto;width:min(372px,92vw);background:rgba(8,11,22,.82);
+  #menu{position:fixed;inset:0;z-index:50;display:flex;align-items:center;padding:4vmin;pointer-events:none;justify-content:center}
+  #panel{pointer-events:auto;width:min(400px,92vw);background:rgba(8,11,22,.82);
     border:1px solid var(--line);border-radius:3px;padding:22px 22px 16px;
-    box-shadow:8px 8px 0 rgba(0,0,0,.35)}
+    box-shadow:8px 8px 0 rgba(0,0,0,.35);max-height:90vh;overflow-y:auto}
   h1{font-size:clamp(34px,5.4vw,52px);line-height:.95;font-style:italic;font-weight:900;color:#fff;
     text-shadow:3px 0 var(--red),-3px 0 #2ec5ff,0 5px 0 rgba(0,0,0,.45)}
   .tag{margin:8px 0 16px;font-size:10px;letter-spacing:.26em;color:#93a0c0;text-transform:uppercase}
@@ -69,6 +69,10 @@
     box-shadow:4px 4px 0 rgba(0,0,0,.4);transition:transform .08s}
   #start:hover{background:#ff6a52;transform:translate(-1px,-1px)}
   #start:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(0,0,0,.4)}
+  #homeBtn{width:100%;margin-top:8px;padding:10px;background:#1a2238;border:1px solid var(--line);color:#93a0c0;
+    font:inherit;font-size:11px;font-weight:700;letter-spacing:.24em;cursor:pointer;
+    text-transform:uppercase;text-decoration:none;display:block;text-align:center}
+  #homeBtn:hover{background:#253050;color:#fff}
   .keys{margin-top:14px;font-size:10px;color:#8b96b4;letter-spacing:.08em;line-height:1.9}
   .keys b{color:#d9c08a;font-weight:700}
   .foot{margin-top:10px;font-size:9px;letter-spacing:.14em;color:#525d7a;text-transform:uppercase}
@@ -86,14 +90,26 @@
   .card .seg button{padding:10px 4px}
   #touch{position:fixed;inset:0;z-index:45;pointer-events:none;display:none}
   body.touch #touch{display:block}
-  .tb{position:absolute;bottom:24px;width:74px;height:74px;border-radius:50%;
+  .tb{position:absolute;width:74px;height:74px;border-radius:50%;
     background:rgba(255,255,255,.08);border:2px solid rgba(255,182,77,.4);color:#ffd27d;
     font-size:26px;display:flex;align-items:center;justify-content:center;pointer-events:auto;
     user-select:none;-webkit-user-select:none;touch-action:none}
   .tb:active{background:rgba(255,182,77,.3)}
-  #tL{left:20px}#tR{left:110px}#tB{right:110px}#tG{right:20px;border-color:rgba(255,80,64,.6)}
+  #tL{bottom:24px;left:20px}#tR{bottom:24px;left:110px}#tB{bottom:24px;right:110px}#tG{bottom:24px;right:20px;border-color:rgba(255,80,64,.6)}
+  #tCam{top:14px;left:50%;transform:translateX(-50%);width:54px;height:54px;font-size:14px}
+  #tPause{top:14px;right:14px;width:54px;height:54px;font-size:18px}
   #noGL{position:fixed;inset:0;z-index:99;display:flex;align-items:center;justify-content:center;
     background:#0a0e18;text-align:center;padding:20px}
+  @media (max-width:768px) and (orientation:portrait){
+    .tb{width:58px;height:58px;font-size:22px}
+    #tL{bottom:16px;left:12px}#tR{bottom:16px;left:82px}
+    #tB{bottom:16px;right:82px}#tG{bottom:16px;right:12px}
+    #speed{right:10px;bottom:90px}
+    #speed .v{font-size:40px}
+    #hint{display:none}
+    #hudTL{top:8px;left:8px}#hudTR{top:8px;right:8px}
+    .chip{font-size:10px;padding:4px 8px}
+  }
 </style>
 </head>
 <body>
@@ -121,17 +137,18 @@
   <div id="panel">
     <h1>STUNT CAR<br>RACER</h1>
     <div class="tag">HTML5 tribute · procedural circuits · offline</div>
+    <div class="lbl">Difficulty</div><div class="seg" id="dfSeg"></div>
     <div class="lbl">Opponents</div><div class="seg" id="opSeg"></div>
-    <div class="lbl">CPU skill</div><div class="seg" id="skSeg"></div>
     <div class="lbl">Laps</div><div class="seg" id="lpSeg"></div>
+    <div class="lbl">Music</div><div class="seg" id="muSeg"></div>
     <div class="lbl">Track seed</div>
     <div id="seedRow"><input id="seed" value="7420523" spellcheck="false">
       <button id="dice" title="random seed">⚄</button></div>
     <button id="start">START ENGINE ▸</button>
+    <a id="homeBtn" href="https://1nd1g0.github.io/" target="_blank">⌂ HOME</a>
     <div class="keys">
-      <b>↑/W</b> throttle · <b>↓/S</b> brake/reverse · <b>←→/A D</b> steer · <b>C</b> camera (chase / low / cockpit)<br>
-      Cockpit view rolls with the car — watch the horizon tilt through banked bends.<br>
-      Watch the yellow-black ramp stripes — carry speed over the gaps.
+      <b>↑/W</b> throttle · <b>↓/S</b> brake/reverse · <b>←→/A D</b> steer · <b>C</b> camera<br>
+      <b>M</b> sound · <b>ESC</b> pause · <b>R</b> recover
     </div>
     <div class="foot">the seed decides the circuit — same seed, same track</div>
   </div>
@@ -147,11 +164,13 @@
 
 <div id="pauseOv" class="ovl hidden"><div class="card"><h2>PAUSED</h2>
   <div class="seg"><button id="pResume">RESUME</button><button id="pMenu">QUIT TO MENU</button></div>
+  <div class="lbl" style="margin-top:16px">Music</div><div class="seg" id="pmMuSeg"></div>
 </div></div>
 
 <div id="touch">
   <div class="tb" id="tL">◀</div><div class="tb" id="tR">▶</div>
   <div class="tb" id="tB">▼</div><div class="tb" id="tG">▲</div>
+  <div class="tb" id="tCam">CAM</div><div class="tb" id="tPause">⏸</div>
 </div>
 <div id="noGL" class="hidden"><div>This machine refused WebGL.<br>The stunt circuit stays closed today.</div></div>
 
@@ -244,7 +263,7 @@ var SA={aPos:gl.getAttribLocation(sprog,"aPos"),aA:gl.getAttribLocation(sprog,"a
 gl.enable(gl.DEPTH_TEST);
 gl.useProgram(prog);
 gl.uniform3f(U.uLight,.478,.797,.372);
-gl.uniform3f(U.uFogC,.95,.68,.43);      /* matched to the bright dusk horizon */
+gl.uniform3f(U.uFogC,.95,.68,.43);
 gl.uniform2f(U.uFogR,150,820);
 gl.uniform1f(U.uAlpha,1);
 gl.clearColor(0,0,0,0);
@@ -301,11 +320,21 @@ function box(B,C,r,f,lx,ly,lz,hx,hy,hz,col){
   quad(B,P(-1, 1,-1),P(-1, 1, 1),P( 1, 1, 1),P( 1, 1,-1),col);
   quad(B,P(-1,-1, 1),P(-1,-1,-1),P( 1,-1,-1),P( 1,-1, 1),col);}
 
+/* ================= difficulty ================= */
+var DIFFS={
+  easy:{hw:5.5,assist:0.7,curve:0.7,cpuBoost:0.88,label:"EASY"},
+  normal:{hw:4.5,assist:0.3,curve:1.0,cpuBoost:1.0,label:"NORMAL"},
+  hard:{hw:3.5,assist:0.0,curve:1.35,cpuBoost:1.12,label:"HARD"}};
+var HW=4.5;
+var ASSIST=0.3;
+var CPU_BOOST=1.0;
+
 /* ================= track generation ================= */
 var TRK=null;
 function genTrack(seed){
   var rnd=mulberry32(seed), nc=10+(rnd()*6|0), R0=150+rnd()*80;
   var px=[],pz=[],ph=[],i,j;
+  var curveF=DIFFS[opt.diff].curve;
   for(i=0;i<nc;i++){var a=i/nc*TAU+(rnd()-.5)*(TAU/nc)*.6, rr=R0*(.6+rnd()*.7);
     px.push(Math.cos(a)*rr);pz.push(Math.sin(a)*rr);ph.push(3.5+rnd()*20);}
   function CR(p0,p1,p2,p3,t){var t2=t*t,t3=t2*t;
@@ -328,6 +357,7 @@ function genTrack(seed){
   for(i=0;i<N;i++){var jn=(i+1)%N;H[i]=Math.atan2(X[jn]-X[i],Z[jn]-Z[i]);}
   for(i=0;i<N;i++){K[i]=wrapAng(H[(i+1)%N]-H[(i+N-1)%N])/2;}
   K=blur(K,3);
+  for(i=0;i<N;i++)K[i]*=curveF;
   var bi=0,bk=1e9;
   for(i=0;i<N;i+=5){var m=0;for(j=-25;j<=25;j+=5)m=Math.max(m,Math.abs(K[(i+j+N)%N]));
     if(m<bk){bk=m;bi=i;}}
@@ -337,11 +367,13 @@ function genTrack(seed){
   for(i=0;i<30;i++){var w=sm(i/30);Y[i]=y0+(Y[i]-y0)*w;}
   for(var k=1;k<=24;k++){var ff=(k-1)/24;Y[N-k]=Y[0]+(Y[N-k]-Y[0])*ff;}
   var nb2=2+(rnd()*3|0);
+  if(opt.diff==="hard")nb2+=2;
   for(var b=0;b<nb2;b++){var c=60+rnd()*(N-120),wd=18+rnd()*26,
     amp=(rnd()<.5?-1:1)*(1+rnd()*2);
     var lo=Math.max(0,Math.floor(c-wd)),hi=Math.min(N,Math.ceil(c-wd));
     for(i=lo;i<hi;i++){var e=Math.sin(Math.PI*(i-c)/wd);Y[i]+=amp*e*e;}}
   var gaps=[],ng=1+(N>850?1:0)+(rnd()<.4?1:0);
+  if(opt.diff==="hard")ng+=1;
   for(var g=0;g<ng;g++){
     for(var att=0;att<60;att++){
       var s0=Math.floor(N*(.2+.55*g/ng)+(rnd()-.5)*N*.12);
@@ -387,7 +419,7 @@ var C_ROAD1=[.60,.62,.67],C_ROAD2=[.54,.56,.62],C_UND=[.22,.24,.29],C_SKI=[.30,.
     C_PYL=[.28,.30,.36],C_RED=[.85,.24,.17],C_WHT=[.93,.90,.84],
     C_YEL=[.91,.72,.29],C_BLK=[.12,.12,.14],C_CHK1=[.95,.93,.88],C_CHK2=[.10,.11,.15];
 function buildTrack(){
-  var T=TRK,B=NB(),hw=4.5,KS=8,Wd=9,i,j,q;
+  var T=TRK,B=NB(),hw=HW,KS=8,Wd=hw*2,i,j,q;
   function ring(ix){
     var rv=rightOf(T.H[ix]),sb=Math.sin(T.B[ix]),p=[],pb=[];
     for(var jj=0;jj<=KS;jj++){
@@ -413,7 +445,6 @@ function buildTrack(){
       var hh2=(T.Y[i]-.6)/2,rv2=rightOf(T.H[i]);
       box(B,[T.X[i],hh2,T.Z[i]],[rv2[0],0,rv2[1]],[Math.sin(T.H[i]),0,Math.cos(T.H[i])],
         0,0,0,.5,hh2,.5,C_PYL);}}
-  /* start gantry — stands ON the elevated track surface */
   var ix=2,rv3=rightOf(T.H[ix]);
   var r=[rv3[0],0,rv3[1]],f=[Math.sin(T.H[ix]),0,Math.cos(T.H[ix])],
       C=[T.X[ix],T.Y[ix],T.Z[ix]];
@@ -483,7 +514,6 @@ function buildCar(){
   box(B,[0,0,0],r,f,-.45,.88,-1.6,.05,.14,.06,sh(.7));
   box(B,[0,0,0],r,f,.45,.88,-1.6,.05,.14,.06,sh(.7));
   carBody=bake(B);
-  /* round wheels: 8-sided cylinders, axis along x */
   var W=NB(),WR=.34,WW=.16,WSEG=8,k;
   function wring(x){var o=[];
     for(var q=0;q<=WSEG;q++){var th=q/WSEG*TAU;
@@ -498,21 +528,28 @@ function buildCar(){
 }
 
 /* ================= cars, physics, AI ================= */
-var HW=4.5;
-var SKILLS={
-  rookie:{corner:.62,noise:1.5,react:.55,sp:.78,label:"ROOKIE"},
-  amateur:{corner:.78,noise:.95,react:.34,sp:.88,label:"AMATEUR"},
-  pro:{corner:.90,noise:.50,react:.20,sp:.96,label:"PRO"},
-  expert:{corner:1.0,noise:.18,react:.10,sp:1.03,label:"EXPERT"}};
-var CPU_DEFS=[["KESTREL",[.10,.66,.60]],["MANTIS",[.92,.66,.12]],
-  ["VIPER",[.52,.32,.76]],["PUMA",[.95,.42,.16]],["KOMODO",[.25,.45,.85]]];
-function makeCar(isPlayer,tint,name,skill){
-  return {isPlayer:isPlayer,tint:tint,name:name,skill:skill,
+var CPU_DEFS=[
+  ["KESTREL",[.10,.66,.60]],["MANTIS",[.92,.66,.12]],
+  ["VIPER",[.52,.32,.76]],["PUMA",[.95,.42,.16]],
+  ["KOMODO",[.25,.45,.85]],["FALCON",[.20,.75,.30]],
+  ["COBRA",[.80,.20,.40]],["RAVEN",[.40,.40,.60]]];
+
+function makeCar(isPlayer,tint,name){
+  var rng=Math.random;
+  var agg=isPlayer?0.5:(0.3+rng()*0.6);
+  var pref=isPlayer?0.5:(0.2+rng()*0.7);
+  var pat=isPlayer?0.5:(0.3+rng()*0.5);
+  var boost=isPlayer?1.0:(0.88+rng()*0.22)*CPU_BOOST;
+  var vBase=isPlayer?47:43+rng()*5;
+  var vmax=vBase*boost;
+  return {isPlayer:isPlayer,tint:tint,name:name,
+    agg:agg,pref:pref,pat:pat,boost:boost,
     s:0,lat:0,v:0,vy:0,y:5,air:false,steer:0,th:0,br:0,
     lap:0,lapStart:0,lastLap:null,bestLap:null,fin:false,finT:null,
-    spin:0,safe:0,safeT:0,resp:0,react:0,ph:Math.random()*9,
+    spin:0,safe:0,safeT:0,resp:0,react:0,ph:rng()*9,
     hold:false,allowRev:isPlayer,sR:0,sP:0,
-    vmax:isPlayer?47:45*skill.sp+(Math.random()*2.4-1.2)};}
+    vmax:vmax};
+}
 function placeGrid(){
   cars.forEach(function(c,slot){
     c.s=TRK.L-10-slot*7;
@@ -521,7 +558,7 @@ function placeGrid(){
     c.y=tr.y;c.vy=0;c.v=0;c.air=false;c.steer=0;c.th=0;c.br=0;
     c.lap=0;c.fin=false;c.finT=null;c.lastLap=null;c.bestLap=null;c.lapStart=0;
     c.safe=c.s;c.safeT=0;c.resp=0;c.spin=0;c.sR=-tr.b;c.sP=-Math.atan(tr.slope);
-    c.react=.15+Math.random()*(c.skill?c.skill.react:.3);});}
+    c.react=.15+Math.random()*(c.isPlayer?.3:.2);});}
 function respawn(c){
   c.s=c.safe;c.lat=0;c.v=0;c.air=false;c.y=sample(c.s).y;
   var tr=sample(c.s);c.vy=tr.slope*c.v;c.resp=1.6;
@@ -544,6 +581,13 @@ function stepCar(c,dt){
   var sEff=c.steer*7.5*clamp(Math.abs(c.v)/11,0,1)*(c.v<0?-1:1)*(c.air?.3:1);
   var drift=c.air?0:tr.k*c.v*c.v*.15;
   c.lat+=(sEff+drift)*dt;
+  if(!c.air&&c.isPlayer&&ASSIST>0){
+    var edgeDist=HW-Math.abs(c.lat);
+    if(edgeDist<1.5){
+      var pull=ASSIST*(1.5-edgeDist)*.8*(c.v/c.vmax);
+      c.lat+=-Math.sign(c.lat)*pull*dt*8;
+    }
+  }
   if(c.air){
     c.vy-=9.8*dt;c.y+=c.vy*dt;
     if(!tr.gap&&Math.abs(c.lat)<=HW+.45&&c.y<=tr.y){
@@ -576,25 +620,34 @@ function stepCar(c,dt){
   if(c.resp>0)c.resp-=dt;
 }
 function aiControl(c,t,dt){
-  var sk=c.skill;
   var la=c.v*c.v/38,kmax=0,ds=[8,16,26,38,la],i;
   for(i=0;i<ds.length;i++)kmax=Math.max(kmax,Math.abs(sampleK(c.s+ds[i])));
-  var latA=10.5+7.5*sk.corner;
+  var latA=(9+c.pat*3)*c.pref+(8*(1-c.pref));
   var vT=Math.min(c.vmax,Math.sqrt(latA/Math.max(kmax,.0007)));
   for(i=0;i<TRK.gaps.length;i++){var g=TRK.gaps[i],d=wrapF(g.s0-c.s);
-    if(d>-2&&d<55)vT=Math.max(vT,Math.min(c.vmax,g.vmin+3));}
-  var latT=clamp(-sampleK(c.s+14)*150,-2.6,2.6);
+    if(d>-2&&d<55)vT=Math.max(vT,Math.min(c.vmax,g.vmin+3+c.agg*2));}
+  var optLine=-sampleK(c.s+14)*150;
+  var myOffset=Math.sin(c.ph+t*.3)*c.pref*1.8;
+  var latT=clamp(optLine*c.pref+myOffset*(1-c.pref),-2.8,2.8);
   for(i=0;i<cars.length;i++){var o=cars[i];
     if(o===c)continue;
     var da=wrapF(o.s-c.s);
-    if(da>2&&da<26&&Math.abs(o.lat-c.lat)<2.2&&Math.abs(o.v-c.v)<9)
-      latT=c.lat-Math.sign(o.lat-c.lat||1)*2.4;}
-  latT=clamp(latT+Math.sin(t*.9+c.ph)*sk.noise*.6,-3.6,3.6);
-  vT*=1+Math.sin(t*1.7+c.ph*2)*.03*sk.noise;
+    if(da>1&&da<28&&Math.abs(o.lat-c.lat)<2.4){
+      var side=Math.sign(o.lat-c.lat||1);
+      if(c.agg>.5&&Math.abs(o.v-c.v)<12&&da<15){
+        latT=-side*3.2;
+      }else if(c.agg<.5&&Math.abs(o.v-c.v)>8){
+        latT=c.lat-side*2.6;
+      }
+    }}
+  latT=clamp(latT+Math.sin(t*(.7+c.agg*.5)+c.ph)*((1-c.pref)*.9+.2),-3.6,3.6);
+  vT*=1+Math.sin(t*(1.2+c.agg*.8)+c.ph*2)*.03*(1-c.pref+.1);
   if(state==="race"&&raceT<c.react)vT=0;
-  var al=1-Math.exp(-dt/(sk.react*.25+.12));
+  var al=1-Math.exp(-dt/(c.react*.25+.12));
   c.steer+=(clamp((latT-c.lat)*.9,-1,1)-c.steer)*al;
-  var cmd=vT>c.v+.4?1:(vT<c.v-1.2?-1:0);
+  var vGap=vT-c.v;
+  var brakeThresh=-1.5+c.pat*.5;
+  var cmd=vGap>.4?1:(vGap<brakeThresh?-1:0);
   c.th=clamp(c.th+((cmd>0?1:0)-c.th)*al*1.4,0,1);
   c.br=cmd<0?1:0;
 }
@@ -644,8 +697,127 @@ function beep(f,d,g){
   o.connect(gn);gn.connect(master);o.start();o.stop(AC.currentTime+d);}catch(e){}}
 function sfxThud(){beep(70,.12,.3);}
 
+/* ================= EDM Music Synthesizer ================= */
+var musicEnabled=true,musicPlaying=false,musicInterval=null;
+var BPM=128,beatTime=60/BPM;
+var musicStep=0;
+var CHORDS=[
+  [0,4,7],[7,11,14],[9,12,16],[5,9,12]
+];
+var BASS_PATTERNS=[[0,-12,-7,-12],[0,0,-12,-7],[-12,0,-7,0]];
+var LEAD_PATTERNS=[[0,4,7,12,11,7,4,0],[0,7,12,16,12,7,4,7],[12,16,19,16,12,7,4,0],[4,7,12,16,19,16,12,7]];
+var KICK_PATTERN= [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0];
+var SNARE_PATTERN=[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0];
+var HH_PATTERN=  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+var OHH_PATTERN= [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0];
+
+function midiToFreq(m){return 440*Math.pow(2,(m-69)/12);}
+function playNote(freq,dur,type,vol,attack,release){
+  if(!AC||muted||!musicEnabled)return;
+  try{
+    var o=AC.createOscillator(),g=AC.createGain(),f=AC.createBiquadFilter();
+    o.type=type||"sine";o.frequency.value=freq;
+    f.type="lowpass";f.frequency.value=freq*4+500;
+    g.gain.value=0;
+    var t=AC.currentTime;
+    g.gain.linearRampToValueAtTime(vol||.1,t+(attack||.01));
+    g.gain.linearRampToValueAtTime(vol||.1,t+dur-(release||.05));
+    g.gain.linearRampToValueAtTime(0,t+dur);
+    o.connect(f);f.connect(g);g.connect(master);
+    o.start(t);o.stop(t+dur+.05);
+  }catch(e){}}
+function playKick(vol){
+  if(!AC||muted||!musicEnabled)return;
+  try{
+    var o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;
+    o.type="sine";
+    o.frequency.setValueAtTime(150,t);
+    o.frequency.exponentialRampToValueAtTime(40,t+.12);
+    g.gain.setValueAtTime(vol||.4,t);
+    g.gain.exponentialRampToValueAtTime(.001,t+.18);
+    o.connect(g);g.connect(master);o.start(t);o.stop(t+.2);
+    var n=AC.createBufferSource(),buf=AC.createBuffer(1,AC.sampleRate*.01,AC.sampleRate);
+    var d=buf.getChannelData(0);
+    for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
+    n.buffer=buf;var ng=AC.createGain();ng.gain.value=vol||.3;
+    n.connect(ng);ng.connect(master);n.start(t);
+  }catch(e){}}
+function playSnare(vol){
+  if(!AC||muted||!musicEnabled)return;
+  try{
+    var t=AC.currentTime;
+    var o=AC.createOscillator(),og=AC.createGain();
+    o.type="triangle";o.frequency.value=180;
+    og.gain.setValueAtTime(vol||.2,t);
+    og.gain.exponentialRampToValueAtTime(.001,t+.1);
+    o.connect(og);og.connect(master);o.start(t);o.stop(t+.12);
+    var n=AC.createBufferSource(),buf=AC.createBuffer(1,AC.sampleRate*.08,AC.sampleRate);
+    var d=buf.getChannelData(0);
+    for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1);
+    n.buffer=buf;var ng=AC.createGain(),nf=AC.createBiquadFilter();
+    nf.type="highpass";nf.frequency.value=1500;
+    ng.gain.setValueAtTime(vol||.15,t);
+    ng.gain.exponentialRampToValueAtTime(.001,t+.12);
+    n.connect(nf);nf.connect(ng);ng.connect(master);n.start(t);
+  }catch(e){}}
+function playHat(vol,open){
+  if(!AC||muted||!musicEnabled)return;
+  try{
+    var t=AC.currentTime,dur=open?.12:.03;
+    var n=AC.createBufferSource(),buf=AC.createBuffer(1,AC.sampleRate*dur*2,AC.sampleRate);
+    var d=buf.getChannelData(0);
+    for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,open?1:3);
+    n.buffer=buf;var g=AC.createGain(),f=AC.createBiquadFilter();
+    f.type="highpass";f.frequency.value=6000;
+    g.gain.setValueAtTime(vol||.08,t);
+    g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    n.connect(f);f.connect(g);g.connect(master);n.start(t);
+  }catch(e){}}
+function musicTick(){
+  if(!musicEnabled||muted||!AC)return;
+  var step=musicStep%16;
+  var chordIdx=Math.floor(musicStep/16)%4;
+  var chord=CHORDS[chordIdx];
+  var bassPat=BASS_PATTERNS[chordIdx%BASS_PATTERNS.length];
+  var leadPat=LEAD_PATTERNS[chordIdx%LEAD_PATTERNS.length];
+  var subStep=Math.floor(step/4);
+  var eighthSub=step%4;
+  if(KICK_PATTERN[step])playKick(.35);
+  if(SNARE_PATTERN[step])playSnare(.2);
+  if(HH_PATTERN[step])playHat(.06,false);
+  if(OHH_PATTERN[step])playHat(.05,true);
+  if(eighthSub===0){
+    var bassNote=60+chord[0]+bassPat[subStep]-24;
+    playNote(midiToFreq(bassNote),beatTime*.9,"sawtooth",.15,.01,.1);
+  }
+  if(step%2===0){
+    var leadNote=60+chord[0]+leadPat[Math.floor(step/2)%leadPat.length]+12;
+    playNote(midiToFreq(leadNote),beatTime*.4,"square",.06,.005,.05);
+  }
+  if(step===0){
+    for(var i=0;i<chord.length;i++){
+      playNote(midiToFreq(60+chord[i]),beatTime*3.8,"sine",.04,.2,.3);
+    }
+  }
+  musicStep++;
+}
+function startMusic(){
+  if(musicPlaying||!musicEnabled)return;
+  sfxInit();
+  if(!AC)return;
+  musicPlaying=true;
+  musicStep=0;
+  var stepDur=beatTime/4;
+  musicInterval=setInterval(musicTick,stepDur*1000);
+}
+function stopMusic(){
+  if(!musicPlaying)return;
+  musicPlaying=false;
+  if(musicInterval){clearInterval(musicInterval);musicInterval=null;}
+}
+
 /* ================= state ================= */
-var opt={opp:3,skill:"amateur",laps:3};
+var opt={opp:3,diff:"normal",laps:3,music:true};
 var cars=[],player=null,demoCar=null;
 var state="menu",stateBeforePause="race",raceT=0,countT=0,camSnap=true,camMode=0;
 var keys={up:false,dn:false,lt:false,rt:false};
@@ -671,14 +843,16 @@ function ranking(){
 function startRace(){
   try{
     sfxInit();if(AC&&AC.resume)AC.resume();
+    var df=DIFFS[opt.diff];
+    HW=df.hw;ASSIST=df.assist;CPU_BOOST=df.cpuBoost;
     var sv=seedEl.value.trim()||"1";
     var num=/^\d+$/.test(sv)?parseInt(sv,10):hashStr(sv);
     TRK=genTrack(num);buildTrack();
     cars=[];
-    var sk=SKILLS[opt.skill],i;
-    for(i=0;i<opt.opp;i++){var d=CPU_DEFS[i%CPU_DEFS.length];
-      cars.push(makeCar(false,d[1],d[0],sk));}
-    player=makeCar(true,[.91,.25,.18],"YOU",null);
+    for(var i=0;i<opt.opp;i++){
+      var d=CPU_DEFS[i%CPU_DEFS.length];
+      cars.push(makeCar(false,d[1],d[0]));}
+    player=makeCar(true,[.91,.25,.18],"YOU");
     cars.push(player);
     placeGrid();
     raceT=0;countT=3.0;state="count";camSnap=true;
@@ -687,6 +861,7 @@ function startRace(){
     hudEl.classList.remove("hidden");countEl.classList.remove("hidden");
     setCount("3");beep(440);
     hintEl.textContent="SEED "+(num%100000)+" · C CAMERA · R RECOVER · M SOUND · ESC PAUSE";
+    if(opt.music){startMusic();}
   }catch(e){fatal(e);}}
 function toMenu(){
   state="menu";
@@ -694,12 +869,17 @@ function toMenu(){
   pauseEl.classList.add("hidden");hudEl.classList.add("hidden");
   countEl.classList.add("hidden");
   if(AC&&engG)engG.gain.setTargetAtTime(0,AC.currentTime,.1);
-  demoCar=makeCar(false,[.8,.82,.9],"GHOST",SKILLS.pro);
+  stopMusic();
+  demoCar=makeCar(false,[.8,.82,.9],"GHOST");
   demoCar.s=0;demoCar.lat=0;demoCar.y=sample(0).y;
-  cars=[demoCar];player=null;camSnap=true;}
+  cars=[demoCar];player=null;camSnap=true;
+  HW=DIFFS.normal.hw;ASSIST=DIFFS.normal.assist;CPU_BOOST=DIFFS.normal.cpuBoost;
+  TRK=genTrack(7420523);buildTrack();
+}
 function showResults(){
   if(state!=="race")return;
   state="over";
+  stopMusic();
   var sorted=cars.slice().sort(function(a,b){
     if(a.fin&&b.fin)return a.finT-b.finT;
     if(a.fin)return -1;if(b.fin)return 1;
@@ -774,7 +954,6 @@ function frame(now){
         stepCar(c,h);}
       collisions(h);acc-=h;}
     for(var q=0;q<cars.length;q++)updateCarVisual(cars[q],dt);}
-  /* camera */
   var focus=state==="menu"?demoCar:player,fovT=62;
   var effMode=(state==="menu")?0:camMode;
   var fpvView=null;
@@ -803,7 +982,6 @@ function frame(now){
       fovT=(state==="menu"?58:effMode===1?66:63)+Math.abs(focus.v)*.14;}
     camSnap=false;}
   fov+=(fovT-fov)*Math.min(1,dt*4);
-  /* draw */
   gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   if(TRK){
     gProj=m4Persp(fov,cv.width/cv.height,.5,1500);
@@ -845,8 +1023,11 @@ addEventListener("keydown",function(e){
   if(e.code==="KeyR"&&state==="race"&&player)respawn(player);
   if(e.code==="KeyC"&&(state==="race"||state==="count"||state==="over")){
     camMode=(camMode+1)%3;toast(CAM_NAMES[camMode],800);}
-  if(e.code==="KeyM"){muted=!muted;toast(muted?"SOUND OFF":"SOUND ON",800);
-    if(master)master.gain.value=muted?0:.5;}
+  if(e.code==="KeyM"){
+    muted=!muted;toast(muted?"SOUND OFF":"SOUND ON",800);
+    if(master)master.gain.value=muted?0:.5;
+    if(muted)stopMusic();else if(state==="race"&&opt.music)startMusic();
+  }
   if(e.code==="Escape"){
     if(state==="race"||state==="count")enterPause();
     else if(state==="pause")exitPause();}});
@@ -854,6 +1035,7 @@ addEventListener("keyup",function(e){if(keymap[e.code])keys[keymap[e.code]]=fals
 document.addEventListener("visibilitychange",function(){
   if(document.hidden)enterPause();});
 function seg(el,vals,cur,onSel){
+  el.innerHTML="";
   vals.forEach(function(v){
     var b=document.createElement("button");
     b.textContent=v.label!=null?v.label:String(v.value);
@@ -863,13 +1045,19 @@ function seg(el,vals,cur,onSel){
       for(var i=0;i<all.length;i++)all[i].classList.remove("on");
       b.classList.add("on");onSel(v.value);};
     el.appendChild(b);});}
+seg(document.getElementById("dfSeg"),
+  Object.keys(DIFFS).map(function(k){return {value:k,label:DIFFS[k].label};}),
+  opt.diff,function(v){opt.diff=v;});
 seg(document.getElementById("opSeg"),
   [0,1,2,3,4,5].map(function(v){return {value:v};}),opt.opp,function(v){opt.opp=v;});
-seg(document.getElementById("skSeg"),
-  Object.keys(SKILLS).map(function(k){return {value:k,label:SKILLS[k].label};}),
-  opt.skill,function(v){opt.skill=v;});
 seg(document.getElementById("lpSeg"),
   [1,2,3,4,5].map(function(v){return {value:v};}),opt.laps,function(v){opt.laps=v;});
+seg(document.getElementById("muSeg"),
+  [{value:true,label:"ON"},{value:false,label:"OFF"}],opt.music,function(v){opt.music=v;
+    if(!v)stopMusic();else if(state==="race")startMusic();});
+seg(document.getElementById("pmMuSeg"),
+  [{value:true,label:"ON"},{value:false,label:"OFF"}],opt.music,function(v){opt.music=v;
+    if(!v)stopMusic();else if(state==="race")startMusic();});
 document.getElementById("dice").onclick=function(){
   seedEl.value=String(1+(Math.random()*99999|0));toast("NEW SEED",600);};
 document.getElementById("start").onclick=startRace;
@@ -886,7 +1074,16 @@ if("ontouchstart"in window){
     var on=function(e){e.preventDefault();keys[key]=true;};
     var off=function(e){e.preventDefault();keys[key]=false;};
     el.addEventListener("pointerdown",on);el.addEventListener("pointerup",off);
-    el.addEventListener("pointerleave",off);el.addEventListener("pointercancel",off);});}
+    el.addEventListener("pointerleave",off);el.addEventListener("pointercancel",off);});
+  document.getElementById("tCam").addEventListener("pointerdown",function(e){
+    e.preventDefault();
+    if(state==="race"||state==="count"||state==="over"){
+      camMode=(camMode+1)%3;toast(CAM_NAMES[camMode],800);}});
+  document.getElementById("tPause").addEventListener("pointerdown",function(e){
+    e.preventDefault();
+    if(state==="race"||state==="count")enterPause();
+    else if(state==="pause")exitPause();});
+}
 
 /* ================= boot ================= */
 try{
