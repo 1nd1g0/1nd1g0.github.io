@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>Grid Lemmings — Fixed Climb Top Transition</title>
+<title>Grid Lemmings — Camera, Home, Fullscreen</title>
 <style>
   html,body{
     margin:0;padding:0;height:100%;overflow:hidden;
@@ -49,12 +49,18 @@
     position:relative;min-height:0;
     display:flex;align-items:center;justify-content:center;
     background:#000;
+    overflow:hidden;
   }
 
   #c{
+    display:block;
+    width:100%;
+    height:100%;
     image-rendering:pixelated;
     image-rendering:crisp-edges;
-    background:#000;cursor:default;
+    background:#000;
+    cursor:default;
+    touch-action:none;
   }
 
   #msg{
@@ -68,9 +74,38 @@
     position:absolute;top:8px;left:8px;z-index:18;pointer-events:none;
     background:rgba(0,0,0,.72);border:1px solid #466;border-radius:8px;
     padding:8px 10px;font-size:11px;line-height:1.5;color:#cfe8cf;
-    max-width:230px;
+    max-width:260px;
   }
   #cheat b{color:#9fd89f;}
+
+  #overlay{
+    position:absolute;
+    bottom:10px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:17;
+    display:none;
+    gap:8px;
+    padding:6px;
+    border-radius:8px;
+    background:rgba(0,0,0,.58);
+    border:1px solid #577;
+    pointer-events:none;
+  }
+
+  #overlay button{
+    pointer-events:auto;
+    background:#142014;color:#bfe8bf;
+    border:1px solid #577;
+    padding:6px 10px;
+    font-family:monospace;font-size:12px;border-radius:6px;
+    cursor:pointer;
+    user-select:none;
+  }
+
+  #overlay button:active{
+    transform:translateY(1px);
+  }
 
   #bar{
     flex:0 0 auto;
@@ -123,7 +158,7 @@
       font-size: 10px !important;
     }
     
-    #top .box { display: none !important; } /* Hide seed/grid inputs to save space */
+    #top .box { display: none !important; }
     #hud { font-size: 11px !important; gap: 8px !important; }
 
     #stage {
@@ -131,7 +166,7 @@
       height: 100vh !important;
       width: auto !important;
       margin-top: 0 !important;
-      padding-top: 26px !important; /* Space for absolute top bar */
+      padding-top: 26px !important;
       box-sizing: border-box !important;
     }
 
@@ -201,6 +236,17 @@
     #cheat {
       display: none !important;
     }
+
+    #overlay {
+      bottom: 4px !important;
+      padding: 4px !important;
+      gap: 4px !important;
+    }
+
+    #overlay button {
+      font-size: 10px !important;
+      padding: 4px 7px !important;
+    }
   }
 </style>
 </head>
@@ -249,15 +295,25 @@
   <div id="cheat">
     <b>KEYBOARD / CONTROLS</b><br>
     1..8 — select skill<br>
-    Click / Tap — assign skill<br>
+    Tap lemming — assign skill<br>
+    Drag empty area — pan<br>
+    Wheel / pinch — zoom<br>
+    + / - — zoom in / out<br>
+    0 — reset view<br>
+    Arrows — pan, Shift = fast<br>
     P — pause / resume<br>
     F — toggle speed<br>
-    SPACE (hold) — fast forward<br>
+    SPACE hold — fast forward<br>
     R — restart level<br>
     N — next / retry<br>
     M — sound on/off<br>
     H — toggle this help<br>
-    FAST ▶▶ button can also be held
+    HOME / FULLSCREEN appear on title and pause
+  </div>
+
+  <div id="overlay">
+    <button id="homeBtn">HOME</button>
+    <button id="fsBtn">FULLSCREEN</button>
   </div>
 </div>
 
@@ -360,13 +416,14 @@ function fnv1a(str){
 // DOM / canvas
 // =========================================================
 const canvas = document.getElementById("c");
-canvas.width = GW;
-canvas.height = GH;
 const ctx = canvas.getContext("2d");
 
 const stage = document.getElementById("stage");
 const msgEl = document.getElementById("msg");
 const cheatEl = document.getElementById("cheat");
+const overlayEl = document.getElementById("overlay");
+const homeBtn = document.getElementById("homeBtn");
+const fsBtn = document.getElementById("fsBtn");
 
 const lvEl = document.getElementById("lv");
 const tmEl = document.getElementById("tm");
@@ -399,28 +456,190 @@ const nextBtn = document.getElementById("nextBtn");
 const muteBtn = document.getElementById("muteBtn");
 
 const bgCanvas = document.createElement("canvas");
-bgCanvas.width = GW;
-bgCanvas.height = GH;
 const bgCtx = bgCanvas.getContext("2d");
 
-function fitCanvas(){
-  const w = stage.clientWidth;
-  const h = stage.clientHeight;
-  if(!w || !h) return;
+// =========================================================
+// Camera / viewport
+// =========================================================
+let viewW = 0;
+let viewH = 0;
+let dpr = 1;
+let cameraInitialized = false;
 
-  const ar = GW / GH;
-  let cw = w;
-  let ch = w / ar;
+const cam = { x: 0, y: 0, zoom: 1 };
+const MIN_ZOOM = 0.18;
+const MAX_ZOOM = 14;
 
-  if(ch > h){
-    ch = h;
-    cw = h * ar;
+function screenToWorld(sx, sy){
+  return {
+    x: cam.x + sx / cam.zoom,
+    y: cam.y + sy / cam.zoom
+  };
+}
+
+function getCanvasScreen(e){
+  const r = canvas.getBoundingClientRect();
+  return {
+    x: e.clientX - r.left,
+    y: e.clientY - r.top
+  };
+}
+
+function clampCamera(){
+  if(viewW <= 0 || viewH <= 0 || cam.zoom <= 0) return;
+
+  const vw = viewW / cam.zoom;
+  const vh = viewH / cam.zoom;
+
+  const padX = Math.max(TILE * 2, GW * 0.18);
+  const padY = Math.max(TILE * 2, GH * 0.18);
+
+  let minX = -padX;
+  let maxX = GW + padX - vw;
+
+  let minY = -padY;
+  let maxY = GH + padY - vh;
+
+  if(minX > maxX){
+    cam.x = (GW - vw) / 2;
+  }else{
+    cam.x = clamp(cam.x, minX, maxX);
   }
 
-  canvas.style.width = Math.floor(cw) + "px";
-  canvas.style.height = Math.floor(ch) + "px";
+  if(minY > maxY){
+    cam.y = (GH - vh) / 2;
+  }else{
+    cam.y = clamp(cam.y, minY, maxY);
+  }
 }
-window.addEventListener("resize", fitCanvas);
+
+function fitCamera(){
+  if(viewW <= 0 || viewH <= 0 || GW <= 0 || GH <= 0) return;
+
+  const z = Math.min(viewW / GW, viewH / GH);
+  cam.zoom = clamp(z, MIN_ZOOM, MAX_ZOOM);
+
+  cam.x = GW / 2 - viewW / (2 * cam.zoom);
+  cam.y = GH / 2 - viewH / (2 * cam.zoom);
+
+  clampCamera();
+  cameraInitialized = true;
+}
+
+function resetCamera(){
+  fitCamera();
+}
+
+function resizeCanvas(){
+  const w = Math.max(1, Math.floor(canvas.clientWidth || stage.clientWidth));
+  const h = Math.max(1, Math.floor(canvas.clientHeight || stage.clientHeight));
+
+  dpr = window.devicePixelRatio || 1;
+  viewW = w;
+  viewH = h;
+
+  canvas.width = Math.floor(w * dpr);
+  canvas.height = Math.floor(h * dpr);
+
+  if(!cameraInitialized){
+    fitCamera();
+  }else{
+    clampCamera();
+  }
+}
+
+function setZoomAt(sx, sy, newZoom){
+  newZoom = clamp(newZoom, MIN_ZOOM, MAX_ZOOM);
+  if(!isFinite(newZoom) || newZoom <= 0) return;
+
+  const before = screenToWorld(sx, sy);
+  cam.zoom = newZoom;
+  const after = screenToWorld(sx, sy);
+
+  cam.x += before.x - after.x;
+  cam.y += before.y - after.y;
+
+  clampCamera();
+}
+
+function zoomAt(sx, sy, factor){
+  if(!isFinite(factor) || factor <= 0) return;
+  setZoomAt(sx, sy, cam.zoom * factor);
+}
+
+function zoomAtCenter(factor){
+  zoomAt(viewW / 2, viewH / 2, factor);
+}
+
+function panByWorld(dx, dy){
+  cam.x += dx;
+  cam.y += dy;
+  clampCamera();
+}
+
+window.addEventListener("resize", resizeCanvas);
+window.addEventListener("orientationchange", () => setTimeout(resizeCanvas, 80));
+
+// =========================================================
+// Fullscreen helpers
+// =========================================================
+function isFullscreen(){
+  return !!(
+    document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.msFullscreenElement
+  );
+}
+
+function toggleFullscreen(){
+  const el = document.documentElement;
+
+  if(!isFullscreen()){
+    const req =
+      el.requestFullscreen ||
+      el.webkitRequestFullscreen ||
+      el.msRequestFullscreen;
+
+    if(req){
+      try{
+        const p = req.call(el);
+        if(p && p.catch) p.catch(()=>{});
+      }catch(_){}
+    }
+  }else{
+    const exit =
+      document.exitFullscreen ||
+      document.webkitExitFullscreen ||
+      document.msExitFullscreen;
+
+    if(exit){
+      try{
+        const p = exit.call(document);
+        if(p && p.catch) p.catch(()=>{});
+      }catch(_){}
+    }
+  }
+}
+
+["fullscreenchange","webkitfullscreenchange","msfullscreenchange"].forEach(ev=>{
+  document.addEventListener(ev, ()=>{
+    updateMenus();
+    setTimeout(resizeCanvas, 60);
+  });
+});
+
+homeBtn.addEventListener("click", e=>{
+  e.preventDefault();
+  e.stopPropagation();
+  window.location.href = "https://1nd1g0.github.io/";
+});
+
+fsBtn.addEventListener("click", e=>{
+  e.preventDefault();
+  e.stopPropagation();
+  unlockAudio();
+  toggleFullscreen();
+});
 
 function computeMetrics(){
   GW = COLS * TILE;
@@ -442,12 +661,10 @@ function updateCanvasSize(){
   GW = COLS * TILE;
   GH = ROWS * TILE;
 
-  canvas.width = GW;
-  canvas.height = GH;
   bgCanvas.width = GW;
   bgCanvas.height = GH;
 
-  fitCanvas();
+  resizeCanvas();
 }
 
 // =========================================================
@@ -892,7 +1109,13 @@ function updateParticles(){
 }
 
 function drawParticles(){
+  const vx0 = cam.x - TILE;
+  const vx1 = cam.x + viewW / cam.zoom + TILE;
+  const vy0 = cam.y - TILE;
+  const vy1 = cam.y + viewH / cam.zoom + TILE;
+
   for(const p of particles){
+    if(p.x < vx0 || p.x > vx1 || p.y < vy0 || p.y > vy1) continue;
     const a = clamp(p.life/18,0,1);
     ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${a.toFixed(3)})`;
     ctx.fillRect(p.x-1, p.y-1, 3, 3);
@@ -1963,7 +2186,10 @@ function assignSkill(L, sk){
 
 function findLemAt(px,py){
   let best = null;
-  let bd = Math.max(14, TILE) * Math.max(14, TILE);
+
+  const screenTol = Math.max(10, TILE * 0.85);
+  const worldTol = screenTol / Math.max(0.01, cam.zoom);
+  let bd = worldTol * worldTol;
 
   for(const L of lems){
     if(L.dead || L.counted) continue;
@@ -1984,7 +2210,7 @@ function findLemAt(px,py){
 }
 
 function updateHover(){
-  if(gameState !== "play"){
+  if(gameState !== "play" || paused){
     hoverLem = null;
     canvas.style.cursor = "default";
     return;
@@ -2268,6 +2494,19 @@ function updateCheat(){
   cheatEl.style.display = (gameState === "title" || cheatManual) ? "block" : "none";
 }
 
+let lastOverlayShow = null;
+
+function updateMenus(){
+  const show = gameState === "title" || (gameState === "play" && paused);
+
+  if(show !== lastOverlayShow){
+    overlayEl.style.display = show ? "flex" : "none";
+    lastOverlayShow = show;
+  }
+
+  fsBtn.textContent = isFullscreen() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+}
+
 function updateHUD(){
   lvEl.textContent = levelNum;
   tmEl.textContent = timerEnabled ? formatTime(timeLeft) : "∞";
@@ -2278,6 +2517,7 @@ function updateHUD(){
   lfEl.textContent = Math.max(0, total - spawned + lems.length);
 
   updateCheat();
+  updateMenus();
 }
 
 function updateSkillButtons(){
@@ -2324,6 +2564,7 @@ function togglePause(){
   pauseBtn.textContent = paused ? "RESUME" : "PAUSE";
   if(paused) showMsg("PAUSED", 999999);
   else showMsg("", 0);
+  updateMenus();
 }
 
 function toggleSpeed(){
@@ -2360,6 +2601,18 @@ function updateFastForwardState(){
   ffBtn.classList.toggle("sel", fastForward);
 }
 
+function startPlayFromTitle(){
+  if(gameState !== "title") return;
+
+  unlockAudio();
+  gameState = "play";
+  paused = false;
+  pauseBtn.textContent = "PAUSE";
+  nextBtn.textContent = "NEXT LEVEL";
+  showMsg(`LEVEL ${levelNum}`, 100);
+  updateMenus();
+}
+
 function endLevel(timeout=false){
   if(gameState !== "play") return;
 
@@ -2382,6 +2635,7 @@ function endLevel(timeout=false){
 
   paused = false;
   pauseBtn.textContent = "PAUSE";
+  updateMenus();
 }
 
 function endLevelIfNeeded(){
@@ -2436,22 +2690,22 @@ function loadLevel(n, playNow){
 
   if(gameState === "title"){
     nextBtn.textContent = "START";
-    showMsg("GRID LEMMINGS<br><span style='font-size:15px'>click / tap to start</span>", 999999);
+    showMsg("GRID LEMMINGS<br><span style='font-size:15px'>click / tap to start • drag to pan • wheel/pinch to zoom</span>", 999999);
   }else{
     nextBtn.textContent = "NEXT LEVEL";
     showMsg(`LEVEL ${levelNum}`, 100);
   }
 
+  fitCamera();
   updateHUD();
+  updateMenus();
 }
 
 function advance(){
   unlockAudio();
 
   if(gameState === "title"){
-    gameState = "play";
-    nextBtn.textContent = "NEXT LEVEL";
-    showMsg(`LEVEL ${levelNum}`, 100);
+    startPlayFromTitle();
     return;
   }
 
@@ -2463,33 +2717,38 @@ function advance(){
 }
 
 // =========================================================
-// Input
+// Input: pointer pan / pinch / tap
 // =========================================================
-function canvasPos(e){
-  const r = canvas.getBoundingClientRect();
+const pointers = new Map();
+let tapCandidate = null;
+let dragMode = null;       // null | "pan" | "pinch"
+let panStart = null;
+let pinch = null;
+const TAP_SLOP = 6;
+
+function twoPointerInfo(){
+  const arr = Array.from(pointers.values());
+  if(arr.length < 2) return null;
+
+  const a = arr[0];
+  const b = arr[1];
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+
   return {
-    x: (e.clientX - r.left) * GW / r.width,
-    y: (e.clientY - r.top) * GH / r.height
+    dist: Math.max(1, Math.hypot(dx, dy)),
+    mid: {
+      x: (a.x + b.x) / 2,
+      y: (a.y + b.y) / 2
+    }
   };
 }
 
-canvas.addEventListener("pointermove", e=>{
-  mouse = canvasPos(e);
-});
-
-canvas.addEventListener("pointerleave", ()=>{
-  mouse.x = -999;
-  mouse.y = -999;
-});
-
-canvas.addEventListener("pointerdown", e=>{
-  e.preventDefault();
-  unlockAudio();
+function handleTap(rec){
+  const world = screenToWorld(rec.startX, rec.startY);
 
   if(gameState === "title"){
-    gameState = "play";
-    nextBtn.textContent = "NEXT LEVEL";
-    showMsg(`LEVEL ${levelNum}`, 100);
+    startPlayFromTitle();
     return;
   }
 
@@ -2500,9 +2759,8 @@ canvas.addEventListener("pointerdown", e=>{
 
   if(gameState !== "play" || paused) return;
 
-  mouse = canvasPos(e);
-  const L = findLemAt(mouse.x, mouse.y);
-  if(!L) return;
+  const target = findLemAt(world.x, world.y) || rec.hit;
+  if(!target || target.dead || target.counted) return;
 
   const sk = selectedSkill;
 
@@ -2511,15 +2769,196 @@ canvas.addEventListener("pointerdown", e=>{
     return;
   }
 
-  if(assignSkill(L, sk)){
+  if(assignSkill(target, sk)){
     skillCounts[sk]--;
     updateSkillButtons();
     sfxAssign();
   }else{
     sfxDenied();
   }
+}
+
+canvas.addEventListener("pointerdown", e=>{
+  e.preventDefault();
+  unlockAudio();
+
+  const s = getCanvasScreen(e);
+  const primary = e.button === 0 || e.pointerType !== "mouse";
+
+  const rec = {
+    id: e.pointerId,
+    startX: s.x,
+    startY: s.y,
+    x: s.x,
+    y: s.y,
+    button: e.button,
+    pointerType: e.pointerType,
+    primary,
+    hit: null,
+    moved: false
+  };
+
+  pointers.set(e.pointerId, rec);
+
+  try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
+
+  mouse = screenToWorld(s.x, s.y);
+
+  if(pointers.size === 1){
+    if(!primary){
+      dragMode = "pan";
+      panStart = { sx: s.x, sy: s.y, camX: cam.x, camY: cam.y };
+      tapCandidate = null;
+      canvas.style.cursor = "grabbing";
+    }else{
+      const hit = (gameState === "play" && !paused) ? findLemAt(mouse.x, mouse.y) : null;
+      rec.hit = hit;
+      tapCandidate = rec;
+      dragMode = null;
+      panStart = null;
+    }
+  }else if(pointers.size === 2){
+    tapCandidate = null;
+    dragMode = "pinch";
+    panStart = null;
+
+    const info = twoPointerInfo();
+    if(info){
+      pinch = {
+        prevDist: info.dist,
+        prevMid: info.mid
+      };
+    }
+
+    canvas.style.cursor = "grabbing";
+  }
 });
 
+canvas.addEventListener("pointermove", e=>{
+  const s = getCanvasScreen(e);
+  mouse = screenToWorld(s.x, s.y);
+
+  const rec = pointers.get(e.pointerId);
+  if(rec){
+    rec.x = s.x;
+    rec.y = s.y;
+  }
+
+  if(dragMode === "pinch" && pointers.size >= 2){
+    const info = twoPointerInfo();
+
+    if(info && pinch && pinch.prevDist > 0){
+      const factor = info.dist / pinch.prevDist;
+
+      if(factor > 0 && isFinite(factor)){
+        zoomAt(info.mid.x, info.mid.y, factor);
+      }
+
+      const dx = info.mid.x - pinch.prevMid.x;
+      const dy = info.mid.y - pinch.prevMid.y;
+
+      cam.x -= dx / cam.zoom;
+      cam.y -= dy / cam.zoom;
+      clampCamera();
+
+      pinch.prevDist = info.dist;
+      pinch.prevMid = info.mid;
+    }
+
+    return;
+  }
+
+  if(rec && rec.primary && tapCandidate && tapCandidate.id === rec.id && !tapCandidate.moved){
+    const dist = Math.hypot(rec.x - rec.startX, rec.y - rec.startY);
+
+    if(dist > TAP_SLOP){
+      tapCandidate.moved = true;
+
+      // Pan only when the drag began on a non-lemming target.
+      if(!tapCandidate.hit){
+        dragMode = "pan";
+        panStart = { sx: rec.x, sy: rec.y, camX: cam.x, camY: cam.y };
+        canvas.style.cursor = "grabbing";
+      }
+    }
+  }
+
+  if(dragMode === "pan" && panStart && rec){
+    const dx = rec.x - panStart.sx;
+    const dy = rec.y - panStart.sy;
+
+    cam.x = panStart.camX - dx / cam.zoom;
+    cam.y = panStart.camY - dy / cam.zoom;
+
+    clampCamera();
+  }
+});
+
+function endPointer(e){
+  const rec = pointers.get(e.pointerId);
+  const s = getCanvasScreen(e);
+
+  if(rec){
+    rec.x = s.x;
+    rec.y = s.y;
+  }
+
+  pointers.delete(e.pointerId);
+
+  try{ canvas.releasePointerCapture(e.pointerId); }catch(_){}
+
+  if(pointers.size === 0){
+    if(tapCandidate && tapCandidate.id === e.pointerId && !tapCandidate.moved && tapCandidate.primary){
+      handleTap(tapCandidate);
+    }
+
+    tapCandidate = null;
+    dragMode = null;
+    panStart = null;
+    pinch = null;
+    canvas.style.cursor = "default";
+  }else if(pointers.size === 1){
+    // After pinch ends, do not immediately treat remaining finger as tap/pan.
+    tapCandidate = null;
+    dragMode = null;
+    panStart = null;
+    pinch = null;
+    canvas.style.cursor = "default";
+  }
+}
+
+canvas.addEventListener("pointerup", endPointer);
+canvas.addEventListener("pointercancel", endPointer);
+canvas.addEventListener("lostpointercapture", endPointer);
+
+canvas.addEventListener("pointerleave", ()=>{
+  mouse.x = -999;
+  mouse.y = -999;
+});
+
+canvas.addEventListener("contextmenu", e=>{
+  e.preventDefault();
+});
+
+canvas.addEventListener("wheel", e=>{
+  e.preventDefault();
+  unlockAudio();
+
+  const s = getCanvasScreen(e);
+
+  let delta = e.deltaY;
+  if(e.deltaMode === 1) delta *= 16;
+  else if(e.deltaMode === 2) delta *= 100;
+
+  const sensitivity = e.ctrlKey ? 0.010 : 0.0016;
+  const factor = Math.exp(-delta * sensitivity);
+
+  zoomAt(s.x, s.y, factor);
+}, {passive:false});
+
+// =========================================================
+// UI buttons
+// =========================================================
 document.querySelectorAll("#bar button[data-sk]").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     selectSkill(btn.dataset.sk);
@@ -2636,12 +3075,60 @@ applySizeBtn.addEventListener("click", ()=>{
   loadLevel(levelNum, gameState !== "title");
 });
 
-// Keyboard.
+// =========================================================
+// Keyboard
+// =========================================================
 window.addEventListener("keydown", e=>{
   const tag = e.target;
   if(tag === seedInput || tag === musicSeedInput || tag === colsInput || tag === rowsInput || tag === tileInput) return;
 
   unlockAudio();
+
+  // Camera keyboard controls.
+  if(e.key === "0" || (e.ctrlKey && e.key === "0")){
+    resetCamera();
+    e.preventDefault();
+    return;
+  }
+
+  if(e.key === "+" || e.key === "=" || (e.ctrlKey && (e.key === "+" || e.key === "="))){
+    zoomAtCenter(1.25);
+    e.preventDefault();
+    return;
+  }
+
+  if(e.key === "-" || e.key === "_" || (e.ctrlKey && (e.key === "-" || e.key === "_"))){
+    zoomAtCenter(0.8);
+    e.preventDefault();
+    return;
+  }
+
+  const panPixels = TILE * (e.shiftKey ? 4 : 1);
+  const panWorld = panPixels / Math.max(0.01, cam.zoom);
+
+  if(e.key === "ArrowLeft"){
+    panByWorld(-panWorld, 0);
+    e.preventDefault();
+    return;
+  }
+
+  if(e.key === "ArrowRight"){
+    panByWorld(panWorld, 0);
+    e.preventDefault();
+    return;
+  }
+
+  if(e.key === "ArrowUp"){
+    panByWorld(0, -panWorld);
+    e.preventDefault();
+    return;
+  }
+
+  if(e.key === "ArrowDown"){
+    panByWorld(0, panWorld);
+    e.preventDefault();
+    return;
+  }
 
   if(e.code === "Space"){
     e.preventDefault();
@@ -2682,8 +3169,17 @@ window.addEventListener("blur", ()=>{
 // Rendering
 // =========================================================
 function drawTiles(){
-  for(let y=0; y<ROWS; y++){
-    for(let x=0; x<COLS; x++){
+  if(viewW <= 0 || viewH <= 0 || cam.zoom <= 0) return;
+
+  const x0 = clamp(Math.floor(cam.x / TILE) - 1, 0, COLS - 1);
+  const x1 = clamp(Math.ceil((cam.x + viewW / cam.zoom) / TILE) + 1, 0, COLS - 1);
+  const y0 = clamp(Math.floor(cam.y / TILE) - 1, 0, ROWS - 1);
+  const y1 = clamp(Math.ceil((cam.y + viewH / cam.zoom) / TILE) + 1, 0, ROWS - 1);
+
+  if(x0 > x1 || y0 > y1) return;
+
+  for(let y=y0; y<=y1; y++){
+    for(let x=x0; x<=x1; x++){
       const v = terrain[y*COLS+x];
       if(v === EMPTY) continue;
 
@@ -2763,16 +3259,22 @@ function drawTiles(){
     }
   }
 
+  ctx.lineWidth = 1 / cam.zoom;
   ctx.strokeStyle = "rgba(0,0,0,.08)";
   ctx.beginPath();
-  for(let x=0; x<=COLS; x++){
-    ctx.moveTo(x*TILE+0.5, 0);
-    ctx.lineTo(x*TILE+0.5, GH);
+
+  for(let x=x0; x<=x1+1; x++){
+    const px = x*TILE;
+    ctx.moveTo(px, y0*TILE);
+    ctx.lineTo(px, (y1+1)*TILE);
   }
-  for(let y=0; y<=ROWS; y++){
-    ctx.moveTo(0, y*TILE+0.5);
-    ctx.lineTo(GW, y*TILE+0.5);
+
+  for(let y=y0; y<=y1+1; y++){
+    const py = y*TILE;
+    ctx.moveTo(x0*TILE, py);
+    ctx.lineTo((x1+1)*TILE, py);
   }
+
   ctx.stroke();
 }
 
@@ -2803,6 +3305,15 @@ function drawMarkers(){
 }
 
 function drawLem(L){
+  if(viewW > 0 && viewH > 0 && cam.zoom > 0){
+    const vx0 = cam.x - TILE;
+    const vx1 = cam.x + viewW / cam.zoom + TILE;
+    const vy0 = cam.y - BODY_H - TILE;
+    const vy1 = cam.y + viewH / cam.zoom + TILE;
+
+    if(L.x < vx0 || L.x > vx1 || L.y < vy0 || L.y > vy1) return;
+  }
+
   const bx = Math.round(L.x - BODY_W/2);
   const by = Math.round(L.y - BODY_H);
 
@@ -2924,7 +3435,7 @@ function drawLem(L){
 }
 
 function drawHover(){
-  if(!hoverLem || hoverLem.dead || hoverLem.counted || gameState !== "play") return;
+  if(!hoverLem || hoverLem.dead || hoverLem.counted || gameState !== "play" || paused) return;
 
   const x = Math.round(hoverLem.x - BODY_W/2) - 3;
   const y = Math.round(hoverLem.y - BODY_H) - 3;
@@ -2933,17 +3444,32 @@ function drawHover(){
 
   const pulse = 0.55 + 0.45*Math.sin(gameTime*0.25);
 
+  ctx.lineWidth = 1 / cam.zoom;
   ctx.strokeStyle = `rgba(255,255,255,${pulse.toFixed(3)})`;
-  ctx.lineWidth = 1;
-  ctx.strokeRect(x+0.5, y+0.5, w, h);
+  ctx.strokeRect(x, y, w, h);
 
   ctx.fillStyle = `rgba(255,255,180,${(pulse*0.8).toFixed(3)})`;
-  ctx.fillRect(x + w/2 - 1, y - 4, 2, 2);
+  ctx.fillRect(x + w/2 - 1, y - 4 / cam.zoom, 2 / cam.zoom, 2 / cam.zoom);
 }
 
 function render(){
-  ctx.clearRect(0,0,GW,GH);
-  ctx.drawImage(bgCanvas,0,0);
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  if(viewW <= 0 || viewH <= 0 || cam.zoom <= 0) return;
+
+  ctx.save();
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.scale(cam.zoom, cam.zoom);
+  ctx.translate(-cam.x, -cam.y);
+
+  ctx.imageSmoothingEnabled = false;
+
+  ctx.drawImage(bgCanvas, 0, 0);
 
   drawTiles();
   drawMarkers();
@@ -2954,6 +3480,8 @@ function render(){
   }
 
   drawHover();
+
+  ctx.restore();
 }
 
 // =========================================================
@@ -3009,6 +3537,14 @@ let acc = 0;
 
 function frame(now){
   requestAnimationFrame(frame);
+
+  const sw = Math.floor(canvas.clientWidth || stage.clientWidth);
+  const sh = Math.floor(canvas.clientHeight || stage.clientHeight);
+  const sdpr = window.devicePixelRatio || 1;
+
+  if(sw > 0 && sh > 0 && (sw !== viewW || sh !== viewH || sdpr !== dpr)){
+    resizeCanvas();
+  }
 
   let dt = now - last;
   last = now;
