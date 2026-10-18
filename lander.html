@@ -12,7 +12,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(2,4,12,.84);padding:18px;text-align:center;z-index:20}
 .hidden{display:none!important}
 h1{margin:0;font-size:clamp(28px,7vw,58px);letter-spacing:2px;color:#8ff}
-p{margin:4px 0;max-width:700px;line-height:1.35;font-size:clamp(12px,3.2vw,16px)}
+p{margin:4px 0;max-width:720px;line-height:1.35;font-size:clamp(12px,3.2vw,16px)}
 .btn,button,a.btn{display:inline-block;background:#0b2436;border:1px solid #2bd;color:#dff;padding:9px 14px;margin:4px;font:inherit;border-radius:6px;cursor:pointer;text-decoration:none;touch-action:manipulation}
 .btn:hover,button:hover{background:#12405f}
 .btn.sel{background:#0aa;border-color:#8ff;color:#001018}
@@ -119,10 +119,23 @@ input{background:#001018;border:1px solid #2bd;color:#8ff;font:inherit;padding:6
 <script>
 "use strict";
 
+if (!Math.imul) {
+  Math.imul = function(a, b) {
+    var ah = (a >>> 16) & 0xffff, al = a & 0xffff;
+    var bh = (b >>> 16) & 0xffff, bl = b & 0xffff;
+    return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0)) | 0;
+  };
+}
+if (!window.requestAnimationFrame) {
+  window.requestAnimationFrame = function(cb) { return setTimeout(function() { cb(Date.now()); }, 16); };
+}
+
 var WORLD_W = 2400;
 var WORLD_H = 1500;
 var STEP = 1 / 60;
 var PI2 = Math.PI * 2;
+var FOV = 45 * Math.PI / 180;
+var SHIP_R = 12;
 
 function $(id) { return document.getElementById(id); }
 function clamp(v,a,b) { return v < a ? a : (v > b ? b : v); }
@@ -136,6 +149,24 @@ function normAngle(a) {
   return a;
 }
 function randomSeed() { return (Math.random() * 0xFFFFFFFF) >>> 0; }
+function hasClass(el,c) { return el && (" " + el.className + " ").indexOf(" " + c + " ") >= 0; }
+function setClass(el,c,on) {
+  if (!el) return;
+  if (on) {
+    if (!hasClass(el,c)) el.className = (el.className ? el.className + " " : "") + c;
+  } else {
+    if (hasClass(el,c)) el.className = (" " + el.className + " ").replace(" " + c + " ", " ").replace(/^\s+|\s+$/g, "");
+  }
+}
+function escapeHtml(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function parseSeedValue(v) {
+  v = String(v || "").trim().replace(/^0x/i, "");
+  var n = parseInt(v, 16);
+  if (!isFinite(n) || n < 0) return randomSeed();
+  return n >>> 0;
+}
 
 function mulberry32(a) {
   return function() {
@@ -207,16 +238,16 @@ function fbm2(x,y,seed,oct) {
 
 var QUALITIES = {
   low: {
-    name:"low", renderScale:0.55, dprCap:1, cell:30, chunkCols:32,
-    maxParticles:65, stars:45, zoomMul:0.82, depth:48, exhaustRate:24
+    name:"low", renderScale:0.55, dprCap:1, cell:28, chunkCols:28,
+    maxParticles:65, stars:45, zoomMul:0.82, depth:44, exhaustRate:24
   },
   mid: {
-    name:"mid", renderScale:0.75, dprCap:1.25, cell:20, chunkCols:24,
-    maxParticles:150, stars:85, zoomMul:0.92, depth:64, exhaustRate:45
+    name:"mid", renderScale:0.75, dprCap:1.25, cell:18, chunkCols:22,
+    maxParticles:150, stars:85, zoomMul:0.92, depth:60, exhaustRate:45
   },
   high: {
-    name:"high", renderScale:1, dprCap:1.5, cell:14, chunkCols:18,
-    maxParticles:280, stars:140, zoomMul:1, depth:80, exhaustRate:70
+    name:"high", renderScale:1, dprCap:1.5, cell:13, chunkCols:16,
+    maxParticles:280, stars:140, zoomMul:1, depth:76, exhaustRate:70
   }
 };
 
@@ -234,7 +265,7 @@ function getPreset(mode) {
   if (mode === "auto") mode = detectAuto();
   var src = QUALITIES[mode] || QUALITIES.mid;
   var q = {};
-  for (var k in src) q[k] = src[k];
+  for (var k in src) if (src.hasOwnProperty(k)) q[k] = src[k];
   q.baseRenderScale = q.renderScale;
   return q;
 }
@@ -254,8 +285,18 @@ function mat3Identity(o) {
   return o;
 }
 
+/*
+  Angle convention:
+  angle = 0       -> ship points up, thrust +Y
+  angle > 0       -> ship tilts right, thrust +X/+Y
+  angle < 0       -> ship tilts left,  thrust -X/+Y
+
+  This matrix is a clockwise 2D rotation for positive angles,
+  matching the physics thrust vector (sin(angle), cos(angle)).
+*/
 function setModel(outM, outN, x, y, z, ang) {
   var c = Math.cos(ang), s = Math.sin(ang);
+
   outM[0]=c;  outM[1]=-s; outM[2]=0; outM[3]=0;
   outM[4]=s;  outM[5]=c;  outM[6]=0; outM[7]=0;
   outM[8]=0;  outM[9]=0;  outM[10]=1;outM[11]=0;
@@ -430,16 +471,20 @@ function Renderer(canvas) {
     "  vec3 n = normalize(vNormal);",
     "  if (!gl_FrontFacing) n = -n;",
     "  vec3 tex = vec3(1.0);",
-    "  if (uUseTex > 0.5) tex = texture2D(uTex, vUV * uTexScale).rgb;",
-    "  float up = clamp(n.y * 0.5 + 0.5, 0.0, 1.0);",
-    "  vec3 base = mix(uColor, uColor2, clamp(up * 0.65 + (tex.g - 0.5) * 0.5, 0.0, 1.0));",
-    "  base *= (0.72 + 0.55 * tex.r);",
+    "  float mixF = clamp(n.y * 0.5 + 0.5, 0.0, 1.0) * 0.5;",
+    "  if (uUseTex > 0.5) {",
+    "    tex = texture2D(uTex, vUV * uTexScale).rgb;",
+    "    mixF = clamp(n.y * 0.5 + 0.5, 0.0, 1.0) * 0.65 + (tex.g - 0.5) * 0.5;",
+    "  }",
+    "  vec3 base = mix(uColor, uColor2, clamp(mixF, 0.0, 1.0));",
+    "  if (uUseTex > 0.5) base *= (0.72 + 0.55 * tex.r);",
     "  if (uDepthTint > 0.5) {",
     "    float hf = clamp(vWorld.y / uWorldH, 0.0, 1.0);",
-    "    base *= mix(0.62, 1.12, hf);",
+    "    base *= mix(0.55, 1.15, hf);",
     "  }",
     "  vec3 l = normalize(uLightDir);",
     "  float diff = max(dot(n, l), 0.0);",
+    "  float up = clamp(n.y * 0.5 + 0.5, 0.0, 1.0);",
     "  vec3 amb = mix(uAmbientGround, uAmbientSky, up);",
     "  vec3 col = base * (amb + uLightColor * diff);",
     "  vec3 v = normalize(uCamPos - vWorld);",
@@ -487,7 +532,7 @@ function Renderer(canvas) {
   gl.disable(gl.CULL_FACE);
   gl.clearColor(0.012, 0.016, 0.04, 1);
 
-  this.maxParticleVerts = 340 * 6;
+  this.maxParticleVerts = 360 * 6;
   this.particleData = new Float32Array(this.maxParticleVerts * 10);
   this.particleDynBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, this.particleDynBuffer);
@@ -524,8 +569,7 @@ Renderer.prototype.makeProgram = function(vsSrc, fsSrc, attribNames) {
 
   var obj = { prog: p };
   for (i = 0; i < attribNames.length; i++) obj[attribNames[i]] = gl.getAttribLocation(p, attribNames[i]);
-  var u = p.get ? null : null;
-  var names = [];
+  var names;
   if (attribNames[0] === "aPos") {
     names = ["uProj","uView","uModel","uNormalMat","uTex","uColor","uColor2","uEmissive","uLightDir","uLightColor","uAmbientSky","uAmbientGround","uSpecColor","uSpecPower","uCamPos","uTexScale","uAlpha","uUseTex","uDepthTint","uWorldH"];
   } else {
@@ -560,14 +604,25 @@ Renderer.prototype.createMesh = function(verts, indices) {
   var gl = this.gl;
   var mesh = {
     vbo: gl.createBuffer(),
-    ibo: gl.createBuffer(),
-    count: indices.length,
-    type: this.indexUint ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT
+    ibo: null,
+    count: 0,
+    type: 0
   };
+
   gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
   gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ibo);
-  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+  if (indices && indices.length) {
+    mesh.ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ibo);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+    mesh.count = indices.length;
+    mesh.type = (window.Uint32Array && indices instanceof Uint32Array) ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
+  } else {
+    mesh.count = verts.length / 8;
+    mesh.type = 0;
+  }
+
   return mesh;
 };
 
@@ -626,7 +681,7 @@ Renderer.prototype.beginOpaque = function(proj, view, camPos) {
   gl.uniformMatrix4fv(p.uView, false, view);
   gl.uniform3fv(p.uCamPos, camPos);
 
-  gl.uniform3f(p.uLightDir, 0.25, 0.75, 0.65);
+  gl.uniform3f(p.uLightDir, 0.35, 0.75, 0.55);
   gl.uniform3f(p.uLightColor, 0.92, 0.94, 1.0);
   gl.uniform3f(p.uAmbientSky, 0.24, 0.27, 0.36);
   gl.uniform3f(p.uAmbientGround, 0.08, 0.08, 0.12);
@@ -655,8 +710,12 @@ Renderer.prototype.drawMesh = function(mesh, model, normalMat, mat) {
   gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 32, 12);
   gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 32, 24);
 
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ibo);
-  gl.drawElements(gl.TRIANGLES, mesh.count, mesh.type, 0);
+  if (mesh.ibo) {
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ibo);
+    gl.drawElements(gl.TRIANGLES, mesh.count, mesh.type, 0);
+  } else {
+    gl.drawArrays(gl.TRIANGLES, 0, mesh.count);
+  }
 };
 
 Renderer.prototype.drawParticleBuffer = function(buffer, vertexCount, proj, view, right, up, depthTest) {
@@ -718,35 +777,38 @@ function quad(mb, ax,ay,az, bx,by,bz, cx,cy,cz, dx,dy,dz, nx,ny,nz, au,av, bu,bv
   mb.i.push(b,b+1,b+2, b,b+2,b+3);
 }
 
-function addBoxRot(mb, cx,cy,cz, hx,hy,hz, ang) {
-  var c = Math.cos(ang), s = Math.sin(ang);
-  function rp(x,y) { return [x*c + y*s, -x*s + y*c]; }
-  var p00 = rp(-hx,-hy), p10 = rp(hx,-hy), p11 = rp(hx,hy), p01 = rp(-hx,hy);
-  var x00=p00[0]+cx, y00=p00[1]+cy;
-  var x10=p10[0]+cx, y10=p10[1]+cy;
-  var x11=p11[0]+cx, y11=p11[1]+cy;
-  var x01=p01[0]+cx, y01=p01[1]+cy;
-  var zb = cz - hz, zf = cz + hz;
+function addBox(mb, cx,cy,cz, hx,hy,hz) {
+  var x0 = cx - hx, x1 = cx + hx;
+  var y0 = cy - hy, y1 = cy + hy;
+  var z0 = cz - hz, z1 = cz + hz;
 
-  // front (+z)
-  quad(mb, x00,y00,zf, x10,y10,zf, x11,y11,zf, x01,y01,zf, 0,0,1, x00,y00, x10,y10, x11,y11, x01,y01);
-  // back (-z)
-  quad(mb, x00,y00,zb, x10,y10,zb, x11,y11,zb, x01,y01,zb, 0,0,-1, x00,y00, x10,y10, x11,y11, x01,y01);
-  // right (+x rotated)
-  quad(mb, x10,y10,zb, x10,y10,zf, x11,y11,zf, x11,y11,zb, c,-s,0, y10,zb, y10,zf, y11,zf, y11,zb);
-  // left (-x rotated)
-  quad(mb, x00,y00,zb, x00,y00,zf, x01,y01,zf, x01,y01,zb, -c,s,0, y00,zb, y00,zf, y01,zf, y01,zb);
-  // top (+y rotated)
-  quad(mb, x01,y01,zb, x11,y11,zb, x11,y11,zf, x01,y01,zf, s,c,0, x01,zb, x11,zb, x11,zf, x01,zf);
-  // bottom (-y rotated)
-  quad(mb, x00,y00,zb, x10,y10,zb, x10,y10,zf, x00,y00,zf, -s,-c,0, x00,zb, x10,zb, x10,zf, x00,zf);
+  quad(mb, x0,y0,z1, x1,y0,z1, x1,y1,z1, x0,y1,z1, 0,0,1, x0,y0, x1,y0, x1,y1, x0,y1);
+  quad(mb, x0,y0,z0, x1,y0,z0, x1,y1,z0, x0,y1,z0, 0,0,-1, x0,y0, x1,y0, x1,y1, x0,y1);
+  quad(mb, x1,y0,z0, x1,y0,z1, x1,y1,z1, x1,y1,z0, 1,0,0, z0,y0, z1,y0, z1,y1, z0,y1);
+  quad(mb, x0,y0,z0, x0,y0,z1, x0,y1,z1, x0,y1,z0, -1,0,0, z0,y0, z1,y0, z1,y1, z0,y1);
+  quad(mb, x0,y1,z0, x1,y1,z0, x1,y1,z1, x0,y1,z1, 0,1,0, x0,z0, x1,z0, x1,z1, x0,z1);
+  quad(mb, x0,y0,z0, x1,y0,z0, x1,y0,z1, x0,y0,z1, 0,-1,0, x0,z0, x1,z0, x1,z1, x0,z1);
 }
 
 function finishMesh(renderer, mb) {
-  if (mb.v.length === 0) return null;
-  var verts = new Float32Array(mb.v);
+  if (!mb || mb.v.length === 0 || mb.i.length === 0) return null;
+
+  var maxI = 0;
+  for (var i = 0; i < mb.i.length; i++) if (mb.i[i] > maxI) maxI = mb.i[i];
+
+  // Very old WebGL devices may lack 32-bit indices. Fall back to non-indexed triangles.
+  if (maxI >= 65535 && !renderer.indexUint) {
+    var out = new Float32Array(mb.i.length * 8);
+    var o = 0;
+    for (i = 0; i < mb.i.length; i++) {
+      var src = mb.i[i] * 8;
+      for (var j = 0; j < 8; j++) out[o++] = mb.v[src + j];
+    }
+    return renderer.createMesh(out, null);
+  }
+
   var idx = renderer.indexUint ? new Uint32Array(mb.i) : new Uint16Array(mb.i);
-  return renderer.createMesh(verts, idx);
+  return renderer.createMesh(new Float32Array(mb.v), idx);
 }
 
 function makeNoiseTexture(renderer) {
@@ -810,41 +872,41 @@ function addBillboard(data, off, x,y,z, size, r,g,b,a) {
 
 function buildShipMesh(renderer) {
   var mb = new MeshBuilder();
-  addBoxRot(mb, 0, 0, 0, 9, 6, 8, 0);
-  addBoxRot(mb, 0, 7, 0, 6.5, 4.5, 7, 0);
-  addBoxRot(mb, 0, 8, 7.2, 4, 3, 1.5, 0);
-  addBoxRot(mb, -9.5, -1, 0, 2.5, 4, 5, 0);
-  addBoxRot(mb, 9.5, -1, 0, 2.5, 4, 5, 0);
-  addBoxRot(mb, -10.5, -9, 0, 1.6, 6.5, 1.6, 0.45);
-  addBoxRot(mb, 10.5, -9, 0, 1.6, 6.5, 1.6, -0.45);
-  addBoxRot(mb, -14, -13.5, 0, 4, 1.3, 1.8, 0);
-  addBoxRot(mb, 14, -13.5, 0, 4, 1.3, 1.8, 0);
-  addBoxRot(mb, 0, -8.5, 0, 4, 2.5, 4, 0);
-  addBoxRot(mb, 0, -11, 0, 2.8, 1.8, 2.8, 0);
-  addBoxRot(mb, 5, 12, 0, 0.6, 2.2, 0.6, 0.2);
+  addBox(mb, 0, 0, 0, 8, 5, 7);
+  addBox(mb, 0, 6.5, 0, 5.5, 4, 6);
+  addBox(mb, 0, 7.5, 6.2, 3.2, 2.4, 1.2);
+  addBox(mb, -8.5, -1, 0, 2.2, 3.5, 4.5);
+  addBox(mb, 8.5, -1, 0, 2.2, 3.5, 4.5);
+  addBox(mb, -9.5, -8.5, 0, 1.3, 5.5, 1.3);
+  addBox(mb, 9.5, -8.5, 0, 1.3, 5.5, 1.3);
+  addBox(mb, -11, -12.5, 0, 3.2, 1.1, 1.5);
+  addBox(mb, 11, -12.5, 0, 3.2, 1.1, 1.5);
+  addBox(mb, 0, -7.5, 0, 3.5, 2.2, 3.5);
+  addBox(mb, 0, -10.2, 0, 2.4, 1.5, 2.4);
+  addBox(mb, 4.5, 11, 0, 0.55, 2.0, 0.55);
   return finishMesh(renderer, mb);
 }
 
 function buildAstroMesh(renderer) {
   var mb = new MeshBuilder();
-  addBoxRot(mb, 0, 0, 0, 4, 5, 4, 0);
-  addBoxRot(mb, 0, 6.5, 0, 4.2, 4, 4.2, 0);
-  addBoxRot(mb, 0, 6.5, 3.6, 2.6, 2.2, 1, 0);
-  addBoxRot(mb, -5, 0, 0, 1.5, 4.5, 2.5, 0);
-  addBoxRot(mb, 4.2, 2.5, 0, 1.2, 3, 1.2, 0.2);
-  addBoxRot(mb, -4.2, 2.5, 0, 1.2, 3, 1.2, -0.2);
-  addBoxRot(mb, 2, -7, 0, 1.4, 3, 1.4, 0.1);
-  addBoxRot(mb, -2, -7, 0, 1.4, 3, 1.4, -0.1);
+  addBox(mb, 0, 0, 0, 3.5, 4.5, 3.2);
+  addBox(mb, 0, 6.2, 0, 3.8, 3.6, 3.6);
+  addBox(mb, 0, 6.2, 3.2, 2.2, 2.0, 0.9);
+  addBox(mb, -4.5, 0, 0, 1.3, 4.0, 2.2);
+  addBox(mb, 4.2, 2.2, 0, 1.0, 2.7, 1.0);
+  addBox(mb, -4.2, 2.2, 0, 1.0, 2.7, 1.0);
+  addBox(mb, 1.8, -6.5, 0, 1.2, 2.7, 1.2);
+  addBox(mb, -1.8, -6.5, 0, 1.2, 2.7, 1.2);
   return finishMesh(renderer, mb);
 }
 
 function buildFuelMesh(renderer) {
   var mb = new MeshBuilder();
-  addBoxRot(mb, 0, 0, 0, 6, 8, 6, 0);
-  addBoxRot(mb, 0, 9, 0, 2.5, 1.8, 2.5, 0);
-  addBoxRot(mb, 0, 2, 6.4, 3.2, 3.2, 1, 0);
-  addBoxRot(mb, -6.4, 0, 0, 1, 4, 4, 0);
-  addBoxRot(mb, 6.4, 0, 0, 1, 4, 4, 0);
+  addBox(mb, 0, 0, 0, 5.2, 7.2, 5.2);
+  addBox(mb, 0, 8.2, 0, 2.2, 1.5, 2.2);
+  addBox(mb, 0, 1.8, 5.6, 2.8, 2.8, 0.9);
+  addBox(mb, -5.6, 0, 0, 0.9, 3.5, 3.5);
+  addBox(mb, 5.6, 0, 0, 0.9, 3.5, 3.5);
   return finishMesh(renderer, mb);
 }
 
@@ -853,16 +915,457 @@ function solidAtG(t,gx,gy) {
   return t.solid[gy * t.cols + gx] === 1;
 }
 
-function buildTerrainChunks(t, q) {
+function inPadZoneCol(t,c) {
+  return c >= t.padStart - 5 && c <= t.padEnd + 5;
+}
+
+function inPadZoneCell(t,c,r) {
+  return c >= t.padStart - 5 && c <= t.padEnd + 5 && r >= t.padRow - 5 && r <= t.padRow + 2;
+}
+
+function getSurfaceY(t,c) {
+  c = clamp(c, 0, t.cols - 1);
+  var y = (t.surfaceRef[c] + 1) * t.cell + SHIP_R + 22;
+  return clamp(y, 25, WORLD_H - 25);
+}
+
+function surfacePoint(t,c) {
+  c = clamp(c, 0, t.cols - 1);
+  return { x: (c + 0.5) * t.cell, y: getSurfaceY(t,c) };
+}
+
+function carveCircle(t,cx,cy,r) {
+  var x0 = Math.max(0, Math.floor(cx - r));
+  var x1 = Math.min(t.cols - 1, Math.ceil(cx + r));
+  var y0 = Math.max(0, Math.floor(cy - r));
+  var y1 = Math.min(t.rows - 1, Math.ceil(cy + r));
+  for (var y = y0; y <= y1; y++) {
+    for (var x = x0; x <= x1; x++) {
+      if (inPadZoneCell(t,x,y)) continue;
+      var idx = y * t.cols + x;
+      if (!t.solid[idx]) continue;
+      var dx = (x - cx) / r;
+      var dy = (y - cy) / r;
+      if (dx * dx + dy * dy <= 1) t.solid[idx] = 0;
+    }
+  }
+}
+
+function carveLine(t,a,b,r) {
+  var dx = b.x - a.x, dy = b.y - a.y;
+  var d = len2(dx,dy);
+  var steps = Math.max(1, Math.ceil(d * 1.6));
+  for (var i = 0; i <= steps; i++) {
+    var u = i / steps;
+    carveCircle(t, lerp(a.x,b.x,u), lerp(a.y,b.y,u), r);
+  }
+}
+
+function computeAirVisited(t) {
+  var n = t.cols * t.rows;
+  var visited = new Uint8Array(n);
+  var queue = new Int32Array(n);
+  var head = 0, tail = 0;
+  var top = t.rows - 1;
+
+  for (var c = 0; c < t.cols; c++) {
+    var idx = top * t.cols + c;
+    if (!t.solid[idx] && !visited[idx]) {
+      visited[idx] = 1;
+      queue[tail++] = idx;
+    }
+  }
+
+  while (head < tail) {
+    var cur = queue[head++];
+    var gx = cur % t.cols;
+    var gy = (cur - gx) / t.cols;
+    var nb;
+
+    if (gx > 0) {
+      nb = cur - 1;
+      if (!t.solid[nb] && !visited[nb]) { visited[nb] = 1; queue[tail++] = nb; }
+    }
+    if (gx < t.cols - 1) {
+      nb = cur + 1;
+      if (!t.solid[nb] && !visited[nb]) { visited[nb] = 1; queue[tail++] = nb; }
+    }
+    if (gy > 0) {
+      nb = cur - t.cols;
+      if (!t.solid[nb] && !visited[nb]) { visited[nb] = 1; queue[tail++] = nb; }
+    }
+    if (gy < t.rows - 1) {
+      nb = cur + t.cols;
+      if (!t.solid[nb] && !visited[nb]) { visited[nb] = 1; queue[tail++] = nb; }
+    }
+  }
+
+  return visited;
+}
+
+function removeIsolatedAir(t) {
+  var visited = computeAirVisited(t);
+  var n = t.cols * t.rows;
+  for (var i = 0; i < n; i++) {
+    if (!t.solid[i] && !visited[i]) t.solid[i] = 1;
+  }
+}
+
+function recomputeTops(t) {
+  t.tops = new Int32Array(t.cols);
+  for (var c = 0; c < t.cols; c++) {
+    var top = -1;
+    for (var r = t.rows - 1; r >= 0; r--) {
+      if (t.solid[r * t.cols + c]) { top = r; break; }
+    }
+    t.tops[c] = top;
+  }
+}
+
+function buildSurfacePrefix(t) {
+  t.surfaceY = new Float32Array(t.cols);
+  t.surfacePrefix = new Float32Array(t.cols);
+  for (var c = 0; c < t.cols; c++) t.surfaceY[c] = getSurfaceY(t,c);
+  t.surfacePrefix[0] = 0;
+  for (c = 1; c < t.cols; c++) {
+    var dx = t.cell;
+    var dy = t.surfaceY[c] - t.surfaceY[c-1];
+    t.surfacePrefix[c] = t.surfacePrefix[c-1] + len2(dx,dy);
+  }
+}
+
+function surfaceDistance(t,c1,c2) {
+  c1 = clamp(c1,0,t.cols-1);
+  c2 = clamp(c2,0,t.cols-1);
+  if (c1 > c2) { var tmp = c1; c1 = c2; c2 = tmp; }
+  return t.surfacePrefix[c2] - t.surfacePrefix[c1];
+}
+
+function polylineLength(pts) {
+  if (!pts || pts.length < 2) return 0;
+  var L = 0;
+  for (var i = 1; i < pts.length; i++) {
+    var d = len2(pts[i].x - pts[i-1].x, pts[i].y - pts[i-1].y);
+    if (d > 0.01) L += d;
+  }
+  return L;
+}
+
+function makeTunnelPath(t, sc, sr, ec, er, rng, clampUnderground) {
+  var cols = t.cols;
+  var dist = Math.abs(er - sr) + Math.abs(ec - sc);
+  var steps = Math.max(5, Math.ceil(dist * 0.75));
+  var pts = [];
+  var wc = (rng() - 0.5) * (2 + t.diff * 4);
+  var wr = (rng() - 0.5) * (1 + t.diff * 2);
+  var phase = rng() * PI2;
+
+  for (var i = 0; i <= steps; i++) {
+    var u = i / steps;
+    var c = lerp(sc, ec, u);
+    var r = lerp(sr, er, u);
+
+    if (i > 0 && i < steps) {
+      var bump = Math.sin(u * Math.PI);
+      c += wc * bump + Math.sin(u * 5.7 + phase) * 0.7 * bump;
+      r += wr * bump + Math.cos(u * 4.3 + phase) * 0.5 * bump;
+
+      if (clampUnderground) {
+        var ci = clamp(Math.floor(c), 0, cols - 1);
+        var maxR = t.surfaceRef[ci] - 1;
+        if (maxR < 1) maxR = 1;
+        r = clamp(r, 1, maxR);
+      }
+
+      if (inPadZoneCol(t, Math.floor(c))) {
+        c = (c < t.padCenter) ? (t.padStart - 6) : (t.padEnd + 6);
+      }
+      c = clamp(c, 1, cols - 2);
+    }
+
+    pts.push({ x: c, y: r });
+  }
+
+  pts[0] = { x: sc, y: sr };
+  pts[steps] = { x: ec, y: er };
+  return pts;
+}
+
+function findAnyExit(t, tc, tr, entranceCol, side, rng) {
+  var minC = side < 0 ? 2 : t.padEnd + 6;
+  var maxC = side < 0 ? t.padStart - 6 : t.cols - 3;
+  if (minC > maxC) return -1;
+
+  var cand = [];
+  var minOff = 6 + Math.floor(t.diff * 8);
+  var maxOff = Math.min(65, maxC - minC);
+  var dirs = [1, -1];
+  var cc, di, off;
+
+  for (off = minOff; off <= maxOff; off += 2) {
+    for (di = 0; di < 2; di++) {
+      cc = tc + dirs[di] * off;
+      if (cc < minC || cc > maxC) continue;
+      if (inPadZoneCol(t,cc)) continue;
+      if (Math.abs(cc - entranceCol) < 5) continue;
+      if (t.surfaceRef[cc] <= tr + 3) continue;
+      cand.push(cc);
+    }
+    if (cand.length > 18) break;
+  }
+
+  if (cand.length) return cand[Math.floor(rng() * cand.length)];
+
+  for (cc = minC; cc <= maxC; cc++) {
+    if (inPadZoneCol(t,cc)) continue;
+    if (Math.abs(cc - entranceCol) < 5) continue;
+    if (t.surfaceRef[cc] <= tr + 3) continue;
+    return cc;
+  }
+
+  return -1;
+}
+
+function createDeepSite(t, rng, id) {
+  var cols = t.cols;
+  var cell = t.cell;
+  var attempts = 0;
+
+  while (attempts++ < 120) {
+    var entranceCol = 3 + Math.floor(rng() * (cols - 6));
+    if (inPadZoneCol(t, entranceCol)) continue;
+
+    var top = t.surfaceRef[entranceCol];
+    var maxDepth = top - 5;
+    if (maxDepth < 7) continue;
+
+    var side = entranceCol < t.padCenter ? -1 : 1;
+    var depth = 8 + Math.floor(rng() * (8 + t.diff * 22)) + Math.floor(t.diff * 12);
+    if (depth > maxDepth) depth = maxDepth;
+
+    var targetRow = top - depth;
+    var horiz = Math.round((rng() - 0.5) * depth * 0.9);
+    var targetCol = entranceCol + horiz;
+
+    if (Math.abs(targetCol - entranceCol) < 7) {
+      targetCol = entranceCol + (side < 0 ? -7 : 7);
+    }
+
+    if (side < 0) targetCol = clamp(targetCol, 2, t.padStart - 7);
+    else targetCol = clamp(targetCol, t.padEnd + 7, cols - 3);
+
+    if (targetCol < 2 || targetCol >= cols - 2) continue;
+    if (inPadZoneCol(t,targetCol)) continue;
+
+    var ts = t.surfaceRef[targetCol];
+    if (targetRow > ts - 3) targetRow = ts - 3;
+    if (targetRow < 2) continue;
+    if (inPadZoneCell(t,targetCol,targetRow)) continue;
+
+    var astroPt = { x: (targetCol + 0.5) * cell, y: (targetRow + 0.5) * cell };
+    var tooClose = false;
+    for (var ai = 0; ai < t.astronauts.length; ai++) {
+      if (dist2(t.astronauts[ai].x, t.astronauts[ai].y, astroPt.x, astroPt.y) < 180 * 180) {
+        tooClose = true;
+        break;
+      }
+    }
+    if (tooClose) continue;
+
+    var path = makeTunnelPath(t, entranceCol, top, targetCol, targetRow, rng, true);
+    for (var i = 0; i < path.length - 1; i++) carveLine(t, path[i], path[i+1], t.tunnelHalf);
+    carveCircle(t, targetCol, targetRow, t.chamberHalf);
+
+    // Guarantee no dead end: every deep chamber gets a second surface exit.
+    var exit2 = findAnyExit(t, targetCol, targetRow, entranceCol, side, rng);
+    if (exit2 < 0) continue;
+
+    var path2 = makeTunnelPath(t, targetCol, targetRow, exit2, t.surfaceRef[exit2], rng, true);
+    for (i = 0; i < path2.length - 1; i++) carveLine(t, path2[i], path2[i+1], t.tunnelHalf);
+    carveCircle(t, exit2, t.surfaceRef[exit2], t.tunnelHalf);
+
+    t.caveEntrances.push(entranceCol);
+    t.caveEntrances.push(exit2);
+
+    var surf = surfacePoint(t, entranceCol);
+    var pts = [surf];
+    for (i = 0; i < path.length; i++) {
+      pts.push({ x: (path[i].x + 0.5) * cell, y: (path[i].y + 0.5) * cell });
+    }
+
+    var last = pts[pts.length - 1];
+    if (dist2(last.x,last.y,astroPt.x,astroPt.y) > (cell * 0.35) * (cell * 0.35)) pts.push(astroPt);
+    else pts[pts.length - 1] = astroPt;
+
+    return {
+      x: astroPt.x, y: astroPt.y, taken: false, r: 18, id: id,
+      deep: true, entranceCol: entranceCol, surfaceCol: entranceCol,
+      surfacePoint: surf,
+      accessPath: pts,
+      gridPath: path,
+      secondaryPath: path2,
+      chamberGrid: { x: targetCol, y: targetRow },
+      pathLen: polylineLength(pts)
+    };
+  }
+
+  return null;
+}
+
+function restoreDeepSites(t) {
+  for (var i = 0; i < t.astronauts.length; i++) {
+    var a = t.astronauts[i];
+    if (!a.deep) continue;
+
+    if (a.gridPath) {
+      for (var j = 0; j < a.gridPath.length - 1; j++) {
+        carveLine(t, a.gridPath[j], a.gridPath[j+1], t.tunnelHalf);
+      }
+    }
+    if (a.chamberGrid) {
+      carveCircle(t, a.chamberGrid.x, a.chamberGrid.y, t.chamberHalf);
+    }
+    if (a.secondaryPath) {
+      for (j = 0; j < a.secondaryPath.length - 1; j++) {
+        carveLine(t, a.secondaryPath[j], a.secondaryPath[j+1], t.tunnelHalf);
+      }
+      var e = a.secondaryPath[a.secondaryPath.length - 1];
+      carveCircle(t, e.x, e.y, t.tunnelHalf);
+    }
+  }
+}
+
+function addDecorativeTunnel(t, rng) {
+  var cols = t.cols;
+  for (var att = 0; att < 40; att++) {
+    var left = rng() < 0.5;
+    var minC = left ? 2 : t.padEnd + 7;
+    var maxC = left ? t.padStart - 7 : cols - 3;
+    if (maxC - minC < 14) continue;
+
+    var c1 = minC + Math.floor(rng() * (maxC - minC + 1));
+    var c2 = minC + Math.floor(rng() * (maxC - minC + 1));
+    if (Math.abs(c2 - c1) < 14) continue;
+    if (t.surfaceRef[c1] < 8 || t.surfaceRef[c2] < 8) continue;
+
+    var midC = clamp(Math.floor((c1 + c2) * 0.5), minC, maxC);
+    var depth = 4 + Math.floor(rng() * (6 + t.diff * 14));
+    var midR = Math.min(t.surfaceRef[c1], t.surfaceRef[c2], t.surfaceRef[midC]) - depth;
+    if (midR < 2) continue;
+
+    var p1 = makeTunnelPath(t, c1, t.surfaceRef[c1], midC, midR, rng, true);
+    for (var i = 0; i < p1.length - 1; i++) carveLine(t, p1[i], p1[i+1], t.tunnelHalf);
+
+    var p2 = makeTunnelPath(t, midC, midR, c2, t.surfaceRef[c2], rng, true);
+    for (i = 0; i < p2.length - 1; i++) carveLine(t, p2[i], p2[i+1], t.tunnelHalf);
+
+    carveCircle(t, midC, midR, t.chamberHalf);
+    t.caveEntrances.push(c1);
+    t.caveEntrances.push(c2);
+    return true;
+  }
+  return false;
+}
+
+function createSurfaceSite(t, rng, id) {
+  var cols = t.cols;
+  var cell = t.cell;
+  var attempts = 0;
+
+  while (attempts++ < 1200) {
+    var c = 2 + Math.floor(rng() * (cols - 4));
+    if (inPadZoneCol(t,c)) continue;
+    var top = t.tops[c];
+    if (top < 1) continue;
+    if (top < t.surfaceRef[c] - 2) continue;
+
+    var nearCave = false;
+    for (var i = 0; i < t.caveEntrances.length; i++) {
+      if (Math.abs(t.caveEntrances[i] - c) < 5) { nearCave = true; break; }
+    }
+    if (nearCave) continue;
+
+    var x = (c + 0.5) * cell;
+    var y = (top + 1) * cell + 12;
+    var nearAstro = false;
+    for (i = 0; i < t.astronauts.length; i++) {
+      if (Math.abs(t.astronauts[i].x - x) < 150) { nearAstro = true; break; }
+    }
+    if (nearAstro) continue;
+
+    var surf = surfacePoint(t,c);
+    var path = [surf, { x: x, y: y }];
+    return {
+      x: x, y: y, taken: false, r: 18, id: id,
+      deep: false, entranceCol: c, surfaceCol: c,
+      surfacePoint: surf,
+      accessPath: path,
+      gridPath: null,
+      secondaryPath: null,
+      chamberGrid: null,
+      pathLen: polylineLength(path)
+    };
+  }
+
+  var chosen = -1;
+  for (var cc = 2; cc < cols - 2; cc++) {
+    if (inPadZoneCol(t,cc)) continue;
+    if (t.tops[cc] < 1) continue;
+    var xx = (cc + 0.5) * cell;
+    var near = false;
+    for (var jj = 0; jj < t.astronauts.length; jj++) {
+      if (Math.abs(t.astronauts[jj].x - xx) < 120) { near = true; break; }
+    }
+    if (!near) { chosen = cc; break; }
+  }
+  if (chosen < 0) {
+    for (cc = 2; cc < cols - 2; cc++) {
+      if (!inPadZoneCol(t,cc) && t.tops[cc] >= 1) { chosen = cc; break; }
+    }
+  }
+  if (chosen < 0) chosen = clamp(t.padEnd + 6, 2, cols - 3);
+
+  var ftop = Math.max(1, t.tops[chosen] >= 0 ? t.tops[chosen] : 1);
+  var fx = (chosen + 0.5) * cell;
+  var fy = (ftop + 1) * cell + 12;
+  var fsurf = surfacePoint(t,chosen);
+  var fpath = [fsurf, { x: fx, y: fy }];
+  return {
+    x: fx, y: fy, taken: false, r: 18, id: id,
+    deep: false, entranceCol: chosen, surfaceCol: chosen,
+    surfacePoint: fsurf,
+    accessPath: fpath,
+    gridPath: null,
+    secondaryPath: null,
+    chamberGrid: null,
+    pathLen: polylineLength(fpath)
+  };
+}
+
+function buildBackdropMesh(t, quality) {
+  var mb = new MeshBuilder();
+  var z = -quality.depth * 0.5 - 2;
+  for (var c = 0; c < t.cols; c++) {
+    var x0 = c * t.cell;
+    var x1 = Math.min(WORLD_W, (c + 1) * t.cell);
+    var yT = (t.surfaceRef[c] + 1) * t.cell;
+    quad(mb, x0,0,z, x1,0,z, x1,yT,z, x0,yT,z, 0,0,1, x0,0, x1,0, x1,yT, x0,yT);
+  }
+  return finishMesh(renderer, mb);
+}
+
+function buildTerrainChunks(t, quality) {
   var chunks = [];
-  var HZ = q.depth * 0.5;
-  for (var start = 0; start < t.cols; start += q.chunkCols) {
-    var end = Math.min(t.cols, start + q.chunkCols);
+  var HZ = quality.depth * 0.5;
+
+  for (var start = 0; start < t.cols; start += quality.chunkCols) {
+    var end = Math.min(t.cols, start + quality.chunkCols);
     var mb = new MeshBuilder();
+    var gx, gy;
 
     // Front silhouette spans.
-    for (var gx = start; gx < end; gx++) {
-      var gy = 0;
+    for (gx = start; gx < end; gx++) {
+      gy = 0;
       while (gy < t.rows) {
         while (gy < t.rows && !solidAtG(t,gx,gy)) gy++;
         if (gy >= t.rows) break;
@@ -886,16 +1389,16 @@ function buildTerrainChunks(t, q) {
         var y0 = gy * t.cell;
         var y1 = y0 + t.cell;
 
-        if (!solidAtG(t,gx,gy+1)) {
+        if (gy === t.rows - 1 || !solidAtG(t,gx,gy+1)) {
           quad(mb, x0,y1,-HZ, x1,y1,-HZ, x1,y1,HZ, x0,y1,HZ, 0,1,0, x0,-HZ, x1,-HZ, x1,HZ, x0,HZ);
         }
         if (!solidAtG(t,gx,gy-1)) {
           quad(mb, x0,y0,-HZ, x1,y0,-HZ, x1,y0,HZ, x0,y0,HZ, 0,-1,0, x0,-HZ, x1,-HZ, x1,HZ, x0,HZ);
         }
-        if (!solidAtG(t,gx-1,gy)) {
+        if (gx === 0 || !solidAtG(t,gx-1,gy)) {
           quad(mb, x0,y0,-HZ, x0,y1,-HZ, x0,y1,HZ, x0,y0,HZ, -1,0,0, y0,-HZ, y1,-HZ, y1,HZ, y0,HZ);
         }
-        if (!solidAtG(t,gx+1,gy)) {
+        if (gx === t.cols - 1 || !solidAtG(t,gx+1,gy)) {
           quad(mb, x1,y0,-HZ, x1,y1,-HZ, x1,y1,HZ, x1,y0,HZ, 1,0,0, y0,-HZ, y1,-HZ, y1,HZ, y0,HZ);
         }
       }
@@ -904,20 +1407,23 @@ function buildTerrainChunks(t, q) {
     var mesh = finishMesh(renderer, mb);
     if (mesh) chunks.push({ mesh: mesh, minX: start * t.cell, maxX: end * t.cell });
   }
+
   return chunks;
 }
 
-function buildPadMeshes(t, q) {
+function buildPadMeshes(t, quality) {
   var width = (t.padEnd - t.padStart) * t.cell;
+  var HZ = quality.depth * 0.5;
   var mbD = new MeshBuilder();
-  addBoxRot(mbD, 0, 0, 0, width * 0.5, 2.5, q.depth * 0.5 + 4, 0);
-  addBoxRot(mbD, -width * 0.5 + 3, 3.5, 0, 1.5, 3.5, q.depth * 0.5 + 2, 0);
-  addBoxRot(mbD,  width * 0.5 - 3, 3.5, 0, 1.5, 3.5, q.depth * 0.5 + 2, 0);
-
   var mbL = new MeshBuilder();
-  addBoxRot(mbL, -width * 0.5 + 3, 9, 0, 2, 2, 2, 0);
-  addBoxRot(mbL,  width * 0.5 - 3, 9, 0, 2, 2, 2, 0);
-  addBoxRot(mbL, 0, 8, 0, 1.4, 1.4, 1.4, 0);
+
+  addBox(mbD, 0, 0, 0, width * 0.5, 1.5, HZ + 3);
+  addBox(mbD, -width * 0.5 + 4, 4, 0, 1.4, 4, HZ + 1);
+  addBox(mbD,  width * 0.5 - 4, 4, 0, 1.4, 4, HZ + 1);
+
+  addBox(mbL, -width * 0.5 + 4, 9, 0, 1.8, 1.8, 1.8);
+  addBox(mbL,  width * 0.5 - 4, 9, 0, 1.8, 1.8, 1.8);
+  addBox(mbL, 0, 8, 0, 1.2, 1.2, 1.2);
 
   return {
     deck: finishMesh(renderer, mbD),
@@ -926,122 +1432,275 @@ function buildPadMeshes(t, q) {
   };
 }
 
-function ensureAir(t,x,y,margin) {
-  x = clamp(x, 20, WORLD_W - 20);
-  var col = clamp(Math.floor(x / t.cell), 0, t.cols - 1);
-  var surf = t.tops[col] >= 0 ? (t.tops[col] + 1) * t.cell : 0;
-  y = Math.max(y, surf + margin);
-  if (y > WORLD_H - 55) y = WORLD_H - 55;
-  return y;
+function circleHitsSolid(t,x,y,r) {
+  var minGx = Math.floor((x - r) / t.cell);
+  var maxGx = Math.floor((x + r) / t.cell);
+  var minGy = Math.floor((y - r) / t.cell);
+  var maxGy = Math.floor((y + r) / t.cell);
+  for (var gy = minGy; gy <= maxGy; gy++) {
+    if (gy < 0 || gy >= t.rows) continue;
+    for (var gx = minGx; gx <= maxGx; gx++) {
+      if (gx < 0 || gx >= t.cols) continue;
+      var idx = gy * t.cols + gx;
+      if (!t.solid[idx]) continue;
+      var cx0 = gx * t.cell;
+      var cy0 = gy * t.cell;
+      var closestX = clamp(x, cx0, cx0 + t.cell);
+      var closestY = clamp(y, cy0, cy0 + t.cell);
+      var dx = x - closestX;
+      var dy = y - closestY;
+      if (dx * dx + dy * dy <= r * r) return true;
+    }
+  }
+  return false;
 }
 
-function addFuel(t,x,y,amount) {
-  for (var att = 0; att < 3; att++) {
-    x = clamp(x, 35, WORLD_W - 35);
-    y = ensureAir(t,x,y,75);
-    var needMove = false;
-    for (var i = 0; i < t.fuels.length; i++) {
-      var f = t.fuels[i];
-      if (dist2(f.x,f.y,x,y) < 55*55) {
-        if (f.fuel + amount <= 200) {
-          f.fuel += amount;
-          return;
-        } else {
-          x += 65;
-          y += 45;
-          needMove = true;
-          break;
-        }
+function checkCollision(t,x,y,r) {
+  var minGx = Math.floor((x - r) / t.cell);
+  var maxGx = Math.floor((x + r) / t.cell);
+  var minGy = Math.floor((y - r) / t.cell);
+  var maxGy = Math.floor((y + r) / t.cell);
+  var hit = false, pad = false;
+  for (var gy = minGy; gy <= maxGy; gy++) {
+    if (gy < 0 || gy >= t.rows) continue;
+    for (var gx = minGx; gx <= maxGx; gx++) {
+      if (gx < 0 || gx >= t.cols) continue;
+      var idx = gy * t.cols + gx;
+      if (!t.solid[idx]) continue;
+      var cx0 = gx * t.cell;
+      var cy0 = gy * t.cell;
+      var closestX = clamp(x, cx0, cx0 + t.cell);
+      var closestY = clamp(y, cy0, cy0 + t.cell);
+      var dx = x - closestX;
+      var dy = y - closestY;
+      if (dx * dx + dy * dy <= r * r) {
+        hit = true;
+        if (t.padMap[idx]) pad = true;
       }
     }
-    if (!needMove) {
-      t.fuels.push({ x:x, y:y, taken:false, r:16, fuel:amount, id:t.fuels.length });
-      return;
+  }
+  return { hit: hit, pad: pad };
+}
+
+function makeAirPoint(t,x,y,r) {
+  r = r || 16;
+  x = clamp(x, 30, WORLD_W - 30);
+  y = clamp(y, 30, WORLD_H - 30);
+
+  if (!circleHitsSolid(t,x,y,r)) return { x:x, y:y };
+
+  var col = clamp(Math.floor(x / t.cell), 0, t.cols - 1);
+  var surf = t.surfaceY ? t.surfaceY[col] : getSurfaceY(t,col);
+  var k, nx, ny;
+
+  for (k = 0; k < 24; k++) {
+    ny = surf + 35 + k * Math.max(1, t.cell);
+    if (ny > WORLD_H - 25) break;
+    if (!circleHitsSolid(t,x,ny,r)) return { x:x, y:ny };
+  }
+
+  var offs = [20,-20,40,-40,60,-60,80,-80,100,-100,120,-120];
+  for (k = 0; k < offs.length; k++) {
+    nx = clamp(x + offs[k], 30, WORLD_W - 30);
+    if (!circleHitsSolid(t,nx,y,r)) return { x:nx, y:y };
+    if (!circleHitsSolid(t,nx,surf + 45,r)) return { x:nx, y:surf + 45 };
+  }
+
+  for (k = 1; k < 30; k++) {
+    ny = clamp(y + k * t.cell, 30, WORLD_H - 25);
+    if (!circleHitsSolid(t,x,ny,r)) return { x:x, y:ny };
+  }
+
+  return null;
+}
+
+function appendPoint(route, p, minD) {
+  if (!p) return;
+  if (route.length) {
+    var last = route[route.length - 1];
+    if (dist2(last.x,last.y,p.x,p.y) < minD * minD) return;
+  }
+  route.push({ x: p.x, y: p.y });
+}
+
+function appendSurfacePath(route, c1, c2, t) {
+  c1 = clamp(c1,0,t.cols-1);
+  c2 = clamp(c2,0,t.cols-1);
+  var dir = c2 >= c1 ? 1 : -1;
+  var span = Math.abs(c2 - c1);
+  var step = span > 40 ? 2 : 1;
+  var minD = t.cell * 0.45;
+  var c = c1;
+  while (true) {
+    appendPoint(route, surfacePoint(t,c), minD);
+    if (c === c2) break;
+    var next = c + dir * step;
+    if ((dir > 0 && next > c2) || (dir < 0 && next < c2)) next = c2;
+    c = next;
+  }
+}
+
+function nodeDistance(A,B,t) {
+  var ap = A.accessPath || A.path || [];
+  var bp = B.accessPath || B.path || [];
+  return polylineLength(ap) + surfaceDistance(t, A.surfaceCol, B.surfaceCol) + polylineLength(bp);
+}
+
+function buildRoute(t) {
+  var padSurf = surfacePoint(t, t.padCenter);
+  var startPoint = {
+    x: t.padX,
+    y: clamp(t.padTopY + 330 + t.diff * 170, t.padTopY + 80, WORLD_H - 80)
+  };
+  var padPoint = { x: t.padX, y: t.padTopY + SHIP_R + 2 };
+
+  var startNode = {
+    point: startPoint,
+    surfacePoint: padSurf,
+    surfaceCol: t.padCenter,
+    accessPath: [padSurf, startPoint]
+  };
+
+  var padNode = {
+    point: padPoint,
+    surfacePoint: padSurf,
+    surfaceCol: t.padCenter,
+    accessPath: [padSurf, padPoint]
+  };
+
+  var remaining = t.astronauts.slice();
+  var nodes = [startNode];
+  var current = startNode;
+  var i, j;
+
+  while (remaining.length) {
+    var bestIdx = 0;
+    var bestD = Infinity;
+    for (i = 0; i < remaining.length; i++) {
+      var d = nodeDistance(current, remaining[i], t);
+      if (d < bestD) { bestD = d; bestIdx = i; }
+    }
+    current = remaining[bestIdx];
+    nodes.push(current);
+    remaining.splice(bestIdx, 1);
+  }
+  nodes.push(padNode);
+
+  var route = [];
+  var minD = t.cell * 0.35;
+
+  for (i = 0; i < nodes.length - 1; i++) {
+    var A = nodes[i];
+    var B = nodes[i+1];
+
+    if (i === 0) appendPoint(route, A.point, minD);
+
+    var ap = A.accessPath || A.path || [];
+    for (j = ap.length - 2; j >= 0; j--) {
+      appendPoint(route, ap[j], minD);
+    }
+
+    appendSurfacePath(route, A.surfaceCol, B.surfaceCol, t);
+
+    var bp = B.accessPath || B.path || [];
+    for (j = 1; j < bp.length; j++) {
+      appendPoint(route, bp[j], minD);
     }
   }
+
+  if (!route.length) route.push({ x: t.startPoint.x, y: t.startPoint.y });
+  if (route.length < 2) route.push({ x: t.padX, y: t.padTopY + SHIP_R + 2 });
+  return route;
 }
 
-function sampleSegment(a,b,step) {
-  var dx = b.x - a.x, dy = b.y - a.y;
-  var d = len2(dx,dy);
-  var n = Math.max(1, Math.ceil(d / step));
-  var out = [];
-  for (var i = 0; i <= n; i++) {
-    var u = i / n;
-    out.push({ x: a.x + dx * u, y: a.y + dy * u });
-  }
-  return out;
-}
-
-function polyLength(pts) {
-  var L = 0;
-  for (var i = 1; i < pts.length; i++) L += len2(pts[i].x - pts[i-1].x, pts[i].y - pts[i-1].y);
-  return L;
-}
-
-function pointAlongPolyline(pts, u) {
-  if (pts.length <= 1) return { x: pts[0].x, y: pts[0].y };
-  if (u <= 0) return { x: pts[0].x, y: pts[0].y };
-  if (u >= 1) return { x: pts[pts.length-1].x, y: pts[pts.length-1].y };
-  var total = polyLength(pts);
-  var target = total * u;
-  var acc = 0;
+function buildCumulative(pts) {
+  if (!pts || !pts.length) return new Float32Array(0);
+  var cum = new Float32Array(pts.length);
+  cum[0] = 0;
   for (var i = 1; i < pts.length; i++) {
-    var seg = len2(pts[i].x - pts[i-1].x, pts[i].y - pts[i-1].y);
-    if (acc + seg >= target) {
-      var t = seg > 0 ? (target - acc) / seg : 0;
+    cum[i] = cum[i-1] + len2(pts[i].x - pts[i-1].x, pts[i].y - pts[i-1].y);
+  }
+  return cum;
+}
+
+function pointAlongCum(pts, cum, d) {
+  if (!pts || !pts.length) return { x: 0, y: 0 };
+  var last = pts.length - 1;
+  if (d <= 0) return pts[0];
+  if (d >= cum[last]) return pts[last];
+  for (var i = 1; i <= last; i++) {
+    if (cum[i] >= d) {
+      var seg = cum[i] - cum[i-1];
+      var t = seg > 0.001 ? (d - cum[i-1]) / seg : 0;
       return { x: lerp(pts[i-1].x, pts[i].x, t), y: lerp(pts[i-1].y, pts[i].y, t) };
     }
-    acc += seg;
   }
-  return { x: pts[pts.length-1].x, y: pts[pts.length-1].y };
+  return pts[last];
 }
 
-function planFuel(t, q, rng) {
-  var pts = [];
-  pts.push({ x: t.shipStart.x, y: t.shipStart.y });
+function addFuelPlanned(t,x,y,amount) {
+  var p = makeAirPoint(t,x,y,16);
+  if (!p) return false;
+  x = p.x; y = p.y;
 
-  var rem = [];
-  for (var i = 0; i < t.astronauts.length; i++) rem.push(t.astronauts[i]);
-  var cur = pts[0];
-
-  while (rem.length) {
-    var bi = 0, bd = 1e18;
-    for (i = 0; i < rem.length; i++) {
-      var tx = rem[i].x, ty = rem[i].y + 55;
-      var d = dist2(cur.x, cur.y, tx, ty);
-      if (d < bd) { bd = d; bi = i; }
+  for (var attempt = 0; attempt < 12; attempt++) {
+    var dup = false;
+    for (var i = 0; i < t.fuels.length; i++) {
+      if (dist2(t.fuels[i].x,t.fuels[i].y,x,y) < 46 * 46) {
+        dup = true;
+        var np = makeAirPoint(t,x + 55,y + 35,16);
+        if (!np) np = makeAirPoint(t,x - 55,y + 35,16);
+        if (!np) break;
+        x = np.x; y = np.y;
+        break;
+      }
     }
-    var a = rem.splice(bi, 1)[0];
-    var p = { x: a.x, y: a.y + 55 };
-    pts.push(p);
-    cur = p;
-  }
-
-  pts.push({ x: t.padX, y: t.padTopY + 145 });
-  pts.push({ x: t.padX, y: t.padTopY + 75 });
-
-  var segments = [];
-  for (i = 0; i < pts.length - 1; i++) {
-    var samples = sampleSegment(pts[i], pts[i+1], 82);
-    for (var j = 0; j < samples.length; j++) samples[j].y = ensureAir(t, samples[j].x, samples[j].y, 92);
-    var L = polyLength(samples);
-    var req = (L / 95) * t.burn * t.safety + 35;
-    segments.push({ samples: samples, len: L, req: req });
-  }
-
-  for (i = 0; i < segments.length; i++) {
-    var seg = segments[i];
-    var cans = clamp(Math.ceil(seg.req / t.fuelCan) + 1, 1, 14);
-    for (var k = 0; k < cans; k++) {
-      var u = (k + 0.55) / cans;
-      var pp = pointAlongPolyline(seg.samples, u);
-      addFuel(t, pp.x, pp.y, t.fuelCan);
+    if (!dup) {
+      t.fuels.push({ x:x, y:y, taken:false, r:15, fuel:amount, id:t.fuels.length });
+      return true;
     }
   }
 
-  addFuel(t, t.shipStart.x, t.shipStart.y - 85, t.fuelCan);
-  addFuel(t, t.padX, t.padTopY + 105, t.fuelCan);
+  var fp = makeAirPoint(t,x + 70,y + 50,16);
+  if (fp) {
+    t.fuels.push({ x:fp.x, y:fp.y, taken:false, r:15, fuel:amount, id:t.fuels.length });
+    return true;
+  }
+  return false;
+}
+
+function totalAvailableFuel(t) {
+  var sum = t.startFuel;
+  for (var i = 0; i < t.fuels.length; i++) sum += t.fuels[i].fuel;
+  return sum;
+}
+
+function planFuel(t, route, quality, rng) {
+  var routeLen = polylineLength(route);
+  if (routeLen < 1) routeLen = 1;
+
+  var fuelPerDist = t.burn / 135 + 0.018;
+  var required = routeLen * fuelPerDist * 1.65 + 110;
+  var additional = Math.max(0, required - t.startFuel);
+
+  var canAmount = t.fuelCan;
+  var cansByReq = Math.ceil(additional / canAmount);
+  var maxSpacing = 300 - t.diff * 120;
+  var cansBySpacing = Math.ceil(routeLen / maxSpacing);
+  var cans = Math.max(6 + t.astronauts.length * 2, cansByReq, cansBySpacing);
+  var maxCans = Math.min(160, 70 + t.astronauts.length * 12);
+  cans = Math.min(cans, maxCans);
+
+  var cum = buildCumulative(route);
+  var i, d, p;
+  for (i = 0; i < cans; i++) {
+    d = routeLen * (i + 0.5) / cans;
+    p = pointAlongCum(route, cum, d);
+    addFuelPlanned(t, p.x, p.y, canAmount);
+  }
+
+  addFuelPlanned(t, route[0].x, route[0].y - 35, canAmount);
+  addFuelPlanned(t, t.padX, t.padTopY + 95, canAmount);
 
   var extra = 2 + Math.floor(t.stage / 2);
   for (i = 0; i < extra; i++) {
@@ -1050,11 +1709,57 @@ function planFuel(t, q, rng) {
     var top = t.tops[col];
     if (top < 0) continue;
     var y = (top + 1) * t.cell + 135 + rng() * 280;
-    addFuel(t, x, y, t.fuelCan);
+    addFuelPlanned(t, x, y, canAmount);
   }
+
+  var guard = 0;
+  while (totalAvailableFuel(t) < required && guard++ < 80) {
+    p = makeAirPoint(t, route[0].x, route[0].y + 60 + guard * 35, 16);
+    if (p) {
+      t.fuels.push({ x:p.x, y:p.y, taken:false, r:15, fuel:canAmount, id:t.fuels.length });
+    } else {
+      break;
+    }
+  }
+
+  t.requiredFuel = required;
+  return required;
 }
 
-function generateLevel(lvl, sd, quality) {
+function validateLevel(t) {
+  if (!t || !t.astronauts || !t.astronauts.length || !t.startPoint) return false;
+
+  var visited = computeAirVisited(t);
+
+  function checkWorld(x,y) {
+    var gx = Math.floor(x / t.cell);
+    var gy = Math.floor(y / t.cell);
+    if (gx < 0 || gx >= t.cols || gy < 0 || gy >= t.rows) return false;
+    var idx = gy * t.cols + gx;
+    if (t.solid[idx]) return false;
+    return !!visited[idx];
+  }
+
+  if (!checkWorld(t.startPoint.x, t.startPoint.y)) return false;
+  if (!checkWorld(t.padX, t.padTopY + SHIP_R + 3)) return false;
+
+  var i;
+  for (i = 0; i < t.astronauts.length; i++) {
+    if (!checkWorld(t.astronauts[i].x, t.astronauts[i].y)) return false;
+  }
+
+  var totalFuel = t.startFuel;
+  for (i = 0; i < t.fuels.length; i++) {
+    if (!checkWorld(t.fuels[i].x, t.fuels[i].y)) return false;
+    totalFuel += t.fuels[i].fuel;
+  }
+
+  if (t.requiredFuel && totalFuel + 1 < t.requiredFuel) return false;
+
+  return true;
+}
+
+function generateLevelCore(lvl, sd, quality, simple) {
   var rng = mulberry32(hash32(sd, lvl));
   var cell = quality.cell;
   var cols = Math.ceil(WORLD_W / cell);
@@ -1064,185 +1769,147 @@ function generateLevel(lvl, sd, quality) {
   var heights = new Int32Array(cols);
 
   var stage = Math.floor((lvl - 1) / 3);
-  var diff = Math.min(1, stage / 10);
+  var diff = Math.min(1, stage / 12);
+  var c, r, i;
 
-  var rough = 0.10 + diff * 0.20;
-  var mount = 0.14 + diff * 0.22;
-
-  for (var c = 0; c < cols; c++) {
+  for (c = 0; c < cols; c++) {
     var h = rows * 0.42;
-    h += (fbm1(c * 0.12, sd + lvl * 31, 4) - 0.5) * rows * rough;
+    h += (fbm1(c * 0.12, sd + lvl * 31, 4) - 0.5) * rows * (0.10 + diff * 0.18);
     var m = fbm1(c * 0.05, sd + 777 + lvl * 13, 3);
-    if (m > 0.55) h += Math.pow((m - 0.55) / 0.45, 1.6) * rows * mount;
+    if (m > 0.55) h += Math.pow((m - 0.55) / 0.45, 1.6) * rows * (0.12 + diff * 0.20);
     var cr = fbm1(c * 0.25, sd + 4242, 2);
-    if (cr > 0.72) h -= Math.pow((cr - 0.72) / 0.28, 2) * rows * 0.07;
-    heights[c] = Math.floor(clamp(h, rows * 0.22, rows * 0.70));
+    if (cr > 0.72) h -= Math.pow((cr - 0.72) / 0.28, 2) * rows * (0.05 + diff * 0.08);
+    heights[c] = Math.floor(clamp(h, rows * 0.18, rows * 0.72));
   }
 
-  var padWorld = Math.max(72, 160 - stage * 6);
+  var padWorld = Math.max(72, 155 - stage * 4);
   var padCells = Math.max(5, Math.round(padWorld / cell));
-  var padStart = Math.floor(cols * (0.12 + rng() * 0.18));
+  var padStart = Math.floor(cols * (0.12 + rng() * 0.16));
   padStart = clamp(padStart, 2, cols - padCells - 3);
   var padEnd = padStart + padCells;
   var padCenter = Math.floor((padStart + padEnd) * 0.5);
   var padRow = heights[padCenter];
 
-  for (var i = -3; i < padCells + 3; i++) {
+  for (i = -3; i < padCells + 3; i++) {
     var pc = padStart + i;
     if (pc >= 0 && pc < cols) heights[pc] = padRow;
   }
 
-  var surfaceHeights = new Int32Array(cols);
-  for (c = 0; c < cols; c++) surfaceHeights[c] = heights[c];
-
   for (c = 0; c < cols; c++) {
-    for (var gy = 0; gy <= heights[c]; gy++) solid[gy * cols + c] = 1;
+    for (r = 0; r <= heights[c]; r++) solid[r * cols + c] = 1;
   }
 
-  function carveBlob(bx, by, brx, bry) {
-    var x0 = Math.max(0, Math.floor(bx - brx));
-    var x1 = Math.min(cols - 1, Math.ceil(bx + brx));
-    var y0 = Math.max(1, Math.floor(by - bry));
-    var y1 = Math.min(rows - 2, Math.ceil(by + bry));
-    for (var yy = y0; yy <= y1; yy++) {
-      for (var xx = x0; xx <= x1; xx++) {
-        if (xx >= padStart - 2 && xx < padEnd + 2 && yy >= padRow - 3 && yy <= padRow + 1) continue;
-        if (yy >= surfaceHeights[xx]) continue;
-        var dx = (xx - bx) / brx;
-        var dy = (yy - by) / bry;
-        if (dx * dx + dy * dy <= 1) solid[yy * cols + xx] = 0;
-      }
-    }
-  }
-
-  var caveCount = Math.min(stage, 15);
-  var prevX = 0, prevY = 0;
-  for (i = 0; i < caveCount; i++) {
-    var cx = Math.floor(rng() * cols);
-    var surf = surfaceHeights[cx];
-    var avail = surf - 8;
-    if (avail < 5) continue;
-    var cy = Math.floor(4 + rng() * avail);
-    var big = rng() < 0.28;
-    var rx = (big ? 5 : 2) + rng() * (3 + Math.min(stage, 12) * 0.28);
-    var ry = (big ? 4 : 2) + rng() * (2 + Math.min(stage, 12) * 0.22);
-    carveBlob(cx, cy, rx, ry);
-    if (i > 0 && rng() < 0.72) {
-      var steps = 8 + Math.floor(rng() * 14);
-      var tx = prevX, ty = prevY;
-      for (var s = 1; s <= steps; s++) {
-        tx = lerp(tx, cx, s / steps) + (rng() - 0.5) * 1.8;
-        ty = lerp(ty, cy, s / steps) + (rng() - 0.5) * 1.2;
-        carveBlob(tx, ty, 1.4 + rng() * 1.5, 1.0 + rng() * 1.0);
-      }
-    }
-    prevX = cx;
-    prevY = cy;
-  }
-
-  // Reinforce pad after carving.
   for (c = padStart; c < padEnd; c++) {
+    for (r = Math.max(0, padRow - 3); r <= padRow; r++) solid[r * cols + c] = 1;
     padMap[padRow * cols + c] = 1;
-    for (gy = Math.max(0, padRow - 3); gy <= padRow; gy++) solid[gy * cols + c] = 1;
   }
 
-  var tops = new Int32Array(cols);
-  for (c = 0; c < cols; c++) {
-    tops[c] = -1;
-    for (gy = rows - 1; gy >= 0; gy--) {
-      if (solid[gy * cols + c]) { tops[c] = gy; break; }
-    }
-  }
-
-  var astroCount = Math.min(1 + Math.floor(stage * 0.8), 8);
-  var astronauts = [];
-  var minSep = Math.max(145, 225 - stage * 7);
-
-  function addAstroByCol(cc) {
-    cc = clamp(cc, 2, cols - 3);
-    if (cc >= padStart - 3 && cc < padEnd + 3) return false;
-    var top = tops[cc];
-    if (top < 1) return false;
-    var x = (cc + 0.5) * cell;
-    for (var ii = 0; ii < astronauts.length; ii++) {
-      if (Math.abs(astronauts[ii].x - x) < minSep) return false;
-    }
-    var y = (top + 1) * cell + 11;
-    astronauts.push({ x:x, y:y, taken:false, r:17, id:astronauts.length });
-    return true;
-  }
-
-  var tries = 0;
-  while (astronauts.length < astroCount && tries < 1600) {
-    tries++;
-    addAstroByCol(Math.floor(rng() * cols));
-  }
-  for (c = padEnd + 5; c < cols - 3 && astronauts.length < astroCount; c += 5) addAstroByCol(c);
-  for (c = 3; c < padStart - 4 && astronauts.length < astroCount; c += 5) addAstroByCol(c);
-  while (astronauts.length < astroCount) {
-    var fx = 200 + astronauts.length * 220;
-    var fc = clamp(Math.floor(fx / cell), 2, cols - 3);
-    var ftop = Math.max(1, tops[fc]);
-    astronauts.push({ x:(fc+0.5)*cell, y:(ftop+1)*cell+11, taken:false, r:17, id:astronauts.length });
-    if (astronauts.length > 12) break;
-  }
-
-  var gravity = 24 + diff * 18;
-  var thrust = 86 + diff * 20;
-  var burn = 15 + diff * 7;
-  var safeVx = 40 - diff * 10;
-  var safeVy = 60 - diff * 20;
-  var safeAng = 0.40 - diff * 0.14;
-  var maxFuel = 360;
-  var startFuel = Math.round(clamp(155 - diff * 75, 75, 155));
-  var fuelCan = Math.round(clamp(62 - diff * 24, 34, 62));
-  var safety = 3.3 - diff * 1.5;
-
-  var padTopY = (padRow + 1) * cell;
-  var padX = (padCenter + 0.5) * cell;
-  var shipStart = { x: padX, y: Math.min(WORLD_H - 120, padTopY + 380) };
+  var surfaceRef = new Int32Array(cols);
+  for (c = 0; c < cols; c++) surfaceRef[c] = heights[c];
 
   var t = {
     level: lvl,
     stage: stage,
+    diff: diff,
     cell: cell,
     cols: cols,
     rows: rows,
     solid: solid,
     padMap: padMap,
-    tops: tops,
+    surfaceRef: surfaceRef,
+    tops: null,
     padStart: padStart,
     padEnd: padEnd,
     padCenter: padCenter,
     padRow: padRow,
-    padX: padX,
-    padTopY: padTopY,
-    shipStart: shipStart,
-    astronauts: astronauts,
+    padX: (padCenter + 0.5) * cell,
+    padTopY: (padRow + 1) * cell,
+    astronauts: [],
     fuels: [],
-    gravity: gravity,
-    thrust: thrust,
-    burn: burn,
-    safeVx: safeVx,
-    safeVy: safeVy,
-    safeAng: safeAng,
-    maxFuel: maxFuel,
-    startFuel: startFuel,
-    fuelCan: fuelCan,
-    safety: safety,
+    caveEntrances: [],
+    tunnelHalf: Math.max(2, Math.ceil(SHIP_R * 2.7 / cell)),
+    chamberHalf: 0,
+    gravity: 24 + diff * 16,
+    thrust: 88 + diff * 18,
+    burn: 15 + diff * 6,
+    rotRate: 2.75 - diff * 0.65,
+    safeVx: 38 - diff * 10,
+    safeVy: 58 - diff * 18,
+    safeAng: 0.42 - diff * 0.16,
+    maxFuel: 400,
+    startFuel: Math.round(155 - diff * 45),
+    fuelCan: Math.round(72 - diff * 22),
+    startPoint: null,
+    route: null,
+    requiredFuel: 0,
     chunks: null,
-    pad: null
+    pad: null,
+    backdrop: null,
+    surfaceY: null,
+    surfacePrefix: null
+  };
+  t.chamberHalf = t.tunnelHalf + 2 + Math.floor(diff * 2);
+
+  var astroCount = Math.min(1 + Math.floor(lvl / 3), 8);
+  var deepChance = simple ? 0 : clamp((lvl - 3) * 0.09, 0, 0.88);
+  var pendingSurface = 0;
+
+  for (i = 0; i < astroCount; i++) {
+    var site = null;
+    if (!simple && lvl >= 4 && rng() < deepChance) site = createDeepSite(t, rng, t.astronauts.length);
+    if (site) t.astronauts.push(site);
+    else pendingSurface++;
+  }
+
+  if (!simple) {
+    var decoCount = Math.min(8, Math.floor(stage * 0.7));
+    for (i = 0; i < decoCount; i++) addDecorativeTunnel(t, rng);
+  }
+
+  removeIsolatedAir(t);
+  restoreDeepSites(t);
+  removeIsolatedAir(t);
+  recomputeTops(t);
+  buildSurfacePrefix(t);
+
+  for (i = 0; i < pendingSurface; i++) {
+    t.astronauts.push(createSurfaceSite(t, rng, t.astronauts.length));
+  }
+
+  if (t.astronauts.length === 0) {
+    t.astronauts.push(createSurfaceSite(t, rng, 0));
+  }
+
+  t.startPoint = {
+    x: t.padX,
+    y: clamp(t.padTopY + 330 + t.diff * 170, t.padTopY + 80, WORLD_H - 80)
   };
 
-  planFuel(t, quality, rng);
+  var route = buildRoute(t);
+  t.route = route;
+  planFuel(t, route, quality, rng);
+
+  return t;
+}
+
+function generateLevel(lvl, sd, quality) {
+  var t = generateLevelCore(lvl, sd, quality, false);
+  if (!validateLevel(t)) {
+    t = generateLevelCore(lvl, sd, quality, true);
+    if (!validateLevel(t)) {
+      t = generateLevelCore(1, sd, quality, true);
+      t.level = lvl;
+    }
+  }
+
+  t.seedUsed = sd;
+  t.backdrop = buildBackdropMesh(t, quality);
   t.chunks = buildTerrainChunks(t, quality);
   t.pad = buildPadMeshes(t, quality);
   return t;
 }
 
 var renderer = null;
-var noiseTex = null;
-var particleTex = null;
 var shipMesh = null;
 var astroMesh = null;
 var fuelMesh = null;
@@ -1255,7 +1922,7 @@ var state = "title";
 
 var terrain = null;
 var ship = null;
-var camera = { x: WORLD_W * 0.5, y: WORLD_H * 0.62 };
+var camera = { x: WORLD_W * 0.5, y: WORLD_H * 0.62, dist: 1200 };
 var particles = [];
 var starBuffer = null;
 var entityZ = 50;
@@ -1268,6 +1935,7 @@ var exhaustAcc = 0;
 var msgTimer = 0;
 var perfN = 0;
 var perfT = 0;
+var hudAcc = 0;
 
 var keys = { left:false, right:false, thrust:false };
 
@@ -1281,6 +1949,10 @@ var identityNormal = mat3Identity(new Float32Array(9));
 var tmpModel = new Float32Array(16);
 var tmpNormal = new Float32Array(9);
 
+var backdropMat = {
+  color: [0.018,0.020,0.030], color2: [0.030,0.032,0.045], emissive: [0.006,0.006,0.012],
+  texScale: 0.02, alpha: 1, useTex: 0, spec: [0,0,0], specPower: 1, depthTint: 0
+};
 var terrainMat = {
   color: [0.48,0.45,0.43], color2: [0.74,0.72,0.68], emissive: [0,0,0],
   texScale: 0.035, alpha: 1, useTex: 1, spec: [0.02,0.02,0.03], specPower: 8, depthTint: 1
@@ -1315,6 +1987,7 @@ function disposeTerrain(t) {
     renderer.disposeMesh(t.pad.deck);
     renderer.disposeMesh(t.pad.lights);
   }
+  if (t.backdrop) renderer.disposeMesh(t.backdrop);
 }
 
 function buildStars() {
@@ -1334,20 +2007,40 @@ function buildStars() {
   starBuffer = renderer.createParticleStatic(data);
 }
 
+function baseDistance() {
+  var aspect = renderer.w / Math.max(1, renderer.h);
+  var tanHalf = Math.tan(FOV / 2);
+  var targetH = 780 / q.zoomMul;
+  var targetW = 1150 / q.zoomMul;
+  var dH = targetH / (2 * tanHalf);
+  var dW = targetW / (2 * tanHalf * Math.max(0.25, aspect));
+  return clamp(Math.max(dH, dW), 520, 2400);
+}
+
+function resetKeys() {
+  keys.left = false;
+  keys.right = false;
+  keys.thrust = false;
+  setClass($("btnLeft"), "active", false);
+  setClass($("btnRight"), "active", false);
+  setClass($("btnThrust"), "active", false);
+}
+
 function prepareLevel() {
+  resetKeys();
   disposeTerrain(terrain);
   terrain = generateLevel(level, seed, q);
   entityZ = q.depth * 0.5 + 12;
 
   ship = {
-    x: terrain.shipStart.x,
-    y: terrain.shipStart.y,
+    x: terrain.startPoint.x,
+    y: terrain.startPoint.y,
     vx: 0,
     vy: 0,
     angle: 0,
     fuel: terrain.startFuel,
     maxFuel: terrain.maxFuel,
-    r: 14,
+    r: SHIP_R,
     alive: true,
     grounded: false,
     thrusting: false
@@ -1360,7 +2053,8 @@ function prepareLevel() {
   crashTimer = 0;
   buildStars();
   camera.x = ship.x;
-  camera.y = ship.y + 30;
+  camera.y = ship.y + 25;
+  camera.dist = baseDistance();
   updateSeedInputs();
   updateHUD();
 }
@@ -1377,22 +2071,19 @@ function resize() {
   var w = Math.max(1, Math.floor(cssW * dpr * q.renderScale));
   var h = Math.max(1, Math.floor(cssH * dpr * q.renderScale));
   renderer.resize(w, h);
+  camera.dist = baseDistance();
 }
 
 function updateCameraMatrices() {
   var aspect = renderer.w / Math.max(1, renderer.h);
-  var fov = 45 * Math.PI / 180;
-  var tanHalf = Math.tan(fov / 2);
-  var needH = 700 / q.zoomMul;
-  var needW = 1000 / q.zoomMul;
-  var dist = Math.max(needH / (2 * tanHalf), needW / (2 * tanHalf * Math.max(0.25, aspect)));
-  dist = clamp(dist, 600, 3200);
+  var tanHalf = Math.tan(FOV / 2);
+  var dist = camera.dist;
+
+  mat4Perspective(proj, FOV, aspect, 1, dist + 4000);
 
   var ex = camera.x;
-  var ey = camera.y + dist * 0.12;
+  var ey = camera.y + dist * 0.08;
   var ez = dist;
-
-  mat4Perspective(proj, fov, aspect, 1, dist + 3500);
   mat4LookAt(view, ex, ey, ez, camera.x, camera.y, 0, 0, 1, 0);
 
   camPos[0] = ex; camPos[1] = ey; camPos[2] = ez;
@@ -1466,35 +2157,6 @@ function spawnExplosion(x,y) {
   }
 }
 
-function checkCollision(x,y,r) {
-  if (!terrain) return { hit:false, pad:false };
-  var t = terrain;
-  var minGx = Math.floor((x - r) / t.cell);
-  var maxGx = Math.floor((x + r) / t.cell);
-  var minGy = Math.floor((y - r) / t.cell);
-  var maxGy = Math.floor((y + r) / t.cell);
-  var hit = false, pad = false;
-  for (var gy = minGy; gy <= maxGy; gy++) {
-    if (gy < 0 || gy >= t.rows) continue;
-    for (var gx = minGx; gx <= maxGx; gx++) {
-      if (gx < 0 || gx >= t.cols) continue;
-      var idx = gy * t.cols + gx;
-      if (!t.solid[idx]) continue;
-      var cx0 = gx * t.cell;
-      var cy0 = gy * t.cell;
-      var closestX = clamp(x, cx0, cx0 + t.cell);
-      var closestY = clamp(y, cy0, cy0 + t.cell);
-      var dx = x - closestX;
-      var dy = y - closestY;
-      if (dx * dx + dy * dy <= r * r) {
-        hit = true;
-        if (t.padMap[idx]) pad = true;
-      }
-    }
-  }
-  return { hit: hit, pad: pad };
-}
-
 function crashShip() {
   if (!ship || !ship.alive) return;
   ship.alive = false;
@@ -1518,7 +2180,7 @@ function winLevel() {
 }
 
 function updateShip(dt) {
-  if (!ship || !ship.alive || state !== "playing") return;
+  if (!ship || !ship.alive || state !== "playing" || !terrain) return;
 
   if (ship.grounded) {
     if (keys.thrust && ship.fuel > 0) {
@@ -1532,9 +2194,8 @@ function updateShip(dt) {
     }
   }
 
-  var rot = 2.65;
-  if (keys.left) ship.angle -= rot * dt;
-  if (keys.right) ship.angle += rot * dt;
+  if (keys.left) ship.angle -= terrain.rotRate * dt;
+  if (keys.right) ship.angle += terrain.rotRate * dt;
   ship.angle = normAngle(ship.angle);
 
   ship.thrusting = keys.thrust && ship.fuel > 0;
@@ -1567,20 +2228,21 @@ function updateShip(dt) {
   if (nx < ship.r) { nx = ship.r; ship.vx = Math.abs(ship.vx) * 0.2; }
   if (nx > WORLD_W - ship.r) { nx = WORLD_W - ship.r; ship.vx = -Math.abs(ship.vx) * 0.2; }
   if (ny > WORLD_H - ship.r) { ny = WORLD_H - ship.r; ship.vy = -Math.abs(ship.vy) * 0.2; }
+  if (ny < ship.r) { ny = ship.r; ship.vy = Math.abs(ship.vy) * 0.2; }
 
-  var col = checkCollision(nx, ny, ship.r);
+  var col = checkCollision(terrain, nx, ny, ship.r);
   if (col.hit) {
     var safe =
       col.pad &&
       Math.abs(ship.vx) < terrain.safeVx &&
-      ship.vy >= -terrain.safeVy &&
-      ship.vy <= 30 &&
+      ship.vy < 0 &&
+      ship.vy > -terrain.safeVy &&
       Math.abs(normAngle(ship.angle)) < terrain.safeAng &&
-      ny > terrain.padTopY - 8;
+      ny > terrain.padTopY + 1;
 
     if (safe) {
       ship.x = nx;
-      ship.y = terrain.padTopY + ship.r + 0.5;
+      ship.y = terrain.padTopY + ship.r + 2;
       ship.vx = 0;
       ship.vy = 0;
       ship.angle = 0;
@@ -1647,9 +2309,41 @@ function updateParticles(dt) {
 }
 
 function updateCamera(dt) {
-  var tx = ship ? ship.x : WORLD_W * 0.5;
-  var ty = ship ? ship.y + 25 : WORLD_H * 0.6;
-  var k = Math.min(1, dt * 4.5);
+  var tx, ty;
+  if (ship) {
+    var speed = len2(ship.vx, ship.vy);
+    var speedNorm = clamp(speed / 240, 0, 1);
+    var base = baseDistance();
+    var desiredDist = base * (1 + speedNorm * 0.95);
+
+    var tanHalf = Math.tan(FOV / 2);
+    var halfH = desiredDist * tanHalf;
+    var halfW = halfH * (renderer.w / Math.max(1, renderer.h));
+
+    var lead = 0.16 + speedNorm * 0.62;
+    var ox = ship.vx * lead;
+    var oy = ship.vy * lead;
+
+    var maxOX = halfW * 0.34;
+    var maxOY = halfH * 0.30;
+    ox = clamp(ox, -maxOX, maxOX);
+    oy = clamp(oy, -maxOY, maxOY);
+
+    tx = ship.x + ox;
+    ty = ship.y + oy;
+
+    var marginX = Math.min(halfW * 0.25, WORLD_W * 0.5);
+    var marginY = Math.min(halfH * 0.25, WORLD_H * 0.5);
+    tx = clamp(tx, marginX, WORLD_W - marginX);
+    ty = clamp(ty, marginY, WORLD_H - marginY);
+
+    camera.dist += (desiredDist - camera.dist) * Math.min(1, dt * 2.5);
+  } else {
+    tx = WORLD_W * 0.5;
+    ty = WORLD_H * 0.6;
+  }
+
+  var k = Math.min(1, dt * 3.2);
   camera.x += (tx - camera.x) * k;
   camera.y += (ty - camera.y) * k;
 }
@@ -1682,6 +2376,12 @@ function buildParticleData() {
   return off / 10;
 }
 
+function isVisible(x,y) {
+  var halfW = (renderer.visibleHalfW || 800) * 1.25 + 120;
+  var halfH = (renderer.visibleHalfH || 600) * 1.25 + 120;
+  return x > camera.x - halfW && x < camera.x + halfW && y > camera.y - halfH && y < camera.y + halfH;
+}
+
 function render() {
   if (!renderer) return;
   updateCameraMatrices();
@@ -1694,16 +2394,21 @@ function render() {
   renderer.beginOpaque(proj, view, camPos);
 
   if (terrain) {
-    var halfW = renderer.visibleHalfW || 700;
-    for (var i = 0; i < terrain.chunks.length; i++) {
-      var ch = terrain.chunks[i];
-      if (ch.maxX < camera.x - halfW * 1.45 - 300) continue;
-      if (ch.minX > camera.x + halfW * 1.45 + 300) continue;
-      renderer.drawMesh(ch.mesh, identityModel, identityNormal, terrainMat);
+    if (terrain.backdrop) renderer.drawMesh(terrain.backdrop, identityModel, identityNormal, backdropMat);
+
+    var halfW = renderer.visibleHalfW || 800;
+    var i;
+    if (terrain.chunks) {
+      for (i = 0; i < terrain.chunks.length; i++) {
+        var ch = terrain.chunks[i];
+        if (ch.maxX < camera.x - halfW * 1.45 - 300) continue;
+        if (ch.minX > camera.x + halfW * 1.45 + 300) continue;
+        renderer.drawMesh(ch.mesh, identityModel, identityNormal, terrainMat);
+      }
     }
 
-    if (terrain.pad) {
-      setModel(tmpModel, tmpNormal, terrain.padX, terrain.padTopY + 3, q.depth * 0.5 + 2, 0);
+    if (terrain.pad && isVisible(terrain.padX, terrain.padTopY + 20)) {
+      setModel(tmpModel, tmpNormal, terrain.padX, terrain.padTopY, q.depth * 0.5 + 2, 0);
       renderer.drawMesh(terrain.pad.deck, tmpModel, tmpNormal, padMat);
 
       var pulse = 0.45 + 0.55 * Math.sin(gameTime * 4);
@@ -1716,13 +2421,13 @@ function render() {
         padLightMat.emissive[1] = 0.65 * pulse;
         padLightMat.emissive[2] = 0.10 * pulse;
       }
-      setModel(tmpModel, tmpNormal, terrain.padX, terrain.padTopY + 3, q.depth * 0.5 + 7, 0);
+      setModel(tmpModel, tmpNormal, terrain.padX, terrain.padTopY, q.depth * 0.5 + 7, 0);
       renderer.drawMesh(terrain.pad.lights, tmpModel, tmpNormal, padLightMat);
     }
 
     for (i = 0; i < terrain.astronauts.length; i++) {
       var a = terrain.astronauts[i];
-      if (a.taken) continue;
+      if (a.taken || !isVisible(a.x, a.y)) continue;
       var bob = Math.sin(gameTime * 2.2 + a.id) * 2.5;
       var sway = Math.sin(gameTime * 1.7 + a.id) * 0.08;
       setModel(tmpModel, tmpNormal, a.x, a.y + bob, entityZ - 2, sway);
@@ -1731,7 +2436,7 @@ function render() {
 
     for (i = 0; i < terrain.fuels.length; i++) {
       var f = terrain.fuels[i];
-      if (f.taken) continue;
+      if (f.taken || !isVisible(f.x, f.y)) continue;
       var fb = Math.sin(gameTime * 2.0 + f.id) * 3.0;
       var fs = Math.sin(gameTime * 1.3 + f.id) * 0.15;
       setModel(tmpModel, tmpNormal, f.x, f.y + fb, entityZ - 1, fs);
@@ -1759,7 +2464,8 @@ function updateHUD() {
   $("fuelFill").style.width = (fp * 100) + "%";
   $("fuelFill").style.background = fp < 0.25 ? "#ff5252" : "#4fc3f7";
   $("velHud").textContent = len2(ship.vx, ship.vy).toFixed(0);
-  $("seedHud").textContent = seed.toString(16).toUpperCase();
+  var shownSeed = (terrain.seedUsed === undefined ? seed : terrain.seedUsed) >>> 0;
+  $("seedHud").textContent = shownSeed.toString(16).toUpperCase();
 }
 
 function updateSeedInputs() {
@@ -1778,20 +2484,20 @@ function showMsg(text) {
 
 function setState(s) {
   state = s;
-  $("title").classList.toggle("hidden", s !== "title");
-  $("pause").classList.toggle("hidden", s !== "paused");
-  $("win").classList.toggle("hidden", s !== "win");
-  $("lose").classList.toggle("hidden", s !== "lose");
+  setClass($("title"), "hidden", s !== "title");
+  setClass($("pause"), "hidden", s !== "paused");
+  setClass($("win"), "hidden", s !== "win");
+  setClass($("lose"), "hidden", s !== "lose");
   var inGame = (s === "playing" || s === "crashing");
-  $("hud").classList.toggle("hidden", !inGame);
-  $("controls").classList.toggle("hidden", s !== "playing");
+  setClass($("hud"), "hidden", !inGame);
+  setClass($("controls"), "hidden", s !== "playing");
   if (s !== "playing") Snd.setThrust(false);
 }
 
 function refreshGfxButtons() {
   var btns = document.querySelectorAll(".gfxBtn");
   for (var i = 0; i < btns.length; i++) {
-    btns[i].classList.toggle("sel", btns[i].getAttribute("data-q") === gfxMode);
+    setClass(btns[i], "sel", btns[i].getAttribute("data-q") === gfxMode);
   }
 }
 
@@ -1802,30 +2508,43 @@ function setGfx(mode) {
   resize();
   var prev = state;
   prepareLevel();
-  if (prev === "title") setState("title");
-  else setState("paused");
+  setState(prev === "title" ? "title" : "paused");
 }
 
-function applySeedFromInput(value) {
-  var parsed = parseInt(String(value).trim(), 16);
-  seed = isFinite(parsed) ? (parsed >>> 0) : randomSeed();
-  level = 1;
-  updateSeedInputs();
+function applySeedFromString(value, targetState) {
+  seed = parseSeedValue(value);
+  if (targetState === "title") level = 1;
   prepareLevel();
-  setState("paused");
+  setState(targetState);
 }
 
-function newSeed() {
+function newSeedTitle() {
   seed = randomSeed();
   level = 1;
-  updateSeedInputs();
+  prepareLevel();
+  setState("title");
+}
+
+function newSeedPause() {
+  seed = randomSeed();
   prepareLevel();
   setState("paused");
+}
+
+function newSeedLose() {
+  seed = randomSeed();
+  prepareLevel();
+  setState("playing");
+}
+
+function resumeGame() {
+  resetKeys();
+  setState("playing");
 }
 
 function togglePause() {
   if (state === "playing") setState("paused");
-  else if (state === "paused") setState("playing");
+  else if (state === "paused") resumeGame();
 }
 
 function trackPerf(dt) {
@@ -1847,79 +2566,125 @@ function trackPerf(dt) {
 
 function bindHold(id, key) {
   var el = $(id);
+  el.tabIndex = -1;
+
   function down(e) {
-    e.preventDefault();
+    if (e.preventDefault) e.preventDefault();
     Snd.init();
     Snd.resume();
     keys[key] = true;
-    el.classList.add("active");
-    try { el.setPointerCapture(e.pointerId); } catch (_) {}
+    setClass(el, "active", true);
+    try { if (e.pointerId !== undefined && el.setPointerCapture) el.setPointerCapture(e.pointerId); } catch (_) {}
   }
   function up(e) {
-    e.preventDefault();
+    if (e.preventDefault) e.preventDefault();
     keys[key] = false;
-    el.classList.remove("active");
+    setClass(el, "active", false);
   }
-  el.addEventListener("pointerdown", down);
-  el.addEventListener("pointerup", up);
-  el.addEventListener("pointercancel", up);
-  el.addEventListener("pointerleave", up);
+
+  if (window.PointerEvent) {
+    el.addEventListener("pointerdown", down);
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
+    el.addEventListener("pointerleave", up);
+  } else {
+    el.addEventListener("mousedown", down);
+    el.addEventListener("mouseup", up);
+    el.addEventListener("mouseleave", up);
+    el.addEventListener("touchstart", down);
+    el.addEventListener("touchend", up);
+    el.addEventListener("touchcancel", up);
+  }
+}
+
+function bindClick(id, fn) {
+  var el = $(id);
+  el.addEventListener("click", function(e) {
+    if (e.preventDefault) e.preventDefault();
+    Snd.init();
+    Snd.resume();
+    Snd.click();
+    if (el.blur) el.blur();
+    fn();
+  });
 }
 
 function wireUI() {
   var gfxBtns = document.querySelectorAll(".gfxBtn");
   for (var i = 0; i < gfxBtns.length; i++) {
     (function(btn) {
-      btn.addEventListener("click", function() {
+      btn.addEventListener("click", function(e) {
+        if (e.preventDefault) e.preventDefault();
         Snd.init(); Snd.resume(); Snd.click();
+        if (btn.blur) btn.blur();
         setGfx(btn.getAttribute("data-q"));
       });
     })(gfxBtns[i]);
   }
 
-  $("startBtn").addEventListener("click", function() {
-    Snd.init(); Snd.resume(); Snd.click();
-    level = 1;
-    loadLevel();
-  });
+  bindClick("startBtn", function() { level = 1; loadLevel(); });
+  bindClick("newSeedTitle", newSeedTitle);
+  bindClick("newSeedPause", newSeedPause);
+  bindClick("loseNewSeed", newSeedLose);
 
-  $("newSeedTitle").addEventListener("click", function() { Snd.init(); Snd.resume(); Snd.click(); newSeed(); });
-  $("newSeedPause").addEventListener("click", function() { Snd.init(); Snd.resume(); Snd.click(); newSeed(); });
-  $("loseNewSeed").addEventListener("click", function() { Snd.init(); Snd.resume(); Snd.click(); newSeed(); });
+  $("seedTitle").addEventListener("change", function(e) { applySeedFromString(e.target.value, "title"); });
+  $("seedPause").addEventListener("change", function(e) { applySeedFromString(e.target.value, "paused"); });
 
-  $("seedTitle").addEventListener("change", function(e) { applySeedFromInput(e.target.value); });
-  $("seedPause").addEventListener("change", function(e) { applySeedFromInput(e.target.value); });
+  bindClick("pauseBtn", togglePause);
+  bindClick("resumeBtn", resumeGame);
+  bindClick("restartBtn", loadLevel);
+  bindClick("pauseTitleBtn", function() { prepareLevel(); setState("title"); });
 
-  $("pauseBtn").addEventListener("click", function() { Snd.click(); togglePause(); });
-  $("resumeBtn").addEventListener("click", function() { Snd.click(); setState("playing"); });
-  $("restartBtn").addEventListener("click", function() { Snd.click(); loadLevel(); });
-  $("pauseTitleBtn").addEventListener("click", function() { Snd.click(); prepareLevel(); setState("title"); });
+  bindClick("nextBtn", function() { level++; loadLevel(); });
+  bindClick("winTitleBtn", function() { prepareLevel(); setState("title"); });
 
-  $("nextBtn").addEventListener("click", function() { Snd.click(); level++; loadLevel(); });
-  $("winTitleBtn").addEventListener("click", function() { Snd.click(); prepareLevel(); setState("title"); });
-
-  $("retryBtn").addEventListener("click", function() { Snd.click(); loadLevel(); });
-  $("loseTitleBtn").addEventListener("click", function() { Snd.click(); prepareLevel(); setState("title"); });
+  bindClick("retryBtn", loadLevel);
+  bindClick("loseTitleBtn", function() { prepareLevel(); setState("title"); });
 
   bindHold("btnLeft", "left");
   bindHold("btnRight", "right");
   bindHold("btnThrust", "thrust");
 
   window.addEventListener("keydown", function(e) {
-    if (e.code === "ArrowLeft" || e.code === "ArrowRight" || e.code === "ArrowUp" || e.code === "Space") e.preventDefault();
-    Snd.init();
-    Snd.resume();
-    if (e.code === "ArrowLeft" || e.code === "KeyA") keys.left = true;
-    if (e.code === "ArrowRight" || e.code === "KeyD") keys.right = true;
-    if (e.code === "ArrowUp" || e.code === "Space" || e.code === "KeyW") keys.thrust = true;
-    if (e.code === "Escape") togglePause();
-    if (e.code === "Enter" && state === "title") { level = 1; loadLevel(); }
+    var tag = e.target && e.target.tagName;
+    var code = e.code || "";
+    var kc = e.keyCode || 0;
+
+    if (tag === "INPUT" || tag === "TEXTAREA") {
+      if ((code === "Escape" || kc === 27) && e.target.blur) e.target.blur();
+      return;
+    }
+
+    if ((code === "Space" || kc === 32 || code === "Enter" || kc === 13) && tag === "BUTTON") {
+      if (e.preventDefault) e.preventDefault();
+      return;
+    }
+
+    var left = code === "ArrowLeft" || code === "KeyA" || kc === 37 || kc === 65;
+    var right = code === "ArrowRight" || code === "KeyD" || kc === 39 || kc === 68;
+    var up = code === "ArrowUp" || code === "KeyW" || code === "Space" || kc === 38 || kc === 87 || kc === 32;
+    var esc = code === "Escape" || kc === 27;
+    var enter = code === "Enter" || kc === 13;
+
+    if (left || right || up) {
+      if (e.preventDefault) e.preventDefault();
+      Snd.init();
+      Snd.resume();
+    }
+
+    if (left) keys.left = true;
+    if (right) keys.right = true;
+    if (up) keys.thrust = true;
+    if (esc) togglePause();
+    if (enter && state === "title") { level = 1; loadLevel(); }
   });
 
   window.addEventListener("keyup", function(e) {
-    if (e.code === "ArrowLeft" || e.code === "KeyA") keys.left = false;
-    if (e.code === "ArrowRight" || e.code === "KeyD") keys.right = false;
-    if (e.code === "ArrowUp" || e.code === "Space" || e.code === "KeyW") keys.thrust = false;
+    var code = e.code || "";
+    var kc = e.keyCode || 0;
+    if (code === "ArrowLeft" || code === "KeyA" || kc === 37 || kc === 65) keys.left = false;
+    if (code === "ArrowRight" || code === "KeyD" || kc === 39 || kc === 68) keys.right = false;
+    if (code === "ArrowUp" || code === "KeyW" || code === "Space" || kc === 38 || kc === 87 || kc === 32) keys.thrust = false;
   });
 
   window.addEventListener("resize", resize);
@@ -1934,11 +2699,15 @@ var acc = 0;
 
 function loop(now) {
   requestAnimationFrame(loop);
+  if (typeof now !== "number") now = Date.now();
   if (!lastTime) lastTime = now;
   var dt = (now - lastTime) / 1000;
   lastTime = now;
+  if (dt < 0) dt = 0;
   if (dt > 0.1) dt = 0.1;
-  trackPerf(dt);
+
+  if (state === "playing" || state === "crashing") trackPerf(dt);
+  else { perfN = 0; perfT = 0; }
 
   if (state !== "paused") {
     acc += dt;
@@ -1949,10 +2718,19 @@ function loop(now) {
       guard++;
     }
     if (guard >= 5) acc = 0;
+  } else {
+    acc = 0;
   }
 
   render();
-  if (state === "playing" || state === "crashing") updateHUD();
+
+  if (state === "playing" || state === "crashing") {
+    hudAcc += dt;
+    if (hudAcc >= 0.12) {
+      updateHUD();
+      hudAcc = 0;
+    }
+  }
 }
 
 function init() {
@@ -1977,10 +2755,13 @@ function init() {
 try {
   init();
 } catch (err) {
+  var msg = String(err && err.message || err);
+  var isWebGL = /WebGL|shader|program/i.test(msg);
   document.body.innerHTML =
     '<div style="color:#fff;font-family:monospace;padding:20px">' +
-    '<h2>Unable to start</h2><p>' + String(err && err.message || err) + '</p>' +
-    '<p>This game requires WebGL.</p></div>';
+    '<h2>Unable to start</h2><p>' + escapeHtml(msg) + '</p>' +
+    (isWebGL ? '<p>This game requires WebGL.</p>' : '<p>Please report this bug.</p>') +
+    '</div>';
 }
 </script>
 </body>
