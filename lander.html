@@ -56,7 +56,7 @@ input{background:#001018;border:1px solid #2bd;color:#8ff;font:inherit;padding:6
 
 <div id="title" class="screen">
   <h1>LUNAR SALVAGE</h1>
-  <p>Rescue every astronaut, gather fuel, and land softly on the pad.</p>
+  <p>True 3D volumetric models in a 2D side-view world. Rescue every astronaut, gather fuel, and land softly on the pad.</p>
   <div class="row">GFX
     <button class="gfxBtn" data-q="auto">Auto</button>
     <button class="gfxBtn" data-q="low">Low</button>
@@ -134,8 +134,12 @@ var WORLD_W = 2400;
 var WORLD_H = 1500;
 var STEP = 1 / 60;
 var PI2 = Math.PI * 2;
-var FOV = 45 * Math.PI / 180;
+var FOV = 50 * Math.PI / 180;
 var SHIP_R = 12;
+
+var SHIP_SCALE = 1.28;
+var ASTRO_SCALE = 1.22;
+var FUEL_SCALE = 1.22;
 
 function $(id) { return document.getElementById(id); }
 function clamp(v,a,b) { return v < a ? a : (v > b ? b : v); }
@@ -167,6 +171,8 @@ function parseSeedValue(v) {
   if (!isFinite(n) || n < 0) return randomSeed();
   return n >>> 0;
 }
+function uvX(x) { return x / WORLD_W; }
+function uvY(y) { return y / WORLD_H; }
 
 function mulberry32(a) {
   return function() {
@@ -238,16 +244,52 @@ function fbm2(x,y,seed,oct) {
 
 var QUALITIES = {
   low: {
-    name:"low", renderScale:0.55, dprCap:1, cell:28, chunkCols:28,
-    maxParticles:65, stars:45, zoomMul:1.6, depth:44, exhaustRate:24
+    name:"low",
+    renderScale:0.88,
+    dprCap:1.0,
+    maxPixels:1100000,
+    cell:26,
+    chunkCols:18,
+    maxParticles:90,
+    stars:60,
+    texW:256,
+    texH:160,
+    seg:8,
+    depth:42,
+    exhaustRate:28,
+    zoomHalfH:285
   },
   mid: {
-    name:"mid", renderScale:0.75, dprCap:1.25, cell:18, chunkCols:22,
-    maxParticles:150, stars:85, zoomMul:1.8, depth:60, exhaustRate:45
+    name:"mid",
+    renderScale:0.95,
+    dprCap:1.5,
+    maxPixels:2000000,
+    cell:18,
+    chunkCols:14,
+    maxParticles:160,
+    stars:95,
+    texW:512,
+    texH:320,
+    seg:12,
+    depth:58,
+    exhaustRate:48,
+    zoomHalfH:260
   },
   high: {
-    name:"high", renderScale:1, dprCap:1.5, cell:13, chunkCols:16,
-    maxParticles:280, stars:140, zoomMul:2, depth:76, exhaustRate:70
+    name:"high",
+    renderScale:1,
+    dprCap:2.0,
+    maxPixels:3400000,
+    cell:14,
+    chunkCols:12,
+    maxParticles:240,
+    stars:140,
+    texW:512,
+    texH:320,
+    seg:16,
+    depth:72,
+    exhaustRate:65,
+    zoomHalfH:245
   }
 };
 
@@ -285,41 +327,8 @@ function mat3Identity(o) {
   return o;
 }
 
-/*
-  Angle convention:
-  angle = 0       -> ship points up, thrust +Y
-  angle > 0       -> ship tilts right, thrust +X/+Y
-  angle < 0       -> ship tilts left,  thrust -X/+Y
-
-  This matrix is a clockwise 2D rotation for positive angles,
-  matching the physics thrust vector (sin(angle), cos(angle)).
-*/
-function setModel(outM, outN, x, y, z, ang) {
-  var c = Math.cos(ang), s = Math.sin(ang);
-
-  outM[0]=c;  outM[1]=-s; outM[2]=0; outM[3]=0;
-  outM[4]=s;  outM[5]=c;  outM[6]=0; outM[7]=0;
-  outM[8]=0;  outM[9]=0;  outM[10]=1;outM[11]=0;
-  outM[12]=x; outM[13]=y; outM[14]=z;outM[15]=1;
-
-  outN[0]=c; outN[1]=-s; outN[2]=0;
-  outN[3]=s; outN[4]=c;  outN[5]=0;
-  outN[6]=0; outN[7]=0;  outN[8]=1;
-}
-
-function normalize3(x,y,z) {
-  var l = len2(len2(x,y),z) || 1;
-  return [x/l, y/l, z/l];
-}
-
-function cross3(a,b) {
-  return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
-}
-
-function dot3(a,b) { return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]; }
-
 function mat4Perspective(out, fovy, aspect, near, far) {
-  var f = 1 / Math.tan(fovy / 2);
+  var f = 1 / Math.tan(fovy * 0.5);
   out[0]=f/aspect; out[1]=0; out[2]=0; out[3]=0;
   out[4]=0; out[5]=f; out[6]=0; out[7]=0;
   out[8]=0; out[9]=0; out[10]=(far+near)/(near-far); out[11]=-1;
@@ -327,18 +336,37 @@ function mat4Perspective(out, fovy, aspect, near, far) {
   return out;
 }
 
-function mat4LookAt(out, ex,ey,ez, cx,cy,cz, ux,uy,uz) {
-  var z = normalize3(ex-cx, ey-cy, ez-cz);
-  var x = normalize3.apply(null, cross3([ux,uy,uz], z));
-  var y = cross3(z, x);
-  out[0]=x[0]; out[1]=y[0]; out[2]=z[0]; out[3]=0;
-  out[4]=x[1]; out[5]=y[1]; out[6]=z[1]; out[7]=0;
-  out[8]=x[2]; out[9]=y[2]; out[10]=z[2]; out[11]=0;
-  out[12]=-dot3(x,[ex,ey,ez]);
-  out[13]=-dot3(y,[ex,ey,ez]);
-  out[14]=-dot3(z,[ex,ey,ez]);
-  out[15]=1;
+function mat4Translate(out, x, y, z) {
+  out[0]=1; out[1]=0; out[2]=0; out[3]=0;
+  out[4]=0; out[5]=1; out[6]=0; out[7]=0;
+  out[8]=0; out[9]=0; out[10]=1; out[11]=0;
+  out[12]=x; out[13]=y; out[14]=z; out[15]=1;
   return out;
+}
+
+/*
+  Angle convention:
+  angle = 0       -> model points up, thrust +Y
+  angle > 0       -> model tilts right, thrust +X/+Y
+  angle < 0       -> model tilts left,  thrust -X/+Y
+
+  Column-major matrix:
+  local up (0,1,0) becomes (sin(angle), cos(angle), 0),
+  exactly matching the physics thrust vector.
+*/
+function setModelScaled(outM, outN, x, y, z, ang, scale) {
+  scale = scale || 1;
+  var c = Math.cos(ang), s = Math.sin(ang);
+  var cs = c * scale, ss = s * scale;
+
+  outM[0]=cs; outM[1]=-ss; outM[2]=0; outM[3]=0;
+  outM[4]=ss; outM[5]=cs;  outM[6]=0; outM[7]=0;
+  outM[8]=0;  outM[9]=0;   outM[10]=1;outM[11]=0;
+  outM[12]=x; outM[13]=y;  outM[14]=z;outM[15]=1;
+
+  outN[0]=c; outN[1]=-s; outN[2]=0;
+  outN[3]=s; outN[4]=c;  outN[5]=0;
+  outN[6]=0; outN[7]=0;  outN[8]=1;
 }
 
 var Snd = {
@@ -433,11 +461,12 @@ function Renderer(canvas) {
   if (!gl) throw new Error("WebGL is not available.");
   this.gl = gl;
   this.canvas = canvas;
-  this.indexUint = !!gl.getExtension("OES_element_index_uint");
   this.w = 1;
   this.h = 1;
   this.visibleHalfW = 700;
   this.visibleHalfH = 500;
+  this.levelTex = null;
+  this.particleTex = null;
 
   var opaqueVS = [
     "attribute vec3 aPos;",
@@ -463,36 +492,41 @@ function Renderer(canvas) {
     "varying vec3 vWorld;",
     "varying vec2 vUV;",
     "uniform sampler2D uTex;",
-    "uniform vec3 uColor, uColor2, uEmissive;",
-    "uniform vec3 uLightDir, uLightColor, uAmbientSky, uAmbientGround;",
-    "uniform vec3 uSpecColor, uCamPos;",
-    "uniform float uSpecPower, uTexScale, uAlpha, uUseTex, uDepthTint, uWorldH;",
+    "uniform vec3 uColor, uColor2, uEmissive, uSpecColor, uCamPos;",
+    "uniform float uSpecPower, uTexScale, uAlpha, uUseTex, uDepthTint;",
     "void main() {",
-    "  vec3 n = normalize(vNormal);",
-    "  if (!gl_FrontFacing) n = -n;",
+    "  vec3 n = vNormal;",
+    "  float nl = length(n);",
+    "  if (nl < 0.0001) n = vec3(0.0, 0.0, 1.0); else n /= nl;",
     "  vec3 tex = vec3(1.0);",
-    "  float mixF = clamp(n.y * 0.5 + 0.5, 0.0, 1.0) * 0.5;",
+    "  float up = clamp(n.y * 0.5 + 0.5, 0.0, 1.0);",
+    "  float mixF = up * 0.5;",
     "  if (uUseTex > 0.5) {",
     "    tex = texture2D(uTex, vUV * uTexScale).rgb;",
-    "    mixF = clamp(n.y * 0.5 + 0.5, 0.0, 1.0) * 0.65 + (tex.g - 0.5) * 0.5;",
+    "    tex = max(tex, vec3(0.35));",
+    "    mixF = up * 0.45 + (tex.g - 0.5) * 0.55;",
     "  }",
     "  vec3 base = mix(uColor, uColor2, clamp(mixF, 0.0, 1.0));",
-    "  if (uUseTex > 0.5) base *= (0.72 + 0.55 * tex.r);",
+    "  if (uUseTex > 0.5) base *= (0.78 + 0.38 * tex.r);",
+    "  vec3 lightDir = normalize(vec3(0.32, 0.82, 0.46));",
+    "  vec3 lightColor = vec3(0.95, 0.96, 1.00);",
+    "  float ndl = dot(n, lightDir);",
+    "  float diff = abs(ndl);",
+    "  diff = 0.18 + diff * 0.82;",
+    "  vec3 ambSky = vec3(0.42, 0.46, 0.58);",
+    "  vec3 ambGround = vec3(0.18, 0.18, 0.24);",
+    "  vec3 amb = mix(ambGround, ambSky, up);",
+    "  vec3 col = base * (amb * 0.65 + lightColor * diff);",
     "  if (uDepthTint > 0.5) {",
-    "    float hf = clamp(vWorld.y / uWorldH, 0.0, 1.0);",
-    "    base *= mix(0.55, 1.15, hf);",
+    "    float hf = clamp(vWorld.y / 1500.0, 0.0, 1.0);",
+    "    col *= mix(0.78, 1.08, hf);",
     "  }",
-    "  vec3 l = normalize(uLightDir);",
-    "  float diff = max(dot(n, l), 0.0);",
-    "  float up = clamp(n.y * 0.5 + 0.5, 0.0, 1.0);",
-    "  vec3 amb = mix(uAmbientGround, uAmbientSky, up);",
-    "  vec3 col = base * (amb + uLightColor * diff);",
-    "  vec3 v = normalize(uCamPos - vWorld);",
-    "  vec3 h = normalize(l + v);",
-    "  float spec = pow(max(dot(n, h), 0.0), uSpecPower) * step(0.0, dot(n, l));",
+    "  vec3 viewDir = normalize(uCamPos - vWorld);",
+    "  vec3 halfVec = normalize(lightDir + viewDir);",
+    "  float spec = pow(max(dot(n, halfVec), 0.0), max(uSpecPower, 1.0));",
     "  col += uSpecColor * spec;",
     "  col += uEmissive;",
-    "  gl_FragColor = vec4(col, uAlpha);",
+    "  gl_FragColor = vec4(clamp(col, 0.0, 1.0), uAlpha);",
     "}"
   ].join("\n");
 
@@ -532,7 +566,9 @@ function Renderer(canvas) {
   gl.disable(gl.CULL_FACE);
   gl.clearColor(0.012, 0.016, 0.04, 1);
 
-  this.maxParticleVerts = 360 * 6;
+  this.whiteTex = this.createTexture(1, 1, new Uint8Array([255,255,255,255]), { repeat:false, mipmap:false });
+
+  this.maxParticleVerts = 420 * 6;
   this.particleData = new Float32Array(this.maxParticleVerts * 10);
   this.particleDynBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, this.particleDynBuffer);
@@ -571,7 +607,11 @@ Renderer.prototype.makeProgram = function(vsSrc, fsSrc, attribNames) {
   for (i = 0; i < attribNames.length; i++) obj[attribNames[i]] = gl.getAttribLocation(p, attribNames[i]);
   var names;
   if (attribNames[0] === "aPos") {
-    names = ["uProj","uView","uModel","uNormalMat","uTex","uColor","uColor2","uEmissive","uLightDir","uLightColor","uAmbientSky","uAmbientGround","uSpecColor","uSpecPower","uCamPos","uTexScale","uAlpha","uUseTex","uDepthTint","uWorldH"];
+    names = [
+      "uProj","uView","uModel","uNormalMat","uTex",
+      "uColor","uColor2","uEmissive","uSpecColor","uSpecPower",
+      "uCamPos","uTexScale","uAlpha","uUseTex","uDepthTint"
+    ];
   } else {
     names = ["uProj","uView","uRight","uUp","uTex"];
   }
@@ -600,13 +640,17 @@ Renderer.prototype.createTexture = function(w,h,data,opt) {
   return { tex: tex, w: w, h: h };
 };
 
+Renderer.prototype.disposeTexture = function(t) {
+  if (t && t.tex) this.gl.deleteTexture(t.tex);
+};
+
 Renderer.prototype.createMesh = function(verts, indices) {
   var gl = this.gl;
   var mesh = {
     vbo: gl.createBuffer(),
     ibo: null,
     count: 0,
-    type: 0
+    type: gl.UNSIGNED_SHORT
   };
 
   gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
@@ -617,7 +661,6 @@ Renderer.prototype.createMesh = function(verts, indices) {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ibo);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
     mesh.count = indices.length;
-    mesh.type = (window.Uint32Array && indices instanceof Uint32Array) ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
   } else {
     mesh.count = verts.length / 8;
     mesh.type = 0;
@@ -674,18 +717,12 @@ Renderer.prototype.beginOpaque = function(proj, view, camPos) {
   gl.disableVertexAttribArray(3);
 
   gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, this.noiseTex.tex);
+  gl.bindTexture(gl.TEXTURE_2D, this.levelTex ? this.levelTex.tex : this.whiteTex.tex);
   gl.uniform1i(p.uTex, 0);
 
   gl.uniformMatrix4fv(p.uProj, false, proj);
   gl.uniformMatrix4fv(p.uView, false, view);
   gl.uniform3fv(p.uCamPos, camPos);
-
-  gl.uniform3f(p.uLightDir, 0.35, 0.75, 0.55);
-  gl.uniform3f(p.uLightColor, 0.92, 0.94, 1.0);
-  gl.uniform3f(p.uAmbientSky, 0.24, 0.27, 0.36);
-  gl.uniform3f(p.uAmbientGround, 0.08, 0.08, 0.12);
-  gl.uniform1f(p.uWorldH, WORLD_H);
 };
 
 Renderer.prototype.drawMesh = function(mesh, model, normalMat, mat) {
@@ -700,7 +737,7 @@ Renderer.prototype.drawMesh = function(mesh, model, normalMat, mat) {
   gl.uniform3fv(p.uEmissive, mat.emissive);
   gl.uniform3fv(p.uSpecColor, mat.spec);
   gl.uniform1f(p.uSpecPower, mat.specPower);
-  gl.uniform1f(p.uTexScale, mat.texScale);
+  gl.uniform1f(p.uTexScale, mat.texScale === undefined ? 1 : mat.texScale);
   gl.uniform1f(p.uAlpha, mat.alpha === undefined ? 1 : mat.alpha);
   gl.uniform1f(p.uUseTex, mat.useTex === undefined ? 1 : mat.useTex);
   gl.uniform1f(p.uDepthTint, mat.depthTint || 0);
@@ -782,12 +819,174 @@ function addBox(mb, cx,cy,cz, hx,hy,hz) {
   var y0 = cy - hy, y1 = cy + hy;
   var z0 = cz - hz, z1 = cz + hz;
 
-  quad(mb, x0,y0,z1, x1,y0,z1, x1,y1,z1, x0,y1,z1, 0,0,1, x0,y0, x1,y0, x1,y1, x0,y1);
-  quad(mb, x0,y0,z0, x1,y0,z0, x1,y1,z0, x0,y1,z0, 0,0,-1, x0,y0, x1,y0, x1,y1, x0,y1);
-  quad(mb, x1,y0,z0, x1,y0,z1, x1,y1,z1, x1,y1,z0, 1,0,0, z0,y0, z1,y0, z1,y1, z0,y1);
-  quad(mb, x0,y0,z0, x0,y0,z1, x0,y1,z1, x0,y1,z0, -1,0,0, z0,y0, z1,y0, z1,y1, z0,y1);
-  quad(mb, x0,y1,z0, x1,y1,z0, x1,y1,z1, x0,y1,z1, 0,1,0, x0,z0, x1,z0, x1,z1, x0,z1);
-  quad(mb, x0,y0,z0, x1,y0,z0, x1,y0,z1, x0,y0,z1, 0,-1,0, x0,z0, x1,z0, x1,z1, x0,z1);
+  function face(ax,ay,az, bx,by,bz, ccx,ccy,ccz, dx,dy,dz, nx,ny,nz) {
+    var b = mb.v.length / 8;
+    mb.vertex(ax,ay,az,nx,ny,nz,0,0);
+    mb.vertex(bx,by,bz,nx,ny,nz,1,0);
+    mb.vertex(ccx,ccy,ccz,nx,ny,nz,1,1);
+    mb.vertex(dx,dy,dz,nx,ny,nz,0,1);
+    mb.i.push(b,b+1,b+2,b,b+2,b+3);
+  }
+
+  face(x0,y0,z1, x1,y0,z1, x1,y1,z1, x0,y1,z1, 0,0,1);
+  face(x0,y0,z0, x1,y0,z0, x1,y1,z0, x0,y1,z0, 0,0,-1);
+  face(x1,y0,z0, x1,y0,z1, x1,y1,z1, x1,y1,z0, 1,0,0);
+  face(x0,y0,z0, x0,y0,z1, x0,y1,z1, x0,y1,z0, -1,0,0);
+  face(x0,y1,z0, x1,y1,z0, x1,y1,z1, x0,y1,z1, 0,1,0);
+  face(x0,y0,z0, x1,y0,z0, x1,y0,z1, x0,y0,z1, 0,-1,0);
+}
+
+function addCircleCap(mb,cx,cy,cz,nx,ny,nz,r,seg,sx,sy,sz,ux,uy,uz) {
+  seg = Math.max(3, seg | 0);
+  if (r <= 0.02) return;
+  var center = mb.vertex(cx,cy,cz,nx,ny,nz,0.5,0.5);
+  for (var i = 0; i < seg; i++) {
+    var a = i / seg * PI2;
+    var b = (i + 1) / seg * PI2;
+    var ca = Math.cos(a), sa = Math.sin(a);
+    var cb = Math.cos(b), sb = Math.sin(b);
+    var p0x = cx + (sx * ca + ux * sa) * r;
+    var p0y = cy + (sy * ca + uy * sa) * r;
+    var p0z = cz + (sz * ca + uz * sa) * r;
+    var p1x = cx + (sx * cb + ux * sb) * r;
+    var p1y = cy + (sy * cb + uy * sb) * r;
+    var p1z = cz + (sz * cb + uz * sb) * r;
+    var v0 = mb.vertex(p0x,p0y,p0z,nx,ny,nz,0.5 + 0.5 * ca,0.5 + 0.5 * sa);
+    var v1 = mb.vertex(p1x,p1y,p1z,nx,ny,nz,0.5 + 0.5 * cb,0.5 + 0.5 * sb);
+    mb.i.push(center,v0,v1);
+  }
+}
+
+function addTube(mb, ax,ay,az, bx,by,bz, rA,rB, seg, caps) {
+  seg = Math.max(3, seg | 0);
+  var dx = bx - ax, dy = by - ay, dz = bz - az;
+  var ln = len2(len2(dx,dy), dz);
+  if (ln < 1e-5) return;
+
+  var dirx = dx / ln, diry = dy / ln, dirz = dz / ln;
+  var refx = 0, refy = 1, refz = 0;
+  if (Math.abs(diry) > 0.95) { refx = 1; refy = 0; refz = 0; }
+
+  var sx = refy * dirz - refz * diry;
+  var sy = refz * dirx - refx * dirz;
+  var sz = refx * diry - refy * dirx;
+  var sl = len2(len2(sx,sy), sz);
+  if (sl < 1e-5) { sx = 1; sy = 0; sz = 0; sl = 1; }
+  sx /= sl; sy /= sl; sz /= sl;
+
+  var ux = diry * sz - dirz * sy;
+  var uy = dirz * sx - dirx * sz;
+  var uz = dirx * sy - diry * sx;
+
+  var slope = (rA - rB) / ln;
+
+  for (var i = 0; i < seg; i++) {
+    var a0 = i / seg * PI2;
+    var a1 = (i + 1) / seg * PI2;
+    var c0 = Math.cos(a0), s0 = Math.sin(a0);
+    var c1 = Math.cos(a1), s1 = Math.sin(a1);
+
+    var r0x = sx * c0 + ux * s0;
+    var r0y = sy * c0 + uy * s0;
+    var r0z = sz * c0 + uz * s0;
+    var r1x = sx * c1 + ux * s1;
+    var r1y = sy * c1 + uy * s1;
+    var r1z = sz * c1 + uz * s1;
+
+    var n0x = r0x + dirx * slope;
+    var n0y = r0y + diry * slope;
+    var n0z = r0z + dirz * slope;
+    var n1x = r1x + dirx * slope;
+    var n1y = r1y + diry * slope;
+    var n1z = r1z + dirz * slope;
+    var nl0 = len2(len2(n0x,n0y),n0z) || 1;
+    var nl1 = len2(len2(n1x,n1y),n1z) || 1;
+    n0x /= nl0; n0y /= nl0; n0z /= nl0;
+    n1x /= nl1; n1y /= nl1; n1z /= nl1;
+
+    var pA0x = ax + r0x * rA, pA0y = ay + r0y * rA, pA0z = az + r0z * rA;
+    var pB0x = bx + r0x * rB, pB0y = by + r0y * rB, pB0z = bz + r0z * rB;
+    var pA1x = ax + r1x * rA, pA1y = ay + r1y * rA, pA1z = az + r1z * rA;
+    var pB1x = bx + r1x * rB, pB1y = by + r1y * rB, pB1z = bz + r1z * rB;
+
+    var u0 = i / seg, u1 = (i + 1) / seg;
+    var b = mb.v.length / 8;
+    mb.vertex(pA0x,pA0y,pA0z,n0x,n0y,n0z,u0,0);
+    mb.vertex(pB0x,pB0y,pB0z,n0x,n0y,n0z,u0,1);
+    mb.vertex(pB1x,pB1y,pB1z,n1x,n1y,n1z,u1,1);
+    mb.vertex(pA1x,pA1y,pA1z,n1x,n1y,n1z,u1,0);
+    mb.i.push(b,b+1,b+2,b,b+2,b+3);
+  }
+
+  if (caps) {
+    if (rA > 0.02) addCircleCap(mb, ax,ay,az, -dirx,-diry,-dirz, rA, seg, sx,sy,sz, ux,uy,uz);
+    if (rB > 0.02) addCircleCap(mb, bx,by,bz,  dirx, diry, dirz, rB, seg, sx,sy,sz, ux,uy,uz);
+  }
+}
+
+function addSphere(mb, cx,cy,cz, r, slices, rings) {
+  slices = Math.max(4, slices | 0);
+  rings = Math.max(2, rings | 0);
+  if (r <= 0.01) return;
+
+  function vert(lat, lon) {
+    var theta = lat / rings * Math.PI;
+    var phi = lon / slices * PI2;
+    var st = Math.sin(theta), ct = Math.cos(theta);
+    var sp = Math.sin(phi), cp = Math.cos(phi);
+    var nx = st * cp, ny = ct, nz = st * sp;
+    return mb.vertex(cx + nx * r, cy + ny * r, cz + nz * r, nx, ny, nz, lon / slices, lat / rings);
+  }
+
+  for (var lat = 0; lat < rings; lat++) {
+    for (var lon = 0; lon < slices; lon++) {
+      var a = vert(lat, lon);
+      var b = vert(lat, lon + 1);
+      var c = vert(lat + 1, lon + 1);
+      var d = vert(lat + 1, lon);
+      mb.i.push(a,b,c,a,c,d);
+    }
+  }
+}
+
+function normalize3(x,y,z) {
+  var l = Math.sqrt(x*x + y*y + z*z) || 1;
+  return [x/l, y/l, z/l];
+}
+
+function cross3(a,b) {
+  return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+}
+
+function dot3(a,b) { return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]; }
+
+function mat4LookAt(out, ex,ey,ez, cx,cy,cz, ux,uy,uz) {
+  var zx = ex - cx, zy = ey - cy, zz = ez - cz;
+  var zl = Math.sqrt(zx*zx + zy*zy + zz*zz);
+  if (zl < 1e-5) { zx = 0; zy = 0; zz = 1; zl = 1; }
+  zx /= zl; zy /= zl; zz /= zl;
+
+  var xx = uy * zz - uz * zy;
+  var xy = uz * zx - ux * zz;
+  var xz = ux * zy - uy * zx;
+  var xl = Math.sqrt(xx*xx + xy*xy + xz*xz);
+  if (xl < 1e-5) {
+    xx = 1; xy = 0; xz = 0; xl = 1;
+  }
+  xx /= xl; xy /= xl; xz /= xl;
+
+  var yx = zy * xz - zz * xy;
+  var yy = zz * xx - zx * xz;
+  var yz = zx * xy - zy * xx;
+
+  out[0]=xx; out[1]=yx; out[2]=zx; out[3]=0;
+  out[4]=xy; out[5]=yy; out[6]=zy; out[7]=0;
+  out[8]=xz; out[9]=yz; out[10]=zz; out[11]=0;
+  out[12]=-(xx*ex + xy*ey + xz*ez);
+  out[13]=-(yx*ex + yy*ey + yz*ez);
+  out[14]=-(zx*ex + zy*ey + zz*ez);
+  out[15]=1;
+  return out;
 }
 
 function finishMesh(renderer, mb) {
@@ -796,8 +995,7 @@ function finishMesh(renderer, mb) {
   var maxI = 0;
   for (var i = 0; i < mb.i.length; i++) if (mb.i[i] > maxI) maxI = mb.i[i];
 
-  // Very old WebGL devices may lack 32-bit indices. Fall back to non-indexed triangles.
-  if (maxI >= 65535 && !renderer.indexUint) {
+  if (maxI >= 65535) {
     var out = new Float32Array(mb.i.length * 8);
     var o = 0;
     for (i = 0; i < mb.i.length; i++) {
@@ -807,29 +1005,7 @@ function finishMesh(renderer, mb) {
     return renderer.createMesh(out, null);
   }
 
-  var idx = renderer.indexUint ? new Uint32Array(mb.i) : new Uint16Array(mb.i);
-  return renderer.createMesh(new Float32Array(mb.v), idx);
-}
-
-function makeNoiseTexture(renderer) {
-  var size = 64;
-  var data = new Uint8Array(size * size * 4);
-  var seed = 9173;
-  for (var y = 0; y < size; y++) {
-    for (var x = 0; x < size; x++) {
-      var nx = x / size * 5;
-      var ny = y / size * 5;
-      var v = fbm2(nx, ny, seed, 4);
-      var ridge = 1 - Math.abs(fbm2(nx * 2 + 3, ny * 2 + 7, seed + 1, 3) * 2 - 1);
-      var spot = noise2(nx * 8, ny * 8, seed + 2);
-      var i = (y * size + x) * 4;
-      data[i] = Math.floor(clamp(v,0,1) * 255);
-      data[i+1] = Math.floor(clamp(ridge,0,1) * 255);
-      data[i+2] = Math.floor(clamp(spot,0,1) * 255);
-      data[i+3] = 255;
-    }
-  }
-  return renderer.createTexture(size, size, data, { repeat: true, mipmap: true });
+  return renderer.createMesh(new Float32Array(mb.v), new Uint16Array(mb.i));
 }
 
 function makeParticleTexture(renderer) {
@@ -849,7 +1025,67 @@ function makeParticleTexture(renderer) {
       data[i+3] = Math.floor(a * 255);
     }
   }
-  return renderer.createTexture(size, size, data, { repeat: false, mipmap: false });
+  return renderer.createTexture(size, size, data, { repeat: false, mipmap: true });
+}
+
+function makeLevelTexture(renderer, seed, w, h) {
+  w = Math.max(64, w | 0);
+  h = Math.max(64, h | 0);
+  var data = new Uint8Array(w * h * 4);
+
+  for (var y = 0; y < h; y++) {
+    var v = y / h;
+    for (var x = 0; x < w; x++) {
+      var u = x / w;
+
+      var warpX = fbm2(u * 3.7 + 11.3, v * 3.7 + 5.1, seed + 17, 3) - 0.5;
+      var warpY = fbm2(u * 3.7 + 2.7, v * 3.7 + 19.4, seed + 29, 3) - 0.5;
+
+      var su = u * 6.0 + warpX * 2.1;
+      var sv = v * 6.0 + warpY * 2.1;
+
+      var base = fbm2(su, sv, seed, 5);
+      var ridN = fbm2(su * 2.1 + 4.0, sv * 2.1 + 8.0, seed + 41, 4);
+      var ridge = 1.0 - Math.abs(ridN * 2.0 - 1.0);
+      var fine = noise2(su * 13.0, sv * 13.0, seed + 53);
+      var micro = noise2(u * 51.0 + base * 4.0, v * 51.0 + ridge * 4.0, seed + 67);
+
+      var veinRaw = fbm2(u * 9.0 + ridge * 2.5, v * 9.0 + base * 2.5, seed + 83, 3);
+      var vein = Math.pow(Math.max(0.0, 1.0 - Math.abs(veinRaw - 0.53) * 11.0), 2.0);
+
+      var craterRaw = noise2(u * 21.0 + base * 5.0, v * 21.0 + ridge * 5.0, seed + 97);
+      var crater = Math.pow(Math.max(0.0, 1.0 - Math.abs(craterRaw - 0.67) * 9.0), 2.0);
+
+      var strata = 0.5 + 0.5 * Math.sin(v * 37.0 + base * 14.0 + fine * 5.0);
+      var patch = fbm2(u * 2.5 + ridge, v * 2.5 + base, seed + 101, 3);
+
+      var r = 0.62 + base * 0.24 + ridge * 0.12 + vein * 0.09 + crater * 0.09 + micro * 0.04;
+      var g = 0.58 + ridge * 0.20 + strata * 0.11 + vein * 0.07 + micro * 0.035 - base * 0.035;
+      var b = 0.53 + crater * 0.20 + vein * 0.16 + micro * 0.05 - ridge * 0.025;
+
+      if (patch > 0.64) {
+        r *= 1.07;
+        g *= 1.02;
+        b *= 0.94;
+      } else if (patch < 0.34) {
+        r *= 0.94;
+        g *= 0.99;
+        b *= 1.06;
+      }
+
+      r = clamp(r, 0.34, 1.0);
+      g = clamp(g, 0.30, 1.0);
+      b = clamp(b, 0.28, 1.0);
+
+      var i = (y * w + x) * 4;
+      data[i] = Math.floor(r * 255);
+      data[i+1] = Math.floor(g * 255);
+      data[i+2] = Math.floor(b * 255);
+      data[i+3] = 255;
+    }
+  }
+
+  return renderer.createTexture(w, h, data, { repeat: false, mipmap: false });
 }
 
 var PARTICLE_CORNERS = [-1,-1, 1,-1, 1,1, -1,-1, 1,1, -1,1];
@@ -870,43 +1106,109 @@ function addBillboard(data, off, x,y,z, size, r,g,b,a) {
   return off;
 }
 
-function buildShipMesh(renderer) {
+function buildShipMesh(renderer, seg) {
   var mb = new MeshBuilder();
-  addBox(mb, 0, 0, 0, 8, 5, 7);
-  addBox(mb, 0, 6.5, 0, 5.5, 4, 6);
-  addBox(mb, 0, 7.5, 6.2, 3.2, 2.4, 1.2);
-  addBox(mb, -8.5, -1, 0, 2.2, 3.5, 4.5);
-  addBox(mb, 8.5, -1, 0, 2.2, 3.5, 4.5);
-  addBox(mb, -9.5, -8.5, 0, 1.3, 5.5, 1.3);
-  addBox(mb, 9.5, -8.5, 0, 1.3, 5.5, 1.3);
-  addBox(mb, -11, -12.5, 0, 3.2, 1.1, 1.5);
-  addBox(mb, 11, -12.5, 0, 3.2, 1.1, 1.5);
-  addBox(mb, 0, -7.5, 0, 3.5, 2.2, 3.5);
-  addBox(mb, 0, -10.2, 0, 2.4, 1.5, 2.4);
-  addBox(mb, 4.5, 11, 0, 0.55, 2.0, 0.55);
+  var s1 = Math.max(4, seg - 2);
+  var s2 = Math.max(3, seg - 3);
+  var rings = Math.max(3, seg >> 1);
+  var signs = [-1, 1];
+
+  addTube(mb, 0, -5.0, 0, 0, -1.0, 0, 7.4, 6.1, seg, true);
+  addTube(mb, 0, -1.0, 0, 0,  2.4, 0, 6.1, 5.8, seg, false);
+  addTube(mb, 0,  2.4, 0, 0,  4.8, 0, 5.8, 4.9, seg, false);
+
+  addSphere(mb, 0, 6.0, 0, 4.7, Math.max(6, seg), rings);
+
+  addTube(mb, 0, 6.0, 3.8, 0, 6.0, 5.2, 1.85, 1.55, s1, true);
+  addBox(mb, 0, 6.0, 5.35, 1.35, 0.95, 0.25);
+
+  addTube(mb, 0, -5.0, 0, 0, -8.6, 0, 2.55, 5.2, seg, true);
+  addTube(mb, 0, -8.6, 0, 0, -9.4, 0, 5.2, 4.5, s1, false);
+  addSphere(mb, 0, -9.4, 0, 4.1, s1, Math.max(2, rings - 1));
+
+  addTube(mb, -5.5, -2.8, 0, -5.5, 0.7, 0, 1.65, 1.65, s1, true);
+  addTube(mb,  5.5, -2.8, 0,  5.5, 0.7, 0, 1.65, 1.65, s1, true);
+  addBox(mb, -3.8, -0.9, 0, 1.55, 0.6, 0.95);
+  addBox(mb,  3.8, -0.9, 0, 1.55, 0.6, 0.95);
+
+  addBox(mb, -5.2, 4.1, 0, 0.85, 0.7, 0.85);
+  addBox(mb,  5.2, 4.1, 0, 0.85, 0.7, 0.85);
+
+  for (var i = 0; i < 2; i++) {
+    var sx = signs[i];
+    for (var j = 0; j < 2; j++) {
+      var sz = signs[j];
+      var ax = sx * 3.8, ay = -4.0, az = sz * 2.4;
+      var bx = sx * 9.4, by = -8.4, bz = sz * 5.4;
+      addTube(mb, ax, ay, az, bx, by, bz, 0.92, 0.68, s2, false);
+      addTube(mb, sx * 2.2, -4.8, sz * 1.3,
+                  (ax + bx) * 0.55, (ay + by) * 0.55, (az + bz) * 0.55,
+                  0.48, 0.38, s2, false);
+      addTube(mb, bx, by, bz, bx, by - 0.85, bz, 1.85, 1.58, s1, true);
+      addBox(mb, bx, by - 1.25, bz, 2.1, 0.25, 1.38);
+    }
+  }
+
+  addTube(mb, 0, 9.7, 0, 0, 11.7, 0, 0.18, 0.14, s2, false);
+  addTube(mb, 0, 11.7, 0, 0, 12.2, 0, 0.78, 0.11, s1, false);
+  addBox(mb, 0, 1.0, -4.1, 1.8, 0.9, 0.2);
+
   return finishMesh(renderer, mb);
 }
 
-function buildAstroMesh(renderer) {
+function buildAstroMesh(renderer, seg) {
   var mb = new MeshBuilder();
-  addBox(mb, 0, 0, 0, 3.5, 4.5, 3.2);
-  addBox(mb, 0, 6.2, 0, 3.8, 3.6, 3.6);
-  addBox(mb, 0, 6.2, 3.2, 2.2, 2.0, 0.9);
-  addBox(mb, -4.5, 0, 0, 1.3, 4.0, 2.2);
-  addBox(mb, 4.2, 2.2, 0, 1.0, 2.7, 1.0);
-  addBox(mb, -4.2, 2.2, 0, 1.0, 2.7, 1.0);
-  addBox(mb, 1.8, -6.5, 0, 1.2, 2.7, 1.2);
-  addBox(mb, -1.8, -6.5, 0, 1.2, 2.7, 1.2);
+  var s1 = Math.max(4, seg - 2);
+  var rings = Math.max(3, seg >> 1);
+  var signs = [-1, 1];
+
+  addTube(mb, 0, -2.4, 0, 0, 2.5, 0, 2.75, 2.35, seg, true);
+  addSphere(mb, 0, -2.4, 0, 2.45, s1, Math.max(2, rings - 1));
+
+  addSphere(mb, 0, 4.8, 0, 2.8, Math.max(5, seg), rings);
+  addSphere(mb, 0, 4.95, 1.95, 1.65, s1, Math.max(2, rings - 1));
+
+  addBox(mb, 0, 0.65, -2.45, 2.0, 2.25, 0.88);
+  addBox(mb, 0, 0.75,  2.18, 1.25, 0.88, 0.42);
+
+  for (var i = 0; i < 2; i++) {
+    var sx = signs[i];
+    addTube(mb, sx * 2.55, 1.75, 0, sx * 3.85, -0.5, 0.9, 0.88, 0.74, s1, true);
+    addSphere(mb, sx * 3.95, -0.7, 1.0, 0.78, s1, Math.max(2, rings - 1));
+  }
+
+  for (i = 0; i < 2; i++) {
+    var lx = signs[i];
+    addTube(mb, lx * 1.25, -2.4, 0, lx * 1.7, -5.8, 0.42, 1.0, 0.82, s1, true);
+    addBox(mb, lx * 1.7, -6.3, 0.7, 1.05, 0.45, 0.85);
+  }
+
   return finishMesh(renderer, mb);
 }
 
-function buildFuelMesh(renderer) {
+function buildFuelMesh(renderer, seg) {
   var mb = new MeshBuilder();
-  addBox(mb, 0, 0, 0, 5.2, 7.2, 5.2);
-  addBox(mb, 0, 8.2, 0, 2.2, 1.5, 2.2);
-  addBox(mb, 0, 1.8, 5.6, 2.8, 2.8, 0.9);
-  addBox(mb, -5.6, 0, 0, 0.9, 3.5, 3.5);
-  addBox(mb, 5.6, 0, 0, 0.9, 3.5, 3.5);
+  var s1 = Math.max(4, seg - 2);
+  var rings = Math.max(3, seg >> 1);
+  var signs = [-1, 1];
+
+  addTube(mb, 0, -4.1, 0, 0, 4.1, 0, 3.5, 3.5, seg, false);
+  addSphere(mb, 0,  4.1, 0, 3.5, Math.max(5, seg), rings);
+  addSphere(mb, 0, -4.1, 0, 3.5, Math.max(5, seg), rings);
+
+  addTube(mb, 0, 6.4, 0, 0, 7.8, 0, 1.25, 0.95, s1, true);
+  addSphere(mb, 0, 7.95, 0, 1.05, s1, Math.max(2, rings - 1));
+
+  for (var i = 0; i < 2; i++) {
+    var sx = signs[i];
+    addTube(mb, sx * 3.9, -2.9, 0, sx * 3.9, 2.9, 0, 0.72, 0.72, s1, true);
+  }
+
+  addTube(mb, -2.65, 5.55, 0, 2.65, 5.55, 0, 0.62, 0.62, s1, false);
+  addBox(mb, 0, 0.0, 3.65, 1.95, 2.25, 0.25);
+  addTube(mb, 0, -1.35, 0, 0, -1.35, 0, 3.65, 3.65, Math.max(6, seg), false);
+  addTube(mb, 0,  1.35, 0, 0,  1.35, 0, 3.65, 3.65, Math.max(6, seg), false);
+
   return finishMesh(renderer, mb);
 }
 
@@ -1053,8 +1355,8 @@ function polylineLength(pts) {
 
 function makeTunnelPath(t, sc, sr, ec, er, rng, clampUnderground) {
   var cols = t.cols;
-  var dist = Math.abs(er - sr) + Math.abs(ec - sc);
-  var steps = Math.max(5, Math.ceil(dist * 0.75));
+  var distance = Math.abs(er - sr) + Math.abs(ec - sc);
+  var steps = Math.max(5, Math.ceil(distance * 0.75));
   var pts = [];
   var wc = (rng() - 0.5) * (2 + t.diff * 4);
   var wr = (rng() - 0.5) * (1 + t.diff * 2);
@@ -1091,36 +1393,32 @@ function makeTunnelPath(t, sc, sr, ec, er, rng, clampUnderground) {
   return pts;
 }
 
-function findAnyExit(t, tc, tr, entranceCol, side, rng) {
-  var minC = side < 0 ? 2 : t.padEnd + 6;
-  var maxC = side < 0 ? t.padStart - 6 : t.cols - 3;
-  if (minC > maxC) return -1;
-
+function findAnyExit(t, tc, tr, entranceCol, rng) {
   var cand = [];
   var minOff = 6 + Math.floor(t.diff * 8);
-  var maxOff = Math.min(65, maxC - minC);
+  var maxOff = Math.min(70, t.cols - 4);
   var dirs = [1, -1];
-  var cc, di, off;
+  var off, di, c;
 
   for (off = minOff; off <= maxOff; off += 2) {
     for (di = 0; di < 2; di++) {
-      cc = tc + dirs[di] * off;
-      if (cc < minC || cc > maxC) continue;
-      if (inPadZoneCol(t,cc)) continue;
-      if (Math.abs(cc - entranceCol) < 5) continue;
-      if (t.surfaceRef[cc] <= tr + 3) continue;
-      cand.push(cc);
+      c = tc + dirs[di] * off;
+      if (c < 2 || c >= t.cols - 2) continue;
+      if (inPadZoneCol(t,c)) continue;
+      if (Math.abs(c - entranceCol) < 5) continue;
+      if (t.surfaceRef[c] <= tr + 3) continue;
+      cand.push(c);
     }
-    if (cand.length > 18) break;
+    if (cand.length > 20) break;
   }
 
   if (cand.length) return cand[Math.floor(rng() * cand.length)];
 
-  for (cc = minC; cc <= maxC; cc++) {
-    if (inPadZoneCol(t,cc)) continue;
-    if (Math.abs(cc - entranceCol) < 5) continue;
-    if (t.surfaceRef[cc] <= tr + 3) continue;
-    return cc;
+  for (c = 2; c < t.cols - 2; c++) {
+    if (inPadZoneCol(t,c)) continue;
+    if (Math.abs(c - entranceCol) < 5) continue;
+    if (t.surfaceRef[c] <= tr + 3) continue;
+    return c;
   }
 
   return -1;
@@ -1131,7 +1429,7 @@ function createDeepSite(t, rng, id) {
   var cell = t.cell;
   var attempts = 0;
 
-  while (attempts++ < 120) {
+  while (attempts++ < 140) {
     var entranceCol = 3 + Math.floor(rng() * (cols - 6));
     if (inPadZoneCol(t, entranceCol)) continue;
 
@@ -1176,8 +1474,7 @@ function createDeepSite(t, rng, id) {
     for (var i = 0; i < path.length - 1; i++) carveLine(t, path[i], path[i+1], t.tunnelHalf);
     carveCircle(t, targetCol, targetRow, t.chamberHalf);
 
-    // Guarantee no dead end: every deep chamber gets a second surface exit.
-    var exit2 = findAnyExit(t, targetCol, targetRow, entranceCol, side, rng);
+    var exit2 = findAnyExit(t, targetCol, targetRow, entranceCol, rng);
     if (exit2 < 0) continue;
 
     var path2 = makeTunnelPath(t, targetCol, targetRow, exit2, t.surfaceRef[exit2], rng, true);
@@ -1237,7 +1534,7 @@ function restoreDeepSites(t) {
 
 function addDecorativeTunnel(t, rng) {
   var cols = t.cols;
-  for (var att = 0; att < 40; att++) {
+  for (var att = 0; att < 45; att++) {
     var left = rng() < 0.5;
     var minC = left ? 2 : t.padEnd + 7;
     var maxC = left ? t.padStart - 7 : cols - 3;
@@ -1349,7 +1646,11 @@ function buildBackdropMesh(t, quality) {
     var x0 = c * t.cell;
     var x1 = Math.min(WORLD_W, (c + 1) * t.cell);
     var yT = (t.surfaceRef[c] + 1) * t.cell;
-    quad(mb, x0,0,z, x1,0,z, x1,yT,z, x0,yT,z, 0,0,1, x0,0, x1,0, x1,yT, x0,yT);
+    quad(mb,
+      x0,0,z, x1,0,z, x1,yT,z, x0,yT,z,
+      0,0,1,
+      uvX(x0),uvY(0), uvX(x1),uvY(0), uvX(x1),uvY(yT), uvX(x0),uvY(yT)
+    );
   }
   return finishMesh(renderer, mb);
 }
@@ -1363,7 +1664,6 @@ function buildTerrainChunks(t, quality) {
     var mb = new MeshBuilder();
     var gx, gy;
 
-    // Front silhouette spans.
     for (gx = start; gx < end; gx++) {
       gy = 0;
       while (gy < t.rows) {
@@ -1376,11 +1676,14 @@ function buildTerrainChunks(t, quality) {
         var wx1 = wx0 + t.cell;
         var wy0 = y0 * t.cell;
         var wy1 = (y1 + 1) * t.cell;
-        quad(mb, wx0,wy0,HZ, wx1,wy0,HZ, wx1,wy1,HZ, wx0,wy1,HZ, 0,0,1, wx0,wy0, wx1,wy0, wx1,wy1, wx0,wy1);
+        quad(mb,
+          wx0,wy0,HZ, wx1,wy0,HZ, wx1,wy1,HZ, wx0,wy1,HZ,
+          0,0,1,
+          uvX(wx0),uvY(wy0), uvX(wx1),uvY(wy0), uvX(wx1),uvY(wy1), uvX(wx0),uvY(wy1)
+        );
       }
     }
 
-    // Exposed extruded faces.
     for (gy = 0; gy < t.rows; gy++) {
       for (gx = start; gx < end; gx++) {
         if (!solidAtG(t,gx,gy)) continue;
@@ -1390,16 +1693,32 @@ function buildTerrainChunks(t, quality) {
         var y1 = y0 + t.cell;
 
         if (gy === t.rows - 1 || !solidAtG(t,gx,gy+1)) {
-          quad(mb, x0,y1,-HZ, x1,y1,-HZ, x1,y1,HZ, x0,y1,HZ, 0,1,0, x0,-HZ, x1,-HZ, x1,HZ, x0,HZ);
+          quad(mb,
+            x0,y1,-HZ, x1,y1,-HZ, x1,y1,HZ, x0,y1,HZ,
+            0,1,0,
+            uvX(x0),uvY(y1), uvX(x1),uvY(y1), uvX(x1),uvY(y1), uvX(x0),uvY(y1)
+          );
         }
         if (!solidAtG(t,gx,gy-1)) {
-          quad(mb, x0,y0,-HZ, x1,y0,-HZ, x1,y0,HZ, x0,y0,HZ, 0,-1,0, x0,-HZ, x1,-HZ, x1,HZ, x0,HZ);
+          quad(mb,
+            x0,y0,-HZ, x1,y0,-HZ, x1,y0,HZ, x0,y0,HZ,
+            0,-1,0,
+            uvX(x0),uvY(y0), uvX(x1),uvY(y0), uvX(x1),uvY(y0), uvX(x0),uvY(y0)
+          );
         }
         if (gx === 0 || !solidAtG(t,gx-1,gy)) {
-          quad(mb, x0,y0,-HZ, x0,y1,-HZ, x0,y1,HZ, x0,y0,HZ, -1,0,0, y0,-HZ, y1,-HZ, y1,HZ, y0,HZ);
+          quad(mb,
+            x0,y0,-HZ, x0,y1,-HZ, x0,y1,HZ, x0,y0,HZ,
+            -1,0,0,
+            uvX(x0),uvY(y0), uvX(x0),uvY(y1), uvX(x0),uvY(y1), uvX(x0),uvY(y0)
+          );
         }
         if (gx === t.cols - 1 || !solidAtG(t,gx+1,gy)) {
-          quad(mb, x1,y0,-HZ, x1,y1,-HZ, x1,y1,HZ, x1,y0,HZ, 1,0,0, y0,-HZ, y1,-HZ, y1,HZ, y0,HZ);
+          quad(mb,
+            x1,y0,-HZ, x1,y1,-HZ, x1,y1,HZ, x1,y0,HZ,
+            1,0,0,
+            uvX(x1),uvY(y0), uvX(x1),uvY(y1), uvX(x1),uvY(y1), uvX(x1),uvY(y0)
+          );
         }
       }
     }
@@ -1417,13 +1736,13 @@ function buildPadMeshes(t, quality) {
   var mbD = new MeshBuilder();
   var mbL = new MeshBuilder();
 
-  addBox(mbD, 0, 0, 0, width * 0.5, 1.5, HZ + 3);
-  addBox(mbD, -width * 0.5 + 4, 4, 0, 1.4, 4, HZ + 1);
-  addBox(mbD,  width * 0.5 - 4, 4, 0, 1.4, 4, HZ + 1);
+  addBox(mbD, 0, 0, 0, width * 0.5, 1.0, HZ + 3);
+  addBox(mbD, -width * 0.5 + 4, 3.2, 0, 1.25, 3.2, HZ + 1);
+  addBox(mbD,  width * 0.5 - 4, 3.2, 0, 1.25, 3.2, HZ + 1);
 
-  addBox(mbL, -width * 0.5 + 4, 9, 0, 1.8, 1.8, 1.8);
-  addBox(mbL,  width * 0.5 - 4, 9, 0, 1.8, 1.8, 1.8);
-  addBox(mbL, 0, 8, 0, 1.2, 1.2, 1.2);
+  addBox(mbL, -width * 0.5 + 4, 8.0, 0, 1.55, 1.55, 1.55);
+  addBox(mbL,  width * 0.5 - 4, 8.0, 0, 1.55, 1.55, 1.55);
+  addBox(mbL, 0, 7.0, 0, 1.0, 1.0, 1.0);
 
   return {
     deck: finishMesh(renderer, mbD),
@@ -1550,9 +1869,9 @@ function buildRoute(t) {
   var padSurf = surfacePoint(t, t.padCenter);
   var startPoint = {
     x: t.padX,
-    y: clamp(t.padTopY + 330 + t.diff * 170, t.padTopY + 80, WORLD_H - 80)
+    y: clamp(t.padTopY + 145 + t.diff * 70, t.padTopY + 65, WORLD_H - 65)
   };
-  var padPoint = { x: t.padX, y: t.padTopY + SHIP_R + 2 };
+  var padPoint = { x: t.padX, y: t.padTopY + SHIP_R + 1 };
 
   var startNode = {
     point: startPoint,
@@ -1609,7 +1928,7 @@ function buildRoute(t) {
   }
 
   if (!route.length) route.push({ x: t.startPoint.x, y: t.startPoint.y });
-  if (route.length < 2) route.push({ x: t.padX, y: t.padTopY + SHIP_R + 2 });
+  if (route.length < 2) route.push({ x: t.padX, y: t.padTopY + SHIP_R + 1 });
   return route;
 }
 
@@ -1679,16 +1998,16 @@ function planFuel(t, route, quality, rng) {
   var routeLen = polylineLength(route);
   if (routeLen < 1) routeLen = 1;
 
-  var fuelPerDist = t.burn / 135 + 0.018;
-  var required = routeLen * fuelPerDist * 1.65 + 110;
+  var fuelPerDist = t.burn / 190 + 0.010;
+  var required = routeLen * fuelPerDist * 1.35 + 80;
   var additional = Math.max(0, required - t.startFuel);
 
   var canAmount = t.fuelCan;
   var cansByReq = Math.ceil(additional / canAmount);
-  var maxSpacing = 300 - t.diff * 120;
+  var maxSpacing = 520 - t.diff * 160;
   var cansBySpacing = Math.ceil(routeLen / maxSpacing);
   var cans = Math.max(6 + t.astronauts.length * 2, cansByReq, cansBySpacing);
-  var maxCans = Math.min(160, 70 + t.astronauts.length * 12);
+  var maxCans = Math.min(120, 30 + t.astronauts.length * 10);
   cans = Math.min(cans, maxCans);
 
   var cum = buildCumulative(route);
@@ -1700,7 +2019,7 @@ function planFuel(t, route, quality, rng) {
   }
 
   addFuelPlanned(t, route[0].x, route[0].y - 35, canAmount);
-  addFuelPlanned(t, t.padX, t.padTopY + 95, canAmount);
+  addFuelPlanned(t, t.padX, t.padTopY + 85, canAmount);
 
   var extra = 2 + Math.floor(t.stage / 2);
   for (i = 0; i < extra; i++) {
@@ -1708,13 +2027,13 @@ function planFuel(t, route, quality, rng) {
     var col = clamp(Math.floor(x / t.cell), 0, t.cols - 1);
     var top = t.tops[col];
     if (top < 0) continue;
-    var y = (top + 1) * t.cell + 135 + rng() * 280;
+    var y = (top + 1) * t.cell + 120 + rng() * 260;
     addFuelPlanned(t, x, y, canAmount);
   }
 
   var guard = 0;
-  while (totalAvailableFuel(t) < required && guard++ < 80) {
-    p = makeAirPoint(t, route[0].x, route[0].y + 60 + guard * 35, 16);
+  while (totalAvailableFuel(t) < required && guard++ < 100) {
+    p = makeAirPoint(t, route[0].x, route[0].y + 55 + guard * 32, 16);
     if (p) {
       t.fuels.push({ x:p.x, y:p.y, taken:false, r:15, fuel:canAmount, id:t.fuels.length });
     } else {
@@ -1741,7 +2060,7 @@ function validateLevel(t) {
   }
 
   if (!checkWorld(t.startPoint.x, t.startPoint.y)) return false;
-  if (!checkWorld(t.padX, t.padTopY + SHIP_R + 3)) return false;
+  if (!checkWorld(t.padX, t.padTopY + SHIP_R + 2)) return false;
 
   var i;
   for (i = 0; i < t.astronauts.length; i++) {
@@ -1829,16 +2148,16 @@ function generateLevelCore(lvl, sd, quality, simple) {
     caveEntrances: [],
     tunnelHalf: Math.max(2, Math.ceil(SHIP_R * 2.7 / cell)),
     chamberHalf: 0,
-    gravity: 24 + diff * 16,
-    thrust: 88 + diff * 18,
-    burn: 15 + diff * 6,
+    gravity: 22 + diff * 14,
+    thrust: 90 + diff * 16,
+    burn: 14 + diff * 5,
     rotRate: 2.75 - diff * 0.65,
     safeVx: 38 - diff * 10,
     safeVy: 58 - diff * 18,
     safeAng: 0.42 - diff * 0.16,
-    maxFuel: 400,
-    startFuel: Math.round(155 - diff * 45),
-    fuelCan: Math.round(72 - diff * 22),
+    maxFuel: 500,
+    startFuel: Math.round(180 - diff * 55),
+    fuelCan: Math.round(85 - diff * 30),
     startPoint: null,
     route: null,
     requiredFuel: 0,
@@ -1846,7 +2165,8 @@ function generateLevelCore(lvl, sd, quality, simple) {
     pad: null,
     backdrop: null,
     surfaceY: null,
-    surfacePrefix: null
+    surfacePrefix: null,
+    seedUsed: sd
   };
   t.chamberHalf = t.tunnelHalf + 2 + Math.floor(diff * 2);
 
@@ -1882,7 +2202,7 @@ function generateLevelCore(lvl, sd, quality, simple) {
 
   t.startPoint = {
     x: t.padX,
-    y: clamp(t.padTopY + 330 + t.diff * 170, t.padTopY + 80, WORLD_H - 80)
+    y: clamp(t.padTopY + 145 + t.diff * 70, t.padTopY + 65, WORLD_H - 65)
   };
 
   var route = buildRoute(t);
@@ -1902,7 +2222,6 @@ function generateLevel(lvl, sd, quality) {
     }
   }
 
-  t.seedUsed = sd;
   t.backdrop = buildBackdropMesh(t, quality);
   t.chunks = buildTerrainChunks(t, quality);
   t.pad = buildPadMeshes(t, quality);
@@ -1922,7 +2241,7 @@ var state = "title";
 
 var terrain = null;
 var ship = null;
-var camera = { x: WORLD_W * 0.5, y: WORLD_H * 0.62, dist: 1200 };
+var camera = { x: WORLD_W * 0.5, y: WORLD_H * 0.62, dist: 700 };
 var particles = [];
 var starBuffer = null;
 var entityZ = 50;
@@ -1950,28 +2269,28 @@ var tmpModel = new Float32Array(16);
 var tmpNormal = new Float32Array(9);
 
 var backdropMat = {
-  color: [0.018,0.020,0.030], color2: [0.030,0.032,0.045], emissive: [0.006,0.006,0.012],
-  texScale: 0.02, alpha: 1, useTex: 0, spec: [0,0,0], specPower: 1, depthTint: 0
+  color: [0.030,0.036,0.052], color2: [0.048,0.054,0.070], emissive: [0.012,0.014,0.022],
+  texScale: 1, alpha: 1, useTex: 0, spec: [0,0,0], specPower: 1, depthTint: 0
 };
 var terrainMat = {
-  color: [0.48,0.45,0.43], color2: [0.74,0.72,0.68], emissive: [0,0,0],
-  texScale: 0.035, alpha: 1, useTex: 1, spec: [0.02,0.02,0.03], specPower: 8, depthTint: 1
+  color: [0.62,0.58,0.54], color2: [0.88,0.84,0.78], emissive: [0.025,0.025,0.025],
+  texScale: 1, alpha: 1, useTex: 1, spec: [0.035,0.035,0.045], specPower: 10, depthTint: 1
 };
 var shipMat = {
-  color: [0.74,0.78,0.84], color2: [0.94,0.96,1.0], emissive: [0.02,0.03,0.05],
-  texScale: 0.08, alpha: 1, useTex: 1, spec: [0.36,0.40,0.48], specPower: 52, depthTint: 0
+  color: [0.82,0.86,0.92], color2: [1.00,1.00,1.00], emissive: [0.06,0.07,0.09],
+  texScale: 1, alpha: 1, useTex: 0, spec: [0.42,0.46,0.54], specPower: 58, depthTint: 0
 };
 var astroMat = {
-  color: [0.92,0.94,0.98], color2: [0.68,0.82,1.0], emissive: [0.02,0.04,0.06],
-  texScale: 0.10, alpha: 1, useTex: 1, spec: [0.12,0.13,0.16], specPower: 28, depthTint: 0
+  color: [0.96,0.98,1.00], color2: [0.76,0.88,1.00], emissive: [0.05,0.07,0.09],
+  texScale: 1, alpha: 1, useTex: 0, spec: [0.16,0.17,0.20], specPower: 30, depthTint: 0
 };
 var fuelMat = {
-  color: [0.86,0.26,0.18], color2: [1.0,0.76,0.22], emissive: [0.08,0.02,0.0],
-  texScale: 0.09, alpha: 1, useTex: 1, spec: [0.22,0.16,0.10], specPower: 34, depthTint: 0
+  color: [0.96,0.36,0.22], color2: [1.00,0.86,0.32], emissive: [0.12,0.05,0.01],
+  texScale: 1, alpha: 1, useTex: 0, spec: [0.26,0.20,0.12], specPower: 36, depthTint: 0
 };
 var padMat = {
-  color: [0.34,0.37,0.42], color2: [0.58,0.62,0.68], emissive: [0.01,0.04,0.03],
-  texScale: 0.05, alpha: 1, useTex: 1, spec: [0.16,0.17,0.20], specPower: 26, depthTint: 0
+  color: [0.48,0.52,0.58], color2: [0.72,0.76,0.82], emissive: [0.025,0.055,0.045],
+  texScale: 1, alpha: 1, useTex: 0, spec: [0.20,0.21,0.24], specPower: 28, depthTint: 0
 };
 var padLightMat = {
   color: [0.16,0.16,0.16], color2: [0.16,0.16,0.16], emissive: [0.2,1.0,0.4],
@@ -1988,6 +2307,21 @@ function disposeTerrain(t) {
     renderer.disposeMesh(t.pad.lights);
   }
   if (t.backdrop) renderer.disposeMesh(t.backdrop);
+}
+
+function disposeEntityMeshes() {
+  if (!renderer) return;
+  if (shipMesh) renderer.disposeMesh(shipMesh);
+  if (astroMesh) renderer.disposeMesh(astroMesh);
+  if (fuelMesh) renderer.disposeMesh(fuelMesh);
+  shipMesh = astroMesh = fuelMesh = null;
+}
+
+function buildEntityMeshes() {
+  disposeEntityMeshes();
+  shipMesh = buildShipMesh(renderer, q.seg);
+  astroMesh = buildAstroMesh(renderer, q.seg);
+  fuelMesh = buildFuelMesh(renderer, q.seg);
 }
 
 function buildStars() {
@@ -2009,12 +2343,11 @@ function buildStars() {
 
 function baseDistance() {
   var aspect = renderer.w / Math.max(1, renderer.h);
-  var tanHalf = Math.tan(FOV / 2);
-  var targetH = 780 / q.zoomMul;
-  var targetW = 1150 / q.zoomMul;
-  var dH = targetH / (2 * tanHalf);
-  var dW = targetW / (2 * tanHalf * Math.max(0.25, aspect));
-  return clamp(Math.max(dH, dW), 520, 2400);
+  var tanHalf = Math.tan(FOV * 0.5);
+  var safeAspect = Math.max(0.35, aspect);
+  var dH = q.zoomHalfH / tanHalf;
+  var dW = (q.zoomHalfH * 0.95) / (tanHalf * safeAspect);
+  return clamp(Math.max(dH, dW), 320, 1400);
 }
 
 function resetKeys() {
@@ -2028,6 +2361,10 @@ function resetKeys() {
 
 function prepareLevel() {
   resetKeys();
+
+  if (renderer.levelTex) renderer.disposeTexture(renderer.levelTex);
+  renderer.levelTex = makeLevelTexture(renderer, hash32(seed, level * 7919 + 12345), q.texW, q.texH);
+
   disposeTerrain(terrain);
   terrain = generateLevel(level, seed, q);
   entityZ = q.depth * 0.5 + 12;
@@ -2053,7 +2390,7 @@ function prepareLevel() {
   crashTimer = 0;
   buildStars();
   camera.x = ship.x;
-  camera.y = ship.y + 25;
+  camera.y = ship.y - 25;
   camera.dist = baseDistance();
   updateSeedInputs();
   updateHUD();
@@ -2068,21 +2405,28 @@ function resize() {
   var cssW = window.innerWidth;
   var cssH = window.innerHeight;
   var dpr = Math.min(window.devicePixelRatio || 1, q.dprCap);
-  var w = Math.max(1, Math.floor(cssW * dpr * q.renderScale));
-  var h = Math.max(1, Math.floor(cssH * dpr * q.renderScale));
-  renderer.resize(w, h);
+  var w = cssW * dpr * q.renderScale;
+  var h = cssH * dpr * q.renderScale;
+
+  if (q.maxPixels && w * h > q.maxPixels) {
+    var f = Math.sqrt(q.maxPixels / (w * h));
+    w *= f;
+    h *= f;
+  }
+
+  renderer.resize(Math.max(2, Math.floor(w)), Math.max(2, Math.floor(h)));
   camera.dist = baseDistance();
 }
 
 function updateCameraMatrices() {
   var aspect = renderer.w / Math.max(1, renderer.h);
-  var tanHalf = Math.tan(FOV / 2);
+  var tanHalf = Math.tan(FOV * 0.5);
   var dist = camera.dist;
 
   mat4Perspective(proj, FOV, aspect, 1, dist + 4000);
 
   var ex = camera.x;
-  var ey = camera.y + dist * 0.08;
+  var ey = camera.y + dist * 0.05;
   var ez = dist;
   mat4LookAt(view, ex, ey, ez, camera.x, camera.y, 0, 0, 1, 0);
 
@@ -2104,8 +2448,8 @@ function spawnExhaust() {
   var dirx = -Math.sin(ship.angle);
   var diry = -Math.cos(ship.angle);
   var speed = 75 + Math.random() * 95;
-  var x = ship.x + dirx * 16;
-  var y = ship.y + diry * 16;
+  var x = ship.x + dirx * 13;
+  var y = ship.y + diry * 13;
   addParticle({
     x: x, y: y, z: entityZ + 2,
     vx: dirx * speed + ship.vx * 0.25 + (Math.random() - 0.5) * 38,
@@ -2242,7 +2586,7 @@ function updateShip(dt) {
 
     if (safe) {
       ship.x = nx;
-      ship.y = terrain.padTopY + ship.r + 2;
+      ship.y = terrain.padTopY + ship.r + 1;
       ship.vx = 0;
       ship.vy = 0;
       ship.angle = 0;
@@ -2314,26 +2658,28 @@ function updateCamera(dt) {
     var speed = len2(ship.vx, ship.vy);
     var speedNorm = clamp(speed / 240, 0, 1);
     var base = baseDistance();
-    var desiredDist = base * (1 + speedNorm * 0.95);
+    var desiredDist = base * (1 + speedNorm * 0.78);
 
-    var tanHalf = Math.tan(FOV / 2);
+    var tanHalf = Math.tan(FOV * 0.5);
     var halfH = desiredDist * tanHalf;
     var halfW = halfH * (renderer.w / Math.max(1, renderer.h));
 
-    var lead = 0.16 + speedNorm * 0.62;
+    var lead = 0.18 + speedNorm * 0.55;
     var ox = ship.vx * lead;
     var oy = ship.vy * lead;
 
-    var maxOX = halfW * 0.34;
-    var maxOY = halfH * 0.30;
+    var maxOX = halfW * 0.32;
+    var maxOY = halfH * 0.28;
     ox = clamp(ox, -maxOX, maxOX);
     oy = clamp(oy, -maxOY, maxOY);
 
-    tx = ship.x + ox;
-    ty = ship.y + oy;
+    var downBias = halfH * (0.13 * (1 - speedNorm) + 0.03);
 
-    var marginX = Math.min(halfW * 0.25, WORLD_W * 0.5);
-    var marginY = Math.min(halfH * 0.25, WORLD_H * 0.5);
+    tx = ship.x + ox;
+    ty = ship.y + oy - downBias;
+
+    var marginX = Math.min(halfW * 0.22, WORLD_W * 0.5);
+    var marginY = Math.min(halfH * 0.22, WORLD_H * 0.5);
     tx = clamp(tx, marginX, WORLD_W - marginX);
     ty = clamp(ty, marginY, WORLD_H - marginY);
 
@@ -2408,7 +2754,7 @@ function render() {
     }
 
     if (terrain.pad && isVisible(terrain.padX, terrain.padTopY + 20)) {
-      setModel(tmpModel, tmpNormal, terrain.padX, terrain.padTopY, q.depth * 0.5 + 2, 0);
+      setModelScaled(tmpModel, tmpNormal, terrain.padX, terrain.padTopY, q.depth * 0.5 + 2, 0, 1);
       renderer.drawMesh(terrain.pad.deck, tmpModel, tmpNormal, padMat);
 
       var pulse = 0.45 + 0.55 * Math.sin(gameTime * 4);
@@ -2421,7 +2767,7 @@ function render() {
         padLightMat.emissive[1] = 0.65 * pulse;
         padLightMat.emissive[2] = 0.10 * pulse;
       }
-      setModel(tmpModel, tmpNormal, terrain.padX, terrain.padTopY, q.depth * 0.5 + 7, 0);
+      setModelScaled(tmpModel, tmpNormal, terrain.padX, terrain.padTopY, q.depth * 0.5 + 7, 0, 1);
       renderer.drawMesh(terrain.pad.lights, tmpModel, tmpNormal, padLightMat);
     }
 
@@ -2430,7 +2776,7 @@ function render() {
       if (a.taken || !isVisible(a.x, a.y)) continue;
       var bob = Math.sin(gameTime * 2.2 + a.id) * 2.5;
       var sway = Math.sin(gameTime * 1.7 + a.id) * 0.08;
-      setModel(tmpModel, tmpNormal, a.x, a.y + bob, entityZ - 2, sway);
+      setModelScaled(tmpModel, tmpNormal, a.x, a.y + bob, entityZ - 2, sway, ASTRO_SCALE);
       renderer.drawMesh(astroMesh, tmpModel, tmpNormal, astroMat);
     }
 
@@ -2439,15 +2785,15 @@ function render() {
       if (f.taken || !isVisible(f.x, f.y)) continue;
       var fb = Math.sin(gameTime * 2.0 + f.id) * 3.0;
       var fs = Math.sin(gameTime * 1.3 + f.id) * 0.15;
-      setModel(tmpModel, tmpNormal, f.x, f.y + fb, entityZ - 1, fs);
+      setModelScaled(tmpModel, tmpNormal, f.x, f.y + fb, entityZ - 1, fs, FUEL_SCALE);
       renderer.drawMesh(fuelMesh, tmpModel, tmpNormal, fuelMat);
     }
 
     if (ship && ship.alive) {
-      shipMat.emissive[0] = ship.thrusting ? 0.07 : 0.02;
-      shipMat.emissive[1] = ship.thrusting ? 0.04 : 0.03;
-      shipMat.emissive[2] = ship.thrusting ? 0.01 : 0.05;
-      setModel(tmpModel, tmpNormal, ship.x, ship.y, entityZ, ship.angle);
+      shipMat.emissive[0] = ship.thrusting ? 0.09 : 0.04;
+      shipMat.emissive[1] = ship.thrusting ? 0.06 : 0.05;
+      shipMat.emissive[2] = ship.thrusting ? 0.02 : 0.07;
+      setModelScaled(tmpModel, tmpNormal, ship.x, ship.y, entityZ, ship.angle, SHIP_SCALE);
       renderer.drawMesh(shipMesh, tmpModel, tmpNormal, shipMat);
     }
   }
@@ -2491,7 +2837,10 @@ function setState(s) {
   var inGame = (s === "playing" || s === "crashing");
   setClass($("hud"), "hidden", !inGame);
   setClass($("controls"), "hidden", s !== "playing");
-  if (s !== "playing") Snd.setThrust(false);
+  if (s !== "playing") {
+    Snd.setThrust(false);
+    resetKeys();
+  }
 }
 
 function refreshGfxButtons() {
@@ -2505,6 +2854,7 @@ function setGfx(mode) {
   gfxMode = mode;
   refreshGfxButtons();
   q = getPreset(mode);
+  buildEntityMeshes();
   resize();
   var prev = state;
   prepareLevel();
@@ -2533,6 +2883,7 @@ function newSeedPause() {
 
 function newSeedLose() {
   seed = randomSeed();
+  level = 1;
   prepareLevel();
   setState("playing");
 }
@@ -2555,10 +2906,10 @@ function trackPerf(dt) {
     var avg = (perfT / perfN) * 1000;
     perfN = 0;
     perfT = 0;
-    if (avg > 55 && q.renderScale > 0.42) {
-      q.renderScale = Math.max(0.42, q.renderScale * 0.82);
-      q.maxParticles = Math.max(35, Math.floor(q.maxParticles * 0.78));
-      q.exhaustRate = Math.max(10, Math.floor(q.exhaustRate * 0.8));
+    if (avg > 55 && q.renderScale > 0.82) {
+      q.renderScale = Math.max(0.82, q.renderScale * 0.92);
+      q.maxParticles = Math.max(45, Math.floor(q.maxParticles * 0.84));
+      q.exhaustRate = Math.max(14, Math.floor(q.exhaustRate * 0.88));
       resize();
     }
   }
@@ -2736,15 +3087,11 @@ function loop(now) {
 function init() {
   var canvas = $("cv");
   renderer = new Renderer(canvas);
-  renderer.noiseTex = makeNoiseTexture(renderer);
   renderer.particleTex = makeParticleTexture(renderer);
-
-  shipMesh = buildShipMesh(renderer);
-  astroMesh = buildAstroMesh(renderer);
-  fuelMesh = buildFuelMesh(renderer);
 
   q = getPreset(gfxMode);
   refreshGfxButtons();
+  buildEntityMeshes();
   resize();
   prepareLevel();
   wireUI();
