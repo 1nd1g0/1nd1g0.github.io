@@ -56,7 +56,7 @@ input{background:#001018;border:1px solid #2bd;color:#8ff;font:inherit;padding:6
 
 <div id="title" class="screen">
   <h1>LUNAR SALVAGE</h1>
-  <p>True 3D models in a 2D side-view world. Rescue every astronaut, gather fuel, and land softly on the pad.</p>
+  <p>Rescue every astronaut, gather fuel, and land softly on the pad.</p>
   <div class="row">GFX
     <button class="gfxBtn" data-q="auto">Auto</button>
     <button class="gfxBtn" data-q="low">Low</button>
@@ -239,15 +239,15 @@ function fbm2(x,y,seed,oct) {
 var QUALITIES = {
   low: {
     name:"low", renderScale:0.55, dprCap:1, cell:28, chunkCols:28,
-    maxParticles:65, stars:45, zoomMul:0.82, depth:44, exhaustRate:24
+    maxParticles:65, stars:45, zoomMul:1.6, depth:44, exhaustRate:24
   },
   mid: {
     name:"mid", renderScale:0.75, dprCap:1.25, cell:18, chunkCols:22,
-    maxParticles:150, stars:85, zoomMul:0.92, depth:60, exhaustRate:45
+    maxParticles:150, stars:85, zoomMul:1.8, depth:60, exhaustRate:45
   },
   high: {
     name:"high", renderScale:1, dprCap:1.5, cell:13, chunkCols:16,
-    maxParticles:280, stars:140, zoomMul:1, depth:76, exhaustRate:70
+    maxParticles:280, stars:140, zoomMul:2, depth:76, exhaustRate:70
   }
 };
 
