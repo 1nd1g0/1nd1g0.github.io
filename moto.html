@@ -8,16 +8,16 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:"Courier New",Courier,monospace;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
-#c{position:fixed;top:0;left:0;width:100%;height:100%;display:block;background:#0b0b19;touch-action:none}
-.screen{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:10px;z-index:100;overflow:auto;overscroll-behavior:contain;background:rgba(0,0,0,.92);touch-action:pan-y;-webkit-overflow-scrolling:touch}
+#c{position:fixed;top:0;left:0;width:100%;height:100%;display:block;background:#0b0b19;touch-action:none;transform:translateZ(0);will-change:transform;image-rendering:auto}
+.screen{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:10px;z-index:100;overflow:auto;overscroll-behavior:contain;background:rgba(0,0,0,.94);touch-action:pan-y;-webkit-overflow-scrolling:touch}
 .hidden{display:none!important}
-.dialog{width:100%;max-width:620px;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px;border-radius:12px;background:rgba(255,255,255,.045);touch-action:pan-y;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
-.dialog::-webkit-scrollbar{width:8px}
-.dialog::-webkit-scrollbar-thumb{background:rgba(255,255,255,.22);border-radius:8px}
+.dialog{width:100%;max-width:680px;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px;border-radius:12px;background:rgba(255,255,255,.045);touch-action:pan-y;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.dialog::-webkit-scrollbar{width:8px}.dialog::-webkit-scrollbar-thumb{background:rgba(255,255,255,.22);border-radius:8px}
 #titleScreen{background:linear-gradient(135deg,#1a0a2e 0%,#16213e 50%,#0f3460 100%)}
 #titleScreen .dialog{padding-top:56px}
 .title{font-size:28px;color:#ff6b35;text-shadow:0 0 16px #ff6b35,0 0 34px rgba(255,69,0,.45);margin-bottom:8px;text-align:center;letter-spacing:2px;font-weight:bold}
-.subtitle{font-size:12px;color:#aaa;margin-bottom:12px;text-align:center;letter-spacing:1px}
+.subtitle{font-size:12px;color:#aaa;margin-bottom:10px;text-align:center;letter-spacing:1px}
+.rowLabel{font-size:11px;color:#888;margin-top:4px;letter-spacing:1px}
 .btnGrid{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;width:100%}
 .btn{background:linear-gradient(180deg,#ff6b35,#c44520);color:#fff;border:2px solid #ff8c5a;padding:12px 16px;font-size:14px;font-family:inherit;cursor:pointer;border-radius:6px;width:80vw;max-width:240px;min-width:132px;text-align:center;font-weight:bold;letter-spacing:1px;box-shadow:0 4px 14px rgba(255,107,53,.25);touch-action:manipulation}
 .btn:hover,.btn:active{transform:scale(1.03);background:linear-gradient(180deg,#ff8c5a,#ff6b35)}
@@ -25,46 +25,28 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font
 .btn-small{width:auto;min-width:92px;padding:9px 13px;font-size:13px}
 .btn-home{position:fixed;top:8px;left:8px;z-index:102;width:auto;min-width:58px;padding:10px 14px;background:rgba(40,40,60,.9);border-color:#667;box-shadow:none}
 .btn-home:hover{background:rgba(70,70,100,.95)}
-.seed-box{margin:8px 0;text-align:center}
-.seed-box .lab{color:#888;font-size:11px;margin-bottom:5px;letter-spacing:1px}
+.optRow{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;width:100%;margin:2px 0 4px 0}
+.optBtn{width:auto;min-width:82px;padding:9px 10px;font-size:12px;background:linear-gradient(180deg,#2b2b4e,#15152a);border-color:#5a5a88;box-shadow:none}
+.optBtn.selected{background:linear-gradient(180deg,#ffd24a,#ff8c00);border-color:#fff;color:#111;outline:3px solid rgba(255,255,255,.85)}
+.seed-box{margin:8px 0;text-align:center}.seed-box .lab{color:#888;font-size:11px;margin-bottom:5px;letter-spacing:1px}
 .seed-box input{background:#080818;color:#3f3;border:1px solid rgba(0,255,0,.45);padding:9px 10px;font-family:inherit;font-size:15px;width:170px;max-width:72vw;text-align:center;border-radius:4px;letter-spacing:2px;touch-action:auto}
 .seed-box button{background:#1a1a35;color:#fff;border:1px solid #4a4a6e;padding:9px 10px;margin-left:4px;cursor:pointer;font-family:inherit;font-size:13px;border-radius:4px;touch-action:manipulation}
 .seed-box button:focus{outline:3px solid #fff;outline-offset:2px}
 .info{color:#888;font-size:11px;margin-top:10px;text-align:center;padding:0 8px;line-height:1.55}
 #hud{position:fixed;top:8px;left:8px;color:#fff;font-size:13px;z-index:50;text-shadow:1px 1px 3px #000,0 0 8px rgba(0,0,0,.7);pointer-events:none;line-height:1.45}
 #hudRight{position:fixed;top:8px;right:62px;color:#fff;font-size:13px;z-index:50;text-align:right;text-shadow:1px 1px 3px #000;pointer-events:none;line-height:1.45}
-#pauseBtn{position:fixed;top:8px;right:8px;z-index:60;background:rgba(0,0,0,.58);color:#fff;border:2px solid rgba(255,255,255,.55);width:48px;height:48px;font-size:18px;font-family:inherit;cursor:pointer;border-radius:8px;display:none;touch-action:manipulation}
-#pauseBtn:active{background:rgba(255,107,53,.55)}
-#pauseBtn:focus{outline:3px solid #fff;outline-offset:2px}
+#pauseBtn{position:fixed;top:8px;right:8px;z-index:60;background:rgba(0,0,0,.58);color:#fff;border:2px solid rgba(255,255,255,.55);width:48px;height:48px;font-size:18px;font-family:inherit;cursor:pointer;border-radius:8px;display:none;touch-action:manipulation}#pauseBtn:active{background:rgba(255,107,53,.55)}#pauseBtn:focus{outline:3px solid #fff;outline-offset:2px}
 #touchControls{position:fixed;left:0;right:0;bottom:0;z-index:55;display:none;justify-content:space-between;align-items:flex-end;padding:8px 14px 14px 14px;pointer-events:none;touch-action:none}
-@supports (padding-bottom: env(safe-area-inset-bottom)){
-#touchControls{padding-left:calc(14px + env(safe-area-inset-left,0px));padding-right:calc(14px + env(safe-area-inset-right,0px));padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
-}
+@supports (padding-bottom: env(safe-area-inset-bottom)){#touchControls{padding-left:calc(14px + env(safe-area-inset-left,0px));padding-right:calc(14px + env(safe-area-inset-right,0px));padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}}
 .pad{display:flex;flex-direction:column;gap:10px;pointer-events:none}
 .touch-zone{width:74px;height:74px;border-radius:50%;border:3px solid rgba(255,255,255,.34);background:rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.72);font-size:12px;font-weight:bold;letter-spacing:1px;line-height:1.05;text-align:center;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;user-select:none}
 .touch-zone.on{background:rgba(255,107,53,.5);border-color:#ff6b35;color:#fff;transform:scale(.94)}
 .stats{font-size:14px;color:#ccc;margin:8px 0 12px;text-align:center;line-height:1.7}
-.password-box{margin:8px 0;text-align:center;display:none;width:100%}
-.password-box textarea{background:#080818;color:#3f3;border:1px solid rgba(0,255,0,.45);padding:8px;font-family:inherit;font-size:11px;width:100%;max-width:320px;height:58px;border-radius:4px;resize:none;touch-action:auto}
 .popup{position:fixed;top:24%;left:50%;transform:translateX(-50%);color:#ff0;font-size:22px;font-weight:bold;text-shadow:0 0 12px #ff0,0 0 28px rgba(255,255,0,.45);z-index:300;pointer-events:none;animation:fadeUp 1.6s forwards;text-align:center;white-space:nowrap}
 @keyframes fadeUp{0%{opacity:1;transform:translate(-50%,0) scale(1)}18%{transform:translate(-50%,-8px) scale(1.12)}100%{opacity:0;transform:translate(-50%,-90px) scale(.82)}}
-@media(min-width:700px){
-.title{font-size:48px}.subtitle{font-size:15px}.btn{font-size:17px;padding:14px 22px;max-width:280px}.info{font-size:13px}#hud,#hudRight{font-size:16px}.stats{font-size:16px}.touch-zone{width:88px;height:88px;font-size:14px}
-}
-@media(max-height:620px){
-.screen{padding:4px;align-items:flex-start;justify-content:flex-start}
-.dialog{max-height:calc(100vh - 8px);max-height:calc(100dvh - 8px);gap:4px;padding:6px}
-#titleScreen .dialog{padding-top:44px}
-.title{font-size:22px;margin-bottom:2px}.subtitle{font-size:11px;margin-bottom:4px}
-.btn{width:42vw;max-width:178px;min-width:112px;padding:8px 9px;font-size:12px}.btnGrid{gap:4px}
-.btn-small{min-width:82px;padding:7px 9px;font-size:12px}
-.info{font-size:10px;margin-top:4px;line-height:1.35}.seed-box{margin:4px 0}.seed-box input{width:116px;font-size:13px;padding:6px 7px}.seed-box button{padding:6px 8px;font-size:12px;margin-left:2px}
-.password-box textarea{height:42px;font-size:10px}.stats{font-size:12px;margin:4px 0 6px}
-.touch-zone{width:58px;height:58px;font-size:10px}.pad{gap:6px}
-}
-@media(max-width:420px){
-.btn{width:82vw;max-width:260px}.touch-zone{width:66px;height:66px;font-size:11px}
-}
+@media(min-width:700px){.title{font-size:48px}.subtitle{font-size:15px}.btn{font-size:17px;padding:14px 22px;max-width:280px}.info{font-size:13px}#hud,#hudRight{font-size:16px}.stats{font-size:16px}.touch-zone{width:88px;height:88px;font-size:14px}.optBtn{min-width:96px;font-size:13px;padding:10px 12px}}
+@media(max-height:620px){.screen{padding:4px;align-items:flex-start;justify-content:flex-start}.dialog{max-height:calc(100vh - 8px);max-height:calc(100dvh - 8px);gap:4px;padding:6px}#titleScreen .dialog{padding-top:44px}.title{font-size:22px;margin-bottom:2px}.subtitle{font-size:11px;margin-bottom:4px}.btn{width:42vw;max-width:178px;min-width:112px;padding:8px 9px;font-size:12px}.btnGrid{gap:4px}.btn-small{min-width:82px;padding:7px 9px;font-size:12px}.optBtn{min-width:72px;padding:7px 8px;font-size:11px}.info{font-size:10px;margin-top:4px;line-height:1.35}.seed-box{margin:4px 0}.seed-box input{width:116px;font-size:13px;padding:6px 7px}.seed-box button{padding:6px 8px;font-size:12px;margin-left:2px}.stats{font-size:12px;margin:4px 0 6px}.touch-zone{width:58px;height:58px;font-size:10px}.pad{gap:6px}}
+@media(max-width:420px){.btn{width:82vw;max-width:260px}.touch-zone{width:66px;height:66px;font-size:11px}}
 </style>
 </head>
 <body>
@@ -74,23 +56,46 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font
   <button class="btn btn-home" onclick="window.open('https://1nd1g0.github.io/','_blank')">HOME</button>
   <div class="dialog">
     <div class="title">SCOOTER STUNT</div>
-    <div class="subtitle">PROCEDURAL PHYSICS STUNT RIDER</div>
-    <div class="btnGrid">
-      <button class="btn" onclick="startNewGame()">NEW GAME</button>
-      <button class="btn" onclick="loadFromStorage()">LOAD SAVE</button>
-      <button class="btn" onclick="loadFromPassword()">LOAD PASSWORD</button>
+    <div class="subtitle">OPTIMIZED PHYSICS STUNT RIDER</div>
+
+    <div class="rowLabel">DIFFICULTY</div>
+    <div class="optRow" aria-label="Difficulty">
+      <button class="btn optBtn" id="diffBtn0" onclick="setDifficulty(0)">EASY</button>
+      <button class="btn optBtn selected" id="diffBtn1" onclick="setDifficulty(1)">NORMAL</button>
+      <button class="btn optBtn" id="diffBtn2" onclick="setDifficulty(2)">HARD</button>
+      <button class="btn optBtn" id="diffBtn3" onclick="setDifficulty(3)">EXTREME</button>
     </div>
+
+    <div class="rowLabel">DRIVE</div>
+    <div class="optRow" aria-label="Drive mode">
+      <button class="btn optBtn" id="driveBtn0" onclick="setDriveMode(0)">REAR</button>
+      <button class="btn optBtn" id="driveBtn1" onclick="setDriveMode(1)">FRONT</button>
+      <button class="btn optBtn selected" id="driveBtn2" onclick="setDriveMode(2)">BOTH</button>
+    </div>
+
+    <div class="rowLabel">AUDIO</div>
+    <div class="optRow">
+      <button class="btn optBtn selected" id="musicBtn" onclick="toggleMusic()">MUSIC ON</button>
+    </div>
+
+    <div class="btnGrid">
+      <button class="btn" id="titleNewBtn" onclick="startNewGame()">NEW GAME</button>
+      <button class="btn" onclick="loadFromStorage()">LOAD SAVE</button>
+      <button class="btn" onclick="saveToStorage()">SAVE GAME</button>
+    </div>
+
     <div class="seed-box">
       <div class="lab">WORLD SEED</div>
       <input id="seedInput" maxlength="16" spellcheck="false" autocomplete="off" aria-label="World seed">
       <button onclick="regenerateSeed()">RND</button>
-      <button onclick="copySeed()">COPY</button>
       <button onclick="applySeed()">USE</button>
     </div>
+
     <div class="info">
-      KEYS / GAMEPAD: W or Up = gas, S or Down = brake, A or Left = lean back, D or Right = lean forward.<br>
-      MENUS: Arrows/Tab move, Enter/Space activate, 1-9 quick select, Esc/P back or pause.<br>
-      Land clean, chain flips, reach the flag.
+      KEYS: W / Up = gas, S / Down = brake, A / Left = lean back, D / Right = lean forward.<br>
+      ENTER / SPACE activates focused menu button, or default: New Game / Resume / Retry / Next Level.<br>
+      ESC / P pauses. Audio starts after first tap/click, as required by browser autoplay policy.<br>
+      Weather is recycled off-screen, capped by device performance, and rendered with batched draw calls.
     </div>
   </div>
 </div>
@@ -98,20 +103,24 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font
 <div id="pauseScreen" class="screen hidden">
   <div class="dialog">
     <div class="title" style="font-size:26px">PAUSED</div>
-    <div class="btnGrid">
-      <button class="btn" onclick="resumeGame()">RESUME</button>
-      <button class="btn" onclick="restartLevel()">RESTART LEVEL</button>
-      <button class="btn" onclick="saveToStorage()">SAVE TO STORAGE</button>
-      <button class="btn" onclick="showSavePassword()">SAVE PASSWORD</button>
-      <button class="btn" onclick="quitToTitle()">QUIT TO TITLE</button>
+
+    <div class="rowLabel">DRIVE</div>
+    <div class="optRow">
+      <button class="btn optBtn" id="pauseDriveBtn0" onclick="setDriveMode(0)">REAR</button>
+      <button class="btn optBtn" id="pauseDriveBtn1" onclick="setDriveMode(1)">FRONT</button>
+      <button class="btn optBtn" id="pauseDriveBtn2" onclick="setDriveMode(2)">BOTH</button>
     </div>
-    <div class="password-box" id="pwBox">
-      <div style="color:#888;font-size:11px;margin-bottom:5px">COPY THIS PASSWORD INCLUDING SEED</div>
-      <textarea id="pwText" readonly onclick="this.select()"></textarea>
-      <div class="btnGrid" style="margin-top:6px">
-        <button class="btn btn-small" id="copyPwBtn" onclick="copyPassword()">COPY</button>
-        <button class="btn btn-small" onclick="closePassword()">CLOSE</button>
-      </div>
+
+    <div class="rowLabel">AUDIO</div>
+    <div class="optRow">
+      <button class="btn optBtn" id="pauseMusicBtn" onclick="toggleMusic()">MUSIC ON</button>
+    </div>
+
+    <div class="btnGrid">
+      <button class="btn" id="pauseResumeBtn" onclick="resumeGame()">RESUME</button>
+      <button class="btn" onclick="restartLevel()">RESTART LEVEL</button>
+      <button class="btn" onclick="saveToStorage()">SAVE GAME</button>
+      <button class="btn" onclick="quitToTitle()">QUIT TO TITLE</button>
     </div>
   </div>
 </div>
@@ -121,7 +130,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font
     <div class="title" style="color:#ff3030;text-shadow:0 0 18px #f00">CRASHED</div>
     <div class="stats">Distance: <span id="overDist">0</span><br>Score: <span id="overScore">0</span></div>
     <div class="btnGrid">
-      <button class="btn" onclick="restartLevel()">RETRY</button>
+      <button class="btn" id="overRetryBtn" onclick="restartLevel()">RETRY</button>
       <button class="btn" onclick="quitToTitle()">QUIT</button>
     </div>
   </div>
@@ -132,7 +141,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font
     <div class="title" style="color:#30ff90;text-shadow:0 0 18px #0f8">LEVEL COMPLETE</div>
     <div class="stats" id="winStats"></div>
     <div class="btnGrid">
-      <button class="btn" onclick="nextLevel()">NEXT LEVEL</button>
+      <button class="btn" id="winNextBtn" onclick="nextLevel()">NEXT LEVEL</button>
       <button class="btn" onclick="quitToTitle()">QUIT</button>
     </div>
   </div>
@@ -140,26 +149,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font
 
 <button id="pauseBtn" onclick="pauseGame()" aria-label="Pause">II</button>
 
-<div id="hud">
-  <div id="hudDist">0 m</div>
-  <div id="hudSpeed">0 km/h</div>
-</div>
-<div id="hudRight">
-  <div id="hudLevel">Level 1</div>
-  <div id="hudScore">Score 0</div>
-  <div id="hudFlips">Flips 0</div>
-  <div id="hudCombo"></div>
-</div>
+<div id="hud"><div id="hudDist">0 m</div><div id="hudSpeed">0 km/h</div></div>
+<div id="hudRight"><div id="hudLevel">Level 1</div><div id="hudScore">Score 0</div><div id="hudFlips">Flips 0</div><div id="hudCombo"></div><div id="hudDrive">BOTH</div><div id="hudMusic">MUSIC ON</div><div id="hudPerf">Q1</div></div>
 
 <div id="touchControls">
-  <div class="pad">
-    <div class="touch-zone" id="tLeft">LEAN<br>BACK</div>
-    <div class="touch-zone" id="tRight">LEAN<br>FWD</div>
-  </div>
-  <div class="pad">
-    <div class="touch-zone" id="tGas">GAS</div>
-    <div class="touch-zone" id="tBrake">BRAKE</div>
-  </div>
+  <div class="pad"><div class="touch-zone" id="tLeft">LEAN<br>BACK</div><div class="touch-zone" id="tRight">LEAN<br>FWD</div></div>
+  <div class="pad"><div class="touch-zone" id="tGas">GAS</div><div class="touch-zone" id="tBrake">BRAKE</div></div>
 </div>
 
 <script>
@@ -172,9 +167,14 @@ var min = Math.min, max = Math.max, random = Math.random;
 
 function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
 function lerp(a, b, t) { return a + (b - a) * t; }
-function normAngle(a) { a %= TAU; if (a > PI) a -= TAU; else if (a < -PI) a += TAU; return a; }
+function normAngle(a) { if (!isFinite(a)) return 0; a %= TAU; if (a > PI) a -= TAU; else if (a < -PI) a += TAU; return a; }
 function angLerp(a, b, t) { return a + normAngle(b - a) * t; }
 function angleDist(a, b) { return abs(normAngle(a - b)); }
+function nearestUprightAngle(a) { if (!isFinite(a)) return 0; return Math.floor(a / TAU + 0.5) * TAU; }
+function rgba(c, a) { return 'rgba(' + floor(clamp(c[0],0,1)*255) + ',' + floor(clamp(c[1],0,1)*255) + ',' + floor(clamp(c[2],0,1)*255) + ',' + clamp(a,0,1) + ')'; }
+function mix(c1, c2, t) { t = clamp(t,0,1); return [lerp(c1[0],c2[0],t), lerp(c1[1],c2[1],t), lerp(c1[2],c2[2],t)]; }
+function scaleRgb(c, m) { return [clamp(c[0]*m,0,1), clamp(c[1]*m,0,1), clamp(c[2]*m,0,1)]; }
+function $(id) { return document.getElementById(id); }
 
 function RNG(s) { this.s = (s >>> 0) || 0x9e3779b9; }
 RNG.prototype.next = function () {
@@ -198,795 +198,270 @@ function genSeed() {
   for (var i = 0; i < 8; i++) s += c[floor(random() * c.length)];
   return s;
 }
+function hslToRgb(h, s, l) {
+  h = ((h % 360) + 360) % 360 / 360;
+  s = clamp(s, 0, 1); l = clamp(l, 0, 1);
+  if (s === 0) return [l, l, l];
+  function hue2rgb(p, q, t) {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q-p)*6*t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q-p)*(2/3-t)*6;
+    return p;
+  }
+  var q = l < 0.5 ? l*(1+s) : l+s-l*s;
+  var p = 2*l-q;
+  return [hue2rgb(p,q,h+1/3), hue2rgb(p,q,h), hue2rgb(p,q,h-1/3)];
+}
+
+var canvas = $('c');
+var ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+if (ctx) ctx.imageSmoothingEnabled = false;
+
+var W = 1, H = 1;
 
 var seed = genSeed();
 var seedNum = hashStr(seed);
 var level = 1;
 var score = 0;
+var difficulty = 1;
+var driveMode = 2;
+var musicOn = true;
 
-var canvas = document.getElementById('c');
-var gl = null, ctx2d = null, useGL = false, W = 1, H = 1;
+var DIFF_NAMES = ['EASY','NORMAL','HARD','EXTREME'];
+var DRIVE_NAMES = ['REAR','FRONT','BOTH'];
 
-var raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame ||
-  window.mozRequestAnimationFrame || window.msRequestAnimationFrame ||
-  function (cb) { return window.setTimeout(function () { cb(nowFn()); }, 16); };
-var nowFn = (window.performance && window.performance.now) ?
-  function () { return window.performance.now(); } : function () { return Date.now(); };
+var terrain = [];
+var trees = [];
+var pools = [];
+var finishX = 0;
+var theme = null;
 
-function $(id) { return document.getElementById(id); }
+var GRAV = 1320;
+var WRAD = 13;
+var WY = 11;
+var WBASE = 54;
+var MAXSPD = 790;
+var ENG = 1650;
+var LEAN_G = 36;
+var LEAN_A = 98;
+var MAX_AV_G = 8.5;
+var MAX_AV_A = 24;
+var STEP = 1 / 120;
+var FLIP_EPS = 0.34;
+var HEAD_X = 5, HEAD_Y = -46, HEAD_R = 7;
+var HEAD_L_X = 24, HEAD_L_Y = -30;
+var TAIL_L_X = -34, TAIL_L_Y = -2;
 
-function initContext() {
-  try {
-    var opt = { alpha: false, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false };
-    gl = canvas.getContext('webgl', opt) || canvas.getContext('experimental-webgl', opt);
-  } catch (e) { gl = null; }
+var cam = { x:0, y:0, scale:1, bx:0, by:0, bs:1, init:false };
 
-  if (gl) {
-    useGL = true;
-    try { initGL(); } catch (e) { useGL = false; gl = null; }
+var bike = {
+  x:0, y:0, vx:0, vy:0, a:0, av:0, speed:0,
+  onGnd:false, rearG:false, frontG:false,
+  alive:true, finished:false, air:0, rot:0, maxRot:0,
+  flips:0, flipsAwarded:0, dist:0, maxX:0, engineOn:false,
+  combo:0, comboT:0, fax:0, fay:0
+};
+
+var rider = { torsoAbs:0, torsoV:0, headAbs:0, headV:0, crouch:0, crouchV:0 };
+var safe = { x:0, y:0, a:0, vx:120 };
+var stuckTimer = 0;
+var stuckCooldown = 0;
+
+var visuals = {
+  skyTop:[0.04,0.04,0.10], skyBot:[0.08,0.05,0.13],
+  daylight:0.65, ambient:0.85, fogColor:[0.35,0.4,0.5], fogDensity:0.08,
+  weather:1, intensity:0.8, windX:0.2, windStrength:0.8,
+  precipColor:[0.6,0.7,1], lightColor:[1,0.94,0.68], tailColor:[1,0.12,0.08],
+  headlight:0.8, tailLight:0.18, stars:[]
+};
+
+var headLight = { x:0, y:0, dir:0, on:false, i:0, range:520, beam:0.76, power:1.35, color:[1,0.94,0.68] };
+var tailLight = { x:0, y:0, dir:0, on:false, i:0, range:250, beam:1.18, power:0.62, color:[1,0.12,0.08] };
+
+var input = { gas:false, brake:false, left:false, right:false };
+var kIn = { gas:false, brake:false, left:false, right:false };
+var tIn = { gas:false, brake:false, left:false, right:false };
+
+var inGame = false, paused = false, lastT = 0, acc = 0;
+var wxTime = 0, shakeTime = 0, shakeMag = 0, riderCompress = 0;
+var crashPending = false, crashTimer = 0;
+var hudLast = {};
+
+var rgInfo = { y:0, angle:0, type:0, i:0 };
+var fgInfo = { y:0, angle:0, type:0, i:0 };
+var ggInfo = { y:0, angle:0, type:0, i:0 };
+var hgInfo = { y:0, angle:0, type:0, i:0 };
+var tmpInfo = { y:0, angle:0, type:0, i:0 };
+
+var quality = {
+  tier: 1,
+  resScale: 0.88,
+  maxPixels: 900000,
+  weatherDiv: 8500,
+  weatherMax: 170,
+  fog: true,
+  lighting: true,
+  leaves: true,
+  splashMax: 55,
+  music: 1
+};
+
+var qTimer = 0, qSamples = 0, qCooldown = 0;
+
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod|Mobile|Silk/i.test(navigator.userAgent || '') ||
+         ('ontouchstart' in window) ||
+         ((navigator.maxTouchPoints || 0) > 0);
+}
+
+function initialQualityTier() {
+  var mobile = isMobileDevice();
+  var cores = navigator.hardwareConcurrency || 2;
+  var mem = navigator.deviceMemory || 2;
+  if (mobile) return (cores >= 6 && mem >= 4) ? 1 : 0;
+  return cores >= 4 ? 2 : 1;
+}
+
+function configureQualityTier(t) {
+  quality.tier = clamp(floor(t), 0, 2);
+
+  if (quality.tier === 0) {
+    quality.resScale = 0.66;
+    quality.maxPixels = 390000;
+    quality.weatherDiv = 14000;
+    quality.weatherMax = 95;
+    quality.fog = false;
+    quality.lighting = false;
+    quality.leaves = false;
+    quality.splashMax = 24;
+    quality.music = 0;
+  } else if (quality.tier === 1) {
+    quality.resScale = 0.86;
+    quality.maxPixels = 850000;
+    quality.weatherDiv = 9000;
+    quality.weatherMax = 160;
+    quality.fog = true;
+    quality.lighting = true;
+    quality.leaves = true;
+    quality.splashMax = 52;
+    quality.music = 1;
+  } else {
+    quality.resScale = 1.0;
+    quality.maxPixels = 1500000;
+    quality.weatherDiv = 6200;
+    quality.weatherMax = 220;
+    quality.fog = true;
+    quality.lighting = true;
+    quality.leaves = true;
+    quality.splashMax = 78;
+    quality.music = 2;
   }
-  if (!useGL) {
-    try { ctx2d = canvas.getContext('2d'); } catch (e) { ctx2d = null; }
+}
+
+function Pool(max) {
+  this.a = new Array(max);
+  for (var i = 0; i < max; i++) {
+    this.a[i] = {
+      x:0, y:0, vx:0, vy:0, len:0, life:0, maxLife:1,
+      size:0, rot:0, rotV:0, tone:0, type:0, seed:0,
+      r:1, g:1, b:1, kind:0
+    };
   }
+  this.count = 0;
+  this.cap = max;
+  this.spawnAcc = 0;
+  this.seq = 0;
+  this.max = max;
+}
+
+Pool.prototype.recycle = function (i) {
+  if (i < 0 || i >= this.count) return;
+  var p = this.a[i];
+  var last = this.a[--this.count];
+  this.a[i] = last;
+  this.a[this.count] = p;
+};
+
+Pool.prototype.trim = function (cap) {
+  this.cap = min(cap, this.max);
+  while (this.count > this.cap) this.recycle(this.count - 1);
+};
+
+Pool.prototype.reset = function () {
+  this.count = 0;
+  this.spawnAcc = 0;
+  this.seq = 0;
+};
+
+var rain = new Pool(360);
+var snow = new Pool(360);
+var fog = new Pool(90);
+var leaves = new Pool(90);
+var splashes = new Pool(140);
+
+function updateCaps() {
+  var area = W * H;
+  var precipCap = min(quality.weatherMax, floor(area / quality.weatherDiv));
+  precipCap = max(28, precipCap);
+
+  rain.trim(precipCap);
+  snow.trim(precipCap);
+
+  var fogCap = quality.fog ? min(34, floor(area / 42000)) : 0;
+  fog.trim(max(0, fogCap));
+
+  var leafCap = quality.leaves ? min(32, floor(area / 55000)) : 0;
+  leaves.trim(max(0, leafCap));
+
+  splashes.trim(quality.splashMax);
 }
 
 function resize() {
-  W = canvas.width = window.innerWidth || document.documentElement.clientWidth || 360;
-  H = canvas.height = window.innerHeight || document.documentElement.clientHeight || 640;
-  if (useGL && gl) gl.viewport(0, 0, W, H);
+  var cssW = window.innerWidth || document.documentElement.clientWidth || 360;
+  var cssH = window.innerHeight || document.documentElement.clientHeight || 640;
+
+  var dpr = window.devicePixelRatio || 1;
+  var maxDpr = quality.tier === 2 ? 1.45 : (quality.tier === 1 ? 1.08 : 0.95);
+  var scale = quality.resScale * min(dpr, maxDpr);
+
+  var pixels = cssW * cssH * scale * scale;
+  if (pixels > quality.maxPixels) scale *= sqrt(quality.maxPixels / pixels);
+
+  W = canvas.width = max(1, floor(cssW * scale));
+  H = canvas.height = max(1, floor(cssH * scale));
+
+  if (ctx) ctx.imageSmoothingEnabled = false;
+  updateCaps();
   updateTouchVisibility();
 }
 
-var prog, aPosLoc, aColLoc, uResLoc, vBuf, cBuf;
-
-function initGL() {
-  var vsSource = 'attribute vec2 aPos; attribute vec4 aCol; uniform vec2 uRes; varying vec4 vCol;' +
-    'void main(){ vec2 p=(aPos/uRes)*2.0-1.0; p.y=-p.y; gl_Position=vec4(p,0.0,1.0); vCol=aCol; }';
-  var fsSource = 'precision mediump float; varying vec4 vCol; void main(){ gl_FragColor=vCol; }';
-
-  function compile(type, src) {
-    var sh = gl.createShader(type);
-    gl.shaderSource(sh, src);
-    gl.compileShader(sh);
-    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
-    return sh;
-  }
-
-  prog = gl.createProgram();
-  gl.attachShader(prog, compile(gl.VERTEX_SHADER, vsSource));
-  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fsSource));
-  gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
-  gl.useProgram(prog);
-
-  aPosLoc = gl.getAttribLocation(prog, 'aPos');
-  aColLoc = gl.getAttribLocation(prog, 'aCol');
-  uResLoc = gl.getUniformLocation(prog, 'uRes');
-
-  vBuf = gl.createBuffer();
-  cBuf = gl.createBuffer();
-
-  gl.enableVertexAttribArray(aPosLoc);
-  gl.enableVertexAttribArray(aColLoc);
-  gl.enable(gl.BLEND);
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+function setQualityTier(t) {
+  configureQualityTier(t);
+  resize();
+  qCooldown = 2.5;
+  setText($('hudPerf'), 'Q' + quality.tier);
 }
 
-var MAXV = 32000;
-var verts = new Float32Array(MAXV * 2);
-var cols = new Float32Array(MAXV * 4);
-var vn = 0;
-
-function resetDraw() { vn = 0; }
-
-function pushVert(x, y, r, g, b, a) {
-  if (vn >= MAXV) return;
-  var vi = vn * 2, ci = vn * 4;
-  verts[vi] = x; verts[vi + 1] = y;
-  cols[ci] = r; cols[ci + 1] = g; cols[ci + 2] = b; cols[ci + 3] = a;
-  vn++;
-}
-
-function triC(x1, y1, r1, g1, b1, a1, x2, y2, r2, g2, b2, a2, x3, y3, r3, g3, b3, a3) {
-  if (vn + 3 > MAXV) return;
-  pushVert(x1, y1, r1, g1, b1, a1);
-  pushVert(x2, y2, r2, g2, b2, a2);
-  pushVert(x3, y3, r3, g3, b3, a3);
-}
-
-function quadC(x1, y1, r1, g1, b1, a1, x2, y2, r2, g2, b2, a2, x3, y3, r3, g3, b3, a3, x4, y4, r4, g4, b4, a4) {
-  triC(x1, y1, r1, g1, b1, a1, x2, y2, r2, g2, b2, a2, x3, y3, r3, g3, b3, a3);
-  triC(x1, y1, r1, g1, b1, a1, x3, y3, r3, g3, b3, a3, x4, y4, r4, g4, b4, a4);
-}
-
-function line(x1, y1, x2, y2, r, g, b, a, w) {
-  if (w <= 0 || a <= 0) return;
-  var dx = x2 - x1, dy = y2 - y1;
-  var len = sqrt(dx * dx + dy * dy);
-  if (len < 0.0001) return;
-  var hw = w * 0.5;
-  var nx = -dy / len * hw, ny = dx / len * hw;
-  quadC(x1 - nx, y1 - ny, r, g, b, a, x1 + nx, y1 + ny, r, g, b, a,
-        x2 + nx, y2 + ny, r, g, b, a, x2 - nx, y2 - ny, r, g, b, a);
-}
-
-function drawCirc(cx, cy, rad, r, g, b, a, seg) {
-  if (rad <= 0 || a <= 0) return;
-  seg = seg || 8;
-  if (seg < 3) seg = 3;
-  if (seg > 20) seg = 20;
-  for (var i = 0; i < seg; i++) {
-    var a1 = i / seg * TAU, a2 = (i + 1) / seg * TAU;
-    triC(cx, cy, r, g, b, a,
-         cx + cos(a1) * rad, cy + sin(a1) * rad, r, g, b, a,
-         cx + cos(a2) * rad, cy + sin(a2) * rad, r, g, b, a);
-  }
-}
-
-function drawRing(cx, cy, inner, outer, r, g, b, a, seg) {
-  if (outer <= 0 || a <= 0) return;
-  if (inner < 0) inner = 0;
-  if (outer < inner) { var t = inner; inner = outer; outer = t; }
-  seg = seg || 12;
-  if (seg < 3) seg = 3;
-  if (seg > 24) seg = 24;
-  for (var i = 0; i < seg; i++) {
-    var a1 = i / seg * TAU, a2 = (i + 1) / seg * TAU;
-    var c1 = cos(a1), s1 = sin(a1), c2 = cos(a2), s2 = sin(a2);
-    quadC(cx + c1 * inner, cy + s1 * inner, r, g, b, a,
-          cx + c1 * outer, cy + s1 * outer, r, g, b, a,
-          cx + c2 * outer, cy + s2 * outer, r, g, b, a,
-          cx + c2 * inner, cy + s2 * inner, r, g, b, a);
-  }
-}
-
-var visuals = {
-  skyTop: [0.04, 0.04, 0.10], skyBot: [0.08, 0.05, 0.13],
-  stars: [], mount: [[], []],
-  mountColor: [[0.08, 0.07, 0.12], [0.05, 0.04, 0.09]],
-  mountDark: [[0.04, 0.035, 0.07], [0.025, 0.02, 0.05]],
-  ground: [],
-  sco: {
-    frame: [0.82, 0.26, 0.12], dark: [0.20, 0.20, 0.23], metal: [0.55, 0.57, 0.62],
-    grip: [0.10, 0.10, 0.11], tire: [0.09, 0.09, 0.10], hub: [0.42, 0.42, 0.46],
-    light: [1.0, 0.95, 0.70], tail: [1.0, 0.15, 0.10],
-    rider: [0.16, 0.26, 0.55], riderDark: [0.10, 0.16, 0.36],
-    pants: [0.13, 0.14, 0.18], pantsDark: [0.08, 0.09, 0.12],
-    shoe: [0.12, 0.12, 0.13], glove: [0.14, 0.14, 0.16], pack: [0.28, 0.18, 0.10],
-    helmet: [0.92, 0.24, 0.12], visor: [0.08, 0.70, 0.90], skin: [0.85, 0.66, 0.52]
-  },
-  texOff: 0, texSpace: 3, texDX: 0, texDY: 6, decorHash: 0
-};
-
-function present() {
-  if (vn === 0) return;
-
-  if (useGL && gl) {
-    gl.clearColor(visuals.skyTop[0], visuals.skyTop[1], visuals.skyTop[2], 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.uniform2f(uResLoc, W, H);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, vBuf);
-    gl.bufferData(gl.ARRAY_BUFFER, verts.subarray(0, vn * 2), gl.DYNAMIC_DRAW);
-    gl.vertexAttribPointer(aPosLoc, 2, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuf);
-    gl.bufferData(gl.ARRAY_BUFFER, cols.subarray(0, vn * 4), gl.DYNAMIC_DRAW);
-    gl.vertexAttribPointer(aColLoc, 4, gl.FLOAT, false, 0, 0);
-
-    gl.drawArrays(gl.TRIANGLES, 0, vn);
-  } else if (ctx2d) {
-    ctx2d.fillStyle = 'rgb(' + floor(visuals.skyTop[0] * 255) + ',' + floor(visuals.skyTop[1] * 255) + ',' + floor(visuals.skyTop[2] * 255) + ')';
-    ctx2d.fillRect(0, 0, W, H);
-    for (var i = 0; i < vn; i += 3) {
-      var c0 = i * 4, c1 = (i + 1) * 4, c2 = (i + 2) * 4;
-      var r = floor(((cols[c0] + cols[c1] + cols[c2]) / 3) * 255);
-      var g = floor(((cols[c0 + 1] + cols[c1 + 1] + cols[c2 + 1]) / 3) * 255);
-      var b = floor(((cols[c0 + 2] + cols[c1 + 2] + cols[c2 + 2]) / 3) * 255);
-      var a = (cols[c0 + 3] + cols[c1 + 3] + cols[c2 + 3]) / 3;
-      if (a <= 0.01) continue;
-      var v0 = i * 2, v1 = (i + 1) * 2, v2 = (i + 2) * 2;
-      ctx2d.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
-      ctx2d.beginPath();
-      ctx2d.moveTo(verts[v0], verts[v0 + 1]);
-      ctx2d.lineTo(verts[v1], verts[v1 + 1]);
-      ctx2d.lineTo(verts[v2], verts[v2 + 1]);
-      ctx2d.closePath();
-      ctx2d.fill();
-    }
-  }
-  vn = 0;
-}
-
-var AC = null, sfxBus = null, musicBus = null, engineOsc = null, engineGain = null;
-var audioOK = false, audioReady = false, wantMusic = false;
-var musicNodes = [], musicGen = 0;
-
-function paramSet(p, v, t, tc) {
-  if (!p) return;
-  if (p.setTargetAtTime) { try { p.setTargetAtTime(v, t, tc); return; } catch (e) {} }
-  try { p.setValueAtTime(v, t); } catch (e) {}
-}
-
-function ensureAudio() {
-  if (audioOK) { pumpAudio(); return; }
-  try {
-    var Ctor = window.AudioContext || window.webkitAudioContext;
-    if (!Ctor) return;
-    AC = new Ctor();
-    sfxBus = AC.createGain(); sfxBus.gain.value = 0.34; sfxBus.connect(AC.destination);
-    musicBus = AC.createGain(); musicBus.gain.value = 0.20; musicBus.connect(AC.destination);
-    audioOK = true;
-    audioReady = (AC.state === 'running');
-    AC.onstatechange = function () {
-      if (AC && AC.state === 'running') pumpAudio();
-    };
-    pumpAudio();
-  } catch (e) { AC = null; audioOK = false; audioReady = false; }
-}
-
-function pumpAudio() {
-  if (!audioOK || !AC) return;
-  if (AC.state === 'running') {
-    audioReady = true;
-    startEngine();
-    if (wantMusic) { wantMusic = false; startMusic(); }
-    return;
-  }
-  try {
-    var p = AC.resume();
-    if (p && p.then) {
-      p.then(function () {
-        audioReady = true;
-        startEngine();
-        if (wantMusic) { wantMusic = false; startMusic(); }
-      }, function () {});
-    } else {
-      audioReady = true;
-      startEngine();
-      if (wantMusic) { wantMusic = false; startMusic(); }
-    }
-  } catch (e) {}
-}
-
-function startEngine() {
-  if (!AC || engineOsc) return;
-  try {
-    engineOsc = AC.createOscillator();
-    engineGain = AC.createGain();
-    engineOsc.type = 'sawtooth';
-    engineOsc.frequency.value = 55;
-    engineGain.gain.value = 0;
-    try {
-      var filt = AC.createBiquadFilter();
-      filt.type = 'lowpass';
-      filt.frequency.value = 900;
-      engineOsc.connect(filt); filt.connect(engineGain);
-    } catch (e) { engineOsc.connect(engineGain); }
-    engineGain.connect(sfxBus);
-    engineOsc.start();
-  } catch (e) { engineOsc = null; engineGain = null; }
-}
-
-function updateEngine() {
-  if (!AC || !engineOsc || !engineGain) return;
-  var t = AC.currentTime;
-  var f = 46 + bike.speed * 0.5 + (bike.engineOn ? 34 : 0);
-  var v = bike.engineOn ? 0.040 : 0.005;
-  paramSet(engineOsc.frequency, clamp(f, 26, 520), t, 0.04);
-  paramSet(engineGain.gain, v, t, 0.05);
-}
-
-function silenceEngine() {
-  if (AC && engineGain) { try { engineGain.gain.setTargetAtTime(0, AC.currentTime, 0.03); } catch (e) {} }
-}
-
-function startMusic() {
-  if (!AC) return;
-  if (!audioReady || AC.state !== 'running') { wantMusic = true; return; }
-  stopMusic();
-  var gen = ++musicGen;
-  var rng = new RNG((seedNum ^ (level * 0x51ed2701)) >>> 0);
-  var bpm = 88 + rng.i(0, 34);
-  var beat = 60 / bpm;
-  var rootMidi = 36 + rng.i(0, 11);
-  var root = 440 * Math.pow(2, (rootMidi - 69) / 12);
-
-  try {
-    var bass = AC.createOscillator(); bass.type = 'triangle';
-    var bg = AC.createGain(); bg.gain.value = 0.065;
-    bass.connect(bg); bg.connect(musicBus); bass.start();
-
-    var lead = AC.createOscillator(); lead.type = 'square';
-    var lg = AC.createGain(); lg.gain.value = 0.0001;
-    lead.connect(lg); lg.connect(musicBus); lead.start();
-
-    musicNodes.push(bass); musicNodes.push(lead);
-
-    var bassProg = [0, 3, 5, 7, 10, 12, 10, 7];
-    var leadProg = [0, 7, 12, 10, 7, 3, 0, -2];
-    var step = 0;
-
-    function tick() {
-      if (gen !== musicGen || !AC) return;
-      var t = AC.currentTime;
-      paramSet(bass.frequency, root * Math.pow(2, bassProg[step % bassProg.length] / 12), t, 0.02);
-      paramSet(lead.frequency, root * Math.pow(2, (leadProg[(step >> 1) % leadProg.length] + 12) / 12), t, 0.01);
-      try {
-        lg.gain.cancelScheduledValues(t);
-        lg.gain.setValueAtTime(0.0001, t);
-        lg.gain.linearRampToValueAtTime(0.030, t + 0.018);
-        lg.gain.exponentialRampToValueAtTime(0.0004, t + beat * 0.45);
-      } catch (e) {}
-      step++;
-      window.setTimeout(tick, beat * 500);
-    }
-    tick();
-  } catch (e) {}
-}
-
-function stopMusic() {
-  musicGen++;
-  for (var i = 0; i < musicNodes.length; i++) {
-    try { musicNodes[i].stop(); } catch (e) {}
-    try { musicNodes[i].disconnect(); } catch (e) {}
-  }
-  musicNodes.length = 0;
-  wantMusic = false;
-}
-
-function playTone(type, f0, f1, dur, vol, delay) {
-  if (!AC || AC.state !== 'running') return;
-  try {
-    var t = AC.currentTime + (delay || 0);
-    var o = AC.createOscillator();
-    var g = AC.createGain();
-    o.type = type;
-    f0 = max(1, f0); f1 = max(1, f1 || f0);
-    o.frequency.setValueAtTime(f0, t);
-    if (abs(f1 - f0) > 0.01) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(vol, t + 0.012);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(sfxBus);
-    o.start(t); o.stop(t + dur + 0.03);
-  } catch (e) {}
-}
-
-function sfx(kind) {
-  if (!AC || AC.state !== 'running') return;
-  try {
-    var t = AC.currentTime;
-    if (kind === 'land') {
-      playTone('sine', 150, 48, 0.13, 0.15, 0);
-    } else if (kind === 'flip') {
-      playTone('sine', 700, 1450, 0.24, 0.12, 0);
-    } else if (kind === 'win') {
-      playTone('sine', 523, 523, 0.18, 0.12, 0);
-      playTone('sine', 659, 659, 0.18, 0.12, 0.12);
-      playTone('sine', 784, 784, 0.18, 0.12, 0.24);
-      playTone('sine', 1047, 1047, 0.28, 0.12, 0.36);
-    } else if (kind === 'crash') {
-      var len = floor(AC.sampleRate * 0.24);
-      if (len < 16) return;
-      var buf = AC.createBuffer(1, len, AC.sampleRate);
-      var d = buf.getChannelData(0);
-      for (var i = 0; i < len; i++) d[i] = (random() * 2 - 1) * Math.pow(1 - i / len, 1.7);
-      var src = AC.createBufferSource(); src.buffer = buf;
-      var g = AC.createGain();
-      g.gain.setValueAtTime(0.26, t);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.24);
-      try {
-        var filt = AC.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 1100;
-        src.connect(filt); filt.connect(g);
-      } catch (e) { src.connect(g); }
-      g.connect(sfxBus); src.start(t);
-    }
-  } catch (e) {}
-}
-
-function gpPressed(gp, i) {
-  return !!(gp && gp.buttons && gp.buttons[i] && gp.buttons[i].pressed);
-}
-function gpValue(gp, i) {
-  return (gp && gp.buttons && gp.buttons[i]) ? (gp.buttons[i].value || 0) : 0;
-}
-function gpAxis(gp, i) {
-  return (gp && gp.axes && gp.axes.length > i) ? gp.axes[i] : 0;
-}
-
-var input = { gas: false, brake: false, left: false, right: false };
-var kIn = { gas: false, brake: false, left: false, right: false };
-var tIn = { gas: false, brake: false, left: false, right: false };
-
-function getKeyCode(e) {
-  if (e.code) return e.code;
-  var m = { 38: 'ArrowUp', 40: 'ArrowDown', 37: 'ArrowLeft', 39: 'ArrowRight',
-            87: 'KeyW', 83: 'KeyS', 65: 'KeyA', 68: 'KeyD',
-            27: 'Escape', 80: 'KeyP', 32: 'Space', 13: 'Enter', 9: 'Tab' };
-  return m[e.keyCode] || '';
-}
-
-function clearInputs() {
-  input.gas = input.brake = input.left = input.right = false;
-  kIn.gas = kIn.brake = kIn.left = kIn.right = false;
-  tIn.gas = tIn.brake = tIn.left = tIn.right = false;
-  var zones = document.getElementsByClassName('touch-zone');
-  for (var i = zones.length - 1; i >= 0; i--) zones[i].classList.remove('on');
-}
-
-function updateInput() {
-  input.gas = kIn.gas || tIn.gas;
-  input.brake = kIn.brake || tIn.brake;
-  input.left = kIn.left || tIn.left;
-  input.right = kIn.right || tIn.right;
-
-  var gps = [];
-  try {
-    if (navigator.getGamepads) gps = navigator.getGamepads();
-    else if (navigator.webkitGetGamepads) gps = navigator.webkitGetGamepads();
-  } catch (e) { gps = []; }
-
-  for (var i = 0; i < gps.length; i++) {
-    var gp = gps[i];
-    if (!gp) continue;
-
-    if (gpPressed(gp, 0) || gpValue(gp, 7) > 0.15 || gpPressed(gp, 12)) input.gas = true;
-    if (gpPressed(gp, 1) || gpValue(gp, 6) > 0.15 || gpPressed(gp, 13)) input.brake = true;
-    if (gpPressed(gp, 14)) input.left = true;
-    if (gpPressed(gp, 15)) input.right = true;
-
-    var ax0 = gpAxis(gp, 0);
-    if (ax0 < -0.30) input.left = true;
-    if (ax0 > 0.30) input.right = true;
-
-    var ax1 = gpAxis(gp, 1);
-    if (ax1 < -0.30) input.gas = true;
-    if (ax1 > 0.30) input.brake = true;
-  }
-}
-
-function isTextInputActive() {
-  var a = document.activeElement;
-  var tag = a && a.tagName;
-  return tag === 'INPUT' || tag === 'TEXTAREA' || (a && a.isContentEditable);
-}
-
-function isVisibleEl(el) {
-  if (!el || el.disabled) return false;
-  return !!(el.offsetWidth || el.offsetHeight || (el.getClientRects && el.getClientRects().length));
-}
-
-function getMenuButtons() {
-  var ids = ['titleScreen', 'pauseScreen', 'overScreen', 'winScreen'];
-  for (var i = 0; i < ids.length; i++) {
-    var s = $(ids[i]);
-    if (s && !s.classList.contains('hidden')) {
-      var out = [];
-      var list = s.querySelectorAll('.dialog button');
-      for (var j = 0; j < list.length; j++) if (isVisibleEl(list[j])) out.push(list[j]);
-      if (ids[i] === 'titleScreen') {
-        var home = s.querySelector('.btn-home');
-        if (isVisibleEl(home)) out.push(home);
-      }
-      return out;
-    }
-  }
-  return [];
-}
-
-function isMenuVisible() {
-  return !$('titleScreen').classList.contains('hidden') ||
-         !$('pauseScreen').classList.contains('hidden') ||
-         !$('overScreen').classList.contains('hidden') ||
-         !$('winScreen').classList.contains('hidden');
-}
-
-function focusEl(el) {
-  if (!el) return;
-  try { el.focus({ preventScroll: false }); } catch (e) { try { el.focus(); } catch (e2) {} }
-  if (el.scrollIntoView) {
-    try { el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
-    catch (e) { try { el.scrollIntoView(); } catch (e2) {} }
-  }
-}
-
-function focusFirstMenuButton() {
-  var b = getMenuButtons();
-  if (b.length) focusEl(b[0]);
-}
-
-function uiMoveFocus(dir) {
-  var b = getMenuButtons();
-  if (!b.length) return;
-  var cur = -1;
-  var act = document.activeElement;
-  for (var i = 0; i < b.length; i++) if (b[i] === act) { cur = i; break; }
-  var next = cur < 0 ? (dir > 0 ? 0 : b.length - 1) : (cur + dir + b.length) % b.length;
-  focusEl(b[next]);
-}
-
-function digitIndex(c) {
-  if (c === 'Digit1' || c === 'Numpad1') return 0;
-  if (c === 'Digit2' || c === 'Numpad2') return 1;
-  if (c === 'Digit3' || c === 'Numpad3') return 2;
-  if (c === 'Digit4' || c === 'Numpad4') return 3;
-  if (c === 'Digit5' || c === 'Numpad5') return 4;
-  if (c === 'Digit6' || c === 'Numpad6') return 5;
-  if (c === 'Digit7' || c === 'Numpad7') return 6;
-  if (c === 'Digit8' || c === 'Numpad8') return 7;
-  if (c === 'Digit9' || c === 'Numpad9') return 8;
-  return -1;
-}
-
-function menuBack() {
-  if (!$('pauseScreen').classList.contains('hidden') && $('pwBox').style.display === 'block') {
-    closePassword();
-    return;
-  }
-  if (paused) { resumeGame(); return; }
-  if (!$('overScreen').classList.contains('hidden')) { quitToTitle(); return; }
-  if (!$('winScreen').classList.contains('hidden')) { quitToTitle(); return; }
-}
-
-function handleKey(e) {
-  if (isTextInputActive()) return;
-
-  var down = e.type === 'keydown';
-  var c = getKeyCode(e);
-
-  if (down && !audioOK) ensureAudio();
-
-  if (c === 'Escape' || c === 'KeyP') {
-    if (down) {
-      if (inGame && !paused && bike.alive && !bike.finished) pauseGame();
-      else if (paused) resumeGame();
-      else menuBack();
-    }
-    if (e.cancelable) e.preventDefault();
+function updateQualityAuto(dt) {
+  if (qCooldown > 0) {
+    qCooldown -= dt;
+    qTimer = 0;
+    qSamples = 0;
     return;
   }
 
-  var menuButtons = getMenuButtons();
+  qTimer += dt;
+  qSamples++;
 
-  if (menuButtons.length) {
-    if (down) {
-      if (c === 'ArrowDown' || c === 'ArrowRight') { uiMoveFocus(1); if (e.cancelable) e.preventDefault(); return; }
-      if (c === 'ArrowUp' || c === 'ArrowLeft') { uiMoveFocus(-1); if (e.cancelable) e.preventDefault(); return; }
-      if (c === 'Tab') { uiMoveFocus(e.shiftKey ? -1 : 1); if (e.cancelable) e.preventDefault(); return; }
-      if (c === 'Enter' || c === 'Space') {
-        var act = document.activeElement;
-        if (act && act.tagName === 'BUTTON') return;
-        menuButtons[0].click();
-        if (e.cancelable) e.preventDefault();
-        return;
-      }
-      var di = digitIndex(c);
-      if (di >= 0) {
-        if (di < menuButtons.length) menuButtons[di].click();
-        if (e.cancelable) e.preventDefault();
-        return;
-      }
-    }
-
-    if (c === 'ArrowUp' || c === 'ArrowDown' || c === 'ArrowLeft' || c === 'ArrowRight' ||
-        c === 'KeyW' || c === 'KeyA' || c === 'KeyS' || c === 'KeyD') {
-      if (e.cancelable) e.preventDefault();
-      return;
-    }
+  if (qTimer >= 1.0 && qSamples > 8) {
+    var avgMs = (qTimer / qSamples) * 1000;
+    if (avgMs > 31 && quality.tier > 0) setQualityTier(quality.tier - 1);
+    else if (avgMs < 13.5 && quality.tier < 2) setQualityTier(quality.tier + 1);
+    qTimer = 0;
+    qSamples = 0;
   }
-
-  if (inGame && !paused && menuButtons.length === 0) {
-    if (c === 'ArrowUp' || c === 'KeyW') { kIn.gas = down; if (e.cancelable) e.preventDefault(); return; }
-    if (c === 'ArrowDown' || c === 'KeyS') { kIn.brake = down; if (e.cancelable) e.preventDefault(); return; }
-    if (c === 'ArrowLeft' || c === 'KeyA') { kIn.left = down; if (e.cancelable) e.preventDefault(); return; }
-    if (c === 'ArrowRight' || c === 'KeyD') { kIn.right = down; if (e.cancelable) e.preventDefault(); return; }
-  }
-}
-
-var supportsPassive = false;
-try {
-  var popts = Object.defineProperty({}, 'passive', { get: function () { supportsPassive = true; } });
-  window.addEventListener('passiveDetect', null, popts);
-  window.removeEventListener('passiveDetect', null, popts);
-} catch (e) {}
-var nonPassive = supportsPassive ? { passive: false } : false;
-
-function bindZone(id, prop) {
-  var el = $(id);
-  if (!el) return;
-
-  function press(e) {
-    if (e && e.cancelable) e.preventDefault();
-    tIn[prop] = true;
-    el.classList.add('on');
-    ensureAudio();
-    if (window.PointerEvent && e.pointerId !== undefined && el.setPointerCapture) {
-      try { el.setPointerCapture(e.pointerId); } catch (err) {}
-    }
-  }
-  function release(e) {
-    if (e && e.cancelable) e.preventDefault();
-    tIn[prop] = false;
-    el.classList.remove('on');
-  }
-
-  if (window.PointerEvent) {
-    el.addEventListener('pointerdown', press, false);
-    el.addEventListener('pointerup', release, false);
-    el.addEventListener('pointercancel', release, false);
-    el.addEventListener('lostpointercapture', release, false);
-  } else {
-    el.addEventListener('touchstart', press, nonPassive);
-    el.addEventListener('touchend', release, nonPassive);
-    el.addEventListener('touchcancel', release, nonPassive);
-    el.addEventListener('mousedown', press, false);
-    el.addEventListener('mouseup', release, false);
-    el.addEventListener('mouseleave', release, false);
-  }
-}
-
-function updateTouchVisibility() {
-  var coarse = ('ontouchstart' in window) ||
-               (navigator.maxTouchPoints || 0) > 0 ||
-               (navigator.msMaxTouchPoints || 0) > 0;
-  if (window.matchMedia) {
-    try { coarse = coarse || window.matchMedia('(pointer: coarse)').matches; } catch (e) {}
-  }
-  var menuVisible = isMenuVisible();
-  var tc = $('touchControls');
-  if (tc) tc.style.display = (!menuVisible && inGame && bike.alive && !bike.finished && (coarse || W < 900 || H < 520)) ? 'flex' : 'none';
-}
-
-function initTouch() {
-  bindZone('tLeft', 'left');
-  bindZone('tRight', 'right');
-  bindZone('tGas', 'gas');
-  bindZone('tBrake', 'brake');
-  updateTouchVisibility();
-}
-
-var gpPrev = [];
-
-function pollGamepads() {
-  var gps = [];
-  try {
-    if (navigator.getGamepads) gps = navigator.getGamepads();
-    else if (navigator.webkitGetGamepads) gps = navigator.webkitGetGamepads();
-  } catch (e) { gps = []; }
-
-  for (var i = 0; i < gps.length; i++) {
-    var gp = gps[i];
-    if (!gp) { gpPrev[i] = null; continue; }
-
-    var prev = gpPrev[i] || {};
-    var anyEdge = false;
-    for (var b = 0; b < 17; b++) {
-      if (gpPressed(gp, b) && !prev['b' + b]) { anyEdge = true; break; }
-    }
-    if (anyEdge && !audioOK) ensureAudio();
-
-    if (gpPressed(gp, 9) && !prev.b9) {
-      if (inGame && paused) resumeGame();
-      else if (inGame && !paused && bike.alive && !bike.finished) pauseGame();
-    }
-
-    if (isMenuVisible() && !isTextInputActive()) {
-      var btns = getMenuButtons();
-      if (btns.length) {
-        if ((gpPressed(gp, 12) && !prev.b12) || (gpPressed(gp, 14) && !prev.b14)) uiMoveFocus(-1);
-        if ((gpPressed(gp, 13) && !prev.b13) || (gpPressed(gp, 15) && !prev.b15)) uiMoveFocus(1);
-
-        var ax0 = gpAxis(gp, 0);
-        var pax0 = (typeof prev.ax0 === 'number') ? prev.ax0 : 0;
-        if (ax0 < -0.55 && pax0 >= -0.55) uiMoveFocus(-1);
-        if (ax0 > 0.55 && pax0 <= 0.55) uiMoveFocus(1);
-
-        if (gpPressed(gp, 0) && !prev.b0) {
-          var act = document.activeElement;
-          if (act && act.tagName === 'BUTTON' && btns.indexOf(act) >= 0) act.click();
-          else { focusEl(btns[0]); btns[0].click(); }
-        }
-        if (gpPressed(gp, 1) && !prev.b1) menuBack();
-      }
-    }
-
-    var np = {};
-    for (b = 0; b < 17; b++) np['b' + b] = gpPressed(gp, b);
-    np.ax0 = gpAxis(gp, 0);
-    gpPrev[i] = np;
-  }
-}
-
-var terrain = [];
-var finishX = 0;
-var visI0 = 0, visI1 = 0;
-
-function addTerrain(x, y, t) {
-  if (!isFinite(x)) x = 0;
-  if (!isFinite(y)) y = 420;
-  y = clamp(y, -350, 1250);
-  var n = terrain.length;
-  if (n && x <= terrain[n - 1].x) x = terrain[n - 1].x + 1;
-  terrain.push({ x: x, y: y, t: t });
-}
-
-function smoothTerrain(amount, iters) {
-  var n = terrain.length;
-  if (n < 6) return;
-  for (var it = 0; it < iters; it++) {
-    for (var i = 1; i < n - 1; i++) {
-      if (terrain[i].x < 240 || i >= n - 18) continue;
-      var avg = (terrain[i - 1].y + terrain[i + 1].y) * 0.5;
-      terrain[i].y = lerp(terrain[i].y, avg, amount);
-    }
-  }
-}
-
-function genTerrain(lv, sn) {
-  terrain = [];
-  var rng = new RNG((sn ^ ((lv * 0x9e3779b9) >>> 0)) >>> 0);
-  var seg = 22;
-  var maxDy = 15;
-  var x = 0, y = 420, slope = 0, j;
-
-  addTerrain(x, y, 0);
-  while (x < 220) { x += seg; addTerrain(x, 420, 0); }
-
-  var target = 2600 + lv * 650;
-
-  while (x < target) {
-    var f = rng.next();
-
-    if (f < 0.13 && lv >= 2) {
-      var rh = rng.r(30, min(80, 42 + lv * 5));
-      var rl = max(4, ceil(rh / maxDy));
-      var sy = y, ey = y - rh;
-      for (j = 1; j <= rl; j++) { x += seg; y = lerp(sy, ey, j / rl); addTerrain(x, y, 1); }
-    } else if (f < 0.24 && lv >= 2) {
-      var hh = rng.r(22, min(60, 30 + lv * 4));
-      var hl = max(6, ceil(hh * PI / maxDy));
-      var hs = y;
-      for (j = 1; j <= hl; j++) { x += seg; y = hs - sin((j / hl) * PI) * hh; addTerrain(x, y, 2); }
-    } else if (f < 0.32 && lv >= 3) {
-      var dep = rng.r(30, min(72, 40 + lv * 4));
-      var gl = max(3, ceil(dep / maxDy));
-      var gs = y, gm = y + dep;
-      for (j = 1; j <= gl * 2; j++) {
-        x += seg;
-        y = (j <= gl) ? lerp(gs, gm, j / gl) : lerp(gm, gs, (j - gl) / gl);
-        addTerrain(x, y, 3);
-      }
-    } else if (f < 0.40 && lv >= 3) {
-      var dr = rng.r(28, min(70, 38 + lv * 4));
-      var dl = max(4, ceil(dr / maxDy));
-      var ds = y, de = y + dr;
-      for (j = 1; j <= dl; j++) { x += seg; y = lerp(ds, de, j / dl); addTerrain(x, y, 0); }
-    } else if (f < 0.47 && lv >= 4) {
-      var lh = rng.r(30, min(64, 36 + lv * 4));
-      var ll = max(7, ceil(lh * PI * 1.12 / maxDy));
-      var ls = y;
-      for (j = 1; j <= ll; j++) { x += seg; y = ls - sin((j / ll) * PI * 1.12) * lh; addTerrain(x, y, 1); }
-    } else if (f < 0.55 && lv >= 2) {
-      var bl = rng.i(4, 7);
-      var bh = rng.r(5, 11);
-      var bs = y;
-      for (j = 1; j <= bl; j++) { x += seg; y = bs - sin(j * 1.0) * bh; addTerrain(x, y, 0); }
-    } else {
-      x += seg;
-      slope = clamp(slope + rng.r(-3, 3), -7, 7);
-      y = clamp(y + slope * 0.35, 180, 760);
-      addTerrain(x, y, 0);
-    }
-  }
-
-  var fy = y;
-  for (var k = 0; k < 18; k++) { x += seg; addTerrain(x, fy, 4); }
-
-  smoothTerrain(0.16, 2);
-
-  var fi = clamp(terrain.length - 10, 1, terrain.length - 1);
-  finishX = terrain[fi].x;
 }
 
 function lowerBoundX(x) {
@@ -1008,17 +483,12 @@ function segIndex(px) {
   return i;
 }
 
-var rgInfo = { y: 0, angle: 0, type: 0, i: 0 };
-var fgInfo = { y: 0, angle: 0, type: 0, i: 0 };
-var ggInfo = { y: 0, angle: 0, type: 0, i: 0 };
-var hgInfo = { y: 0, angle: 0, type: 0, i: 0 };
-
 function groundAt(px, out) {
   if (terrain.length < 2) { out.y = 420; out.angle = 0; out.type = 0; out.i = 0; return out; }
   var i = segIndex(px);
   var a = terrain[i], b = terrain[i + 1];
   var dx = b.x - a.x;
-  if (dx < 0.0001 && dx > -0.0001) dx = 0.0001;
+  if (abs(dx) < 0.0001) dx = 0.0001;
   var t = clamp((px - a.x) / dx, 0, 1);
   out.y = a.y + (b.y - a.y) * t;
   out.angle = atan2(b.y - a.y, dx);
@@ -1027,137 +497,489 @@ function groundAt(px, out) {
   return out;
 }
 
-function computeVisible(left, right) {
-  if (terrain.length < 2) { visI0 = 0; visI1 = 0; return; }
-  var i0 = lowerBoundX(left);
-  if (i0 > 0) i0--;
-  var i1 = lowerBoundX(right);
-  if (i1 >= terrain.length) i1 = terrain.length - 1;
-  if (i1 <= i0) i1 = min(i0 + 1, terrain.length - 1);
-  visI0 = i0; visI1 = i1;
+var DIFF_PARAMS = [
+  { maxDy:11, target:2200, per:450, ramp:0.07, hill:0.10, gap:0.01, pit:0.03, desc:0.08, whoop:0.06, minRamp:1, minGap:3, minPit:2, rough:2.0, jump:20, depth:26, gapLen:2 },
+  { maxDy:14, target:2600, per:600, ramp:0.10, hill:0.13, gap:0.05, pit:0.05, desc:0.09, whoop:0.07, minRamp:1, minGap:2, minPit:2, rough:2.6, jump:30, depth:34, gapLen:3 },
+  { maxDy:17, target:3000, per:750, ramp:0.13, hill:0.15, gap:0.09, pit:0.07, desc:0.11, whoop:0.09, minRamp:1, minGap:1, minPit:1, rough:3.2, jump:40, depth:46, gapLen:4 },
+  { maxDy:20, target:3400, per:900, ramp:0.16, hill:0.17, gap:0.13, pit:0.09, desc:0.13, whoop:0.11, minRamp:1, minGap:1, minPit:1, rough:3.7, jump:50, depth:58, gapLen:5 }
+];
+
+function addTerrain(x, y, t) {
+  if (!isFinite(x)) x = 0;
+  if (!isFinite(y)) y = 420;
+  y = clamp(y, -350, 1250);
+  var n = terrain.length;
+  if (n && x <= terrain[n-1].x) x = terrain[n-1].x + 1;
+  terrain.push({ x:x, y:y, t:t });
 }
 
-function hslToRgb(h, s, l) {
-  h = ((h % 360) + 360) % 360 / 360;
-  s = clamp(s, 0, 1); l = clamp(l, 0, 1);
-  if (s === 0) return [l, l, l];
-  function hue2rgb(p, q, t) {
-    if (t < 0) t += 1;
-    if (t > 1) t -= 1;
-    if (t < 1 / 6) return p + (q - p) * 6 * t;
-    if (t < 1 / 2) return q;
-    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-    return p;
+function smoothTerrain(amount, iters) {
+  var n = terrain.length;
+  if (n < 6) return;
+  for (var it = 0; it < iters; it++) {
+    for (var i = 1; i < n - 1; i++) {
+      if (terrain[i].x < 240 || i >= n - 20) continue;
+      var avg = (terrain[i-1].y + terrain[i+1].y) * 0.5;
+      terrain[i].y = lerp(terrain[i].y, avg, amount);
+    }
   }
-  var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-  var p = 2 * l - q;
-  return [hue2rgb(p, q, h + 1 / 3), hue2rgb(p, q, h), hue2rgb(p, q, h - 1 / 3)];
+}
+
+function genTerrain(lv, sn, diff) {
+  terrain = [];
+  var P = DIFF_PARAMS[clamp(diff,0,3)];
+  var rng = new RNG((sn ^ ((lv * 0x9e3779b9) >>> 0) ^ ((diff + 1) * 0x85ebca6b)) >>> 0);
+  var seg = 24;
+  var maxDy = P.maxDy;
+  var x = 0, y = 420, slope = 0, j;
+
+  addTerrain(x, y, 0);
+  while (x < 240) { x += seg; addTerrain(x, 420, 0); }
+
+  var target = P.target + lv * P.per;
+  while (x < target) {
+    var f = rng.next();
+    var cum = 0;
+
+    if (f < (cum += P.ramp) && lv >= P.minRamp) {
+      var rh = rng.r(16, min(P.jump + lv * 2, maxDy * 5.5));
+      var rl = max(3, ceil(rh / maxDy));
+      var sy = y, ey = y - rh;
+      for (j = 1; j <= rl; j++) { x += seg; y = lerp(sy, ey, j/rl); addTerrain(x, y, 1); }
+    } else if (f < (cum += P.hill) && lv >= 1) {
+      var hh = rng.r(18, min(P.jump * 0.8 + lv * 2, maxDy * 4.5));
+      var hl = max(5, ceil(hh * PI / maxDy));
+      var hs = y;
+      for (j = 1; j <= hl; j++) { x += seg; y = hs - sin((j/hl)*PI)*hh; addTerrain(x, y, 2); }
+    } else if (f < (cum += P.gap) && lv >= P.minGap) {
+      var startY = y;
+      var gh = rng.r(14, min(P.jump * 0.7 + lv, maxDy * 3.8));
+      var dep = rng.r(18, min(P.depth + lv * 2, maxDy * 4.5));
+      var gapLen = rng.i(2, P.gapLen + floor(lv/3));
+      var rl2 = max(2, ceil(gh / maxDy));
+      var peakY = startY - gh;
+      for (j = 1; j <= rl2; j++) { x += seg; y = lerp(startY, peakY, j/rl2); addTerrain(x, y, 1); }
+      var dl = max(2, ceil((gh + dep) / maxDy));
+      var floorY = startY + dep;
+      for (j = 1; j <= dl; j++) { x += seg; y = lerp(peakY, floorY, j/dl); addTerrain(x, y, 3); }
+      for (j = 0; j < gapLen; j++) { x += seg; y = floorY; addTerrain(x, y, 3); }
+      var ul = max(2, ceil(dep / maxDy));
+      for (j = 1; j <= ul; j++) { x += seg; y = lerp(floorY, startY, j/ul); addTerrain(x, y, 2); }
+    } else if (f < (cum += P.pit) && lv >= P.minPit) {
+      var dep2 = rng.r(18, min(P.depth + lv * 2, maxDy * 3.4));
+      var pitLen = max(2, ceil(dep2 / maxDy));
+      var gs = y, gm = y + dep2;
+      for (j = 1; j <= pitLen * 2; j++) {
+        x += seg;
+        y = (j <= pitLen) ? lerp(gs, gm, j/pitLen) : lerp(gm, gs, (j-pitLen)/pitLen);
+        addTerrain(x, y, 3);
+      }
+    } else if (f < (cum += P.desc) && lv >= 1) {
+      var dr = rng.r(24, min(P.depth * 0.8 + lv * 2, maxDy * 4));
+      var dl2 = max(3, ceil(dr / maxDy));
+      var ds = y, de = y + dr;
+      for (j = 1; j <= dl2; j++) { x += seg; y = lerp(ds, de, j/dl2); addTerrain(x, y, 0); }
+      var rr = rng.r(8, 18);
+      var rl3 = max(2, ceil(rr / maxDy));
+      var rs = y, re = y - rr;
+      for (j = 1; j <= rl3; j++) { x += seg; y = lerp(rs, re, j/rl3); addTerrain(x, y, 2); }
+    } else if (f < (cum += P.whoop) && lv >= 1) {
+      var bl = rng.i(4, 7);
+      var bh = rng.r(5, min(12, maxDy * 0.65));
+      var bs = y;
+      for (j = 1; j <= bl; j++) { x += seg; y = bs - sin(j * 1.0) * bh; addTerrain(x, y, 0); }
+    } else {
+      x += seg;
+      slope = clamp(slope + rng.r(-P.rough, P.rough), -maxDy * 0.55, maxDy * 0.55);
+      y = clamp(y + slope * 0.35, 180, 760);
+      addTerrain(x, y, 0);
+    }
+  }
+
+  var fy = y;
+  for (var k = 0; k < 20; k++) { x += seg; addTerrain(x, fy, 4); }
+  smoothTerrain(0.18, 2);
+  var fi = clamp(terrain.length - 11, 1, terrain.length - 1);
+  finishX = terrain[fi].x;
 }
 
 function genVisuals() {
-  var rng = new RNG((seedNum ^ (level * 0x2545F491)) >>> 0);
-  var skyH = rng.i(200, 330);
-  visuals.skyTop = hslToRgb(skyH, 0.50, 0.05);
-  visuals.skyBot = hslToRgb(skyH + 35, 0.55, 0.13);
+  var rng = new RNG((seedNum ^ (level * 0x2545F491) ^ (difficulty * 0x9e3779b9)) >>> 0);
+
+  var tr = rng.next();
+  var daylight;
+  if (tr < 0.18) {
+    daylight = rng.r(0.30, 0.45);
+    visuals.skyTop = hslToRgb(rng.i(250,310),0.45,0.12);
+    visuals.skyBot = hslToRgb(rng.i(15,45),0.65,0.32);
+  } else if (tr < 0.58) {
+    daylight = rng.r(0.76, 0.96);
+    visuals.skyTop = hslToRgb(rng.i(195,220),0.55,0.28);
+    visuals.skyBot = hslToRgb(rng.i(185,210),0.45,0.62);
+  } else if (tr < 0.78) {
+    daylight = rng.r(0.22, 0.38);
+    visuals.skyTop = hslToRgb(rng.i(260,300),0.50,0.10);
+    visuals.skyBot = hslToRgb(rng.i(0,30),0.70,0.28);
+  } else {
+    daylight = rng.r(0.04, 0.12);
+    visuals.skyTop = hslToRgb(rng.i(225,260),0.55,0.035);
+    visuals.skyBot = hslToRgb(rng.i(235,275),0.45,0.10);
+  }
+
+  var wr = rng.next();
+  if (wr < 0.44) visuals.weather = 1;
+  else if (wr < 0.74) visuals.weather = 2;
+  else visuals.weather = 3;
+
+  visuals.intensity = clamp(0.45 + difficulty * 0.14 + min(level, 12) * 0.018, 0.35, 1.45);
+  visuals.daylight = daylight;
+  visuals.ambient = clamp(0.32 + daylight * 0.82, 0.28, 1.08);
+  if (visuals.weather === 1) visuals.ambient *= 0.78;
+  if (visuals.weather === 2) visuals.ambient *= 0.86;
+  if (visuals.weather === 3) visuals.ambient *= 0.90;
+
+  visuals.fogDensity = 0.035 + (1 - daylight) * 0.05;
+  if (visuals.weather === 1) visuals.fogDensity += rng.r(0.04, 0.09) * visuals.intensity;
+  if (visuals.weather === 2) visuals.fogDensity += rng.r(0.03, 0.08) * visuals.intensity;
+  if (visuals.weather === 3) visuals.fogDensity += rng.r(0.14, 0.26) * visuals.intensity;
+  visuals.fogDensity = clamp(visuals.fogDensity, 0.02, 0.45);
+  visuals.fogColor = mix([0.35,0.40,0.50], visuals.skyBot, 0.45);
+
+  visuals.windX = rng.r(-1, 1);
+  visuals.windStrength = clamp((0.35 + visuals.intensity * 0.85) * rng.r(0.70, 1.25), 0.15, 1.8);
+  visuals.precipColor = visuals.weather === 2 ? [0.94,0.97,1.0] : visuals.weather === 1 ? [0.55,0.68,0.95] : [0.72,0.76,0.82];
+
+  visuals.headlight = clamp((1 - daylight) * 1.25 + visuals.intensity * 0.28 + visuals.fogDensity * 0.85, 0.18, 1.65);
+  visuals.tailLight = clamp(0.10 + (1 - daylight) * 0.26 + visuals.intensity * 0.05, 0.06, 0.42);
 
   visuals.stars = [];
-  var i;
-  for (i = 0; i < 45; i++) {
-    visuals.stars.push({ x: rng.r(0, 1), y: rng.r(0, 0.48), s: rng.r(0.8, 2.2), b: rng.r(0.35, 1) });
+  var starCount = quality.tier === 0 ? 18 : floor(18 + (1 - daylight) * 45);
+  for (var i = 0; i < starCount; i++) {
+    visuals.stars.push({ x:rng.r(0,1), y:rng.r(0,0.52), s:rng.r(0.8,2.0), b:rng.r(0.35,1) });
+  }
+}
+
+function genTrees() {
+  trees = [];
+  var n = terrain.length;
+  if (n < 20) return;
+  var rng = new RNG((seedNum ^ (level * 0x51ed2701) ^ (difficulty * 0x1234abcd)) >>> 0);
+  var lastX = -999;
+  var minSpace = quality.tier === 0 ? 145 : 88;
+  for (var i = 8; i < n - 20; i++) {
+    var p = terrain[i];
+    if (p.t === 3 || p.t === 4) continue;
+    if (p.x < 180 || p.x > finishX - 120) continue;
+    var dx = terrain[i+1].x - p.x;
+    if (dx < 1) continue;
+    var slope = abs(atan2(terrain[i+1].y - p.y, dx));
+    if (slope > 0.28) continue;
+    if (p.x - lastX < rng.r(minSpace, minSpace + 95)) continue;
+    if (rng.next() < 0.30 + difficulty * 0.02) {
+      lastX = p.x;
+      trees.push({
+        x: p.x + dx * 0.5,
+        y: p.y,
+        h: rng.r(36, 78),
+        w: rng.r(13, 27),
+        seed: rng.r(0,100),
+        tone: rng.r(0.84,1.10)
+      });
+    }
+  }
+}
+
+function genPools() {
+  pools = [];
+  if (visuals.weather !== 1 && visuals.weather !== 2) return;
+
+  var n = terrain.length;
+  if (n < 30 || finishX < 500) return;
+
+  var rng = new RNG((seedNum ^ (level * 0x5bd1e995) ^ (difficulty * 0x2545f491) ^ (visuals.weather * 0x9e3779b9)) >>> 0);
+  var type = visuals.weather;
+  var minSpace = type === 1 ? 58 : 76;
+  var maxPools = type === 1 ? 120 : 80;
+  var desired = min(maxPools, 24 + level * 2 + difficulty * 6);
+  var startX = 280;
+  var endX = finishX - 160;
+  if (endX <= startX) return;
+
+  function distOk(x) {
+    for (var q = 0; q < pools.length; q++) if (abs(pools[q].x - x) < minSpace) return false;
+    return true;
+  }
+  function slopeAtIdx(i) {
+    if (i < 0 || i >= n - 1) return 99;
+    var dx = terrain[i+1].x - terrain[i].x;
+    if (dx < 1) return 99;
+    return abs(atan2(terrain[i+1].y - terrain[i].y, dx));
+  }
+  function addPool(x, len, depth, amount) {
+    if (pools.length >= maxPools) return false;
+    if (x < startX || x > endX) return false;
+    if (!distOk(x)) return false;
+    pools.push({ x:x, len:len, depth:depth, amount:amount, type:type, hit:0, seed:rng.r(0,100) });
+    return true;
   }
 
-  visuals.mount = []; visuals.mountColor = []; visuals.mountDark = [];
-  for (var l = 0; l < 2; l++) {
-    var mr = new RNG((seedNum ^ (level * 1000 + l * 77)) >>> 0);
-    var pts = [];
-    for (i = 0; i < 18; i++) pts.push(mr.r(0.20, 0.85));
-    visuals.mount.push(pts);
-    var mh = mr.i(200, 300);
-    visuals.mountColor.push(hslToRgb(mh, 0.30, 0.085 + l * 0.025));
-    visuals.mountDark.push(hslToRgb(mh, 0.35, 0.035 + l * 0.018));
+  for (var i = 6; i < n - 22 && pools.length < desired; i++) {
+    var p = terrain[i];
+    if (p.t === 4) continue;
+    if (p.x < startX || p.x > endX) continue;
+    var sl = slopeAtIdx(i);
+    if (sl > 0.26) continue;
+    var left = terrain[max(0, i - 3)].y;
+    var right = terrain[min(n - 1, i + 3)].y;
+    var basin = p.y - (left + right) * 0.5;
+    var chance = type === 1
+      ? (basin > 1 ? 0.26 : (sl < 0.09 ? 0.13 : 0.045))
+      : (basin > 1 ? 0.20 : (sl < 0.09 ? 0.09 : 0.032));
+    chance *= 1 + difficulty * 0.08 + level * 0.012;
+    if (rng.next() < chance) {
+      var len = rng.r(30, type === 1 ? 86 : 62);
+      var depth = rng.r(30, type === 1 ? 58 : 44);
+      addPool(p.x + (terrain[i+1].x - p.x) * 0.5, len, depth, rng.r(0.60, 1));
+    }
   }
 
-  visuals.ground = [];
-  for (var t = 0; t < 5; t++) {
-    var h;
-    if (t === 4) h = 112;
-    else if (t === 1) h = rng.i(15, 45);
-    else if (t === 2) h = rng.i(70, 140);
-    else if (t === 3) h = rng.i(220, 285);
-    else h = rng.i(25, 120);
-    var sat = rng.r(0.22, 0.45);
-    var li = rng.r(0.10, 0.17) + (t === 1 ? 0.02 : 0);
-    visuals.ground.push({
-      top: hslToRgb(h, sat, li + 0.05),
-      bot: hslToRgb(h, sat * 0.8, li * 0.50),
-      line: hslToRgb(h, min(1, sat * 1.2), li + 0.16),
-      tex: hslToRgb(h + rng.i(-25, 25), sat, li + 0.10)
-    });
+  if (pools.length < desired) {
+    var need = desired - pools.length;
+    var tries = max(18, need * 4);
+    for (var k = 0; k < tries && pools.length < desired; k++) {
+      var frac = (k + 0.5) / tries;
+      var x = lerp(startX, endX, frac);
+      var idx = clamp(segIndex(x), 5, n - 24);
+      var best = idx, bestS = slopeAtIdx(idx);
+      for (var j = max(5, idx - 5); j <= min(n - 24, idx + 5); j++) {
+        var s = slopeAtIdx(j);
+        if (s < bestS) { bestS = s; best = j; }
+      }
+      if (bestS > 0.30) continue;
+      if (terrain[best].t === 4) continue;
+      var px = terrain[best].x + (terrain[best+1].x - terrain[best].x) * 0.5;
+      var len2 = rng.r(32, type === 1 ? 82 : 58);
+      var depth2 = rng.r(32, type === 1 ? 56 : 42);
+      addPool(px, len2, depth2, rng.r(0.62, 1));
+    }
   }
 
-  visuals.texOff = rng.i(0, 5);
-  visuals.texSpace = rng.i(2, 4);
-  visuals.texDX = rng.r(-7, 7);
-  visuals.texDY = rng.r(4, 10);
-  visuals.decorHash = rng.i(0, 100000);
+  if (!pools.length) {
+    for (var q = 8; q < n - 22 && pools.length < 4; q++) {
+      if (terrain[q].t === 4) continue;
+      if (slopeAtIdx(q) > 0.36) continue;
+      var ex = terrain[q].x;
+      if (ex < startX || ex > endX) continue;
+      addPool(ex, rng.r(34, 70), rng.r(34, 52), rng.r(0.65, 1));
+    }
+  }
+}
 
-  var bh = rng.i(0, 360);
-  var rh = rng.i(0, 360);
-  var ph = rng.i(0, 360);
-  visuals.sco = {
-    frame: hslToRgb(bh, 0.70, 0.45),
-    dark: hslToRgb(bh, 0.55, 0.22),
-    metal: [0.55, 0.57, 0.62],
-    grip: [0.10, 0.10, 0.11],
-    tire: [0.085, 0.085, 0.095],
-    hub: hslToRgb(bh + 30, 0.25, 0.55),
-    light: [1.0, 0.95, 0.70],
-    tail: [1.0, 0.15, 0.10],
-    rider: hslToRgb(rh, 0.58, 0.36),
-    riderDark: hslToRgb(rh, 0.55, 0.22),
-    pants: hslToRgb(ph, 0.25, 0.16),
-    pantsDark: hslToRgb(ph, 0.22, 0.10),
-    shoe: [0.12, 0.12, 0.13],
-    glove: [0.14, 0.14, 0.16],
-    pack: hslToRgb(rng.i(0, 360), 0.45, 0.25),
-    helmet: hslToRgb(rng.i(0, 360), 0.75, 0.52),
-    visor: [0.08, 0.70, 0.90],
-    skin: [0.85, 0.66, 0.52]
+function safeCreatePattern(c) {
+  try { return ctx.createPattern(c, 'repeat'); } catch (e) { return null; }
+}
+
+function makePattern(size, painter) {
+  var c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  var p = c.getContext('2d');
+  painter(p, size);
+  return safeCreatePattern(c);
+}
+
+function paintSurface(p, s, cfg, rng) {
+  p.fillStyle = rgba(cfg.surfaceBase, 1);
+  p.fillRect(0, 0, s, s);
+
+  var i, x, y, r, col;
+
+  for (i = 0; i < 70; i++) {
+    col = mix(cfg.surfaceBase, cfg.surfaceAccent, rng.next());
+    p.fillStyle = rgba(col, 0.10 + rng.next() * 0.16);
+    p.beginPath();
+    p.arc(rng.r(0,s), rng.r(0,s), rng.r(2,10), 0, TAU);
+    p.fill();
+  }
+
+  if (cfg.type === 'winter') {
+    for (i = 0; i < 28; i++) {
+      p.strokeStyle = rgba(mix(cfg.surfaceAccent, [1,1,1], 0.35), 0.16 + rng.next() * 0.16);
+      p.lineWidth = 0.5 + rng.next() * 0.7;
+      x = rng.r(0,s); y = rng.r(0,s);
+      p.beginPath();
+      p.moveTo(x, y);
+      p.lineTo(x + rng.r(-16,16), y + rng.r(-16,16));
+      p.stroke();
+    }
+    for (i = 0; i < 110; i++) {
+      p.fillStyle = rgba([1,1,1], 0.10 + rng.next() * 0.22);
+      r = 0.5 + rng.next() * 1.2;
+      p.beginPath(); p.arc(rng.r(0,s), rng.r(0,s), r, 0, TAU); p.fill();
+    }
+  } else if (cfg.type === 'summer') {
+    for (i = 0; i < 150; i++) {
+      col = mix(cfg.surfaceAccent, [0.05,0.18,0.04], rng.next() * 0.55);
+      p.strokeStyle = rgba(col, 0.14 + rng.next() * 0.20);
+      p.lineWidth = 0.65 + rng.next() * 0.9;
+      x = rng.r(0,s); y = rng.r(0,s);
+      p.beginPath();
+      p.moveTo(x, y);
+      p.lineTo(x + rng.r(-2,2), y - rng.r(3,9));
+      p.stroke();
+    }
+  } else if (cfg.type === 'autumn') {
+    for (i = 0; i < 100; i++) {
+      col = mix(cfg.surfaceAccent, [0.45,0.18,0.05], rng.next());
+      p.fillStyle = rgba(col, 0.14 + rng.next() * 0.22);
+      p.save();
+      p.translate(rng.r(0,s), rng.r(0,s));
+      p.rotate(rng.r(0,TAU));
+      p.beginPath();
+      p.ellipse(0, 0, 1.0 + rng.next()*2.4, 0.6 + rng.next()*1.2, 0, 0, TAU);
+      p.fill();
+      p.restore();
+    }
+  } else {
+    for (i = 0; i < 80; i++) {
+      col = mix(cfg.surfaceBase, cfg.surfaceAccent, rng.next());
+      p.fillStyle = rgba(col, 0.08 + rng.next() * 0.14);
+      p.beginPath();
+      p.arc(rng.r(0,s), rng.r(0,s), rng.r(3,12), 0, TAU);
+      p.fill();
+    }
+  }
+}
+
+function paintSub(p, s, cfg, rng) {
+  p.fillStyle = rgba(cfg.subBase, 1);
+  p.fillRect(0, 0, s, s);
+
+  var i, col, x, y;
+
+  for (i = 0; i < 85; i++) {
+    col = mix(cfg.subBase, cfg.subAccent, rng.next());
+    p.fillStyle = rgba(col, 0.10 + rng.next() * 0.16);
+    p.beginPath();
+    p.arc(rng.r(0,s), rng.r(0,s), rng.r(2,11), 0, TAU);
+    p.fill();
+  }
+
+  if (cfg.type === 'winter') {
+    for (i = 0; i < 34; i++) {
+      p.strokeStyle = rgba([0.68,0.84,1.0], 0.08 + rng.next() * 0.13);
+      p.lineWidth = 0.45 + rng.next() * 0.75;
+      x = rng.r(0,s); y = rng.r(0,s);
+      p.beginPath();
+      p.moveTo(x, y);
+      p.lineTo(x + rng.r(-18,18), y + rng.r(-18,18));
+      p.stroke();
+    }
+    for (i = 0; i < 45; i++) {
+      p.fillStyle = rgba([0.82,0.94,1.0], 0.06 + rng.next() * 0.12);
+      p.beginPath(); p.arc(rng.r(0,s), rng.r(0,s), 0.5 + rng.next()*1.4, 0, TAU); p.fill();
+    }
+  } else {
+    for (i = 0; i < 60; i++) {
+      col = mix(cfg.subAccent, [0,0,0], rng.next() * 0.35);
+      p.fillStyle = rgba(col, 0.08 + rng.next() * 0.15);
+      p.beginPath();
+      p.ellipse(rng.r(0,s), rng.r(0,s), 1.0 + rng.next()*3.2, 0.7 + rng.next()*2.1, rng.r(0,TAU), 0, TAU);
+      p.fill();
+    }
+  }
+}
+
+function buildTheme() {
+  var rng = new RNG((seedNum ^ (level * 0x51ed2701) ^ (difficulty * 0x1234abcd) ^ 0x9e3779b9) >>> 0);
+  var type, surfaceBase, surfaceAccent, subBase, subAccent, leafColor;
+
+  if (visuals.weather === 2) {
+    type = 'winter';
+    surfaceBase = [0.84, 0.91, 0.98];
+    surfaceAccent = [0.64, 0.79, 0.95];
+    subBase = [0.30, 0.43, 0.62];
+    subAccent = [0.16, 0.26, 0.44];
+    leafColor = [0.74, 0.86, 0.95];
+  } else if (visuals.weather === 1) {
+    if (visuals.daylight > 0.62) {
+      type = 'summer';
+      surfaceBase = [0.20, 0.50, 0.17];
+      surfaceAccent = [0.32, 0.69, 0.22];
+      subBase = [0.23, 0.15, 0.09];
+      subAccent = [0.11, 0.07, 0.04];
+      leafColor = [0.17, 0.52, 0.15];
+    } else if (visuals.daylight < 0.45) {
+      type = 'autumn';
+      surfaceBase = [0.52, 0.30, 0.10];
+      surfaceAccent = [0.74, 0.44, 0.12];
+      subBase = [0.21, 0.13, 0.08];
+      subAccent = [0.10, 0.06, 0.04];
+      leafColor = [0.66, 0.34, 0.09];
+    } else {
+      type = 'rainTemperate';
+      surfaceBase = [0.22, 0.40, 0.19];
+      surfaceAccent = [0.33, 0.56, 0.25];
+      subBase = [0.19, 0.13, 0.09];
+      subAccent = [0.09, 0.06, 0.04];
+      leafColor = [0.22, 0.45, 0.19];
+    }
+    surfaceBase = scaleRgb(surfaceBase, 0.82);
+    surfaceAccent = scaleRgb(surfaceAccent, 0.84);
+    subBase = scaleRgb(subBase, 0.80);
+    subAccent = scaleRgb(subAccent, 0.78);
+    leafColor = scaleRgb(leafColor, 0.82);
+  } else {
+    type = 'fogTwilight';
+    surfaceBase = [0.26, 0.30, 0.23];
+    surfaceAccent = [0.39, 0.44, 0.30];
+    subBase = [0.15, 0.14, 0.13];
+    subAccent = [0.08, 0.08, 0.07];
+    leafColor = [0.25, 0.36, 0.22];
+  }
+
+  var levelTint = hslToRgb(rng.i(0,360), 0.16, 0.50);
+  surfaceBase = mix(surfaceBase, levelTint, 0.06);
+  surfaceAccent = mix(surfaceAccent, levelTint, 0.08);
+  subBase = mix(subBase, levelTint, 0.04);
+  subAccent = mix(subAccent, levelTint, 0.05);
+  leafColor = mix(leafColor, levelTint, 0.07);
+
+  surfaceBase = scaleRgb(surfaceBase, visuals.ambient);
+  surfaceAccent = scaleRgb(surfaceAccent, visuals.ambient);
+  subBase = scaleRgb(subBase, visuals.ambient);
+  subAccent = scaleRgb(subAccent, visuals.ambient);
+  leafColor = scaleRgb(leafColor, visuals.ambient);
+
+  var cfg = {
+    type: type,
+    surfaceBase: surfaceBase,
+    surfaceAccent: surfaceAccent,
+    subBase: subBase,
+    subAccent: subAccent
+  };
+
+  theme = {
+    type: type,
+    surfaceBase: surfaceBase,
+    surfaceAccent: surfaceAccent,
+    subBase: subBase,
+    subAccent: subAccent,
+    lineColor: mix(surfaceBase, [1,1,1], 0.28),
+    leafColor: leafColor,
+    trunkColor: scaleRgb([0.20,0.13,0.08], visuals.ambient),
+    surfacePattern: makePattern(64, function(p,s){ paintSurface(p,s,cfg,new RNG((seedNum ^ (level*771) ^ 0x1234)>>>0)); }),
+    subPattern: makePattern(64, function(p,s){ paintSub(p,s,cfg,new RNG((seedNum ^ (level*991) ^ 0x5678)>>>0)); })
   };
 }
 
-var GRAV = 1250;
-var WRAD = 13;
-var WY = 11;
-var WBASE = 54;
-var MAXSPD = 620;
-var ENG = 980;
-var LEAN_G = 26;
-var LEAN_A = 82;
-var MAX_AV_G = 7.5;
-var MAX_AV_A = 22;
-var STEP = 1 / 120;
-
-var HEAD_X = 5, HEAD_Y = -46, HEAD_R = 7;
-
-var FLIP_EPS = 0.35;
-var FLIP_MIN_AIR = 0.035;
-
-var bike = {
-  x: 0, y: 0, vx: 0, vy: 0, a: 0, av: 0, speed: 0,
-  onGnd: false, rearG: false, frontG: false,
-  alive: true, finished: false, air: 0, rot: 0, lastA: 0,
-  flips: 0, flipsAwarded: 0, dist: 0, maxX: 0, engineOn: false, combo: 0, comboT: 0
-};
-
-var cam = { x: 0, y: 0, bx: 0, by: 0, init: false };
-var particles = [];
-var MAXP = 140;
-var shakeTime = 0, shakeMag = 0;
-var riderCompress = 0;
-var crashPending = false, crashTimer = 0;
-var ragdoll = null;
-var scooterFall = null;
+function resetRider() {
+  rider.torsoAbs = nearestUprightAngle(bike.a);
+  rider.torsoV = 0;
+  rider.headAbs = nearestUprightAngle(bike.a);
+  rider.headV = 0;
+  rider.crouch = 0;
+  rider.crouchV = 0;
+}
 
 function resetBike() {
   groundAt(120, ggInfo);
@@ -1169,57 +991,282 @@ function resetBike() {
   bike.speed = 0;
   bike.onGnd = true; bike.rearG = true; bike.frontG = true;
   bike.alive = true; bike.finished = false;
-  bike.air = 0; bike.rot = 0; bike.lastA = bike.a;
+  bike.air = 0; bike.rot = 0; bike.maxRot = 0;
   bike.flips = 0; bike.flipsAwarded = 0; bike.dist = 0; bike.maxX = bike.x;
   bike.engineOn = false; bike.combo = 0; bike.comboT = 0;
+  bike.fax = 0; bike.fay = 0;
+  safe.x = bike.x; safe.y = bike.y; safe.a = bike.a; safe.vx = 120;
+  stuckTimer = 0;
+  stuckCooldown = 0;
+  resetRider();
+}
+
+function resetPools() {
+  rain.reset();
+  snow.reset();
+  fog.reset();
+  leaves.reset();
+  splashes.reset();
 }
 
 function addShake(mag, tm) { shakeMag = max(shakeMag, mag); shakeTime = max(shakeTime, tm); }
 
-function updateShake(dt) {
-  if (shakeTime > 0) { shakeTime -= dt; if (shakeTime <= 0) { shakeTime = 0; shakeMag = 0; } }
+function showPopup(txt) {
+  var d = document.createElement('div');
+  d.className = 'popup';
+  d.textContent = txt;
+  document.body.appendChild(d);
+  window.setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 1700);
 }
 
-function updateParticles(dt) {
-  for (var i = particles.length - 1; i >= 0; i--) {
-    var p = particles[i];
-    p.life -= dt;
-    if (p.life <= 0) { particles[i] = particles[particles.length - 1]; particles.pop(); continue; }
-    p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 650 * dt;
-  }
-}
-
-function completedFlipCount(rot) {
-  return floor((abs(rot) + FLIP_EPS) / TAU);
-}
-
-function processFlipRotation(isLanding) {
-  var completed = completedFlipCount(bike.rot);
+function awardFlips() {
+  var completed = floor((bike.maxRot + FLIP_EPS) / TAU);
   if (completed <= bike.flipsAwarded) return;
-  if (!isLanding && bike.air < FLIP_MIN_AIR) return;
-  if (isLanding && bike.air < 0.015) return;
-
   var add = completed - bike.flipsAwarded;
-  if (add > 8) add = 8;
-
+  if (add <= 0) return;
+  if (add > 10) add = 10;
   var mult = bike.combo + 1;
   var pts = add * 500 * mult;
-
   score += pts;
   bike.flips += add;
   bike.combo += add;
   bike.comboT = 2.5;
   bike.flipsAwarded = completed;
-
   showPopup(add + 'x FLIP x' + mult + ' +' + pts);
   sfx('flip');
+}
+
+function isOccluded(lx, ly, tx, ty) {
+  var dx = tx - lx, dy = ty - ly;
+  var dist = sqrt(dx*dx + dy*dy);
+  if (dist < 42) return false;
+  var steps = clamp(floor(dist / 38), 2, quality.tier === 0 ? 5 : 10);
+  for (var i = 1; i < steps; i++) {
+    var t = i / steps;
+    if (t < 0.16 || t > 0.84) continue;
+    var sx = lx + dx * t;
+    var sy = ly + dy * t;
+    groundAt(sx, tmpInfo);
+    if (tmpInfo.y < sy - 2.0) return true;
+  }
+  return false;
+}
+
+function lightIntensity(l, px, py, occlude) {
+  if (!l.on || l.i <= 0.015) return 0;
+  var dx = px - l.x, dy = py - l.y;
+  var d2 = dx*dx + dy*dy;
+  if (d2 > l.range * l.range) return 0;
+  var d = sqrt(d2);
+  var ang = atan2(dy, dx);
+  var ad = abs(normAngle(ang - l.dir));
+  if (ad > l.beam) return 0;
+  var spot = 1 - ad / l.beam;
+  var fall = 1 - d / l.range;
+  var inten = l.i * spot * spot * fall * fall * l.power;
+  if (inten < 0.012) return 0;
+  if (occlude && quality.tier > 0 && isOccluded(l.x, l.y, px, py)) return 0;
+  return clamp(inten, 0, 1);
+}
+
+function updateLights() {
+  headLight.color = visuals.lightColor;
+  tailLight.color = visuals.tailColor;
+  headLight.on = false; tailLight.on = false;
+  headLight.i = 0; tailLight.i = 0;
+
+  if (!isFinite(bike.x) || !isFinite(bike.y) || !isFinite(bike.a)) return;
+
+  var ca = cos(bike.a), sa = sin(bike.a);
+  var mult = (bike.alive && !bike.finished) ? 1.0 : (crashPending ? 0.42 : 0.18);
+
+  headLight.x = bike.x + HEAD_L_X * ca - HEAD_L_Y * sa;
+  headLight.y = bike.y + HEAD_L_X * sa + HEAD_L_Y * ca;
+  headLight.dir = bike.a;
+  headLight.i = visuals.headlight * mult;
+  headLight.range = 500 + bike.speed * 0.55;
+  headLight.beam = 0.76 + clamp(bike.speed / MAXSPD, 0, 1) * 0.16;
+  headLight.power = 1.35;
+  headLight.on = headLight.i > 0.04;
+
+  tailLight.x = bike.x + TAIL_L_X * ca - TAIL_L_Y * sa;
+  tailLight.y = bike.y + TAIL_L_X * sa + TAIL_L_Y * ca;
+  tailLight.dir = bike.a + PI;
+  tailLight.i = visuals.tailLight * mult;
+  tailLight.range = 230 + bike.speed * 0.26;
+  tailLight.beam = 1.18;
+  tailLight.power = 0.62;
+  tailLight.on = tailLight.i > 0.02;
+}
+
+function updateRiderDynamics(dt, landed, preVy) {
+  if (!isFinite(dt) || dt <= 0) return;
+
+  var leanCtl = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+  if (!bike.onGnd) leanCtl = clamp(leanCtl + bike.av * 0.035, -1.25, 1.25);
+
+  var fax = clamp(bike.fax || 0, -3200, 3200);
+  var fay = clamp(bike.fay || 0, -3600, 3600);
+  var accelLean = clamp(-fax / 3600, -0.20, 0.20);
+  var brakeLean = input.brake ? 0.055 : 0;
+  var gasLean = bike.engineOn ? -0.035 : 0;
+  var desiredLean = clamp(leanCtl * 0.09 + accelLean + brakeLean + gasLean, -0.32, 0.32);
+  if (!isFinite(desiredLean)) desiredLean = 0;
+
+  var upright = nearestUprightAngle(rider.torsoAbs);
+  var target = upright + desiredLean;
+  var err = normAngle(rider.torsoAbs - target);
+  var k = bike.onGnd ? 58 : 26;
+  var damp = bike.onGnd ? 9.5 : 5.0;
+
+  if (landed) {
+    var imp = clamp(preVy / 1100, 0, 1.25);
+    rider.torsoV += bike.av * 0.08;
+    rider.crouchV += imp * 24;
+  }
+
+  rider.torsoV += (-err * k - rider.torsoV * damp) * dt;
+  rider.torsoV = clamp(rider.torsoV, -45, 45);
+  rider.torsoAbs += rider.torsoV * dt;
+  if (!isFinite(rider.torsoAbs)) { rider.torsoAbs = nearestUprightAngle(bike.a); rider.torsoV = 0; }
+
+  var maxRel = bike.onGnd ? 0.86 : 1.20;
+  var rel = normAngle(rider.torsoAbs - bike.a);
+  if (rel > maxRel) {
+    rider.torsoAbs = bike.a + maxRel;
+    if (rider.torsoV > bike.av) rider.torsoV = bike.av + (rider.torsoV - bike.av) * 0.18;
+  } else if (rel < -maxRel) {
+    rider.torsoAbs = bike.a - maxRel;
+    if (rider.torsoV < bike.av) rider.torsoV = bike.av + (rider.torsoV - bike.av) * 0.18;
+  }
+
+  var headUpright = nearestUprightAngle(rider.headAbs);
+  var torsoOffset = normAngle(rider.torsoAbs);
+  var headTarget = headUpright + desiredLean * 0.38 + torsoOffset * 0.20;
+  var headErr = normAngle(rider.headAbs - headTarget);
+  var hk = bike.onGnd ? 46 : 24;
+  var hd = bike.onGnd ? 8.2 : 4.6;
+
+  if (landed) rider.headV += bike.av * 0.04;
+  rider.headV += (-headErr * hk - rider.headV * hd) * dt;
+  rider.headV = clamp(rider.headV, -40, 40);
+  rider.headAbs += rider.headV * dt;
+  if (!isFinite(rider.headAbs)) { rider.headAbs = rider.torsoAbs; rider.headV = 0; }
+
+  var headRel = normAngle(rider.headAbs - rider.torsoAbs);
+  var maxHeadRel = 0.58;
+  if (headRel > maxHeadRel) {
+    rider.headAbs = rider.torsoAbs + maxHeadRel;
+    if (rider.headV > rider.torsoV) rider.headV = rider.torsoV + (rider.headV - rider.torsoV) * 0.2;
+  } else if (headRel < -maxHeadRel) {
+    rider.headAbs = rider.torsoAbs - maxHeadRel;
+    if (rider.headV < rider.torsoV) rider.headV = rider.torsoV + (rider.headV - rider.torsoV) * 0.2;
+  }
+
+  var tuck = bike.onGnd ? 0 : clamp(abs(bike.av) * 0.04 + bike.air * 0.11 + abs(leanCtl) * 0.14, 0, 0.62);
+  var contactComp = bike.onGnd ? clamp((-fay - 850) / 2200, 0, 1) : 0;
+  var targetComp = clamp(contactComp + riderCompress * 0.42 + tuck * 0.55, 0, 1);
+  var compAcc = (targetComp - rider.crouch) * 130 - rider.crouchV * 21;
+  rider.crouchV += compAcc * dt;
+  rider.crouchV = clamp(rider.crouchV, -70, 70);
+  rider.crouch += rider.crouchV * dt;
+  rider.crouch = clamp(rider.crouch, 0, 1);
+  if (!isFinite(rider.crouch)) { rider.crouch = 0; rider.crouchV = 0; }
+}
+
+function applyWheelThrust(info, factor, dt) {
+  bike.vx += cos(info.angle) * ENG * factor * dt;
+  bike.vy += sin(info.angle) * ENG * factor * dt;
+}
+
+function rescueBike() {
+  if (!isFinite(safe.x) || safe.x <= 0) {
+    resetBike();
+    stuckCooldown = 1.5;
+    showPopup('RESET');
+    return;
+  }
+
+  var targetX = clamp(safe.x + 42, 80, max(120, finishX - 40));
+  groundAt(targetX, tmpInfo);
+
+  bike.x = targetX;
+  bike.y = tmpInfo.y - WRAD - WY - 1;
+  bike.a = tmpInfo.angle;
+  bike.vx = max(230, safe.vx + 140);
+  bike.vy = -180;
+  bike.av = 0;
+  bike.speed = abs(bike.vx);
+  bike.onGnd = true; bike.rearG = true; bike.frontG = true;
+  bike.air = 0; bike.rot = 0; bike.maxRot = 0; bike.flipsAwarded = 0;
+  bike.fax = 0; bike.fay = 0;
+
+  stuckTimer = 0;
+  stuckCooldown = 1.7;
+
+  safe.x = bike.x;
+  safe.y = bike.y;
+  safe.a = bike.a;
+  safe.vx = bike.vx;
+
+  resetRider();
+  showPopup('UNSTUCK');
+  addShake(0.35, 0.18);
+}
+
+function updateStuck(dt) {
+  if (!bike.alive || bike.finished) return;
+
+  if (stuckCooldown > 0) {
+    stuckCooldown -= dt;
+    stuckTimer = max(0, stuckTimer - dt * 5);
+    return;
+  }
+
+  if (!bike.onGnd) {
+    stuckTimer = max(0, stuckTimer - dt * 8);
+    return;
+  }
+
+  groundAt(bike.x, tmpInfo);
+  var canDrive = (driveMode !== 1 && bike.rearG) || (driveMode !== 0 && bike.frontG);
+  var aligned = angleDist(bike.a, tmpInfo.angle) < 1.0;
+
+  if (input.gas && canDrive && bike.speed < 68 && aligned) {
+    stuckTimer += dt;
+  } else {
+    stuckTimer = max(0, stuckTimer - dt * 3.2);
+  }
+
+  if (stuckTimer > 0.45) {
+    var assist = clamp((stuckTimer - 0.45) / 1.35, 0, 1);
+    var gx = cos(tmpInfo.angle), gy = sin(tmpInfo.angle);
+
+    if (input.left) {
+      bike.av -= 58 * dt;
+      bike.vx += 22 * dt;
+      bike.vy -= 42 * dt * assist;
+    }
+    if (input.right) {
+      bike.av += 58 * dt;
+      bike.vx += 38 * dt;
+      bike.vy -= 24 * dt * assist;
+    }
+    if (!input.left && !input.right) {
+      bike.vx += gx * 135 * dt * assist;
+      bike.vy += gy * 135 * dt * assist - 45 * dt * assist;
+    }
+  }
+
+  if (stuckTimer > 2.45) rescueBike();
 }
 
 function physics(dt) {
   if (!bike.alive || bike.finished) return;
 
-  var wasAir = !bike.onGnd;
+  var pvx = bike.vx, pvy = bike.vy;
   var oldA = bike.a;
+  var wasAir = !bike.onGnd;
   var half = WBASE * 0.5;
 
   var ca = cos(bike.a), sa = sin(bike.a);
@@ -1239,19 +1286,20 @@ function physics(dt) {
   var preVy = bike.vy;
 
   bike.engineOn = false;
-  if (preRearG && input.gas) {
-    bike.vx += cos(rgInfo.angle) * ENG * dt;
-    bike.vy += sin(rgInfo.angle) * ENG * dt;
-    bike.engineOn = true;
+  if (input.gas) {
+    var applied = false;
+    if (driveMode !== 1 && preRearG) { applyWheelThrust(rgInfo, driveMode === 2 ? 0.72 : 1.0, dt); applied = true; }
+    if (driveMode !== 0 && preFrontG) { applyWheelThrust(fgInfo, driveMode === 2 ? 0.72 : 1.0, dt); applied = true; }
+    if (applied) bike.engineOn = true;
   }
 
   if (preOnGnd && input.brake) {
-    var bf = Math.exp(-3.5 * dt);
+    var bf = Math.exp(-3.8 * dt);
     bike.vx *= bf;
     bike.vy *= bf;
   }
 
-  var torque = preOnGnd ? LEAN_G : LEAN_A;
+  var torque = (preOnGnd ? LEAN_G : LEAN_A) * (stuckTimer > 0.12 ? 1.85 : 1.0);
   if (input.left) bike.av -= torque * dt;
   if (input.right) bike.av += torque * dt;
   var maxAv = preOnGnd ? MAX_AV_G : MAX_AV_A;
@@ -1274,19 +1322,6 @@ function physics(dt) {
   bike.frontG = fwy + WRAD >= fgInfo.y - 2;
   bike.onGnd = bike.rearG || bike.frontG;
 
-  if (!wasAir && !bike.onGnd) {
-    bike.rot = 0;
-    bike.flipsAwarded = 0;
-    bike.air = 0;
-  }
-
-  var airThisStep = wasAir || !bike.onGnd;
-  if (airThisStep) {
-    bike.air += dt;
-    bike.rot += bike.a - oldA;
-  }
-
-  var preSolveA = bike.a;
   var corrX = 0, corrY = 0, impX = 0, impY = 0, targ = 0, targW = 0;
 
   if (bike.rearG) {
@@ -1298,7 +1333,7 @@ function physics(dt) {
       corrY += nyR * penR * 0.56;
       var vnR = bike.vx * nxR + bike.vy * nyR;
       if (vnR < 0) {
-        var jR = -vnR * 1.04 * 0.56;
+        var jR = -vnR * 1.05 * 0.56;
         impX += nxR * jR;
         impY += nyR * jR;
       }
@@ -1316,7 +1351,7 @@ function physics(dt) {
       corrY += nyF * penF * 0.44;
       var vnF = bike.vx * nxF + bike.vy * nyF;
       if (vnF < 0) {
-        var jF = -vnF * 1.04 * 0.44;
+        var jF = -vnF * 1.05 * 0.44;
         impX += nxF * jF;
         impY += nyF * jF;
       }
@@ -1331,7 +1366,7 @@ function physics(dt) {
   bike.vy += impY;
 
   if (targW > 0) {
-    bike.a = angLerp(bike.a, targ / targW, 1 - Math.exp(-22 * dt));
+    bike.a = angLerp(bike.a, targ / targW, 1 - Math.exp(-24 * dt));
     bike.av *= Math.exp(-10 * dt);
   } else if (bike.onGnd) {
     groundAt(bike.x, ggInfo);
@@ -1339,36 +1374,30 @@ function physics(dt) {
     bike.av *= Math.exp(-4 * dt);
   }
 
-  if (airThisStep) {
-    bike.rot += bike.a - preSolveA;
-    processFlipRotation(false);
-  }
+  var nowAir = !bike.onGnd;
 
-  if (wasAir && bike.onGnd) {
-    processFlipRotation(true);
-    groundAt(bike.x, ggInfo);
-    var diff = angleDist(bike.a, ggInfo.angle);
-    var impactSpeed = sqrt(bike.vx * bike.vx + bike.vy * bike.vy);
-
-    riderCompress = max(riderCompress, min(1, preVy / 650 + diff * 0.35));
-
-    if (diff > 1.60 && impactSpeed > 120) { crash(); return; }
-
-    if (preVy > 230 || diff > 0.95) {
-      sfx('land');
-      addShake(min(1, preVy / 1000 + diff * 0.15), 0.16);
-    }
-
+  if (!wasAir && nowAir) {
     bike.rot = 0;
-    bike.flipsAwarded = 0;
-    bike.air = 0;
-  } else if (bike.onGnd) {
-    bike.rot = 0;
+    bike.maxRot = 0;
     bike.flipsAwarded = 0;
     bike.air = 0;
   }
 
-  bike.vx *= Math.exp((bike.onGnd ? -0.35 : -0.05) * dt);
+  if (wasAir || nowAir) {
+    bike.rot += bike.a - oldA;
+    bike.air += dt;
+    var ar = abs(bike.rot);
+    if (ar > bike.maxRot) bike.maxRot = ar;
+    if (bike.air >= 0.025) awardFlips();
+  }
+
+  if (nowAir && difficulty >= 2) {
+    var windAccel = (difficulty === 2 ? 78 : 155) * visuals.windStrength;
+    bike.vx += visuals.windX * windAccel * dt;
+    bike.vy += sin(wxTime * 2.35 + bike.x * 0.01) * visuals.windStrength * 16 * dt;
+  }
+
+  bike.vx *= Math.exp((bike.onGnd ? -0.32 : -0.04) * dt);
   bike.speed = sqrt(bike.vx * bike.vx + bike.vy * bike.vy);
   if (bike.speed > MAXSPD) {
     var sc = MAXSPD / bike.speed;
@@ -1376,15 +1405,51 @@ function physics(dt) {
     bike.vy *= sc;
     bike.speed = MAXSPD;
   }
+  bike.av *= Math.exp((bike.onGnd ? -3.2 : -0.32) * dt);
 
-  bike.av *= Math.exp((bike.onGnd ? -3 : -0.35) * dt);
+  var ax = (bike.vx - pvx) / dt;
+  var ay = (bike.vy - pvy) / dt;
+  bike.fax = clamp(ax, -3600, 3600);
+  bike.fay = clamp(ay - GRAV, -3600, 3600);
+
+  var landed = wasAir && !nowAir;
+  updateRiderDynamics(dt, landed, preVy);
 
   if (bike.x > bike.maxX) {
     bike.dist += bike.x - bike.maxX;
     bike.maxX = bike.x;
   }
 
-  bike.lastA = bike.a;
+  if (landed) {
+    awardFlips();
+    groundAt(bike.x, ggInfo);
+    var diff = angleDist(bike.a, ggInfo.angle);
+    riderCompress = max(riderCompress, min(1, preVy / 620 + diff * 0.35));
+
+    if (diff > 1.55 && bike.speed > 110) { crash(); return; }
+
+    if (preVy > 220 || diff > 0.90) {
+      sfx('land');
+      addShake(min(1, preVy / 950 + diff * 0.15), 0.16);
+    }
+
+    bike.rot = 0;
+    bike.maxRot = 0;
+    bike.flipsAwarded = 0;
+    bike.air = 0;
+  } else if (!nowAir) {
+    bike.rot = 0;
+    bike.maxRot = 0;
+    bike.flipsAwarded = 0;
+    bike.air = 0;
+  }
+
+  if (!nowAir && bike.comboT > 0) {
+    bike.comboT -= dt;
+    if (bike.comboT <= 0) bike.combo = 0;
+  }
+
+  updateStuck(dt);
 
   if (bike.y > 2500) { crash(); return; }
 
@@ -1395,63 +1460,50 @@ function physics(dt) {
   var headPen = hyy + HEAD_R - hgInfo.y;
   if (ca < -0.18 && headPen > -1) { crash(); return; }
 
+  groundAt(bike.x, ggInfo);
+  if (
+    bike.onGnd &&
+    bike.speed > 95 &&
+    angleDist(bike.a, ggInfo.angle) < 0.45 &&
+    stuckTimer < 0.10 &&
+    bike.x > 80 &&
+    bike.x < finishX - 120
+  ) {
+    safe.x = bike.x;
+    safe.y = bike.y;
+    safe.a = bike.a;
+    safe.vx = bike.vx;
+  }
+
   if (bike.x >= finishX && bike.onGnd) { win(); return; }
-
-  if (bike.engineOn && bike.rearG && particles.length < MAXP - 2) {
-    var erx = bike.x - half * ca - WY * sa;
-    var ery = bike.y - half * sa + WY * ca;
-    for (var i = 0; i < 2; i++) {
-      particles.push({
-        x: erx - ca * 14 + (random() - 0.5) * 4,
-        y: ery - sa * 14 + (random() - 0.5) * 4,
-        vx: -ca * 70 + (random() - 0.5) * 40,
-        vy: -sa * 70 - random() * 50,
-        life: 0.22 + random() * 0.18, max: 0.40,
-        r: 1, g: 0.50 + random() * 0.30, b: 0.05, sz: 1.8 + random() * 2.2
-      });
-    }
-  }
-
-  if (bike.onGnd && bike.speed > 110 && particles.length < MAXP) {
-    var drx = bike.x - half * ca - WY * sa;
-    var dry = bike.y - half * sa + WY * ca + WRAD;
-    particles.push({
-      x: drx + (random() - 0.5) * 6, y: dry,
-      vx: -bike.vx * 0.08 + (random() - 0.5) * 30,
-      vy: -20 - random() * 40,
-      life: 0.25 + random() * 0.20, max: 0.45,
-      r: 0.35, g: 0.30, b: 0.20, sz: 1.5 + random() * 2
-    });
-  }
-}
-
-function showGameOver() {
-  inGame = false;
-  paused = false;
-  showScreen('overScreen');
 }
 
 function crash() {
   if (!bike.alive || bike.finished) return;
+  awardFlips();
   bike.alive = false;
   crashPending = true;
-  crashTimer = 1.25;
+  crashTimer = 0.75;
   riderCompress = 1;
   clearInputs();
   updateTouchVisibility();
   sfx('crash');
   addShake(1, 0.35);
-  createRagdoll();
-  createScooterFall();
 
-  for (var i = 0; i < 24 && particles.length < MAXP; i++) {
-    particles.push({
-      x: bike.x + (random() - 0.5) * 22, y: bike.y + (random() - 0.5) * 22,
-      vx: (random() - 0.5) * 350, vy: -random() * 250 - 50,
-      life: 0.55 + random() * 0.45, max: 1.0,
-      r: 1, g: 0.35 + random() * 0.40, b: 0.05, sz: 2 + random() * 4
-    });
+  var count = quality.tier === 0 ? 10 : quality.tier === 1 ? 18 : 26;
+  for (var i = 0; i < count && splashes.count < splashes.cap; i++) {
+    var p = splashes.a[splashes.count++];
+    p.x = bike.x + (random() - 0.5) * 24;
+    p.y = bike.y + (random() - 0.5) * 24;
+    p.vx = (random() - 0.5) * 360;
+    p.vy = -random() * 260 - 60;
+    p.life = 0.45 + random() * 0.45;
+    p.maxLife = 0.90;
+    p.r = 1; p.g = 0.35 + random() * 0.40; p.b = 0.05;
+    p.size = 2 + random() * 4;
+    p.kind = 2;
   }
+
   stopMusic();
   silenceEngine();
 }
@@ -1466,6 +1518,8 @@ function win() {
   $('winStats').innerHTML =
     'Distance: ' + floor(bike.dist) + ' m<br>' +
     'Flips: ' + bike.flips + '<br>' +
+    'Difficulty: ' + DIFF_NAMES[clamp(difficulty,0,3)] + '<br>' +
+    'Drive: ' + DRIVE_NAMES[clamp(driveMode,0,2)] + '<br>' +
     'Level bonus: +' + pts + '<br>' +
     'Total score: ' + score;
   inGame = false;
@@ -1476,690 +1530,1382 @@ function win() {
   silenceEngine();
 }
 
-var rbx = 0, rby = 0, rca = 1, rsa = 0, currentSpin = 0;
-function btx(lx, ly) { return rbx + lx * rca - ly * rsa; }
-function bty(lx, ly) { return rby + lx * rsa + ly * rca; }
+function spawnPoolSplash(pool, x, y, vx, vy, speed, strength) {
+  var base = quality.tier === 0 ? 6 : quality.tier === 1 ? 12 : 18;
+  var count = floor((base + speed / 34 + pool.amount * 7) * strength);
+  count = clamp(count, 4, quality.splashMax);
 
-function setTransform(worldX, worldY, angle) {
-  rbx = worldX - cam.x;
-  rby = worldY - cam.y;
-  rca = cos(angle);
-  rsa = sin(angle);
-}
-
-function limbWorld(x1, y1, x2, y2, w1, w2, c, a) {
-  if (a === undefined) a = 1;
-  if (!c || a <= 0) return;
-  var dx = x2 - x1, dy = y2 - y1;
-  var len = sqrt(dx * dx + dy * dy);
-  if (len < 0.05) {
-    drawCirc(x1, y1, max(w1, w2) * 0.5, c[0], c[1], c[2], a, 6);
-    return;
-  }
-  var nx = -dy / len, ny = dx / len;
-  var h1 = w1 * 0.5, h2 = w2 * 0.5;
-  quadC(x1 + nx * h1, y1 + ny * h1, c[0], c[1], c[2], a,
-        x2 + nx * h2, y2 + ny * h2, c[0], c[1], c[2], a,
-        x2 - nx * h2, y2 - ny * h2, c[0], c[1], c[2], a,
-        x1 - nx * h1, y1 - ny * h1, c[0], c[1], c[2], a);
-  drawCirc(x1, y1, h1, c[0], c[1], c[2], a, 6);
-  drawCirc(x2, y2, h2, c[0], c[1], c[2], a, 6);
-}
-
-function limbLocal(x1, y1, x2, y2, w1, w2, c, a) {
-  limbWorld(btx(x1, y1), bty(x1, y1), btx(x2, y2), bty(x2, y2), w1, w2, c, a);
-}
-
-function jointLocal(x, y, r, c, a) {
-  drawCirc(btx(x, y), bty(x, y), r, c[0], c[1], c[2], a === undefined ? 1 : a, 6);
-}
-
-function renderBG() {
-  var st = visuals.skyTop, sb = visuals.skyBot;
-  quadC(0, 0, st[0], st[1], st[2], 1, W, 0, st[0], st[1], st[2], 1,
-        W, H, sb[0], sb[1], sb[2], 1, 0, H, sb[0], sb[1], sb[2], 1);
-
-  var sw = max(1600, W * 1.4), i;
-  for (i = 0; i < visuals.stars.length; i++) {
-    var s = visuals.stars[i];
-    var sx = (s.x * sw - cam.x * 0.035) % sw;
-    if (sx < 0) sx += sw;
-    if (sx < -5 || sx > W + 5) continue;
-    var sy = s.y * H * 0.62 - cam.y * 0.012;
-    if (sy < -5 || sy > H * 0.78) continue;
-    drawCirc(sx, sy, s.s, s.b, s.b * 0.95, s.b * 0.85, 0.85, 4);
-  }
-
-  for (var layer = 0; layer < 2; layer++) {
-    var pts = visuals.mount[layer];
-    if (!pts || !pts.length) continue;
-    var mw = max(2000, W * 1.7);
-    var off = (cam.x * (0.07 + layer * 0.06)) % mw;
-    if (off < 0) off += mw;
-    var baseY = H * (0.52 + layer * 0.13) - cam.y * (0.02 + layer * 0.015);
-    var topC = visuals.mountColor[layer], botC = visuals.mountDark[layer];
-    var segs = pts.length;
-    for (var rep = 0; rep < 2; rep++) {
-      var base = rep * mw - off;
-      for (i = 0; i < segs; i++) {
-        var x1 = base + (i / segs) * mw, x2 = base + ((i + 1) / segs) * mw;
-        if (x2 < -80 || x1 > W + 80) continue;
-        var y1 = baseY - pts[i] * H * 0.16;
-        var y2 = baseY - pts[(i + 1) % segs] * H * 0.16;
-        var bot = H + 20;
-        triC(x1, y1, topC[0], topC[1], topC[2], 0.95, x2, y2, topC[0], topC[1], topC[2], 0.95, x2, bot, botC[0], botC[1], botC[2], 0.95);
-        triC(x1, y1, topC[0], topC[1], topC[2], 0.95, x2, bot, botC[0], botC[1], botC[2], 0.95, x1, bot, botC[0], botC[1], botC[2], 0.95);
-      }
+  for (var i = 0; i < count && splashes.count < splashes.cap; i++) {
+    var p = splashes.a[splashes.count++];
+    var side = random() < 0.5 ? -1 : 1;
+    p.x = x + (random() - 0.5) * pool.len * 0.58;
+    p.y = y - random() * 3;
+    p.vx = vx * (0.10 + random() * 0.22) + side * (45 + random() * 150) * strength;
+    p.vy = -90 - random() * (170 + speed * 0.28) * strength - vy * 0.04;
+    p.life = 0.55 + random() * 0.75;
+    p.maxLife = 1.30;
+    if (pool.type === 1) {
+      p.r = 0.32 + random()*0.18;
+      p.g = 0.60 + random()*0.20;
+      p.b = 0.95 + random()*0.05;
+      p.size = 2.2 + random() * 5.0;
+    } else {
+      p.r = 0.86 + random()*0.10;
+      p.g = 0.90 + random()*0.08;
+      p.b = 0.96 + random()*0.04;
+      p.size = 2.0 + random() * 4.2;
     }
+    p.kind = pool.type === 1 ? 0 : 1;
   }
 }
 
-function renderTerrain() {
-  if (terrain.length < 2) return;
-  computeVisible(cam.x - 80, cam.x + W + 80);
+function updateSplashParticles(dt) {
+  for (var i = 0; i < splashes.count; i++) {
+    var p = splashes.a[i];
+    p.life -= dt;
+    if (p.life <= 0) { splashes.recycle(i); i--; continue; }
 
-  for (var i = visI0; i < visI1; i++) {
-    var a = terrain[i], b = terrain[i + 1];
-    var x1 = a.x - cam.x, y1 = a.y - cam.y;
-    var x2 = b.x - cam.x, y2 = b.y - cam.y;
-    if (x2 < -100 || x1 > W + 100) continue;
-
-    var pal = visuals.ground[a.t] || visuals.ground[0];
-    if (!pal) pal = { top: [0.12, 0.2, 0.06], bot: [0.06, 0.1, 0.03], line: [0.25, 0.4, 0.12], tex: [0.2, 0.35, 0.1] };
-    var bot = H + 40;
-
-    quadC(x1, y1, pal.top[0], pal.top[1], pal.top[2], 1,
-          x2, y2, pal.top[0], pal.top[1], pal.top[2], 1,
-          x2, bot, pal.bot[0], pal.bot[1], pal.bot[2], 1,
-          x1, bot, pal.bot[0], pal.bot[1], pal.bot[2], 1);
-
-    line(x1, y1, x2, y2, pal.line[0], pal.line[1], pal.line[2], 1, 3);
-
-    if (((i + visuals.texOff) % visuals.texSpace) === 0) {
-      var tx = (x1 + x2) * 0.5, ty = (y1 + y2) * 0.5;
-      line(tx, ty, tx + visuals.texDX, ty + visuals.texDY, pal.tex[0], pal.tex[1], pal.tex[2], 0.40, 2);
+    if (p.kind === 2) {
+      p.vy += 900 * dt;
+      p.vx *= 0.985;
+    } else {
+      p.vy += (p.kind === 1 ? 520 : 880) * dt;
+      p.vx *= 0.985;
+      p.vy *= 0.992;
+      groundAt(p.x, tmpInfo);
+      if (p.y > tmpInfo.y + 10) p.life = min(p.life, 0.08);
     }
 
-    var hv = ((i * 2654435761 + visuals.decorHash) >>> 0) & 255;
-    if (hv < 45) {
-      var f = (hv & 15) / 15;
-      drawCirc(lerp(x1, x2, f), lerp(y1, y2, f) - 2, 2 + (hv & 3), 0.26, 0.25, 0.23, 0.85, 5);
-    } else if (hv < 100) {
-      f = ((hv >> 4) & 15) / 15;
-      var gx = lerp(x1, x2, f), gy = lerp(y1, y2, f);
-      line(gx, gy, gx + ((hv & 1) ? 2 : -2), gy - 4 - (hv & 2), pal.tex[0], pal.tex[1], pal.tex[2], 0.50, 1.5);
-    }
-  }
-
-  var fx = finishX - cam.x;
-  if (fx > -80 && fx < W + 80) {
-    groundAt(finishX, ggInfo);
-    var fy = ggInfo.y - cam.y;
-    line(fx, fy, fx, fy - 85, 0.92, 0.92, 0.92, 0.95, 3);
-    for (var r = 0; r < 4; r++) {
-      for (var c = 0; c < 3; c++) {
-        var col = ((r + c) & 1) === 0 ? 1 : 0.08;
-        var qx = fx + c * 9, qy = fy - 85 + r * 9;
-        quadC(qx, qy, col, col, col, 0.95, qx + 9, qy, col, col, col, 0.95,
-              qx + 9, qy + 9, col, col, col, 0.95, qx, qy + 9, col, col, col, 0.95);
-      }
-    }
-  }
-}
-
-function renderParticles() {
-  for (var i = 0; i < particles.length; i++) {
-    var p = particles[i];
-    var sx = p.x - cam.x, sy = p.y - cam.y;
-    if (sx < -40 || sx > W + 40 || sy < -40 || sy > H + 40) continue;
-    var a = clamp(p.life / p.max, 0, 1);
-    drawCirc(sx, sy, p.sz * (0.45 + a * 0.55), p.r, p.g, p.b, a * 0.82, 5);
-  }
-}
-
-function drawChassis() {
-  var S = visuals.sco;
-  var half = WBASE * 0.5;
-  var rwx = btx(-half, WY), rwy = bty(-half, WY);
-  var fwx = btx(half, WY), fwy = bty(half, WY);
-
-  drawRing(rwx, rwy, WRAD * 0.62, WRAD, S.tire[0], S.tire[1], S.tire[2], 1, 12);
-  drawCirc(rwx, rwy, WRAD * 0.55, S.hub[0], S.hub[1], S.hub[2], 1, 8);
-  drawCirc(rwx, rwy, WRAD * 0.20, S.dark[0], S.dark[1], S.dark[2], 1, 6);
-  drawRing(fwx, fwy, WRAD * 0.62, WRAD, S.tire[0], S.tire[1], S.tire[2], 1, 12);
-  drawCirc(fwx, fwy, WRAD * 0.55, S.hub[0], S.hub[1], S.hub[2], 1, 8);
-  drawCirc(fwx, fwy, WRAD * 0.20, S.dark[0], S.dark[1], S.dark[2], 1, 6);
-
-  for (var s = 0; s < 3; s++) {
-    var ang = currentSpin + s * TAU / 3;
-    var cc = cos(ang), ss = sin(ang);
-    line(btx(-half + cc * 2, WY + ss * 2), bty(-half + cc * 2, WY + ss * 2),
-         btx(-half + cc * WRAD * 0.78, WY + ss * WRAD * 0.78), bty(-half + cc * WRAD * 0.78, WY + ss * WRAD * 0.78),
-         S.metal[0], S.metal[1], S.metal[2], 0.85, 1.2);
-    line(btx(half + cc * 2, WY + ss * 2), bty(half + cc * 2, WY + ss * 2),
-         btx(half + cc * WRAD * 0.78, WY + ss * WRAD * 0.78), bty(half + cc * WRAD * 0.78, WY + ss * WRAD * 0.78),
-         S.metal[0], S.metal[1], S.metal[2], 0.85, 1.2);
-  }
-
-  quadC(btx(-17, -3), bty(-17, -3), S.frame[0], S.frame[1], S.frame[2], 1,
-        btx(15, -3), bty(15, -3), S.frame[0], S.frame[1], S.frame[2], 1,
-        btx(15, 1), bty(15, 1), S.dark[0], S.dark[1], S.dark[2], 1,
-        btx(-17, 1), bty(-17, 1), S.dark[0], S.dark[1], S.dark[2], 1);
-
-  quadC(btx(-15, -3.6), bty(-15, -3.6), S.grip[0], S.grip[1], S.grip[2], 1,
-        btx(13, -3.6), bty(13, -3.6), S.grip[0], S.grip[1], S.grip[2], 1,
-        btx(13, -2.2), bty(13, -2.2), S.grip[0], S.grip[1], S.grip[2], 1,
-        btx(-15, -2.2), bty(-15, -2.2), S.grip[0], S.grip[1], S.grip[2], 1);
-
-  line(btx(-17, -2), bty(-17, -2), btx(-24, -7), bty(-24, -7), S.frame[0], S.frame[1], S.frame[2], 1, 3);
-  line(btx(-24, -6), bty(-24, -6), btx(-32, -1), bty(-32, -1), S.dark[0], S.dark[1], S.dark[2], 1, 3);
-  drawCirc(btx(-33, -2), bty(-33, -2), 1.8, S.tail[0], S.tail[1], S.tail[2], 0.95, 6);
-  line(btx(-16, 0), bty(-16, 0), rwx, rwy, S.dark[0], S.dark[1], S.dark[2], 1, 2.5);
-
-  line(fwx, fwy, btx(21, -6), bty(21, -6), S.metal[0], S.metal[1], S.metal[2], 1, 3.2);
-  line(btx(21, -6), bty(21, -6), btx(18, -27), bty(18, -27), S.frame[0], S.frame[1], S.frame[2], 1, 4);
-  drawCirc(btx(20, -16), bty(20, -16), 2.4, S.dark[0], S.dark[1], S.dark[2], 1, 6);
-
-  line(btx(11, -29), bty(11, -29), btx(25, -27), bty(25, -27), S.metal[0], S.metal[1], S.metal[2], 1, 3.2);
-  line(btx(11, -29), bty(11, -29), btx(7, -29.5), bty(7, -29.5), S.grip[0], S.grip[1], S.grip[2], 1, 4.5);
-  line(btx(25, -27), bty(25, -27), btx(29, -26.5), bty(29, -26.5), S.grip[0], S.grip[1], S.grip[2], 1, 4.5);
-  line(btx(24, -25), bty(24, -25), btx(29, -22), bty(29, -22), S.dark[0], S.dark[1], S.dark[2], 1, 1.6);
-  drawCirc(btx(23, -30), bty(23, -30), 2.2, S.light[0], S.light[1], S.light[2], 0.95, 6);
-}
-
-function ik(sx, sy, tx, ty, l1, l2, bend) {
-  var dx = tx - sx, dy = ty - sy;
-  var d = sqrt(dx * dx + dy * dy);
-  if (d < 0.0001) {
-    return { jx: sx, jy: sy + l1 * 0.5, tx: tx, ty: ty };
-  }
-  var maxd = l1 + l2 - 0.001;
-  var mind = abs(l1 - l2) + 0.001;
-  if (d > maxd) {
-    var s = maxd / d;
-    dx *= s; dy *= s;
-    tx = sx + dx; ty = sy + dy;
-    d = maxd;
-  } else if (d < mind) {
-    var s2 = mind / d;
-    dx *= s2; dy *= s2;
-    tx = sx + dx; ty = sy + dy;
-    d = mind;
-  }
-  if (d < 0.0001) d = 0.0001;
-  var a = (l1 * l1 - l2 * l2 + d * d) / (2 * d);
-  var h2 = l1 * l1 - a * a;
-  if (h2 < 0) h2 = 0;
-  var h = sqrt(h2);
-  var ux = dx / d, uy = dy / d;
-  var mx = sx + ux * a, my = sy + uy * a;
-  var px = -uy, py = ux;
-  return { jx: mx + px * h * bend, jy: my + py * h * bend, tx: tx, ty: ty };
-}
-
-function computeRiderPose() {
-  var visA = normAngle(bike.a);
-  var leanCtl = (input.right ? 1 : 0) - (input.left ? 1 : 0);
-  if (!bike.onGnd) leanCtl = clamp(leanCtl + bike.av * 0.04, -1.5, 1.5);
-
-  var counter = -visA * 0.38;
-  var brakeLean = input.brake ? 0.18 : 0;
-  var gasLean = bike.engineOn ? -0.10 : 0;
-  var avLean = clamp(bike.av * 0.025, -0.30, 0.30);
-  var torsoAngle = clamp(0.20 + counter + leanCtl * 0.24 + brakeLean + gasLean + avLean * 0.35, -0.85, 1.05);
-  var headAngle = clamp(torsoAngle * 0.25 - leanCtl * 0.10 + visA * 0.15 - 0.08, -0.70, 0.70);
-
-  var tuck = 0;
-  if (!bike.onGnd) {
-    tuck = clamp(abs(bike.av) * 0.05 + bike.air * 0.15 + abs(leanCtl) * 0.18 + (input.gas ? 0.08 : 0), 0, 0.90);
-  }
-  var compress = clamp(riderCompress, 0, 1);
-
-  var hipX = -2 + leanCtl * 2.2 + tuck * 1.2;
-  var hipY = -22 + compress * 4.5 - tuck * 1.5;
-  var torsoLen = 15 - compress * 1.5;
-
-  var sinT = sin(torsoAngle), cosT = cos(torsoAngle);
-  var chestX = hipX + sinT * torsoLen;
-  var chestY = hipY - cosT * torsoLen;
-
-  var neckLen = 9;
-  var sinH = sin(headAngle), cosH = cos(headAngle);
-  var headX = chestX + 3.0 * cosH + sinH * neckLen;
-  var headY = chestY + 3.0 * sinH - cosH * neckLen;
-
-  var shoulderX = chestX + 1.5 * cosT;
-  var shoulderY = chestY + 1.5 * sinT;
-
-  var footFX = 8 - tuck * 1.5 + leanCtl * 0.8;
-  var footFY = -3 - tuck * 6.5 + compress * 0.8;
-  var footBX = -10 + tuck * 1.2 + leanCtl * 0.5;
-  var footBY = -3 - tuck * 5.0 + compress * 0.8;
-
-  var handFX = 18 - tuck * 1.8 + leanCtl * 0.5;
-  var handFY = -27 + tuck * 4.5 - compress * 1.2;
-  var handBX = handFX - 2.2;
-  var handBY = handFY + 1.2;
-
-  var legF = ik(hipX, hipY, footFX, footFY, 13, 12, -1);
-  var legB = ik(hipX, hipY, footBX, footBY, 13, 12, 1);
-  var armF = ik(shoulderX, shoulderY, handFX, handFY, 10, 9, 1);
-  var armB = ik(shoulderX - 1.2, shoulderY + 1.0, handBX, handBY, 10, 9, 1);
-
-  return {
-    hipX: hipX, hipY: hipY,
-    chestX: chestX, chestY: chestY,
-    headX: headX, headY: headY,
-    shoulderX: shoulderX, shoulderY: shoulderY,
-    kneeFX: legF.jx, kneeFY: legF.jy,
-    footFX: legF.tx, footFY: legF.ty,
-    kneeBX: legB.jx, kneeBY: legB.jy,
-    footBX: legB.tx, footBY: legB.ty,
-    elbowFX: armF.jx, elbowFY: armF.jy,
-    handFX: armF.tx, handFY: armF.ty,
-    elbowBX: armB.jx, elbowBY: armB.jy,
-    handBX: armB.tx, handBY: armB.ty,
-    torsoAngle: torsoAngle, headAngle: headAngle,
-    cosT: cosT, sinT: sinT, cosH: cosH, sinH: sinH
-  };
-}
-
-function drawRider(p) {
-  var S = visuals.sco;
-  var cosT = p.cosT, sinT = p.sinT;
-  var cosH = p.cosH, sinH = p.sinH;
-
-  limbLocal(p.shoulderX - 1.2, p.shoulderY + 1.0, p.elbowBX, p.elbowBY, 4.2, 3.4, S.riderDark, 0.95);
-  limbLocal(p.elbowBX, p.elbowBY, p.handBX, p.handBY, 3.4, 3.0, S.riderDark, 0.95);
-  limbLocal(p.hipX, p.hipY, p.kneeBX, p.kneeBY, 5.2, 4.2, S.pantsDark, 0.95);
-  limbLocal(p.kneeBX, p.kneeBY, p.footBX, p.footBY, 4.2, 3.4, S.pantsDark, 0.95);
-  limbLocal(p.footBX - 2.0, p.footBY, p.footBX + 2.8, p.footBY, 3.0, 2.8, S.shoe, 0.95);
-
-  var ptX = p.chestX - 4.8 * cosT, ptY = p.chestY - 4.8 * sinT;
-  var pbX = p.hipX - 3.6 * cosT, pbY = p.hipY - 3.6 * sinT;
-  limbLocal(ptX, ptY, pbX, pbY, 6.2, 5.2, S.pack, 0.95);
-
-  limbLocal(p.hipX, p.hipY, p.chestX, p.chestY, 8.8, 7.4, S.rider, 1);
-  jointLocal(p.hipX, p.hipY, 4.4, S.pants, 1);
-  jointLocal(p.chestX, p.chestY, 4.0, S.rider, 1);
-  limbLocal(lerp(p.hipX, p.chestX, 0.35), lerp(p.hipY, p.chestY, 0.35),
-            lerp(p.hipX, p.chestX, 0.75), lerp(p.hipY, p.chestY, 0.75),
-            3.0, 2.6, S.helmet, 0.75);
-
-  limbLocal(p.hipX, p.hipY, p.kneeFX, p.kneeFY, 5.6, 4.4, S.pants, 1);
-  limbLocal(p.kneeFX, p.kneeFY, p.footFX, p.footFY, 4.4, 3.6, S.pants, 1);
-  limbLocal(p.footFX - 2.5, p.footFY, p.footFX + 3.0, p.footFY, 3.2, 3.0, S.shoe, 1);
-
-  limbLocal(p.shoulderX, p.shoulderY, p.elbowFX, p.elbowFY, 4.6, 3.6, S.rider, 1);
-  limbLocal(p.elbowFX, p.elbowFY, p.handFX, p.handFY, 3.6, 3.0, S.rider, 1);
-  jointLocal(p.handFX, p.handFY, 2.6, S.glove, 1);
-  jointLocal(p.handBX, p.handBY, 2.3, S.glove, 0.95);
-
-  limbLocal(p.chestX, p.chestY, p.headX, p.headY, 4.2, 3.6, S.skin, 1);
-  drawCirc(btx(p.headX, p.headY), bty(p.headX, p.headY), 6.9, S.helmet[0], S.helmet[1], S.helmet[2], 1, 10);
-
-  var v1x = p.headX + 3 * cosH + 2 * sinH;
-  var v1y = p.headY + 3 * sinH - 2 * cosH;
-  var v2x = p.headX + 7 * cosH;
-  var v2y = p.headY + 7 * sinH;
-  var v3x = p.headX + 5 * cosH - 3 * sinH;
-  var v3y = p.headY + 5 * sinH + 3 * cosH;
-  var v4x = p.headX + 1 * cosH - 1 * sinH;
-  var v4y = p.headY + 1 * sinH + 1 * cosH;
-  quadC(btx(v1x, v1y), bty(v1x, v1y), S.visor[0], S.visor[1], S.visor[2], 0.90,
-        btx(v2x, v2y), bty(v2x, v2y), S.visor[0], S.visor[1], S.visor[2], 0.90,
-        btx(v3x, v3y), bty(v3x, v3y), S.visor[0], S.visor[1], S.visor[2], 0.90,
-        btx(v4x, v4y), bty(v4x, v4y), S.visor[0], S.visor[1], S.visor[2], 0.90);
-
-  line(btx(p.headX + 1 * cosH + 5 * sinH, p.headY + 1 * sinH - 5 * cosH),
-       bty(p.headX + 1 * cosH + 5 * sinH, p.headY + 1 * sinH - 5 * cosH),
-       btx(p.headX + 5 * cosH + 5 * sinH, p.headY + 5 * sinH - 5 * cosH),
-       bty(p.headX + 5 * cosH + 5 * sinH, p.headY + 5 * sinH - 5 * cosH),
-       S.dark[0], S.dark[1], S.dark[2], 0.85, 1.5);
-}
-
-function createRagdoll() {
-  var pose = computeRiderPose();
-  var ca = cos(bike.a), sa = sin(bike.a);
-
-  function tw(lx, ly) {
-    return [bike.x + lx * ca - ly * sa, bike.y + lx * sa + ly * ca];
-  }
-
-  var locals = [
-    [pose.headX, pose.headY],
-    [pose.chestX, pose.chestY],
-    [pose.hipX, pose.hipY],
-    [pose.kneeFX, pose.kneeFY],
-    [pose.footFX, pose.footFY],
-    [pose.kneeBX, pose.kneeBY],
-    [pose.footBX, pose.footBY],
-    [pose.elbowFX, pose.elbowFY],
-    [pose.handFX, pose.handFY],
-    [pose.elbowBX, pose.elbowBY],
-    [pose.handBX, pose.handBY]
-  ];
-  var radii = [6.5, 5, 5, 3, 3.2, 3, 3.2, 3, 2.8, 3, 2.8];
-  var pts = [];
-  var throwF = clamp(bike.speed * 0.25, 0, 180);
-
-  for (var i = 0; i < locals.length; i++) {
-    var pos = tw(locals[i][0], locals[i][1]);
-    var lx = locals[i][0], ly = locals[i][1];
-    var dxda = -lx * sa - ly * ca;
-    var dyda = lx * ca - ly * sa;
-    var vx = bike.vx + bike.av * dxda * 0.5;
-    var vy = bike.vy + bike.av * dyda * 0.5;
-    vx += 70 + throwF * 0.6 + (random() - 0.5) * 80;
-    vy -= 160 + throwF * 0.8 + random() * 80;
-    pts.push({ x: pos[0], y: pos[1], vx: vx, vy: vy, r: radii[i] });
-  }
-
-  var cons = [];
-  function addCon(a, b, stiff) {
-    var dx = pts[b].x - pts[a].x, dy = pts[b].y - pts[a].y;
-    var len = sqrt(dx * dx + dy * dy);
-    cons.push({ a: a, b: b, len: len > 0.01 ? len : 1, stiff: stiff });
-  }
-
-  addCon(0, 1, 0.82);
-  addCon(1, 2, 0.90);
-  addCon(2, 3, 0.86);
-  addCon(3, 4, 0.86);
-  addCon(2, 5, 0.86);
-  addCon(5, 6, 0.86);
-  addCon(1, 7, 0.80);
-  addCon(7, 8, 0.80);
-  addCon(1, 9, 0.80);
-  addCon(9, 10, 0.80);
-  addCon(0, 2, 0.22);
-  addCon(1, 3, 0.12);
-  addCon(1, 5, 0.12);
-
-  ragdoll = { pts: pts, cons: cons };
-}
-
-function updateRagdoll(dt) {
-  if (!ragdoll) return;
-  dt = min(dt, 0.033);
-  var pts = ragdoll.pts, cons = ragdoll.cons;
-  var i, p, c, dx, dy, d, diff;
-
-  for (i = 0; i < pts.length; i++) {
-    p = pts[i];
-    p.vy += GRAV * dt;
-    p.vx *= 0.995;
-    p.vy *= 0.995;
     p.x += p.vx * dt;
     p.y += p.vy * dt;
   }
+}
 
-  for (var it = 0; it < 4; it++) {
-    for (i = 0; i < cons.length; i++) {
-      c = cons[i];
-      var p1 = pts[c.a], p2 = pts[c.b];
-      dx = p2.x - p1.x; dy = p2.y - p1.y;
-      d = sqrt(dx * dx + dy * dy);
-      if (d < 0.0001) continue;
-      diff = (d - c.len) / d * 0.5 * c.stiff;
-      p1.x += dx * diff; p1.y += dy * diff;
-      p2.x -= dx * diff; p2.y -= dy * diff;
-    }
+function updatePools(dt) {
+  for (var i = 0; i < pools.length; i++) {
+    var pool = pools[i];
+    pool.hit = max(0, pool.hit - dt * 1.05);
+    if (!bike.alive || bike.finished || !bike.onGnd) continue;
 
-    for (i = 0; i < pts.length; i++) {
-      p = pts[i];
-      groundAt(p.x, ggInfo);
-      var floorY = ggInfo.y - p.r;
-      if (p.y > floorY) {
-        p.y = floorY;
-        if (p.vy > 0) p.vy *= -0.22;
-        p.vx *= 0.78;
+    var dx = abs(bike.x - pool.x);
+    if (dx < pool.len + 18 && bike.speed > 38) {
+      var oldHit = pool.hit;
+      pool.hit = min(1, pool.hit + dt * 3.2);
+      groundAt(bike.x, tmpInfo);
+
+      if (oldHit < 0.15 && pool.hit >= 0.15) {
+        spawnPoolSplash(pool, bike.x, tmpInfo.y - 1, bike.vx, bike.vy, bike.speed, 1.0);
+      } else if (pool.hit > 0.20 && splashes.count < splashes.cap - 8 && random() < 0.18) {
+        spawnPoolSplash(pool, bike.x, tmpInfo.y - 1, bike.vx, bike.vy, bike.speed * 0.45, 0.28);
       }
     }
   }
 }
 
-function renderRagdoll() {
-  if (!ragdoll) return;
-  var p = ragdoll.pts, S = visuals.sco;
+function spawnUniformPrecip(pool, type, dt) {
+  var rate;
+  if (type === 1) rate = (quality.tier === 0 ? 28 : quality.tier === 1 ? 55 : 78) * visuals.intensity;
+  else rate = (quality.tier === 0 ? 14 : quality.tier === 1 ? 26 : 38) * visuals.intensity;
 
-  var x0 = p[0].x - cam.x, y0 = p[0].y - cam.y;
-  var x1 = p[1].x - cam.x, y1 = p[1].y - cam.y;
-  var x2 = p[2].x - cam.x, y2 = p[2].y - cam.y;
-  var x3 = p[3].x - cam.x, y3 = p[3].y - cam.y;
-  var x4 = p[4].x - cam.x, y4 = p[4].y - cam.y;
-  var x5 = p[5].x - cam.x, y5 = p[5].y - cam.y;
-  var x6 = p[6].x - cam.x, y6 = p[6].y - cam.y;
-  var x7 = p[7].x - cam.x, y7 = p[7].y - cam.y;
-  var x8 = p[8].x - cam.x, y8 = p[8].y - cam.y;
-  var x9 = p[9].x - cam.x, y9 = p[9].y - cam.y;
-  var x10 = p[10].x - cam.x, y10 = p[10].y - cam.y;
+  pool.spawnAcc += rate * dt;
+  if (pool.spawnAcc > 5) pool.spawnAcc = 5;
 
-  limbWorld(x1, y1, x9, y9, 4.2, 3.4, S.riderDark, 0.95);
-  limbWorld(x9, y9, x10, y10, 3.4, 3.0, S.riderDark, 0.95);
-  limbWorld(x2, y2, x5, y5, 5.2, 4.2, S.pantsDark, 0.95);
-  limbWorld(x5, y5, x6, y6, 4.2, 3.4, S.pantsDark, 0.95);
+  var columns = max(8, floor((W + 80) / (type === 1 ? 28 : 36)));
+  var spacing = (W + 80) / columns;
+  var wind = visuals.windX * visuals.windStrength;
 
-  limbWorld(x2, y2, x1, y1, 8.8, 7.4, S.rider, 1);
-  drawCirc(x2, y2, 4.4, S.pants[0], S.pants[1], S.pants[2], 1, 6);
-  drawCirc(x1, y1, 4.0, S.rider[0], S.rider[1], S.rider[2], 1, 6);
+  while (pool.spawnAcc >= 1 && pool.count < pool.cap && pool.count < pool.max) {
+    pool.spawnAcc -= 1;
+    var col = pool.seq++ % columns;
+    var x = -40 + col * spacing + (random() - 0.5) * spacing * 0.42;
+    var p = pool.a[pool.count++];
 
-  limbWorld(x2, y2, x3, y3, 5.6, 4.4, S.pants, 1);
-  limbWorld(x3, y3, x4, y4, 4.4, 3.6, S.pants, 1);
-  limbWorld(x4 - 2, y4, x4 + 3, y4, 3.2, 3.0, S.shoe, 1);
-
-  limbWorld(x1, y1, x7, y7, 4.6, 3.6, S.rider, 1);
-  limbWorld(x7, y7, x8, y8, 3.6, 3.0, S.rider, 1);
-  drawCirc(x8, y8, 2.6, S.glove[0], S.glove[1], S.glove[2], 1, 6);
-
-  limbWorld(x1, y1, x0, y0, 4.2, 3.6, S.skin, 1);
-  drawCirc(x0, y0, 6.9, S.helmet[0], S.helmet[1], S.helmet[2], 1, 10);
-
-  var dx = x0 - x1, dy = y0 - y1;
-  var len = sqrt(dx * dx + dy * dy);
-  if (len > 0.01) {
-    var ux = dx / len, uy = dy / len;
-    var nx = -uy, ny = ux;
-    quadC(x0 + ux * 3 + nx * 2, y0 + uy * 3 + ny * 2, S.visor[0], S.visor[1], S.visor[2], 0.9,
-          x0 + ux * 7, y0 + uy * 7, S.visor[0], S.visor[1], S.visor[2], 0.9,
-          x0 + ux * 5 - nx * 3, y0 + uy * 5 - ny * 3, S.visor[0], S.visor[1], S.visor[2], 0.9,
-          x0 + ux * 1 - nx * 1, y0 + uy * 1 - ny * 1, S.visor[0], S.visor[1], S.visor[2], 0.9);
+    if (type === 1) {
+      p.x = x;
+      p.y = -20 - random() * 70;
+      p.vx = wind * 165 + (random() - 0.5) * 18;
+      p.vy = 700 + random() * 250 + visuals.intensity * 70;
+      p.len = 9 + random() * 12;
+      p.life = 3;
+      p.type = 1;
+    } else {
+      p.x = x;
+      p.y = -10 - random() * 55;
+      p.vx = wind * 52 + (random() - 0.5) * 12;
+      p.vy = 54 + random() * 68 + visuals.intensity * 16;
+      p.len = 1.1 + random() * 2.0;
+      p.life = 8;
+      p.seed = random() * 10;
+      p.type = 2;
+    }
   }
 }
 
-function createScooterFall() {
-  scooterFall = {
-    x: bike.x, y: bike.y,
-    vx: bike.vx * 0.65, vy: bike.vy * 0.45 - 80,
-    a: bike.a, av: bike.av * 0.7 + (random() - 0.5) * 4
-  };
+function updatePrecipPool(pool, dt) {
+  for (var i = 0; i < pool.count; i++) {
+    var p = pool.a[i];
+    p.life -= dt;
+    if (p.type === 2) p.x += sin((wxTime + p.seed) * 1.55) * 16 * dt;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+
+    if (p.life <= 0 || p.y > H + 50 || p.x < -90 || p.x > W + 90) {
+      pool.recycle(i);
+      i--;
+    }
+  }
 }
 
-function updateScooterFall(dt) {
-  if (!scooterFall) return;
-  dt = min(dt, 0.033);
-  var s = scooterFall;
-  s.vy += GRAV * dt;
-  s.x += s.vx * dt;
-  s.y += s.vy * dt;
-  s.a += s.av * dt;
-  s.vx *= 0.995;
-  s.av *= 0.98;
-  groundAt(s.x, ggInfo);
-  if (s.y > ggInfo.y - 22) {
-    s.y = ggInfo.y - 22;
-    if (s.vy > 0) s.vy *= -0.25;
-    s.vx *= 0.82;
-    s.av *= 0.70;
+function updateFog(dt) {
+  if (!quality.fog) { fog.trim(0); return; }
+
+  var active = visuals.fogDensity > 0.035 || visuals.weather === 3;
+  if (active) {
+    var rate = 8 + visuals.fogDensity * 55 + (visuals.weather === 3 ? 22 : 0);
+    fog.spawnAcc += rate * dt;
+    if (fog.spawnAcc > 4) fog.spawnAcc = 4;
+    var wind = visuals.windX * visuals.windStrength;
+
+    while (fog.spawnAcc >= 1 && fog.count < fog.cap && fog.count < fog.max) {
+      fog.spawnAcc -= 1;
+      var p = fog.a[fog.count++];
+      p.x = random() * (W + 180) - 90;
+      p.y = random() * H * 0.96;
+      p.vx = wind * 18 + (random() - 0.5) * 8;
+      p.vy = -4 - random() * 10;
+      p.size = 22 + random() * 48;
+      p.life = 2.8 + random() * 3.8;
+      p.maxLife = 6.6;
+      p.len = 0.018 + random() * 0.040;
+    }
   }
+
+  for (var i = 0; i < fog.count; i++) {
+    var f = fog.a[i];
+    f.life -= dt;
+    f.x += (f.vx + sin((wxTime + f.size) * 0.45) * 6) * dt;
+    f.y += f.vy * dt;
+    if (f.life <= 0 || f.y < -100 || f.y > H + 100 || f.x < -180 || f.x > W + 180) {
+      fog.recycle(i);
+      i--;
+    }
+  }
+}
+
+function updateLeaves(dt) {
+  if (!quality.leaves || !trees.length) { leaves.trim(0); return; }
+
+  var leftW = cam.x - 120 / cam.scale;
+  var rightW = cam.x + (W + 120) / cam.scale;
+  var wind = visuals.windX * visuals.windStrength;
+  var rate = (visuals.weather === 2 ? 0.5 : visuals.weather === 1 ? 1.4 : 2.6) * (0.35 + visuals.windStrength);
+
+  leaves.spawnAcc += rate * dt;
+  if (leaves.spawnAcc > 4) leaves.spawnAcc = 4;
+
+  while (leaves.spawnAcc >= 1 && leaves.count < leaves.cap && leaves.count < leaves.max) {
+    leaves.spawnAcc -= 1;
+    var candidates = 0;
+    var chosen = null;
+    for (var t = 0; t < trees.length; t++) {
+      if (trees[t].x > leftW && trees[t].x < rightW) {
+        candidates++;
+        if (random() < 1 / candidates) chosen = trees[t];
+      }
+    }
+    if (!chosen) break;
+
+    var p = leaves.a[leaves.count++];
+    p.x = chosen.x + (random() - 0.5) * chosen.w * 1.6;
+    p.y = chosen.y - chosen.h * (0.55 + random() * 0.42);
+    p.vx = wind * 38 + (random() - 0.5) * 28;
+    p.vy = -6 - random() * 18;
+    p.rot = random() * TAU;
+    p.rotV = (random() - 0.5) * 6;
+    p.life = 3.2 + random() * 4.0;
+    p.maxLife = 7.2;
+    p.size = 2.0 + random() * 2.8;
+    p.tone = random();
+  }
+
+  for (var i = 0; i < leaves.count; i++) {
+    var lp = leaves.a[i];
+    lp.life -= dt;
+    lp.vx += wind * 22 * dt;
+    lp.vy += 30 * dt;
+    lp.vx *= 0.992;
+    lp.vy *= 0.990;
+    lp.x += lp.vx * dt + sin(wxTime * 2.0 + lp.rot) * 10 * dt;
+    lp.y += lp.vy * dt;
+    lp.rot += lp.rotV * dt;
+    groundAt(lp.x, tmpInfo);
+    if (lp.life <= 0 || lp.y > tmpInfo.y + 25) {
+      leaves.recycle(i);
+      i--;
+    }
+  }
+}
+
+function updateWeather(dt) {
+  wxTime += dt;
+
+  if (visuals.weather === 1) {
+    spawnUniformPrecip(rain, 1, dt);
+    updatePrecipPool(rain, dt);
+  } else if (visuals.weather === 2) {
+    spawnUniformPrecip(snow, 2, dt);
+    updatePrecipPool(snow, dt);
+  }
+
+  updateFog(dt);
+  updateLeaves(dt);
 }
 
 function updateCamera(dt) {
   var focusX = bike.x, focusY = bike.y;
+  var sp = clamp(bike.speed / MAXSPD, 0, 1);
+  var ref = min(W, H);
+  var sizeFactor = clamp(sqrt(ref / 800), 0.78, 1.18);
+  var targetScale = sizeFactor * lerp(1.08, 0.64, sp);
+  targetScale = clamp(targetScale, 0.46, 1.26);
 
-  if (crashPending) {
-    if (ragdoll && ragdoll.pts.length) {
-      var sx = 0, sy = 0;
-      for (var i = 0; i < ragdoll.pts.length; i++) {
-        sx += ragdoll.pts[i].x;
-        sy += ragdoll.pts[i].y;
-      }
-      focusX = sx / ragdoll.pts.length;
-      focusY = sy / ragdoll.pts.length;
-    } else if (scooterFall) {
-      focusX = scooterFall.x;
-      focusY = scooterFall.y;
+  var anchorX = W * lerp(0.33, 0.22, sp);
+  var anchorY = H * lerp(0.60, 0.54, sp);
+  var tx = focusX - anchorX / targetScale;
+  var ty = focusY - anchorY / targetScale;
+  ty = clamp(ty, -1200, 1800);
+
+  if (!cam.init) {
+    cam.bx = tx; cam.by = ty; cam.bs = targetScale; cam.init = true;
+  } else {
+    var kp = 1 - Math.exp(-9 * min(dt, 0.1));
+    var ks = 1 - Math.exp(-3.5 * min(dt, 0.1));
+    cam.bx = lerp(cam.bx, tx, kp);
+    cam.by = lerp(cam.by, ty, kp);
+    cam.bs = lerp(cam.bs, targetScale, ks);
+  }
+
+  cam.x = cam.bx;
+  cam.y = cam.by;
+  cam.scale = cam.bs;
+}
+
+function drawSky() {
+  var g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, rgba(visuals.skyTop, 1));
+  g.addColorStop(1, rgba(visuals.skyBot, 1));
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+
+  var starAlpha = clamp(1 - visuals.daylight * 1.35, 0, 1);
+  if (starAlpha > 0.02) {
+    ctx.fillStyle = rgba([1,0.96,0.88], 0.85 * starAlpha);
+    for (var i = 0; i < visuals.stars.length; i++) {
+      var s = visuals.stars[i];
+      var sw = max(1600, W * 1.4);
+      var sx = (s.x * sw - cam.x * 0.025 * cam.scale) % sw;
+      if (sx < 0) sx += sw;
+      var sy = s.y * H * 0.62 - (cam.y - H * 0.5) * 0.012;
+      if (sx < -5 || sx > W + 5 || sy < -5 || sy > H * 0.78) continue;
+      ctx.fillRect(sx, sy, s.s, s.s);
     }
   }
 
-  var targetX = focusX - W * 0.35;
-  var targetY = clamp(focusY - H * 0.60, -500, 1500);
-
-  if (!cam.init) {
-    cam.bx = targetX;
-    cam.by = targetY;
-    cam.init = true;
+  var cx = W * 0.76 - cam.x * 0.012 * cam.scale;
+  var cy = H * 0.18 - (cam.y - H * 0.5) * 0.01;
+  if (visuals.daylight > 0.38) {
+    ctx.fillStyle = rgba([1,0.92,0.55], 0.16); ctx.beginPath(); ctx.arc(cx,cy,34,0,TAU); ctx.fill();
+    ctx.fillStyle = rgba([1,0.96,0.72], 0.90); ctx.beginPath(); ctx.arc(cx,cy,19,0,TAU); ctx.fill();
   } else {
-    var k = 1 - Math.exp(-12 * min(dt, 0.1));
-    cam.bx = lerp(cam.bx, targetX, k);
-    cam.by = lerp(cam.by, targetY, k);
+    ctx.fillStyle = rgba([0.75,0.82,1.0], 0.08); ctx.beginPath(); ctx.arc(cx,cy,28,0,TAU); ctx.fill();
+    ctx.fillStyle = rgba([0.92,0.95,1.0], 0.84); ctx.beginPath(); ctx.arc(cx,cy,15,0,TAU); ctx.fill();
   }
+}
+
+function worldTransform(shakeX, shakeY) {
+  ctx.setTransform(cam.scale, 0, 0, cam.scale, -cam.x * cam.scale + shakeX, -cam.y * cam.scale + shakeY);
+}
+
+function drawTerrain(leftW, rightW) {
+  if (terrain.length < 2 || !theme) return;
+  var i0 = max(0, lowerBoundX(leftW) - 1);
+  var i1 = min(terrain.length - 1, lowerBoundX(rightW) + 1);
+  var bottom = cam.y + (H + 240) / cam.scale;
+  var i, a, b;
+
+  ctx.beginPath();
+  ctx.moveTo(terrain[i0].x, terrain[i0].y);
+  for (i = i0 + 1; i <= i1; i++) ctx.lineTo(terrain[i].x, terrain[i].y);
+  ctx.lineTo(terrain[i1].x, bottom);
+  ctx.lineTo(terrain[i0].x, bottom);
+  ctx.closePath();
+  ctx.fillStyle = theme.subPattern || rgba(theme.subBase, 1);
+  ctx.fill();
+
+  var band = 18;
+  ctx.beginPath();
+  ctx.moveTo(terrain[i0].x, terrain[i0].y);
+  for (i = i0 + 1; i <= i1; i++) ctx.lineTo(terrain[i].x, terrain[i].y);
+  for (i = i1; i >= i0; i--) ctx.lineTo(terrain[i].x, terrain[i].y + band);
+  ctx.closePath();
+  ctx.fillStyle = theme.surfacePattern || rgba(theme.surfaceBase, 1);
+  ctx.fill();
+
+  ctx.strokeStyle = rgba(theme.lineColor, 1);
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(terrain[i0].x, terrain[i0].y);
+  for (i = i0 + 1; i <= i1; i++) ctx.lineTo(terrain[i].x, terrain[i].y);
+  ctx.stroke();
+
+  if (quality.lighting) {
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.strokeStyle = rgba(headLight.color, 1);
+    for (i = i0; i < i1; i++) {
+      a = terrain[i]; b = terrain[i+1];
+      var mx = (a.x + b.x) * 0.5;
+      var my = (a.y + b.y) * 0.5;
+      var hI = lightIntensity(headLight, mx, my, true);
+      if (hI > 0.018) {
+        ctx.globalAlpha = min(0.72, hI * 0.88);
+        ctx.lineWidth = 2.0 + hI * 5.0;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+    }
+
+    ctx.strokeStyle = rgba(tailLight.color, 1);
+    for (i = i0; i < i1; i++) {
+      a = terrain[i]; b = terrain[i+1];
+      mx = (a.x + b.x) * 0.5;
+      my = (a.y + b.y) * 0.5;
+      var tI = lightIntensity(tailLight, mx, my, true);
+      if (tI > 0.014) {
+        ctx.globalAlpha = min(0.48, tI * 0.72);
+        ctx.lineWidth = 1.3 + tI * 3.0;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+    }
+
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  if (finishX > leftW - 80 && finishX < rightW + 80) {
+    groundAt(finishX, tmpInfo);
+    ctx.strokeStyle = rgba([0.94,0.94,0.94], 0.96);
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(finishX, tmpInfo.y); ctx.lineTo(finishX, tmpInfo.y - 95); ctx.stroke();
+    for (var r = 0; r < 4; r++) {
+      for (var c = 0; c < 3; c++) {
+        var col = ((r+c)&1) === 0 ? 1 : 0.08;
+        ctx.fillStyle = rgba([col,col,col], 0.95);
+        ctx.fillRect(finishX + c*9, tmpInfo.y - 95 + r*9, 9, 9);
+      }
+    }
+  }
+}
+
+function drawPools(leftW, rightW) {
+  if (!theme) return;
+  for (var i = 0; i < pools.length; i++) {
+    var pool = pools[i];
+    if (pool.x + pool.len < leftW - 80 || pool.x - pool.len > rightW + 80) continue;
+
+    var segs = quality.tier === 0 ? 5 : 8;
+    var topPts = [];
+    var botPts = [];
+    var k, xx, yy;
+
+    for (k = 0; k <= segs; k++) {
+      xx = pool.x - pool.len + (2 * pool.len) * k / segs;
+      groundAt(xx, tmpInfo);
+      yy = tmpInfo.y - 0.8;
+      topPts.push([xx, yy]);
+      botPts.push([xx, yy + pool.depth]);
+    }
+
+    var body = pool.type === 1 ? [0.04,0.13,0.26] : [0.72,0.78,0.88];
+    var deep = pool.type === 1 ? [0.005,0.025,0.07] : [0.30,0.35,0.44];
+    body = scaleRgb(body, visuals.ambient);
+    deep = scaleRgb(deep, visuals.ambient);
+
+    ctx.fillStyle = rgba(body, pool.type === 1 ? 0.82 : 0.88);
+    ctx.beginPath();
+    ctx.moveTo(topPts[0][0], topPts[0][1]);
+    for (k = 1; k < topPts.length; k++) ctx.lineTo(topPts[k][0], topPts[k][1]);
+    for (k = botPts.length - 1; k >= 0; k--) ctx.lineTo(botPts[k][0], botPts[k][1]);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = rgba(deep, 0.65);
+    ctx.beginPath();
+    var midStart = floor(topPts.length * 0.18);
+    var midEnd = ceil(topPts.length * 0.82);
+    ctx.moveTo(topPts[midStart][0], lerp(topPts[midStart][1], botPts[midStart][1], 0.55));
+    for (k = midStart + 1; k < midEnd; k++) ctx.lineTo(topPts[k][0], lerp(topPts[k][1], botPts[k][1], 0.55));
+    for (k = midEnd - 1; k >= midStart; k--) ctx.lineTo(botPts[k][0], botPts[k][1]);
+    ctx.closePath();
+    ctx.fill();
+
+    var hi = pool.type === 1 ? [0.55,0.78,1.0] : [0.92,0.96,1.0];
+    ctx.strokeStyle = rgba(hi, 0.16);
+    ctx.lineWidth = 1.2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(topPts[0][0], topPts[0][1]);
+    for (k = 1; k < topPts.length; k++) ctx.lineTo(topPts[k][0], topPts[k][1]);
+    ctx.stroke();
+
+    if (quality.lighting) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = rgba(headLight.color, 1);
+      for (k = 0; k < topPts.length - 1; k++) {
+        var x1 = topPts[k][0], y1 = topPts[k][1];
+        var x2 = topPts[k+1][0], y2 = topPts[k+1][1];
+        var mx = (x1+x2)*0.5, my = (y1+y2)*0.5;
+        var hI = lightIntensity(headLight, mx, my, true);
+        if (hI > 0.018) {
+          ctx.globalAlpha = min(0.78, hI * 0.95);
+          ctx.lineWidth = 1.2 + hI * 2.8;
+          ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+        }
+      }
+
+      ctx.strokeStyle = rgba(tailLight.color, 1);
+      for (k = 0; k < topPts.length - 1; k++) {
+        x1 = topPts[k][0]; y1 = topPts[k][1];
+        x2 = topPts[k+1][0]; y2 = topPts[k+1][1];
+        mx = (x1+x2)*0.5; my = (y1+y2)*0.5;
+        var tI = lightIntensity(tailLight, mx, my, true);
+        if (tI > 0.014) {
+          ctx.globalAlpha = min(0.52, tI * 0.72);
+          ctx.lineWidth = 1.0 + tI * 2.0;
+          ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+        }
+      }
+
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    if (pool.hit > 0.01) {
+      groundAt(pool.x, tmpInfo);
+      var radius = pool.len * (1.05 - pool.hit * 0.72);
+      var alpha = pool.hit * (pool.type === 1 ? 0.34 : 0.26);
+      ctx.strokeStyle = rgba(hi, alpha);
+      ctx.lineWidth = 1.6 + pool.hit * 1.8;
+      ctx.beginPath();
+      ctx.ellipse(pool.x, tmpInfo.y - 1.2, radius, max(2.2, radius * 0.18), 0, 0, TAU);
+      ctx.stroke();
+    }
+  }
+}
+
+function drawTrees(leftW, rightW) {
+  if (!theme) return;
+  for (var i = 0; i < trees.length; i++) {
+    var t = trees[i];
+    if (t.x < leftW - 80 || t.x > rightW + 80) continue;
+
+    var trunkW = max(2.5, t.w * 0.16);
+    ctx.fillStyle = rgba(theme.trunkColor, 1);
+    ctx.fillRect(t.x - trunkW * 0.5, t.y - t.h, trunkW, t.h);
+
+    var leaf = scaleRgb(theme.leafColor, t.tone);
+    ctx.fillStyle = rgba(leaf, 0.95);
+    ctx.beginPath(); ctx.arc(t.x, t.y - t.h * 0.88, t.w * 0.68, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(t.x - t.w * 0.38, t.y - t.h * 0.66, t.w * 0.50, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(t.x + t.w * 0.40, t.y - t.h * 0.68, t.w * 0.52, 0, TAU); ctx.fill();
+
+    if (theme.type === 'winter') {
+      ctx.fillStyle = rgba([0.94,0.98,1.0], 0.62);
+      ctx.beginPath(); ctx.arc(t.x, t.y - t.h * 0.96, t.w * 0.34, 0, TAU); ctx.fill();
+    }
+  }
+}
+
+function drawLeavesWorld() {
+  if (!theme || !leaves.count) return;
+  for (var i = 0; i < leaves.count; i++) {
+    var lp = leaves.a[i];
+    var a = clamp(lp.life / lp.maxLife, 0, 1);
+    var base = mix(theme.leafColor, [0.85,0.55,0.18], lp.tone * 0.55);
+    var col = base;
+
+    if (quality.lighting) {
+      var hI = lightIntensity(headLight, lp.x, lp.y, false);
+      var tI = lightIntensity(tailLight, lp.x, lp.y, false);
+      if (hI > 0) col = mix(col, headLight.color, min(0.48, hI * 0.62));
+      if (tI > 0) col = mix(col, tailLight.color, min(0.30, tI * 0.45));
+    }
+
+    ctx.save();
+    ctx.translate(lp.x, lp.y);
+    ctx.rotate(lp.rot);
+    ctx.fillStyle = rgba(col, a * 0.82);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, lp.size * 1.4, lp.size * 0.70, 0, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawSplashesWorld() {
+  if (!splashes.count) return;
+  ctx.globalCompositeOperation = 'lighter';
+  for (var i = 0; i < splashes.count; i++) {
+    var p = splashes.a[i];
+    var a = clamp(p.life / p.maxLife, 0, 1);
+    var col = [p.r, p.g, p.b];
+
+    if (quality.lighting) {
+      var hI = lightIntensity(headLight, p.x, p.y, false);
+      var tI = lightIntensity(tailLight, p.x, p.y, false);
+      if (hI > 0) col = mix(col, headLight.color, min(0.88, hI * 1.05));
+      if (tI > 0) col = mix(col, tailLight.color, min(0.72, tI * 1.15));
+      a *= 0.55 + hI * 0.75 + tI * 0.45;
+    }
+
+    ctx.fillStyle = rgba(col, clamp(a,0,1) * 0.72);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * (0.55 + a * 0.65), 0, TAU);
+    ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function drawScooterAndRider() {
+  ctx.save();
+  ctx.translate(bike.x, bike.y);
+  ctx.rotate(bike.a);
+
+  var half = WBASE * 0.5;
+  var frame = [0.82,0.26,0.12];
+  var dark = [0.18,0.18,0.20];
+  var metal = [0.58,0.60,0.65];
+  var tire = [0.08,0.08,0.09];
+  var hub = [0.42,0.42,0.46];
+
+  ctx.fillStyle = rgba(tire,1);
+  ctx.beginPath(); ctx.arc(-half, WY, WRAD, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(half, WY, WRAD, 0, TAU); ctx.fill();
+  ctx.fillStyle = rgba(hub,1);
+  ctx.beginPath(); ctx.arc(-half, WY, WRAD*0.55, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(half, WY, WRAD*0.55, 0, TAU); ctx.fill();
+
+  ctx.fillStyle = rgba(frame,1);
+  ctx.fillRect(-17, -3, 32, 4);
+  ctx.fillStyle = rgba([0.10,0.10,0.11],1);
+  ctx.fillRect(-15, -3.6, 28, 1.4);
+
+  ctx.strokeStyle = rgba(dark,1); ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(-17,-2); ctx.lineTo(-24,-7); ctx.lineTo(TAIL_L_X,TAIL_L_Y); ctx.stroke();
+  ctx.fillStyle = rgba(tailLight.on ? [1,0.15,0.10] : [0.35,0.05,0.04], 1);
+  ctx.beginPath(); ctx.arc(TAIL_L_X, TAIL_L_Y, tailLight.on ? 2.1 : 1.6, 0, TAU); ctx.fill();
+  if (tailLight.on) {
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = rgba([1,0.12,0.08], clamp(tailLight.i * 0.30, 0, 0.36));
+    ctx.beginPath(); ctx.arc(TAIL_L_X, TAIL_L_Y, 4.2, 0, TAU); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  ctx.strokeStyle = rgba(metal,1); ctx.lineWidth = 3.2;
+  ctx.beginPath(); ctx.moveTo(half,WY); ctx.lineTo(21,-6); ctx.stroke();
+  ctx.strokeStyle = rgba(frame,1); ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(21,-6); ctx.lineTo(18,-27); ctx.stroke();
+  ctx.strokeStyle = rgba(metal,1); ctx.lineWidth = 3.2;
+  ctx.beginPath(); ctx.moveTo(11,-29); ctx.lineTo(25,-27); ctx.stroke();
+  ctx.strokeStyle = rgba([0.10,0.10,0.11],1); ctx.lineWidth = 4.5;
+  ctx.beginPath(); ctx.moveTo(11,-29); ctx.lineTo(7,-29.5); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(25,-27); ctx.lineTo(29,-26.5); ctx.stroke();
+
+  ctx.fillStyle = rgba(headLight.on ? [1,0.95,0.70] : [0.35,0.32,0.22], 1);
+  ctx.beginPath(); ctx.arc(HEAD_L_X, HEAD_L_Y, 2.4, 0, TAU); ctx.fill();
+  if (headLight.on) {
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = rgba(headLight.color, clamp(headLight.i * 0.26, 0, 0.36));
+    ctx.beginPath(); ctx.arc(HEAD_L_X, HEAD_L_Y, 5.2, 0, TAU); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  var torsoRel = normAngle(rider.torsoAbs - bike.a);
+  var headRel = normAngle(rider.headAbs - bike.a);
+  var hipX = -2, hipY = -22 + rider.crouch * 4.2;
+  var torsoLen = 15 - rider.crouch * 1.2;
+  var chestX = hipX + sin(torsoRel) * torsoLen;
+  var chestY = hipY - cos(torsoRel) * torsoLen;
+  var headX = chestX + sin(headRel) * 9 + 3 * cos(headRel);
+  var headY = chestY - cos(headRel) * 9 + 3 * sin(headRel);
+
+  var footFX = 8, footFY = -3 - rider.crouch * 2.5;
+  var footBX = -10, footBY = -3 - rider.crouch * 1.8;
+  var handFX = 18, handFY = -27 + rider.crouch * 1.5;
+  var handBX = 16, handBY = -26 + rider.crouch * 1.5;
+
+  function limb(x1,y1,x2,y2,bend,width,color) {
+    var mx = (x1+x2)*0.5, my = (y1+y2)*0.5;
+    var dx = x2-x1, dy = y2-y1;
+    var len = sqrt(dx*dx+dy*dy) || 1;
+    var nx = -dy/len, ny = dx/len;
+    ctx.strokeStyle = rgba(color,1);
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x1,y1);
+    ctx.quadraticCurveTo(mx + nx*bend, my + ny*bend, x2,y2);
+    ctx.stroke();
+  }
+
+  var jacket = [0.16,0.26,0.55];
+  var pants = [0.22,0.24,0.30];
+  var skin = [0.86,0.68,0.54];
+  var helmet = [0.92,0.24,0.12];
+
+  limb(hipX,hipY,footBX,footBY,7,5.2,pants);
+  limb(chestX,chestY,handBX,handBY,-5,4.2,mix(jacket,[0,0,0],0.25));
+  limb(hipX,hipY,chestX,chestY,0,8.2,jacket);
+  limb(hipX,hipY,footFX,footFY,-7,5.6,pants);
+  limb(chestX,chestY,handFX,handFY,5,4.6,jacket);
+  limb(chestX,chestY,headX,headY,0,4.2,skin);
+
+  ctx.fillStyle = rgba(helmet,1);
+  ctx.beginPath(); ctx.arc(headX, headY, 6.8, 0, TAU); ctx.fill();
+  ctx.fillStyle = rgba([0.08,0.70,0.90],0.9);
+  ctx.beginPath(); ctx.arc(headX + 3.5*cos(headRel), headY + 3.5*sin(headRel), 3.0, 0, TAU); ctx.fill();
+
+  ctx.restore();
+}
+
+function drawFogScreen() {
+  if (!fog.count && visuals.fogDensity <= 0.012) return;
+
+  ctx.fillStyle = rgba(visuals.fogColor, clamp(visuals.fogDensity * 0.22, 0, 0.16));
+  ctx.fillRect(0, 0, W, H);
+
+  if (!quality.fog || !fog.count) return;
+
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = rgba(visuals.fogColor, 1);
+  for (var i = 0; i < fog.count; i++) {
+    var p = fog.a[i];
+    var wx = cam.x + p.x / cam.scale;
+    var wy = cam.y + p.y / cam.scale;
+    var hI = quality.lighting ? lightIntensity(headLight, wx, wy, false) : 0;
+    var tI = quality.lighting ? lightIntensity(tailLight, wx, wy, false) : 0;
+    var lifeFade = clamp(p.life / p.maxLife, 0, 1);
+    var a = p.len * (0.16 + lifeFade * 0.84) * (0.10 + (hI * 1.35 + tI * 0.85) * 1.8);
+    if (a < 0.002) continue;
+    a = min(a, 0.18);
+    ctx.globalAlpha = a;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, TAU); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function drawPrecipScreen() {
+  var pool = visuals.weather === 1 ? rain : visuals.weather === 2 ? snow : null;
+  if (!pool || !pool.count) return;
+
+  if (visuals.weather === 1) {
+    ctx.strokeStyle = rgba(visuals.precipColor, 0.28);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (var i = 0; i < pool.count; i++) {
+      var p = pool.a[i];
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x - p.vx * 0.016, p.y - p.len);
+    }
+    ctx.stroke();
+
+    if (quality.lighting) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = rgba(headLight.color, 1);
+      for (i = 0; i < pool.count; i++) {
+        p = pool.a[i];
+        var wx = cam.x + p.x / cam.scale;
+        var wy = cam.y + p.y / cam.scale;
+        var hI = lightIntensity(headLight, wx, wy, false);
+        if (hI > 0.16) {
+          ctx.globalAlpha = min(0.42, hI * 0.48);
+          ctx.beginPath(); ctx.arc(p.x, p.y, 1.1 + hI * 1.6, 0, TAU); ctx.fill();
+        }
+      }
+
+      ctx.fillStyle = rgba(tailLight.color, 1);
+      for (i = 0; i < pool.count; i++) {
+        p = pool.a[i];
+        wx = cam.x + p.x / cam.scale;
+        wy = cam.y + p.y / cam.scale;
+        var tI = lightIntensity(tailLight, wx, wy, false);
+        if (tI > 0.14) {
+          ctx.globalAlpha = min(0.34, tI * 0.42);
+          ctx.beginPath(); ctx.arc(p.x, p.y, 1.0 + tI * 1.3, 0, TAU); ctx.fill();
+        }
+      }
+
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+    }
+  } else {
+    ctx.fillStyle = rgba(visuals.precipColor, 0.60);
+    ctx.beginPath();
+    for (var j = 0; j < pool.count; j++) {
+      var s = pool.a[j];
+      ctx.moveTo(s.x + s.len, s.y);
+      ctx.arc(s.x, s.y, s.len, 0, TAU);
+    }
+    ctx.fill();
+
+    if (quality.lighting) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = rgba(headLight.color, 1);
+      for (j = 0; j < pool.count; j++) {
+        s = pool.a[j];
+        wx = cam.x + s.x / cam.scale;
+        wy = cam.y + s.y / cam.scale;
+        hI = lightIntensity(headLight, wx, wy, false);
+        if (hI > 0.14) {
+          ctx.globalAlpha = min(0.38, hI * 0.44);
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.len * (1.5 + hI), 0, TAU); ctx.fill();
+        }
+      }
+
+      ctx.fillStyle = rgba(tailLight.color, 1);
+      for (j = 0; j < pool.count; j++) {
+        s = pool.a[j];
+        wx = cam.x + s.x / cam.scale;
+        wy = cam.y + s.y / cam.scale;
+        tI = lightIntensity(tailLight, wx, wy, false);
+        if (tI > 0.12) {
+          ctx.globalAlpha = min(0.28, tI * 0.36);
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.len * (1.35 + tI), 0, TAU); ctx.fill();
+        }
+      }
+
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+    }
+  }
+}
+
+function drawWeatherScreen() {
+  ctx.setTransform(1,0,0,1,0,0);
+  drawFogScreen();
+  drawPrecipScreen();
 }
 
 function render() {
-  resetDraw();
+  if (!ctx) return;
+
+  ctx.setTransform(1,0,0,1,0,0);
+  drawSky();
 
   var sk = 0;
   if (!paused && shakeTime > 0) sk = shakeMag * 9 * min(1, shakeTime / 0.3);
-  cam.x = cam.bx + (random() - 0.5) * sk;
-  cam.y = cam.by + (random() - 0.5) * sk;
+  var shakeX = (random() - 0.5) * sk;
+  var shakeY = (random() - 0.5) * sk;
 
-  renderBG();
-  renderTerrain();
-  renderParticles();
+  worldTransform(shakeX, shakeY);
 
-  if (crashPending) {
-    if (scooterFall) {
-      setTransform(scooterFall.x, scooterFall.y, scooterFall.a);
-      currentSpin = scooterFall.x * 0.09;
-      drawChassis();
-    }
-    renderRagdoll();
-  } else if (bike.alive) {
-    setTransform(bike.x, bike.y, bike.a);
-    currentSpin = bike.x * 0.09;
-    drawChassis();
-    drawRider(computeRiderPose());
-  }
+  var leftW = cam.x - 140 / cam.scale;
+  var rightW = cam.x + (W + 140) / cam.scale;
 
-  present();
-}
+  drawTerrain(leftW, rightW);
+  drawPools(leftW, rightW);
+  drawTrees(leftW, rightW);
+  drawLeavesWorld();
+  drawSplashesWorld();
 
-var hudDist, hudSpeed, hudLevel, hudScore, hudFlips, hudCombo;
-var hudLast = {};
+  if (bike.alive && !bike.finished) drawScooterAndRider();
 
-function cacheHUD() {
-  hudDist = $('hudDist'); hudSpeed = $('hudSpeed'); hudLevel = $('hudLevel');
-  hudScore = $('hudScore'); hudFlips = $('hudFlips'); hudCombo = $('hudCombo');
+  drawWeatherScreen();
 }
 
 function setText(el, txt) {
   if (!el) return;
-  var id = el.id;
-  if (hudLast[id] !== txt) { hudLast[id] = txt; el.textContent = txt; }
+  if (hudLast[el.id] !== txt) { hudLast[el.id] = txt; el.textContent = txt; }
 }
 
 function updateHUD() {
-  if (!hudDist) return;
-  setText(hudDist, floor(bike.dist) + ' m');
-  setText(hudSpeed, floor(bike.speed * 0.36) + ' km/h');
-  setText(hudLevel, 'Level ' + level);
-  setText(hudScore, 'Score ' + score);
-  setText(hudFlips, 'Flips ' + bike.flips);
-  setText(hudCombo, bike.combo > 0 ? 'Combo x' + (bike.combo + 1) : '');
+  setText($('hudDist'), floor(bike.dist) + ' m');
+  setText($('hudSpeed'), floor(bike.speed * 0.36) + ' km/h');
+  setText($('hudLevel'), 'Level ' + level + ' • ' + DIFF_NAMES[clamp(difficulty,0,3)]);
+  setText($('hudScore'), 'Score ' + score);
+  setText($('hudFlips'), 'Flips ' + bike.flips);
+  setText($('hudCombo'), bike.combo > 0 ? 'Combo x' + (bike.combo + 1) : '');
+  setText($('hudDrive'), 'DRIVE ' + DRIVE_NAMES[clamp(driveMode,0,2)]);
+  setText($('hudMusic'), musicOn ? 'MUSIC ON' : 'MUSIC OFF');
+  setText($('hudPerf'), 'Q' + quality.tier);
 }
 
-function showPopup(txt) {
-  var d = document.createElement('div');
-  d.className = 'popup';
-  d.textContent = txt;
-  document.body.appendChild(d);
-  window.setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 1700);
+function clearInputs() {
+  input.gas = input.brake = input.left = input.right = false;
+  kIn.gas = kIn.brake = kIn.left = kIn.right = false;
+  tIn.gas = tIn.brake = tIn.left = tIn.right = false;
+  var zones = document.getElementsByClassName('touch-zone');
+  for (var i = zones.length - 1; i >= 0; i--) zones[i].classList.remove('on');
 }
 
-var inGame = false, paused = false, lastT = 0, acc = 0;
+function updateInput() {
+  input.gas = kIn.gas || tIn.gas;
+  input.brake = kIn.brake || tIn.brake;
+  input.left = kIn.left || tIn.left;
+  input.right = kIn.right || tIn.right;
+}
 
-function frame(t) {
-  raf(frame);
-  var now = t || nowFn();
-  var dt = (now - lastT) / 1000;
-  lastT = now;
-  if (dt < 0) dt = 0;
-  if (dt > 0.1) dt = 0.1;
+function getKeyCode(e) {
+  if (e.code) return e.code;
+  var m = {38:'ArrowUp',40:'ArrowDown',37:'ArrowLeft',39:'ArrowRight',87:'KeyW',83:'KeyS',65:'KeyA',68:'KeyD',27:'Escape',80:'KeyP',13:'Enter',32:'Space',9:'Tab'};
+  return m[e.keyCode] || '';
+}
 
-  pollGamepads();
+function isTextInputActive() {
+  var a = document.activeElement;
+  var tag = a && a.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || (a && a.isContentEditable);
+}
 
-  if (!inGame) return;
+function isVisibleEl(el) {
+  if (!el || el.disabled) return false;
+  return !!(el.offsetWidth || el.offsetHeight || (el.getClientRects && el.getClientRects().length));
+}
 
-  if (!paused) {
-    if (bike.alive && !bike.finished) {
-      updateInput();
-      acc += dt;
-      var steps = 0;
-      while (acc >= STEP && steps < 8 && bike.alive && !bike.finished) {
-        physics(STEP);
-        acc -= STEP;
-        steps++;
-      }
-      if (acc > STEP * 8) acc = 0;
+function visibleScreenId() {
+  if (!$('titleScreen').classList.contains('hidden')) return 'title';
+  if (!$('pauseScreen').classList.contains('hidden')) return 'pause';
+  if (!$('overScreen').classList.contains('hidden')) return 'over';
+  if (!$('winScreen').classList.contains('hidden')) return 'win';
+  return '';
+}
+
+function isMenuVisible() {
+  return visibleScreenId() !== '';
+}
+
+function getMenuButtons() {
+  var id = visibleScreenId();
+  if (!id) return [];
+  var screen = $(id + 'Screen');
+  if (!screen) return [];
+  var out = [];
+  var list = screen.querySelectorAll('.dialog button');
+  for (var i = 0; i < list.length; i++) if (isVisibleEl(list[i])) out.push(list[i]);
+  if (id === 'title') {
+    var home = screen.querySelector('.btn-home');
+    if (isVisibleEl(home)) out.push(home);
+  }
+  return out;
+}
+
+function primaryButton(menuId) {
+  if (menuId === 'title') return $('titleNewBtn');
+  if (menuId === 'pause') return $('pauseResumeBtn');
+  if (menuId === 'over') return $('overRetryBtn');
+  if (menuId === 'win') return $('winNextBtn');
+  return null;
+}
+
+function focusEl(el) {
+  if (!el) return;
+  try { el.focus({ preventScroll: false }); } catch (e) { try { el.focus(); } catch (e2) {} }
+  if (el.scrollIntoView) {
+    try { el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+    catch (e) { try { el.scrollIntoView(); } catch (e2) {} }
+  }
+}
+
+function uiMoveFocus(dir) {
+  var b = getMenuButtons();
+  if (!b.length) return;
+  var cur = -1;
+  var act = document.activeElement;
+  for (var i = 0; i < b.length; i++) if (b[i] === act) { cur = i; break; }
+  var next = cur < 0 ? (dir > 0 ? 0 : b.length - 1) : (cur + dir + b.length) % b.length;
+  focusEl(b[next]);
+}
+
+function isFocusedMenuButton() {
+  var b = getMenuButtons();
+  var ae = document.activeElement;
+  for (var i = 0; i < b.length; i++) if (b[i] === ae) return true;
+  return false;
+}
+
+function handleKey(e) {
+  if (isTextInputActive()) return;
+
+  var down = e.type === 'keydown';
+  var c = getKeyCode(e);
+
+  if (down) ensureAudio();
+
+  if (c === 'Escape' || c === 'KeyP') {
+    if (down) {
+      if (inGame && !paused && bike.alive && !bike.finished) pauseGame();
+      else if (paused) resumeGame();
     }
-
-    updateParticles(dt);
-    updateShake(dt);
-    riderCompress *= Math.exp(-5 * dt);
-
-    if (crashPending) {
-      crashTimer -= dt;
-      updateRagdoll(dt);
-      updateScooterFall(dt);
-      if (crashTimer <= 0) {
-        crashPending = false;
-        ragdoll = null;
-        scooterFall = null;
-        showGameOver();
-      }
-    }
-
-    updateCamera(dt);
-
-    if (bike.alive && !bike.finished) updateEngine();
-    else silenceEngine();
+    if (e.cancelable) e.preventDefault();
+    return;
   }
 
-  render();
-  updateHUD();
+  var menuId = visibleScreenId();
+
+  if (menuId) {
+    if (down) {
+      if (c === 'ArrowDown' || c === 'ArrowRight') { uiMoveFocus(1); if (e.cancelable) e.preventDefault(); return; }
+      if (c === 'ArrowUp' || c === 'ArrowLeft') { uiMoveFocus(-1); if (e.cancelable) e.preventDefault(); return; }
+      if (c === 'Tab') { uiMoveFocus(e.shiftKey ? -1 : 1); if (e.cancelable) e.preventDefault(); return; }
+      if (c === 'Enter' || c === 'Space') {
+        if (isFocusedMenuButton()) document.activeElement.click();
+        else {
+          var btn = primaryButton(menuId);
+          if (btn) btn.click();
+        }
+        if (e.cancelable) e.preventDefault();
+        return;
+      }
+    }
+
+    if (c === 'ArrowUp' || c === 'ArrowDown' || c === 'ArrowLeft' || c === 'ArrowRight' ||
+        c === 'KeyW' || c === 'KeyA' || c === 'KeyS' || c === 'KeyD' || c === 'Space') {
+      if (e.cancelable) e.preventDefault();
+      return;
+    }
+  }
+
+  if (inGame && !paused && !menuId) {
+    if (c === 'ArrowUp' || c === 'KeyW') { kIn.gas = down; if (e.cancelable) e.preventDefault(); return; }
+    if (c === 'ArrowDown' || c === 'KeyS') { kIn.brake = down; if (e.cancelable) e.preventDefault(); return; }
+    if (c === 'ArrowLeft' || c === 'KeyA') { kIn.left = down; if (e.cancelable) e.preventDefault(); return; }
+    if (c === 'ArrowRight' || c === 'KeyD') { kIn.right = down; if (e.cancelable) e.preventDefault(); return; }
+  }
 }
 
-function hideScreens() {
-  var ids = ['titleScreen', 'pauseScreen', 'overScreen', 'winScreen'];
-  for (var i = 0; i < ids.length; i++) {
-    var e = $(ids[i]);
-    if (e) e.classList.add('hidden');
+var supportsPassive = false;
+try {
+  var popts = Object.defineProperty({}, 'passive', { get: function () { supportsPassive = true; } });
+  window.addEventListener('passiveDetect', null, popts);
+  window.removeEventListener('passiveDetect', null, popts);
+} catch (e) {}
+var nonPassive = supportsPassive ? { passive: false } : false;
+
+function bindZone(id, prop) {
+  var el = $(id);
+  if (!el) return;
+  function press(e) {
+    if (e && e.cancelable) e.preventDefault();
+    tIn[prop] = true;
+    el.classList.add('on');
+    ensureAudio();
+    if (window.PointerEvent && e.pointerId !== undefined && el.setPointerCapture) {
+      try { el.setPointerCapture(e.pointerId); } catch (err) {}
+    }
   }
+  function release(e) {
+    if (e && e.cancelable) e.preventDefault();
+    tIn[prop] = false;
+    el.classList.remove('on');
+  }
+  if (window.PointerEvent) {
+    el.addEventListener('pointerdown', press, false);
+    el.addEventListener('pointerup', release, false);
+    el.addEventListener('pointercancel', release, false);
+    el.addEventListener('lostpointercapture', release, false);
+  } else {
+    el.addEventListener('touchstart', press, nonPassive);
+    el.addEventListener('touchend', release, nonPassive);
+    el.addEventListener('touchcancel', release, nonPassive);
+    el.addEventListener('mousedown', press, false);
+    el.addEventListener('mouseup', release, false);
+    el.addEventListener('mouseleave', release, false);
+  }
+}
+
+function updateTouchVisibility() {
+  var coarse = ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0;
+  if (window.matchMedia) {
+    try { coarse = coarse || window.matchMedia('(pointer: coarse)').matches; } catch (e) {}
+  }
+  var tc = $('touchControls');
+  if (tc) tc.style.display = (!isMenuVisible() && inGame && bike.alive && !bike.finished && coarse) ? 'flex' : 'none';
+}
+
+function initTouch() {
+  bindZone('tLeft','left');
+  bindZone('tRight','right');
+  bindZone('tGas','gas');
+  bindZone('tBrake','brake');
   updateTouchVisibility();
 }
 
-function showScreen(id) {
-  var ids = ['titleScreen', 'pauseScreen', 'overScreen', 'winScreen'];
-  for (var i = 0; i < ids.length; i++) {
-    var e = $(ids[i]);
-    if (!e) continue;
-    if (ids[i] === id) e.classList.remove('hidden');
-    else e.classList.add('hidden');
+var AC = null, masterGain = null, sfxBus = null, musicBus = null;
+var engineOsc = null, engineGain = null;
+var noiseBuf = null;
+var audioReady = false, pendingMusic = false;
+
+var music = {
+  timer: null,
+  step: 0,
+  nextTime: 0,
+  stepDur: 0.13,
+  bpm: 122,
+  bar: 0,
+  section: 0,
+  pattern: 0,
+  root: 110,
+  scale: [0,3,5,7,10],
+  progression: [[0,3,7],[5,8,12],[3,7,10],[7,10,14]],
+  leadEvents: new Array(8),
+  leadCount: 0,
+  density: 0.45
+};
+
+for (var me = 0; me < music.leadEvents.length; me++) music.leadEvents[me] = { step:0, note:0, dur:4, on:false };
+
+function ensureAudio() {
+  if (AC) {
+    if (AC.state === 'running') onAudioRunning();
+    else {
+      try {
+        var p = AC.resume();
+        if (p && p.then) p.then(onAudioRunning, function(){});
+        else onAudioRunning();
+      } catch (e) {}
+    }
+    return;
   }
-  clearInputs();
-  updateTouchVisibility();
-  focusFirstMenuButton();
+
+  try {
+    var Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!Ctor) return;
+    AC = new Ctor();
+
+    masterGain = AC.createGain();
+    masterGain.gain.value = 0.82;
+    masterGain.connect(AC.destination);
+
+    sfxBus = AC.createGain();
+    sfxBus.gain.value = 0.30;
+    sfxBus.connect(masterGain);
+
+    musicBus = AC.createGain();
+    musicBus.gain.value = musicOn ? 0.17 : 0.0001;
+    musicBus.connect(masterGain);
+
+    buildNoise();
+    startEngineSound();
+
+    if (AC.state === 'running') onAudioRunning();
+    else {
+      try {
+        var pr = AC.resume();
+        if (pr && pr.then) pr.then(onAudioRunning, function(){});
+      } catch (e) {}
+    }
+  } catch (e) {
+    AC = null;
+  }
+}
+
+function onAudioRunning() {
+  audioReady = true;
+  if (pendingMusic && musicOn && inGame && !paused && bike.alive && !bike.finished) {
+    pendingMusic = false;
+    startMusic();
+  }
+}
+
+function buildNoise() {
+  if (!AC || noiseBuf) return;
+  var len = floor(AC.sampleRate * 0.28);
+  noiseBuf = AC.createBuffer(1, len, AC.sampleRate);
+  var d = noiseBuf.getChannelData(0);
+  for (var i = 0; i < len; i++) d[i] = random() * 2 - 1;
+}
+
+function startEngineSound() {
+  if (!AC || engineOsc) return;
+  try {
+    engineOsc = AC.createOscillator();
+    engineGain = AC.createGain();
+    engineOsc.type = 'sawtooth';
+    engineOsc.frequency.value = 55;
+    engineGain.gain.value = 0;
+    engineOsc.connect(engineGain);
+    engineGain.connect(sfxBus);
+    engineOsc.start();
+  } catch (e) { engineOsc = null; engineGain = null; }
+}
+
+function updateEngineSound() {
+  if (!AC || !engineOsc || !engineGain) return;
+  var t = AC.currentTime;
+  var f = 48 + bike.speed * 0.58 + (bike.engineOn ? 42 : 0);
+  var v = bike.engineOn ? 0.040 : 0.005;
+  try {
+    engineOsc.frequency.setTargetAtTime(clamp(f,28,620), t, 0.04);
+    engineGain.gain.setTargetAtTime(v, t, 0.05);
+  } catch (e) {}
+}
+
+function silenceEngine() {
+  if (AC && engineGain) { try { engineGain.gain.setTargetAtTime(0, AC.currentTime, 0.03); } catch (e) {} }
+}
+
+function playSynth(type, freq, dur, vol, when, bus, freqEnd) {
+  if (!AC || AC.state !== 'running') return;
+  try {
+    var t = max(when || AC.currentTime, AC.currentTime);
+    var o = AC.createOscillator();
+    var g = AC.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(max(20, freq), t);
+    if (freqEnd) o.frequency.exponentialRampToValueAtTime(max(20, freqEnd), t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(max(0.0002, vol), t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g);
+    g.connect(bus || sfxBus);
+    o.start(t);
+    o.stop(t + dur + 0.02);
+  } catch (e) {}
+}
+
+function playNoise(dur, vol, when, bus, filterType, filterFreq) {
+  if (!AC || AC.state !== 'running' || !noiseBuf) return;
+  try {
+    var t = max(when || AC.currentTime, AC.currentTime);
+    var src = AC.createBufferSource();
+    src.buffer = noiseBuf;
+    var g = AC.createGain();
+    var f = AC.createBiquadFilter();
+    f.type = filterType || 'highpass';
+    f.frequency.value = filterFreq || 1200;
+    f.Q.value = 0.7;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(max(0.0002, vol), t + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f); f.connect(g); g.connect(bus || sfxBus);
+    src.start(t);
+    src.stop(t + dur + 0.03);
+  } catch (e) {}
+}
+
+function sfx(kind) {
+  if (!AC || AC.state !== 'running') return;
+  var t = AC.currentTime;
+  if (kind === 'land') {
+    playSynth('sine', 130, 0.10, 0.10, t, sfxBus, 48);
+  } else if (kind === 'flip') {
+    playSynth('sine', 700, 0.20, 0.10, t, sfxBus, 1450);
+  } else if (kind === 'crash') {
+    playNoise(0.18, 0.18, t, sfxBus, 'lowpass', 700);
+    playSynth('sawtooth', 120, 0.18, 0.10, t, sfxBus, 35);
+  } else if (kind === 'win') {
+    playSynth('sine', 523, 0.16, 0.10, t, sfxBus);
+    playSynth('sine', 659, 0.16, 0.10, t + 0.11, sfxBus);
+    playSynth('sine', 784, 0.16, 0.10, t + 0.22, sfxBus);
+    playSynth('sine', 1047, 0.24, 0.10, t + 0.33, sfxBus);
+  }
+}
+
+function midiToFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+function generateBarMelody() {
+  music.leadCount = 0;
+  var pos = 0;
+  var maxEvents = quality.music === 0 ? 3 : quality.music === 1 ? 5 : 7;
+
+  while (pos < 16 && music.leadCount < maxEvents) {
+    if (random() < 0.18) { pos += 2; continue; }
+    var gap = floor(random() * 3);
+    pos += gap;
+    if (pos >= 16) break;
+
+    var durChoices = quality.music === 0 ? [4,8,8,16] : [2,4,4,8,8,16];
+    var dur = durChoices[floor(random() * durChoices.length)];
+    if (pos + dur > 16) dur = 16 - pos;
+    if (dur < 1) break;
+
+    var ev = music.leadEvents[music.leadCount++];
+    ev.step = pos;
+    ev.note = music.scale[floor(random() * music.scale.length)] + (random() < 0.28 ? 12 : 0) + (music.section >= 2 ? 12 : 0);
+    ev.dur = dur;
+    ev.on = true;
+
+    pos += dur;
+  }
+}
+
+function newMusicSection() {
+  music.section = (music.section + 1) % 4;
+  music.pattern = (music.pattern + 1 + floor(random() * 3)) & 7;
+  music.density = clamp(0.28 + random() * 0.42 + music.section * 0.05, 0.20, 0.72);
+  if (random() < 0.35) music.scale = random() < 0.5 ? [0,3,5,7,10] : [0,2,3,7,9];
+}
+
+function startMusic() {
+  if (!musicOn || !AC || AC.state !== 'running') { pendingMusic = true; return; }
+  stopMusic();
+
+  var rng = new RNG((seedNum ^ (level * 0x51ed2701) ^ (difficulty * 0x1234abcd) ^ (driveMode * 0x9e3779b9)) >>> 0);
+  music.bpm = 118 + rng.i(0, 24) + difficulty * 3;
+  music.stepDur = 60 / music.bpm / 4;
+  music.step = 0;
+  music.bar = 0;
+  music.section = rng.i(0, 3);
+  music.pattern = rng.i(0, 7);
+  music.root = 96 + rng.i(0, 24);
+  music.density = 0.34 + rng.next() * 0.32;
+
+  var progs = [
+    [[0,3,7],[5,8,12],[3,7,10],[7,10,14]],
+    [[0,3,7],[-2,2,5],[3,7,10],[5,8,12]],
+    [[0,4,7],[2,5,9],[-1,3,6],[4,7,11]],
+    [[0,3,7],[0,4,7],[-3,1,4],[2,5,9]]
+  ];
+  music.progression = progs[rng.i(0, progs.length - 1)];
+  music.scale = rng.next() < 0.5 ? [0,3,5,7,10] : [0,2,3,7,9];
+
+  generateBarMelody();
+  music.nextTime = AC.currentTime + 0.06;
+  music.timer = window.setTimeout(scheduleMusic, 20);
+
+  if (musicBus) try { musicBus.gain.setTargetAtTime(0.17, AC.currentTime, 0.12); } catch (e) {}
+}
+
+function stopMusic() {
+  if (music.timer) { window.clearTimeout(music.timer); music.timer = null; }
+  if (AC && musicBus) { try { musicBus.gain.setTargetAtTime(0.0001, AC.currentTime, 0.08); } catch (e) {} }
+}
+
+function scheduleMusic() {
+  if (!musicOn || !AC || AC.state !== 'running') { music.timer = null; return; }
+
+  while (music.nextTime < AC.currentTime + 0.12) {
+    if (music.step % 16 === 0) {
+      music.bar = floor(music.step / 16);
+      if (music.bar > 0 && music.bar % 4 === 0) newMusicSection();
+      generateBarMelody();
+    }
+
+    playMusicStep(music.step, music.nextTime);
+    music.step++;
+    music.nextTime += music.stepDur;
+  }
+
+  music.timer = window.setTimeout(scheduleMusic, 25);
+}
+
+function playMusicStep(step, when) {
+  if (!AC || AC.state !== 'running' || !musicOn) return;
+
+  var delay = max(0, when - AC.currentTime);
+  var s = step % 16;
+  var pat = music.pattern;
+  var sec = music.section;
+  var chord = music.progression[(sec + floor(step / 64)) % music.progression.length];
+  var q = quality.music;
+
+  if (s % 4 === 0) {
+    playSynth('sine', 135, 0.12, 0.26, when, musicBus, 44);
+  }
+
+  if (q >= 1) {
+    if (s === 4 || s === 12 || ((pat & 1) && s === 14)) {
+      playNoise(0.07, 0.085, when, musicBus, 'highpass', 1500);
+    }
+    if (s % 2 === 1) {
+      playNoise(0.025, 0.026 + (s % 4 === 3 ? 0.010 : 0), when, musicBus, 'highpass', 6200);
+    }
+  }
+
+  var bassSteps = [0,3,6,8,11,14];
+  if (pat & 1) bassSteps = [0,2,6,8,10,14];
+  if (pat & 2) bassSteps = [0,4,7,8,12,15];
+
+  for (var i = 0; i < bassSteps.length; i++) {
+    if (s === bassSteps[i]) {
+      var bn = chord[i % chord.length] - 12;
+      playSynth('triangle', midiToFreq(36 + bn), music.stepDur * 1.45, 0.105, when, musicBus);
+    }
+  }
+
+  if (q >= 2 && (s === 0 || s === 6 || s === 10)) {
+    for (i = 0; i < chord.length; i++) {
+      playSynth('sawtooth', midiToFreq(48 + chord[i]), music.stepDur * 1.2, 0.020, when, musicBus);
+    }
+  }
+
+  if (q >= 1 && s === 0 && music.bar % 2 === 0) {
+    for (i = 0; i < chord.length; i++) {
+      playSynth('sine', midiToFreq(60 + chord[i]), music.stepDur * 14, 0.018, when, musicBus);
+    }
+  }
+
+  for (i = 0; i < music.leadCount; i++) {
+    var ev = music.leadEvents[i];
+    if (ev.on && ev.step === s) {
+      var dur = music.stepDur * ev.dur * 0.92;
+      var freq = midiToFreq(57 + ev.note);
+      var wave = (sec & 1) ? 'square' : 'triangle';
+      playSynth(wave, freq, dur, 0.042 + sec * 0.005, when, musicBus);
+      if (q >= 2 && ev.dur >= 8) {
+        playSynth('sine', freq * 2.005, dur * 0.75, 0.014, when, musicBus);
+      }
+    }
+  }
+}
+
+function tryStartMusic() {
+  if (!musicOn) return;
+  if (audioReady) startMusic();
+  else pendingMusic = true;
+}
+
+function toggleMusic() {
+  musicOn = !musicOn;
+  updateOptionUI();
+  ensureAudio();
+  if (AC && musicBus) {
+    try { musicBus.gain.setTargetAtTime(musicOn ? 0.17 : 0.0001, AC.currentTime, 0.08); } catch (e) {}
+  }
+  if (musicOn) {
+    if (inGame && !paused && bike.alive && !bike.finished) tryStartMusic();
+  } else {
+    stopMusic();
+  }
+}
+
+function updateOptionUI() {
+  for (var i = 0; i < 4; i++) {
+    var b = $('diffBtn' + i);
+    if (b) b.className = 'btn optBtn' + (i === difficulty ? ' selected' : '');
+  }
+  for (i = 0; i < 3; i++) {
+    var d = $('driveBtn' + i);
+    if (d) d.className = 'btn optBtn' + (i === driveMode ? ' selected' : '');
+    var pd = $('pauseDriveBtn' + i);
+    if (pd) pd.className = 'btn optBtn' + (i === driveMode ? ' selected' : '');
+  }
+  var mb = $('musicBtn');
+  if (mb) { mb.textContent = musicOn ? 'MUSIC ON' : 'MUSIC OFF'; mb.className = 'btn optBtn' + (musicOn ? ' selected' : ''); }
+  var pmb = $('pauseMusicBtn');
+  if (pmb) { pmb.textContent = musicOn ? 'MUSIC ON' : 'MUSIC OFF'; pmb.className = 'btn optBtn' + (musicOn ? ' selected' : ''); }
+}
+
+function setDifficulty(d) {
+  difficulty = clamp(floor(d), 0, 3);
+  updateOptionUI();
+}
+
+function setDriveMode(d) {
+  driveMode = clamp(floor(d), 0, 2);
+  updateOptionUI();
 }
 
 function readSeed() {
@@ -2170,39 +2916,86 @@ function readSeed() {
   seedNum = hashStr(seed);
 }
 
+function regenerateSeed() {
+  seed = genSeed();
+  seedNum = hashStr(seed);
+  $('seedInput').value = seed;
+}
+
+function applySeed() {
+  readSeed();
+  showPopup('SEED SET');
+}
+
+function hideScreens() {
+  var ids = ['titleScreen','pauseScreen','overScreen','winScreen'];
+  for (var i = 0; i < ids.length; i++) {
+    var e = $(ids[i]);
+    if (e) e.classList.add('hidden');
+  }
+  updateTouchVisibility();
+}
+
+function showScreen(id) {
+  var ids = ['titleScreen','pauseScreen','overScreen','winScreen'];
+  for (var i = 0; i < ids.length; i++) {
+    var e = $(ids[i]);
+    if (!e) continue;
+    if (ids[i] === id) e.classList.remove('hidden');
+    else e.classList.add('hidden');
+  }
+  if (id === 'overScreen') {
+    $('overDist').textContent = floor(bike.dist);
+    $('overScore').textContent = score;
+  }
+  clearInputs();
+  updateTouchVisibility();
+}
+
 function startNewGame() {
   ensureAudio();
   readSeed();
-  level = 1; score = 0;
+  level = 1;
+  score = 0;
   startLevel();
 }
 
 function startLevel() {
   crashPending = false;
   crashTimer = 0;
-  ragdoll = null;
-  scooterFall = null;
   riderCompress = 0;
   cam.init = false;
   clearInputs();
-  genTerrain(level, seedNum);
+  resetPools();
+
+  genTerrain(level, seedNum, difficulty);
   genVisuals();
+  genTrees();
+  buildTheme();
+  genPools();
   resetBike();
-  particles.length = 0;
-  acc = 0; shakeTime = 0; shakeMag = 0;
-  inGame = true; paused = false;
+
+  acc = 0;
+  shakeTime = 0;
+  shakeMag = 0;
+  wxTime = 0;
+
+  inGame = true;
+  paused = false;
+
   hideScreens();
   $('pauseBtn').style.display = 'block';
   updateTouchVisibility();
-  lastT = nowFn();
+  lastT = window.performance && window.performance.now ? window.performance.now() : Date.now();
+
+  ensureAudio();
   stopMusic();
-  startMusic();
+  tryStartMusic();
 }
 
 function pauseGame() {
   if (!inGame || paused || !bike.alive || bike.finished) return;
   paused = true;
-  $('pwBox').style.display = 'none';
   showScreen('pauseScreen');
   stopMusic();
   silenceEngine();
@@ -2214,9 +3007,10 @@ function resumeGame() {
   hideScreens();
   $('pauseBtn').style.display = 'block';
   clearInputs();
-  lastT = nowFn();
+  lastT = window.performance && window.performance.now ? window.performance.now() : Date.now();
   acc = 0;
-  startMusic();
+  ensureAudio();
+  tryStartMusic();
 }
 
 function restartLevel() { startLevel(); }
@@ -2226,72 +3020,22 @@ function quitToTitle() {
   inGame = false;
   paused = false;
   crashPending = false;
-  ragdoll = null;
-  scooterFall = null;
   showScreen('titleScreen');
   $('pauseBtn').style.display = 'none';
   stopMusic();
   silenceEngine();
 }
 
-var SAVE_KEY = 'scooterStuntPro.save.v8';
-
-function getSave() { return { v: 8, seed: seed, level: level, score: score, t: Date.now() }; }
-
-function encodeSave(obj) {
-  var s = JSON.stringify(obj);
-  var u = encodeURIComponent(s);
-  var out = '';
-  for (var i = 0; i < u.length; i++) out += String.fromCharCode(u.charCodeAt(i) + 11);
-  return btoa(out).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-function decodeSave(pw) {
-  pw = String(pw || '').trim().replace(/-/g, '+').replace(/_/g, '/');
-  while (pw.length % 4) pw += '=';
-  var bin = atob(pw);
-  var u = '';
-  for (var i = 0; i < bin.length; i++) u += String.fromCharCode(bin.charCodeAt(i) - 11);
-  return JSON.parse(decodeURIComponent(u));
-}
-
-function legacyCopy(t) {
-  var ta = document.createElement('textarea');
-  ta.value = t;
-  ta.setAttribute('readonly', '');
-  ta.style.position = 'fixed';
-  ta.style.left = '-9999px';
-  document.body.appendChild(ta);
-  ta.select();
-  try { document.execCommand('copy'); } catch (e) {}
-  document.body.removeChild(ta);
-}
-
-function copyText(t) {
-  if (!t) return;
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    try {
-      var pr = navigator.clipboard.writeText(t);
-      if (pr && pr.catch) pr.catch(function () { legacyCopy(t); });
-      return;
-    } catch (e) {}
-  }
-  legacyCopy(t);
-}
+var SAVE_KEY = 'scooterStuntPro.optimized.v16';
 
 function saveToStorage() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(getSave())); showPopup('SAVED'); }
-  catch (e) { window.alert('Could not save to storage.'); }
-}
-
-function applyLoaded(d) {
-  seed = String(d.seed);
-  seedNum = hashStr(seed);
-  level = (d.level > 0) ? floor(d.level) : 1;
-  score = (d.score > 0) ? floor(d.score) : 0;
-  $('seedInput').value = seed;
-  ensureAudio();
-  startLevel();
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      seed: seed, level: level, score: score,
+      difficulty: difficulty, driveMode: driveMode, musicOn: musicOn
+    }));
+    showPopup('SAVED');
+  } catch (e) { window.alert('Could not save.'); }
 }
 
 function loadFromStorage() {
@@ -2300,87 +3044,109 @@ function loadFromStorage() {
     var raw = localStorage.getItem(SAVE_KEY);
     if (!raw) { window.alert('No saved game found.'); return; }
     var d = JSON.parse(raw);
-    if (!d || !d.seed) { window.alert('Save data is invalid.'); return; }
-    applyLoaded(d);
+    if (!d || !d.seed) { window.alert('Save invalid.'); return; }
+    seed = String(d.seed);
+    seedNum = hashStr(seed);
+    level = d.level > 0 ? floor(d.level) : 1;
+    score = d.score > 0 ? floor(d.score) : 0;
+    difficulty = typeof d.difficulty === 'number' ? clamp(floor(d.difficulty),0,3) : 1;
+    driveMode = typeof d.driveMode === 'number' ? clamp(floor(d.driveMode),0,2) : 2;
+    musicOn = typeof d.musicOn === 'boolean' ? d.musicOn : true;
+    updateOptionUI();
+    $('seedInput').value = seed;
+    startLevel();
   } catch (e) { window.alert('Could not load save.'); }
 }
 
-function showSavePassword() {
-  $('pwText').value = encodeSave(getSave());
-  $('pwBox').style.display = 'block';
-  focusEl($('copyPwBtn'));
+function showGameOver() {
+  inGame = false;
+  paused = false;
+  showScreen('overScreen');
 }
 
-function closePassword() {
-  $('pwBox').style.display = 'none';
-  var b = document.querySelector('#pauseScreen .btnGrid button');
-  focusEl(b);
-}
-
-function copyPassword() {
-  copyText($('pwText').value);
-  showPopup('COPIED');
-}
-
-function loadFromPassword() {
-  ensureAudio();
-  var pw = window.prompt('Paste save password:');
-  if (!pw) return;
+function frame(t) {
+  window.requestAnimationFrame(frame);
   try {
-    var d = decodeSave(pw);
-    if (!d || !d.seed) throw 0;
-    applyLoaded(d);
-  } catch (e) { window.alert('Invalid password.'); }
+    var now = t || (window.performance && window.performance.now ? window.performance.now() : Date.now());
+    var dt = (now - lastT) / 1000;
+    lastT = now;
+    if (dt < 0) dt = 0;
+    if (dt > 0.1) dt = 0.1;
+
+    updateQualityAuto(dt);
+
+    if (!inGame) {
+      updateHUD();
+      return;
+    }
+
+    if (!paused) {
+      if (bike.alive && !bike.finished) {
+        updateInput();
+        acc += dt;
+        var steps = 0;
+        while (acc >= STEP && steps < (quality.tier === 0 ? 4 : 8) && bike.alive && !bike.finished) {
+          physics(STEP);
+          acc -= STEP;
+          steps++;
+        }
+        if (acc > STEP * 8) acc = 0;
+      }
+
+      updateSplashParticles(dt);
+      updateWeather(dt);
+      updatePools(dt);
+
+      if (shakeTime > 0) {
+        shakeTime -= dt;
+        if (shakeTime <= 0) { shakeTime = 0; shakeMag = 0; }
+      }
+      riderCompress *= Math.exp(-5 * dt);
+
+      if (crashPending) {
+        crashTimer -= dt;
+        if (crashTimer <= 0) {
+          crashPending = false;
+          showGameOver();
+        }
+      }
+
+      updateCamera(dt);
+
+      if (bike.alive && !bike.finished) updateEngineSound();
+      else silenceEngine();
+    }
+
+    updateLights();
+    render();
+    updateHUD();
+  } catch (e) {
+    if (window.console && console.error) console.error(e);
+  }
 }
 
-function regenerateSeed() {
-  seed = genSeed();
-  seedNum = hashStr(seed);
-  $('seedInput').value = seed;
-}
-
-function copySeed() {
-  var el = $('seedInput');
-  var v = el ? el.value.trim() : '';
-  if (v) { seed = v; seedNum = hashStr(seed); }
-  copyText(seed);
-  showPopup('SEED COPIED');
-}
-
-function applySeed() { readSeed(); showPopup('SEED SET'); }
-
-function unlockAudio() { ensureAudio(); }
-
-initContext();
+configureQualityTier(initialQualityTier());
 resize();
-cacheHUD();
+updateOptionUI();
 initTouch();
+$('seedInput').value = seed;
 
 window.addEventListener('resize', resize, false);
 window.addEventListener('orientationchange', function () { window.setTimeout(resize, 120); }, false);
 document.addEventListener('keydown', handleKey, false);
 document.addEventListener('keyup', handleKey, false);
-document.addEventListener('pointerdown', unlockAudio, false);
-document.addEventListener('touchstart', unlockAudio, nonPassive);
+document.addEventListener('pointerdown', ensureAudio, false);
+document.addEventListener('touchstart', ensureAudio, nonPassive);
 document.addEventListener('visibilitychange', function () {
   if (document.hidden && inGame && !paused && bike.alive && !bike.finished) pauseGame();
 }, false);
-
 document.addEventListener('touchmove', function (e) {
   if (inGame && !paused && e.cancelable) e.preventDefault();
 }, nonPassive);
 document.addEventListener('contextmenu', function (e) { e.preventDefault(); }, false);
 
-canvas.addEventListener('webglcontextlost', function (e) {
-  e.preventDefault();
-  useGL = false;
-  gl = null;
-  try { ctx2d = canvas.getContext('2d'); } catch (err) { ctx2d = null; }
-}, false);
-
-$('seedInput').value = seed;
-lastT = nowFn();
-raf(frame);
+lastT = window.performance && window.performance.now ? window.performance.now() : Date.now();
+window.requestAnimationFrame(frame);
 </script>
 </body>
 </html>
