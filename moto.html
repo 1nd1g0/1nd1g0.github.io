@@ -7,43 +7,63 @@
 <title>Scooter Stunt Pro</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:"Courier New",Courier,monospace;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
-#c{position:fixed;top:0;left:0;width:100%;height:100%;display:block;background:#0b0b19}
-.screen{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;z-index:100;overflow:auto;background:rgba(0,0,0,.88)}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:"Courier New",Courier,monospace;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
+#c{position:fixed;top:0;left:0;width:100%;height:100%;display:block;background:#0b0b19;touch-action:none}
+.screen{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:10px;z-index:100;overflow:auto;overscroll-behavior:contain;background:rgba(0,0,0,.92);touch-action:pan-y;-webkit-overflow-scrolling:touch}
 .hidden{display:none!important}
+.dialog{width:100%;max-width:620px;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px;border-radius:12px;background:rgba(255,255,255,.045);touch-action:pan-y;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.dialog::-webkit-scrollbar{width:8px}
+.dialog::-webkit-scrollbar-thumb{background:rgba(255,255,255,.22);border-radius:8px}
 #titleScreen{background:linear-gradient(135deg,#1a0a2e 0%,#16213e 50%,#0f3460 100%)}
-.title{font-size:28px;color:#ff6b35;text-shadow:0 0 16px #ff6b35,0 0 34px rgba(255,69,0,.45);margin-bottom:10px;text-align:center;letter-spacing:2px;font-weight:bold}
-.subtitle{font-size:12px;color:#aaa;margin-bottom:16px;text-align:center;letter-spacing:1px}
-.btn{background:linear-gradient(180deg,#ff6b35,#c44520);color:#fff;border:2px solid #ff8c5a;padding:13px 24px;margin:5px;font-size:15px;font-family:inherit;cursor:pointer;border-radius:6px;width:80vw;max-width:280px;min-width:160px;text-align:center;font-weight:bold;letter-spacing:1px;box-shadow:0 4px 14px rgba(255,107,53,.25)}
+#titleScreen .dialog{padding-top:56px}
+.title{font-size:28px;color:#ff6b35;text-shadow:0 0 16px #ff6b35,0 0 34px rgba(255,69,0,.45);margin-bottom:8px;text-align:center;letter-spacing:2px;font-weight:bold}
+.subtitle{font-size:12px;color:#aaa;margin-bottom:12px;text-align:center;letter-spacing:1px}
+.btnGrid{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;width:100%}
+.btn{background:linear-gradient(180deg,#ff6b35,#c44520);color:#fff;border:2px solid #ff8c5a;padding:12px 16px;font-size:14px;font-family:inherit;cursor:pointer;border-radius:6px;width:80vw;max-width:240px;min-width:132px;text-align:center;font-weight:bold;letter-spacing:1px;box-shadow:0 4px 14px rgba(255,107,53,.25);touch-action:manipulation}
 .btn:hover,.btn:active{transform:scale(1.03);background:linear-gradient(180deg,#ff8c5a,#ff6b35)}
-.btn-small{width:auto;min-width:96px;padding:9px 14px;font-size:13px}
-.btn-home{position:absolute;top:12px;left:12px;width:auto;min-width:54px;padding:10px 14px;background:rgba(40,40,60,.85);border-color:#667;box-shadow:none}
-.seed-box{margin:12px 0;text-align:center}
+.btn:focus{outline:3px solid #fff;outline-offset:2px}
+.btn-small{width:auto;min-width:92px;padding:9px 13px;font-size:13px}
+.btn-home{position:fixed;top:8px;left:8px;z-index:102;width:auto;min-width:58px;padding:10px 14px;background:rgba(40,40,60,.9);border-color:#667;box-shadow:none}
+.btn-home:hover{background:rgba(70,70,100,.95)}
+.seed-box{margin:8px 0;text-align:center}
 .seed-box .lab{color:#888;font-size:11px;margin-bottom:5px;letter-spacing:1px}
-.seed-box input{background:#080818;color:#3f3;border:1px solid rgba(0,255,0,.45);padding:9px 10px;font-family:inherit;font-size:15px;width:170px;text-align:center;border-radius:4px;letter-spacing:2px}
-.seed-box button{background:#1a1a35;color:#fff;border:1px solid #4a4a6e;padding:9px 10px;margin-left:4px;cursor:pointer;font-family:inherit;font-size:13px;border-radius:4px}
-.info{color:#777;font-size:11px;margin-top:14px;text-align:center;padding:0 10px;line-height:1.55}
+.seed-box input{background:#080818;color:#3f3;border:1px solid rgba(0,255,0,.45);padding:9px 10px;font-family:inherit;font-size:15px;width:170px;max-width:72vw;text-align:center;border-radius:4px;letter-spacing:2px;touch-action:auto}
+.seed-box button{background:#1a1a35;color:#fff;border:1px solid #4a4a6e;padding:9px 10px;margin-left:4px;cursor:pointer;font-family:inherit;font-size:13px;border-radius:4px;touch-action:manipulation}
+.seed-box button:focus{outline:3px solid #fff;outline-offset:2px}
+.info{color:#888;font-size:11px;margin-top:10px;text-align:center;padding:0 8px;line-height:1.55}
 #hud{position:fixed;top:8px;left:8px;color:#fff;font-size:13px;z-index:50;text-shadow:1px 1px 3px #000,0 0 8px rgba(0,0,0,.7);pointer-events:none;line-height:1.45}
 #hudRight{position:fixed;top:8px;right:62px;color:#fff;font-size:13px;z-index:50;text-align:right;text-shadow:1px 1px 3px #000;pointer-events:none;line-height:1.45}
-#pauseBtn{position:fixed;top:8px;right:8px;z-index:60;background:rgba(0,0,0,.58);color:#fff;border:2px solid rgba(255,255,255,.55);width:48px;height:48px;font-size:18px;font-family:inherit;cursor:pointer;border-radius:8px;display:none}
+#pauseBtn{position:fixed;top:8px;right:8px;z-index:60;background:rgba(0,0,0,.58);color:#fff;border:2px solid rgba(255,255,255,.55);width:48px;height:48px;font-size:18px;font-family:inherit;cursor:pointer;border-radius:8px;display:none;touch-action:manipulation}
 #pauseBtn:active{background:rgba(255,107,53,.55)}
-#touchControls{position:fixed;left:0;right:0;bottom:0;z-index:55;display:none;justify-content:space-between;align-items:flex-end;padding:10px 14px 14px 14px;pointer-events:none}
+#pauseBtn:focus{outline:3px solid #fff;outline-offset:2px}
+#touchControls{position:fixed;left:0;right:0;bottom:0;z-index:55;display:none;justify-content:space-between;align-items:flex-end;padding:8px 14px 14px 14px;pointer-events:none;touch-action:none}
 @supports (padding-bottom: env(safe-area-inset-bottom)){
 #touchControls{padding-left:calc(14px + env(safe-area-inset-left,0px));padding-right:calc(14px + env(safe-area-inset-right,0px));padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 }
-.pad{display:flex;flex-direction:column;gap:12px;pointer-events:none}
-.touch-zone{width:78px;height:78px;border-radius:50%;border:3px solid rgba(255,255,255,.34);background:rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);font-size:13px;font-weight:bold;letter-spacing:1px;line-height:1.05;text-align:center;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;user-select:none}
+.pad{display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.touch-zone{width:74px;height:74px;border-radius:50%;border:3px solid rgba(255,255,255,.34);background:rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.72);font-size:12px;font-weight:bold;letter-spacing:1px;line-height:1.05;text-align:center;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;user-select:none}
 .touch-zone.on{background:rgba(255,107,53,.5);border-color:#ff6b35;color:#fff;transform:scale(.94)}
-.stats{font-size:14px;color:#ccc;margin:10px 0 14px;text-align:center;line-height:1.7}
-.password-box{margin:10px 0;text-align:center;display:none}
-.password-box textarea{background:#080818;color:#3f3;border:1px solid rgba(0,255,0,.45);padding:8px;font-family:inherit;font-size:11px;width:290px;max-width:92vw;height:58px;border-radius:4px;resize:none}
+.stats{font-size:14px;color:#ccc;margin:8px 0 12px;text-align:center;line-height:1.7}
+.password-box{margin:8px 0;text-align:center;display:none;width:100%}
+.password-box textarea{background:#080818;color:#3f3;border:1px solid rgba(0,255,0,.45);padding:8px;font-family:inherit;font-size:11px;width:100%;max-width:320px;height:58px;border-radius:4px;resize:none;touch-action:auto}
 .popup{position:fixed;top:24%;left:50%;transform:translateX(-50%);color:#ff0;font-size:22px;font-weight:bold;text-shadow:0 0 12px #ff0,0 0 28px rgba(255,255,0,.45);z-index:300;pointer-events:none;animation:fadeUp 1.6s forwards;text-align:center;white-space:nowrap}
 @keyframes fadeUp{0%{opacity:1;transform:translate(-50%,0) scale(1)}18%{transform:translate(-50%,-8px) scale(1.12)}100%{opacity:0;transform:translate(-50%,-90px) scale(.82)}}
 @media(min-width:700px){
-.title{font-size:48px}.subtitle{font-size:15px}.btn{font-size:18px;padding:15px 34px}.info{font-size:13px}#hud,#hudRight{font-size:16px}.stats{font-size:16px}.touch-zone{width:90px;height:90px;font-size:15px}
+.title{font-size:48px}.subtitle{font-size:15px}.btn{font-size:17px;padding:14px 22px;max-width:280px}.info{font-size:13px}#hud,#hudRight{font-size:16px}.stats{font-size:16px}.touch-zone{width:88px;height:88px;font-size:14px}
 }
-@media(max-height:540px){
-.screen{justify-content:flex-start;padding-top:40px}.title{margin-top:16px}.touch-zone{width:66px;height:66px;font-size:12px}.pad{gap:9px}
+@media(max-height:620px){
+.screen{padding:4px;align-items:flex-start;justify-content:flex-start}
+.dialog{max-height:calc(100vh - 8px);max-height:calc(100dvh - 8px);gap:4px;padding:6px}
+#titleScreen .dialog{padding-top:44px}
+.title{font-size:22px;margin-bottom:2px}.subtitle{font-size:11px;margin-bottom:4px}
+.btn{width:42vw;max-width:178px;min-width:112px;padding:8px 9px;font-size:12px}.btnGrid{gap:4px}
+.btn-small{min-width:82px;padding:7px 9px;font-size:12px}
+.info{font-size:10px;margin-top:4px;line-height:1.35}.seed-box{margin:4px 0}.seed-box input{width:116px;font-size:13px;padding:6px 7px}.seed-box button{padding:6px 8px;font-size:12px;margin-left:2px}
+.password-box textarea{height:42px;font-size:10px}.stats{font-size:12px;margin:4px 0 6px}
+.touch-zone{width:58px;height:58px;font-size:10px}.pad{gap:6px}
+}
+@media(max-width:420px){
+.btn{width:82vw;max-width:260px}.touch-zone{width:66px;height:66px;font-size:11px}
 }
 </style>
 </head>
@@ -52,55 +72,73 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font
 
 <div id="titleScreen" class="screen">
   <button class="btn btn-home" onclick="window.open('https://1nd1g0.github.io/','_blank')">HOME</button>
-  <div class="title">SCOOTER STUNT</div>
-  <div class="subtitle">PROCEDURAL PHYSICS STUNT RIDER</div>
-  <button class="btn" onclick="startNewGame()">NEW GAME</button>
-  <button class="btn" onclick="loadFromStorage()">LOAD SAVE</button>
-  <button class="btn" onclick="loadFromPassword()">LOAD PASSWORD</button>
-  <div class="seed-box">
-    <div class="lab">WORLD SEED</div>
-    <input id="seedInput" maxlength="16" spellcheck="false" autocomplete="off">
-    <button onclick="regenerateSeed()">RND</button>
-    <button onclick="copySeed()">COPY</button>
-    <button onclick="applySeed()">USE</button>
-  </div>
-  <div class="info">
-    KEYS: W/up gas, S/down brake, A/left lean back, D/right lean forward, P or ESC pause<br>
-    TOUCH: separate lean pads (left) and throttle pads (right) / GAMEPAD: A gas, B brake, stick or dpad lean<br>
-    Land clean, chain flips, reach the flag.
+  <div class="dialog">
+    <div class="title">SCOOTER STUNT</div>
+    <div class="subtitle">PROCEDURAL PHYSICS STUNT RIDER</div>
+    <div class="btnGrid">
+      <button class="btn" onclick="startNewGame()">NEW GAME</button>
+      <button class="btn" onclick="loadFromStorage()">LOAD SAVE</button>
+      <button class="btn" onclick="loadFromPassword()">LOAD PASSWORD</button>
+    </div>
+    <div class="seed-box">
+      <div class="lab">WORLD SEED</div>
+      <input id="seedInput" maxlength="16" spellcheck="false" autocomplete="off" aria-label="World seed">
+      <button onclick="regenerateSeed()">RND</button>
+      <button onclick="copySeed()">COPY</button>
+      <button onclick="applySeed()">USE</button>
+    </div>
+    <div class="info">
+      KEYS / GAMEPAD: W or Up = gas, S or Down = brake, A or Left = lean back, D or Right = lean forward.<br>
+      MENUS: Arrows/Tab move, Enter/Space activate, 1-9 quick select, Esc/P back or pause.<br>
+      Land clean, chain flips, reach the flag.
+    </div>
   </div>
 </div>
 
 <div id="pauseScreen" class="screen hidden">
-  <div class="title" style="font-size:26px">PAUSED</div>
-  <button class="btn" onclick="resumeGame()">RESUME</button>
-  <button class="btn" onclick="restartLevel()">RESTART LEVEL</button>
-  <button class="btn" onclick="saveToStorage()">SAVE TO STORAGE</button>
-  <button class="btn" onclick="showSavePassword()">SAVE PASSWORD</button>
-  <button class="btn" onclick="quitToTitle()">QUIT TO TITLE</button>
-  <div class="password-box" id="pwBox">
-    <div style="color:#888;font-size:11px;margin-bottom:5px">COPY THIS PASSWORD INCLUDING SEED</div>
-    <textarea id="pwText" readonly onclick="this.select()"></textarea><br>
-    <button class="btn btn-small" onclick="copyPassword()">COPY</button>
-    <button class="btn btn-small" onclick="document.getElementById('pwBox').style.display='none'">CLOSE</button>
+  <div class="dialog">
+    <div class="title" style="font-size:26px">PAUSED</div>
+    <div class="btnGrid">
+      <button class="btn" onclick="resumeGame()">RESUME</button>
+      <button class="btn" onclick="restartLevel()">RESTART LEVEL</button>
+      <button class="btn" onclick="saveToStorage()">SAVE TO STORAGE</button>
+      <button class="btn" onclick="showSavePassword()">SAVE PASSWORD</button>
+      <button class="btn" onclick="quitToTitle()">QUIT TO TITLE</button>
+    </div>
+    <div class="password-box" id="pwBox">
+      <div style="color:#888;font-size:11px;margin-bottom:5px">COPY THIS PASSWORD INCLUDING SEED</div>
+      <textarea id="pwText" readonly onclick="this.select()"></textarea>
+      <div class="btnGrid" style="margin-top:6px">
+        <button class="btn btn-small" id="copyPwBtn" onclick="copyPassword()">COPY</button>
+        <button class="btn btn-small" onclick="closePassword()">CLOSE</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <div id="overScreen" class="screen hidden">
-  <div class="title" style="color:#ff3030;text-shadow:0 0 18px #f00">CRASHED</div>
-  <div class="stats">Distance: <span id="overDist">0</span><br>Score: <span id="overScore">0</span></div>
-  <button class="btn" onclick="restartLevel()">RETRY</button>
-  <button class="btn" onclick="quitToTitle()">QUIT</button>
+  <div class="dialog">
+    <div class="title" style="color:#ff3030;text-shadow:0 0 18px #f00">CRASHED</div>
+    <div class="stats">Distance: <span id="overDist">0</span><br>Score: <span id="overScore">0</span></div>
+    <div class="btnGrid">
+      <button class="btn" onclick="restartLevel()">RETRY</button>
+      <button class="btn" onclick="quitToTitle()">QUIT</button>
+    </div>
+  </div>
 </div>
 
 <div id="winScreen" class="screen hidden">
-  <div class="title" style="color:#30ff90;text-shadow:0 0 18px #0f8">LEVEL COMPLETE</div>
-  <div class="stats" id="winStats"></div>
-  <button class="btn" onclick="nextLevel()">NEXT LEVEL</button>
-  <button class="btn" onclick="quitToTitle()">QUIT</button>
+  <div class="dialog">
+    <div class="title" style="color:#30ff90;text-shadow:0 0 18px #0f8">LEVEL COMPLETE</div>
+    <div class="stats" id="winStats"></div>
+    <div class="btnGrid">
+      <button class="btn" onclick="nextLevel()">NEXT LEVEL</button>
+      <button class="btn" onclick="quitToTitle()">QUIT</button>
+    </div>
+  </div>
 </div>
 
-<button id="pauseBtn" onclick="pauseGame()">II</button>
+<button id="pauseBtn" onclick="pauseGame()" aria-label="Pause">II</button>
 
 <div id="hud">
   <div id="hudDist">0 m</div>
@@ -380,6 +418,9 @@ function ensureAudio() {
     musicBus = AC.createGain(); musicBus.gain.value = 0.20; musicBus.connect(AC.destination);
     audioOK = true;
     audioReady = (AC.state === 'running');
+    AC.onstatechange = function () {
+      if (AC && AC.state === 'running') pumpAudio();
+    };
     pumpAudio();
   } catch (e) { AC = null; audioOK = false; audioReady = false; }
 }
@@ -544,6 +585,16 @@ function sfx(kind) {
   } catch (e) {}
 }
 
+function gpPressed(gp, i) {
+  return !!(gp && gp.buttons && gp.buttons[i] && gp.buttons[i].pressed);
+}
+function gpValue(gp, i) {
+  return (gp && gp.buttons && gp.buttons[i]) ? (gp.buttons[i].value || 0) : 0;
+}
+function gpAxis(gp, i) {
+  return (gp && gp.axes && gp.axes.length > i) ? gp.axes[i] : 0;
+}
+
 var input = { gas: false, brake: false, left: false, right: false };
 var kIn = { gas: false, brake: false, left: false, right: false };
 var tIn = { gas: false, brake: false, left: false, right: false };
@@ -552,8 +603,16 @@ function getKeyCode(e) {
   if (e.code) return e.code;
   var m = { 38: 'ArrowUp', 40: 'ArrowDown', 37: 'ArrowLeft', 39: 'ArrowRight',
             87: 'KeyW', 83: 'KeyS', 65: 'KeyA', 68: 'KeyD',
-            27: 'Escape', 80: 'KeyP', 32: 'Space' };
+            27: 'Escape', 80: 'KeyP', 32: 'Space', 13: 'Enter', 9: 'Tab' };
   return m[e.keyCode] || '';
+}
+
+function clearInputs() {
+  input.gas = input.brake = input.left = input.right = false;
+  kIn.gas = kIn.brake = kIn.left = kIn.right = false;
+  tIn.gas = tIn.brake = tIn.left = tIn.right = false;
+  var zones = document.getElementsByClassName('touch-zone');
+  for (var i = zones.length - 1; i >= 0; i--) zones[i].classList.remove('on');
 }
 
 function updateInput() {
@@ -571,48 +630,158 @@ function updateInput() {
   for (var i = 0; i < gps.length; i++) {
     var gp = gps[i];
     if (!gp) continue;
-    var b = gp.buttons, ax = gp.axes;
-    if (b) {
-      if ((b[0] && b[0].pressed) || (b[7] && b[7].value > 0.15) || (b[12] && b[12].pressed)) input.gas = true;
-      if ((b[1] && b[1].pressed) || (b[6] && b[6].value > 0.15) || (b[13] && b[13].pressed)) input.brake = true;
-      if (b[14] && b[14].pressed) input.left = true;
-      if (b[15] && b[15].pressed) input.right = true;
-    }
-    if (ax && ax.length > 0) {
-      if (ax[0] < -0.30) input.left = true;
-      if (ax[0] > 0.30) input.right = true;
-    }
-    if (ax && ax.length > 1) {
-      if (ax[1] < -0.30) input.gas = true;
-      if (ax[1] > 0.30) input.brake = true;
-    }
+
+    if (gpPressed(gp, 0) || gpValue(gp, 7) > 0.15 || gpPressed(gp, 12)) input.gas = true;
+    if (gpPressed(gp, 1) || gpValue(gp, 6) > 0.15 || gpPressed(gp, 13)) input.brake = true;
+    if (gpPressed(gp, 14)) input.left = true;
+    if (gpPressed(gp, 15)) input.right = true;
+
+    var ax0 = gpAxis(gp, 0);
+    if (ax0 < -0.30) input.left = true;
+    if (ax0 > 0.30) input.right = true;
+
+    var ax1 = gpAxis(gp, 1);
+    if (ax1 < -0.30) input.gas = true;
+    if (ax1 > 0.30) input.brake = true;
   }
 }
 
+function isTextInputActive() {
+  var a = document.activeElement;
+  var tag = a && a.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || (a && a.isContentEditable);
+}
+
+function isVisibleEl(el) {
+  if (!el || el.disabled) return false;
+  return !!(el.offsetWidth || el.offsetHeight || (el.getClientRects && el.getClientRects().length));
+}
+
+function getMenuButtons() {
+  var ids = ['titleScreen', 'pauseScreen', 'overScreen', 'winScreen'];
+  for (var i = 0; i < ids.length; i++) {
+    var s = $(ids[i]);
+    if (s && !s.classList.contains('hidden')) {
+      var out = [];
+      var list = s.querySelectorAll('.dialog button');
+      for (var j = 0; j < list.length; j++) if (isVisibleEl(list[j])) out.push(list[j]);
+      if (ids[i] === 'titleScreen') {
+        var home = s.querySelector('.btn-home');
+        if (isVisibleEl(home)) out.push(home);
+      }
+      return out;
+    }
+  }
+  return [];
+}
+
+function isMenuVisible() {
+  return !$('titleScreen').classList.contains('hidden') ||
+         !$('pauseScreen').classList.contains('hidden') ||
+         !$('overScreen').classList.contains('hidden') ||
+         !$('winScreen').classList.contains('hidden');
+}
+
+function focusEl(el) {
+  if (!el) return;
+  try { el.focus({ preventScroll: false }); } catch (e) { try { el.focus(); } catch (e2) {} }
+  if (el.scrollIntoView) {
+    try { el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+    catch (e) { try { el.scrollIntoView(); } catch (e2) {} }
+  }
+}
+
+function focusFirstMenuButton() {
+  var b = getMenuButtons();
+  if (b.length) focusEl(b[0]);
+}
+
+function uiMoveFocus(dir) {
+  var b = getMenuButtons();
+  if (!b.length) return;
+  var cur = -1;
+  var act = document.activeElement;
+  for (var i = 0; i < b.length; i++) if (b[i] === act) { cur = i; break; }
+  var next = cur < 0 ? (dir > 0 ? 0 : b.length - 1) : (cur + dir + b.length) % b.length;
+  focusEl(b[next]);
+}
+
+function digitIndex(c) {
+  if (c === 'Digit1' || c === 'Numpad1') return 0;
+  if (c === 'Digit2' || c === 'Numpad2') return 1;
+  if (c === 'Digit3' || c === 'Numpad3') return 2;
+  if (c === 'Digit4' || c === 'Numpad4') return 3;
+  if (c === 'Digit5' || c === 'Numpad5') return 4;
+  if (c === 'Digit6' || c === 'Numpad6') return 5;
+  if (c === 'Digit7' || c === 'Numpad7') return 6;
+  if (c === 'Digit8' || c === 'Numpad8') return 7;
+  if (c === 'Digit9' || c === 'Numpad9') return 8;
+  return -1;
+}
+
+function menuBack() {
+  if (!$('pauseScreen').classList.contains('hidden') && $('pwBox').style.display === 'block') {
+    closePassword();
+    return;
+  }
+  if (paused) { resumeGame(); return; }
+  if (!$('overScreen').classList.contains('hidden')) { quitToTitle(); return; }
+  if (!$('winScreen').classList.contains('hidden')) { quitToTitle(); return; }
+}
+
 function handleKey(e) {
-  var tag = e.target && e.target.tagName;
-  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if (isTextInputActive()) return;
 
   var down = e.type === 'keydown';
   var c = getKeyCode(e);
+
+  if (down && !audioOK) ensureAudio();
 
   if (c === 'Escape' || c === 'KeyP') {
     if (down) {
       if (inGame && !paused && bike.alive && !bike.finished) pauseGame();
       else if (paused) resumeGame();
+      else menuBack();
     }
+    if (e.cancelable) e.preventDefault();
     return;
   }
 
-  var handled = false;
-  if (c === 'ArrowUp' || c === 'KeyW') { kIn.gas = down; handled = true; }
-  else if (c === 'ArrowDown' || c === 'KeyS') { kIn.brake = down; handled = true; }
-  else if (c === 'ArrowLeft' || c === 'KeyA') { kIn.left = down; handled = true; }
-  else if (c === 'ArrowRight' || c === 'KeyD') { kIn.right = down; handled = true; }
-  else if (c === 'Space') { if (down) ensureAudio(); handled = true; }
+  var menuButtons = getMenuButtons();
 
-  if (handled && e.cancelable) e.preventDefault();
-  if (down) ensureAudio();
+  if (menuButtons.length) {
+    if (down) {
+      if (c === 'ArrowDown' || c === 'ArrowRight') { uiMoveFocus(1); if (e.cancelable) e.preventDefault(); return; }
+      if (c === 'ArrowUp' || c === 'ArrowLeft') { uiMoveFocus(-1); if (e.cancelable) e.preventDefault(); return; }
+      if (c === 'Tab') { uiMoveFocus(e.shiftKey ? -1 : 1); if (e.cancelable) e.preventDefault(); return; }
+      if (c === 'Enter' || c === 'Space') {
+        var act = document.activeElement;
+        if (act && act.tagName === 'BUTTON') return;
+        menuButtons[0].click();
+        if (e.cancelable) e.preventDefault();
+        return;
+      }
+      var di = digitIndex(c);
+      if (di >= 0) {
+        if (di < menuButtons.length) menuButtons[di].click();
+        if (e.cancelable) e.preventDefault();
+        return;
+      }
+    }
+
+    if (c === 'ArrowUp' || c === 'ArrowDown' || c === 'ArrowLeft' || c === 'ArrowRight' ||
+        c === 'KeyW' || c === 'KeyA' || c === 'KeyS' || c === 'KeyD') {
+      if (e.cancelable) e.preventDefault();
+      return;
+    }
+  }
+
+  if (inGame && !paused && menuButtons.length === 0) {
+    if (c === 'ArrowUp' || c === 'KeyW') { kIn.gas = down; if (e.cancelable) e.preventDefault(); return; }
+    if (c === 'ArrowDown' || c === 'KeyS') { kIn.brake = down; if (e.cancelable) e.preventDefault(); return; }
+    if (c === 'ArrowLeft' || c === 'KeyA') { kIn.left = down; if (e.cancelable) e.preventDefault(); return; }
+    if (c === 'ArrowRight' || c === 'KeyD') { kIn.right = down; if (e.cancelable) e.preventDefault(); return; }
+  }
 }
 
 var supportsPassive = false;
@@ -664,8 +833,9 @@ function updateTouchVisibility() {
   if (window.matchMedia) {
     try { coarse = coarse || window.matchMedia('(pointer: coarse)').matches; } catch (e) {}
   }
+  var menuVisible = isMenuVisible();
   var tc = $('touchControls');
-  if (tc) tc.style.display = coarse ? 'flex' : 'none';
+  if (tc) tc.style.display = (!menuVisible && inGame && bike.alive && !bike.finished && (coarse || W < 900 || H < 520)) ? 'flex' : 'none';
 }
 
 function initTouch() {
@@ -674,6 +844,58 @@ function initTouch() {
   bindZone('tGas', 'gas');
   bindZone('tBrake', 'brake');
   updateTouchVisibility();
+}
+
+var gpPrev = [];
+
+function pollGamepads() {
+  var gps = [];
+  try {
+    if (navigator.getGamepads) gps = navigator.getGamepads();
+    else if (navigator.webkitGetGamepads) gps = navigator.webkitGetGamepads();
+  } catch (e) { gps = []; }
+
+  for (var i = 0; i < gps.length; i++) {
+    var gp = gps[i];
+    if (!gp) { gpPrev[i] = null; continue; }
+
+    var prev = gpPrev[i] || {};
+    var anyEdge = false;
+    for (var b = 0; b < 17; b++) {
+      if (gpPressed(gp, b) && !prev['b' + b]) { anyEdge = true; break; }
+    }
+    if (anyEdge && !audioOK) ensureAudio();
+
+    if (gpPressed(gp, 9) && !prev.b9) {
+      if (inGame && paused) resumeGame();
+      else if (inGame && !paused && bike.alive && !bike.finished) pauseGame();
+    }
+
+    if (isMenuVisible() && !isTextInputActive()) {
+      var btns = getMenuButtons();
+      if (btns.length) {
+        if ((gpPressed(gp, 12) && !prev.b12) || (gpPressed(gp, 14) && !prev.b14)) uiMoveFocus(-1);
+        if ((gpPressed(gp, 13) && !prev.b13) || (gpPressed(gp, 15) && !prev.b15)) uiMoveFocus(1);
+
+        var ax0 = gpAxis(gp, 0);
+        var pax0 = (typeof prev.ax0 === 'number') ? prev.ax0 : 0;
+        if (ax0 < -0.55 && pax0 >= -0.55) uiMoveFocus(-1);
+        if (ax0 > 0.55 && pax0 <= 0.55) uiMoveFocus(1);
+
+        if (gpPressed(gp, 0) && !prev.b0) {
+          var act = document.activeElement;
+          if (act && act.tagName === 'BUTTON' && btns.indexOf(act) >= 0) act.click();
+          else { focusEl(btns[0]); btns[0].click(); }
+        }
+        if (gpPressed(gp, 1) && !prev.b1) menuBack();
+      }
+    }
+
+    var np = {};
+    for (b = 0; b < 17; b++) np['b' + b] = gpPressed(gp, b);
+    np.ax0 = gpAxis(gp, 0);
+    gpPrev[i] = np;
+  }
 }
 
 var terrain = [];
@@ -911,18 +1133,21 @@ var WBASE = 54;
 var MAXSPD = 620;
 var ENG = 980;
 var LEAN_G = 26;
-var LEAN_A = 70;
+var LEAN_A = 82;
 var MAX_AV_G = 7.5;
-var MAX_AV_A = 19;
+var MAX_AV_A = 22;
 var STEP = 1 / 120;
 
 var HEAD_X = 5, HEAD_Y = -46, HEAD_R = 7;
+
+var FLIP_EPS = 0.35;
+var FLIP_MIN_AIR = 0.035;
 
 var bike = {
   x: 0, y: 0, vx: 0, vy: 0, a: 0, av: 0, speed: 0,
   onGnd: false, rearG: false, frontG: false,
   alive: true, finished: false, air: 0, rot: 0, lastA: 0,
-  flips: 0, dist: 0, maxX: 0, engineOn: false, combo: 0, comboT: 0
+  flips: 0, flipsAwarded: 0, dist: 0, maxX: 0, engineOn: false, combo: 0, comboT: 0
 };
 
 var cam = { x: 0, y: 0, bx: 0, by: 0, init: false };
@@ -945,7 +1170,7 @@ function resetBike() {
   bike.onGnd = true; bike.rearG = true; bike.frontG = true;
   bike.alive = true; bike.finished = false;
   bike.air = 0; bike.rot = 0; bike.lastA = bike.a;
-  bike.flips = 0; bike.dist = 0; bike.maxX = bike.x;
+  bike.flips = 0; bike.flipsAwarded = 0; bike.dist = 0; bike.maxX = bike.x;
   bike.engineOn = false; bike.combo = 0; bike.comboT = 0;
 }
 
@@ -964,13 +1189,40 @@ function updateParticles(dt) {
   }
 }
 
+function completedFlipCount(rot) {
+  return floor((abs(rot) + FLIP_EPS) / TAU);
+}
+
+function processFlipRotation(isLanding) {
+  var completed = completedFlipCount(bike.rot);
+  if (completed <= bike.flipsAwarded) return;
+  if (!isLanding && bike.air < FLIP_MIN_AIR) return;
+  if (isLanding && bike.air < 0.015) return;
+
+  var add = completed - bike.flipsAwarded;
+  if (add > 8) add = 8;
+
+  var mult = bike.combo + 1;
+  var pts = add * 500 * mult;
+
+  score += pts;
+  bike.flips += add;
+  bike.combo += add;
+  bike.comboT = 2.5;
+  bike.flipsAwarded = completed;
+
+  showPopup(add + 'x FLIP x' + mult + ' +' + pts);
+  sfx('flip');
+}
+
 function physics(dt) {
   if (!bike.alive || bike.finished) return;
 
   var wasAir = !bike.onGnd;
-  var ca = cos(bike.a), sa = sin(bike.a);
+  var oldA = bike.a;
   var half = WBASE * 0.5;
 
+  var ca = cos(bike.a), sa = sin(bike.a);
   var rwx = bike.x - half * ca - WY * sa;
   var rwy = bike.y - half * sa + WY * ca;
   var fwx = bike.x + half * ca - WY * sa;
@@ -979,31 +1231,62 @@ function physics(dt) {
   groundAt(rwx, rgInfo);
   groundAt(fwx, fgInfo);
 
-  bike.rearG = rwy + WRAD >= rgInfo.y - 2;
-  bike.frontG = fwy + WRAD >= fgInfo.y - 2;
-  bike.onGnd = bike.rearG || bike.frontG;
+  var preRearG = rwy + WRAD >= rgInfo.y - 2;
+  var preFrontG = fwy + WRAD >= fgInfo.y - 2;
+  var preOnGnd = preRearG || preFrontG;
 
   bike.vy += GRAV * dt;
   var preVy = bike.vy;
 
   bike.engineOn = false;
-  if (bike.rearG && input.gas) {
+  if (preRearG && input.gas) {
     bike.vx += cos(rgInfo.angle) * ENG * dt;
     bike.vy += sin(rgInfo.angle) * ENG * dt;
     bike.engineOn = true;
   }
 
-  if (bike.onGnd && input.brake) {
+  if (preOnGnd && input.brake) {
     var bf = Math.exp(-3.5 * dt);
-    bike.vx *= bf; bike.vy *= bf;
+    bike.vx *= bf;
+    bike.vy *= bf;
   }
 
-  var torque = bike.onGnd ? LEAN_G : LEAN_A;
+  var torque = preOnGnd ? LEAN_G : LEAN_A;
   if (input.left) bike.av -= torque * dt;
   if (input.right) bike.av += torque * dt;
-  var maxAv = bike.onGnd ? MAX_AV_G : MAX_AV_A;
+  var maxAv = preOnGnd ? MAX_AV_G : MAX_AV_A;
   bike.av = clamp(bike.av, -maxAv, maxAv);
 
+  bike.x += bike.vx * dt;
+  bike.y += bike.vy * dt;
+  bike.a += bike.av * dt;
+
+  ca = cos(bike.a); sa = sin(bike.a);
+  rwx = bike.x - half * ca - WY * sa;
+  rwy = bike.y - half * sa + WY * ca;
+  fwx = bike.x + half * ca - WY * sa;
+  fwy = bike.y + half * sa + WY * ca;
+
+  groundAt(rwx, rgInfo);
+  groundAt(fwx, fgInfo);
+
+  bike.rearG = rwy + WRAD >= rgInfo.y - 2;
+  bike.frontG = fwy + WRAD >= fgInfo.y - 2;
+  bike.onGnd = bike.rearG || bike.frontG;
+
+  if (!wasAir && !bike.onGnd) {
+    bike.rot = 0;
+    bike.flipsAwarded = 0;
+    bike.air = 0;
+  }
+
+  var airThisStep = wasAir || !bike.onGnd;
+  if (airThisStep) {
+    bike.air += dt;
+    bike.rot += bike.a - oldA;
+  }
+
+  var preSolveA = bike.a;
   var corrX = 0, corrY = 0, impX = 0, impY = 0, targ = 0, targW = 0;
 
   if (bike.rearG) {
@@ -1011,109 +1294,127 @@ function physics(dt) {
     if (penR > -1.0) {
       if (penR < 0) penR = 0;
       var nxR = sin(rgInfo.angle), nyR = -cos(rgInfo.angle);
-      corrX += nxR * penR * 0.56; corrY += nyR * penR * 0.56;
+      corrX += nxR * penR * 0.56;
+      corrY += nyR * penR * 0.56;
       var vnR = bike.vx * nxR + bike.vy * nyR;
-      if (vnR < 0) { var jR = -vnR * 1.04 * 0.56; impX += nxR * jR; impY += nyR * jR; }
-      targ += rgInfo.angle * 0.56; targW += 0.56;
+      if (vnR < 0) {
+        var jR = -vnR * 1.04 * 0.56;
+        impX += nxR * jR;
+        impY += nyR * jR;
+      }
+      targ += rgInfo.angle * 0.56;
+      targW += 0.56;
     }
   }
+
   if (bike.frontG) {
     var penF = fwy + WRAD - fgInfo.y;
     if (penF > -1.0) {
       if (penF < 0) penF = 0;
       var nxF = sin(fgInfo.angle), nyF = -cos(fgInfo.angle);
-      corrX += nxF * penF * 0.44; corrY += nyF * penF * 0.44;
+      corrX += nxF * penF * 0.44;
+      corrY += nyF * penF * 0.44;
       var vnF = bike.vx * nxF + bike.vy * nyF;
-      if (vnF < 0) { var jF = -vnF * 1.04 * 0.44; impX += nxF * jF; impY += nyF * jF; }
-      targ += fgInfo.angle * 0.44; targW += 0.44;
+      if (vnF < 0) {
+        var jF = -vnF * 1.04 * 0.44;
+        impX += nxF * jF;
+        impY += nyF * jF;
+      }
+      targ += fgInfo.angle * 0.44;
+      targW += 0.44;
     }
   }
 
-  bike.x += corrX; bike.y += corrY;
-  bike.vx += impX; bike.vy += impY;
+  bike.x += corrX;
+  bike.y += corrY;
+  bike.vx += impX;
+  bike.vy += impY;
 
   if (targW > 0) {
     bike.a = angLerp(bike.a, targ / targW, 1 - Math.exp(-22 * dt));
     bike.av *= Math.exp(-10 * dt);
+  } else if (bike.onGnd) {
+    groundAt(bike.x, ggInfo);
+    bike.a = angLerp(bike.a, ggInfo.angle, 1 - Math.exp(-4 * dt));
+    bike.av *= Math.exp(-4 * dt);
+  }
+
+  if (airThisStep) {
+    bike.rot += bike.a - preSolveA;
+    processFlipRotation(false);
+  }
+
+  if (wasAir && bike.onGnd) {
+    processFlipRotation(true);
+    groundAt(bike.x, ggInfo);
+    var diff = angleDist(bike.a, ggInfo.angle);
+    var impactSpeed = sqrt(bike.vx * bike.vx + bike.vy * bike.vy);
+
+    riderCompress = max(riderCompress, min(1, preVy / 650 + diff * 0.35));
+
+    if (diff > 1.60 && impactSpeed > 120) { crash(); return; }
+
+    if (preVy > 230 || diff > 0.95) {
+      sfx('land');
+      addShake(min(1, preVy / 1000 + diff * 0.15), 0.16);
+    }
+
+    bike.rot = 0;
+    bike.flipsAwarded = 0;
+    bike.air = 0;
+  } else if (bike.onGnd) {
+    bike.rot = 0;
+    bike.flipsAwarded = 0;
+    bike.air = 0;
   }
 
   bike.vx *= Math.exp((bike.onGnd ? -0.35 : -0.05) * dt);
-
   bike.speed = sqrt(bike.vx * bike.vx + bike.vy * bike.vy);
   if (bike.speed > MAXSPD) {
     var sc = MAXSPD / bike.speed;
-    bike.vx *= sc; bike.vy *= sc; bike.speed = MAXSPD;
+    bike.vx *= sc;
+    bike.vy *= sc;
+    bike.speed = MAXSPD;
   }
 
-  bike.x += bike.vx * dt;
-  bike.y += bike.vy * dt;
-  bike.a += bike.av * dt;
-  bike.av *= Math.exp((bike.onGnd ? -3 : -0.45) * dt);
+  bike.av *= Math.exp((bike.onGnd ? -3 : -0.35) * dt);
 
-  if (bike.x > bike.maxX) { bike.dist += bike.x - bike.maxX; bike.maxX = bike.x; }
-
-  if (!bike.onGnd) {
-    bike.air += dt;
-    bike.rot += bike.a - bike.lastA;
-  } else {
-    if (wasAir) {
-      groundAt(bike.x, ggInfo);
-      var diff = angleDist(bike.a, ggInfo.angle);
-
-      var flips = floor(abs(bike.rot) / TAU);
-      if (bike.air > 0.32 && flips > 0) {
-        var mult = bike.combo + 1;
-        var pts = flips * 500 * mult;
-        score += pts;
-        bike.flips += flips;
-        bike.combo += flips;
-        bike.comboT = 2.5;
-        showPopup(flips + 'x FLIP x' + mult + ' +' + pts);
-        sfx('flip');
-      }
-
-      riderCompress = max(riderCompress, min(1, preVy / 650 + diff * 0.35));
-
-      if (diff > 1.60 && bike.speed > 120) { crash(); return; }
-      if (preVy > 230 || diff > 0.95) {
-        sfx('land');
-        addShake(min(1, preVy / 1000 + diff * 0.15), 0.16);
-      }
-    }
-    bike.air = 0; bike.rot = 0;
-    if (bike.comboT > 0) { bike.comboT -= dt; if (bike.comboT <= 0) bike.combo = 0; }
+  if (bike.x > bike.maxX) {
+    bike.dist += bike.x - bike.maxX;
+    bike.maxX = bike.x;
   }
 
   bike.lastA = bike.a;
 
   if (bike.y > 2500) { crash(); return; }
 
-  var ch = cos(bike.a), sh = sin(bike.a);
-  var hxx = bike.x + HEAD_X * ch - HEAD_Y * sh;
-  var hyy = bike.y + HEAD_X * sh + HEAD_Y * ch;
+  ca = cos(bike.a); sa = sin(bike.a);
+  var hxx = bike.x + HEAD_X * ca - HEAD_Y * sa;
+  var hyy = bike.y + HEAD_X * sa + HEAD_Y * ca;
   groundAt(hxx, hgInfo);
   var headPen = hyy + HEAD_R - hgInfo.y;
-  if (ch < -0.18 && headPen > -1) { crash(); return; }
+  if (ca < -0.18 && headPen > -1) { crash(); return; }
 
   if (bike.x >= finishX && bike.onGnd) { win(); return; }
 
   if (bike.engineOn && bike.rearG && particles.length < MAXP - 2) {
-    var erx = bike.x - half * ch - WY * sh;
-    var ery = bike.y - half * sh + WY * ch;
+    var erx = bike.x - half * ca - WY * sa;
+    var ery = bike.y - half * sa + WY * ca;
     for (var i = 0; i < 2; i++) {
       particles.push({
-        x: erx - ch * 14 + (random() - 0.5) * 4,
-        y: ery - sh * 14 + (random() - 0.5) * 4,
-        vx: -ch * 70 + (random() - 0.5) * 40,
-        vy: -sh * 70 - random() * 50,
+        x: erx - ca * 14 + (random() - 0.5) * 4,
+        y: ery - sa * 14 + (random() - 0.5) * 4,
+        vx: -ca * 70 + (random() - 0.5) * 40,
+        vy: -sa * 70 - random() * 50,
         life: 0.22 + random() * 0.18, max: 0.40,
         r: 1, g: 0.50 + random() * 0.30, b: 0.05, sz: 1.8 + random() * 2.2
       });
     }
   }
+
   if (bike.onGnd && bike.speed > 110 && particles.length < MAXP) {
-    var drx = bike.x - half * ch - WY * sh;
-    var dry = bike.y - half * sh + WY * ch + WRAD;
+    var drx = bike.x - half * ca - WY * sa;
+    var dry = bike.y - half * sa + WY * ca + WRAD;
     particles.push({
       x: drx + (random() - 0.5) * 6, y: dry,
       vx: -bike.vx * 0.08 + (random() - 0.5) * 30,
@@ -1125,10 +1426,9 @@ function physics(dt) {
 }
 
 function showGameOver() {
-  $('overDist').textContent = floor(bike.dist) + ' m';
-  $('overScore').textContent = score;
-  $('overScreen').classList.remove('hidden');
-  $('pauseBtn').style.display = 'none';
+  inGame = false;
+  paused = false;
+  showScreen('overScreen');
 }
 
 function crash() {
@@ -1137,6 +1437,8 @@ function crash() {
   crashPending = true;
   crashTimer = 1.25;
   riderCompress = 1;
+  clearInputs();
+  updateTouchVisibility();
   sfx('crash');
   addShake(1, 0.35);
   createRagdoll();
@@ -1157,6 +1459,8 @@ function crash() {
 function win() {
   if (bike.finished || !bike.alive) return;
   bike.finished = true;
+  clearInputs();
+  updateTouchVisibility();
   var pts = floor(bike.dist) + bike.flips * 300;
   score += pts;
   $('winStats').innerHTML =
@@ -1164,8 +1468,9 @@ function win() {
     'Flips: ' + bike.flips + '<br>' +
     'Level bonus: +' + pts + '<br>' +
     'Total score: ' + score;
-  $('winScreen').classList.remove('hidden');
-  $('pauseBtn').style.display = 'none';
+  inGame = false;
+  paused = false;
+  showScreen('winScreen');
   sfx('win');
   stopMusic();
   silenceEngine();
@@ -1406,7 +1711,7 @@ function computeRiderPose() {
 
   var tuck = 0;
   if (!bike.onGnd) {
-    tuck = clamp(abs(bike.av) * 0.045 + bike.air * 0.12 + (leanCtl > 0 ? leanCtl * 0.22 : 0) + (input.gas ? 0.08 : 0), 0, 0.85);
+    tuck = clamp(abs(bike.av) * 0.05 + bike.air * 0.15 + abs(leanCtl) * 0.18 + (input.gas ? 0.08 : 0), 0, 0.90);
   }
   var compress = clamp(riderCompress, 0, 1);
 
@@ -1681,8 +1986,8 @@ function updateScooterFall(dt) {
   s.vx *= 0.995;
   s.av *= 0.98;
   groundAt(s.x, ggInfo);
-  if (s.y > ggInfo.y - 18) {
-    s.y = ggInfo.y - 18;
+  if (s.y > ggInfo.y - 22) {
+    s.y = ggInfo.y - 22;
     if (s.vy > 0) s.vy *= -0.25;
     s.vx *= 0.82;
     s.av *= 0.70;
@@ -1792,6 +2097,8 @@ function frame(t) {
   if (dt < 0) dt = 0;
   if (dt > 0.1) dt = 0.1;
 
+  pollGamepads();
+
   if (!inGame) return;
 
   if (!paused) {
@@ -1835,7 +2142,24 @@ function frame(t) {
 
 function hideScreens() {
   var ids = ['titleScreen', 'pauseScreen', 'overScreen', 'winScreen'];
-  for (var i = 0; i < ids.length; i++) { var e = $(ids[i]); if (e) e.classList.add('hidden'); }
+  for (var i = 0; i < ids.length; i++) {
+    var e = $(ids[i]);
+    if (e) e.classList.add('hidden');
+  }
+  updateTouchVisibility();
+}
+
+function showScreen(id) {
+  var ids = ['titleScreen', 'pauseScreen', 'overScreen', 'winScreen'];
+  for (var i = 0; i < ids.length; i++) {
+    var e = $(ids[i]);
+    if (!e) continue;
+    if (ids[i] === id) e.classList.remove('hidden');
+    else e.classList.add('hidden');
+  }
+  clearInputs();
+  updateTouchVisibility();
+  focusFirstMenuButton();
 }
 
 function readSeed() {
@@ -1860,6 +2184,7 @@ function startLevel() {
   scooterFall = null;
   riderCompress = 0;
   cam.init = false;
+  clearInputs();
   genTerrain(level, seedNum);
   genVisuals();
   resetBike();
@@ -1868,6 +2193,7 @@ function startLevel() {
   inGame = true; paused = false;
   hideScreens();
   $('pauseBtn').style.display = 'block';
+  updateTouchVisibility();
   lastT = nowFn();
   stopMusic();
   startMusic();
@@ -1876,8 +2202,8 @@ function startLevel() {
 function pauseGame() {
   if (!inGame || paused || !bike.alive || bike.finished) return;
   paused = true;
-  $('pauseScreen').classList.remove('hidden');
   $('pwBox').style.display = 'none';
+  showScreen('pauseScreen');
   stopMusic();
   silenceEngine();
 }
@@ -1885,7 +2211,9 @@ function pauseGame() {
 function resumeGame() {
   if (!paused) return;
   paused = false;
-  $('pauseScreen').classList.add('hidden');
+  hideScreens();
+  $('pauseBtn').style.display = 'block';
+  clearInputs();
   lastT = nowFn();
   acc = 0;
   startMusic();
@@ -1895,20 +2223,20 @@ function restartLevel() { startLevel(); }
 function nextLevel() { level++; startLevel(); }
 
 function quitToTitle() {
-  inGame = false; paused = false;
+  inGame = false;
+  paused = false;
   crashPending = false;
   ragdoll = null;
   scooterFall = null;
-  hideScreens();
-  $('titleScreen').classList.remove('hidden');
+  showScreen('titleScreen');
   $('pauseBtn').style.display = 'none';
   stopMusic();
   silenceEngine();
 }
 
-var SAVE_KEY = 'scooterStuntPro.save.v5';
+var SAVE_KEY = 'scooterStuntPro.save.v8';
 
-function getSave() { return { v: 5, seed: seed, level: level, score: score, t: Date.now() }; }
+function getSave() { return { v: 8, seed: seed, level: level, score: score, t: Date.now() }; }
 
 function encodeSave(obj) {
   var s = JSON.stringify(obj);
@@ -1980,9 +2308,19 @@ function loadFromStorage() {
 function showSavePassword() {
   $('pwText').value = encodeSave(getSave());
   $('pwBox').style.display = 'block';
+  focusEl($('copyPwBtn'));
 }
 
-function copyPassword() { copyText($('pwText').value); }
+function closePassword() {
+  $('pwBox').style.display = 'none';
+  var b = document.querySelector('#pauseScreen .btnGrid button');
+  focusEl(b);
+}
+
+function copyPassword() {
+  copyText($('pwText').value);
+  showPopup('COPIED');
+}
 
 function loadFromPassword() {
   ensureAudio();
@@ -2006,9 +2344,12 @@ function copySeed() {
   var v = el ? el.value.trim() : '';
   if (v) { seed = v; seedNum = hashStr(seed); }
   copyText(seed);
+  showPopup('SEED COPIED');
 }
 
 function applySeed() { readSeed(); showPopup('SEED SET'); }
+
+function unlockAudio() { ensureAudio(); }
 
 initContext();
 resize();
@@ -2019,6 +2360,8 @@ window.addEventListener('resize', resize, false);
 window.addEventListener('orientationchange', function () { window.setTimeout(resize, 120); }, false);
 document.addEventListener('keydown', handleKey, false);
 document.addEventListener('keyup', handleKey, false);
+document.addEventListener('pointerdown', unlockAudio, false);
+document.addEventListener('touchstart', unlockAudio, nonPassive);
 document.addEventListener('visibilitychange', function () {
   if (document.hidden && inGame && !paused && bike.alive && !bike.finished) pauseGame();
 }, false);
