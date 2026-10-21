@@ -21,10 +21,11 @@ html,body{height:100vh;height:100dvh;background:var(--bg);color:var(--ink);overf
   grid-template-rows:auto minmax(0,1fr) auto;
   grid-template-areas:"head head head" "left board right" "foot foot foot"}
 #gl{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block}
-#app>*:not(#gl){position:relative;z-index:2}
+#app>*:not(#gl):not(#landTop):not(#pad){position:relative;z-index:2}
 #marquee{grid-area:head;min-height:0}
 #hudLeft{grid-area:left}#boardWrap{grid-area:board}#hudRight{grid-area:right}#deck{grid-area:foot}
 #strip,#pad{display:none}
+#pad{position:relative;z-index:2}
 
 /* ---------- marquee ---------- */
 #marquee{display:flex;align-items:flex-end;justify-content:space-between;gap:12px 18px;flex-wrap:wrap;
@@ -63,10 +64,13 @@ body[data-mode=""] .chip.opt{display:inline-flex}
 .pnl:hover{border-color:var(--line2);box-shadow:0 0 0 1px rgba(65,227,196,.07),0 8px 22px -14px #000}
 
 /* Important fix: preview containers must not sit on an opaque canvas-covering background */
-#pnlHold,#pnlNext,#stripHold,#stripNext,
-#holdBox,#nextBox,#miniHold,#miniNext,#ptHoldBox,#ptNextBox{background:transparent}
+#pnlHold,#pnlNext,#stripHold,#stripNext,#landHoldPnl,#landNextPnl,
+#holdBox,#nextBox,#miniHold,#miniNext,#ptHoldBox,#ptNextBox,
+#landHoldBox,#landNextBox{background:transparent}
 .pnl .ph,.pnl .sub,.pnl .row,.pnl .row b,.pnl .num,.pnl .big2,.pnl .b2b,#actName,#actPts,
-.rotInfo{text-shadow:0 1px 2px rgba(0,0,0,.78)}
+.rotInfo,#landTop .lnScore,#landTop .lnSub{
+  text-shadow:0 1px 2px rgba(0,0,0,.82)
+}
 
 .ph{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.24em;color:var(--dim);
   text-transform:uppercase;margin-bottom:8px}
@@ -182,6 +186,60 @@ body.has-side[data-mode="portrait"] #ptSideRight{display:flex}
   text-transform:uppercase;touch-action:manipulation;
 }
 
+/* ---------- landscape top-right HUD / previews ---------- */
+#landTop{
+  display:none;position:absolute;top:8px;right:8px;
+  width:min(150px,26vw);
+  max-height:calc(100% - clamp(80px,26vh,160px) - 16px);
+  overflow:auto;scrollbar-width:none;
+  flex-direction:column;gap:6px;
+  z-index:6;pointer-events:none;
+}
+#landTop::-webkit-scrollbar{display:none}
+body[data-mode="landscape"] #landTop{display:flex}
+
+.lnInfo{pointer-events:none}
+.lnScore{font-family:var(--display);font-size:clamp(20px,4.2vh,34px);line-height:.9;font-variant-numeric:tabular-nums;color:var(--ink)}
+.lnSub{font-size:9px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase;margin-top:3px}
+.lnSub b{color:var(--amber);font-weight:400}
+.lnState{font-size:9px;letter-spacing:.18em;color:var(--dim2);text-transform:uppercase;margin-top:3px}
+
+.lnBtns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;pointer-events:auto}
+.lb{
+  font-family:var(--display);font-size:clamp(9px,1.8vh,12px);letter-spacing:.08em;text-transform:uppercase;
+  min-height:26px;padding:5px 4px;border:1px solid var(--line2);color:var(--ink);
+  background:rgba(16,32,38,.86);cursor:pointer;touch-action:manipulation;transition:.14s;
+}
+.lb:hover{border-color:var(--mint);color:var(--mint)}
+.lb:active{background:var(--mint);color:#06181c}
+.lb.on{background:var(--mint);border-color:var(--mint);color:#06181c}
+.lb.off{color:var(--coral);border-color:#4a2a2c}
+
+.lnTune{
+  display:none;flex-direction:column;gap:5px;pointer-events:auto;
+  border-top:1px solid rgba(42,75,87,.65);padding-top:5px;
+}
+.lnTune.open{display:flex}
+.lnTune .sld{font-size:8px;letter-spacing:.12em;gap:4px}
+.lnTune .sld em{width:34px;font-size:8px}
+.lnTune input[type=range]{height:3px}
+.lnTune input[type=range]::-webkit-slider-thumb{width:10px;height:13px}
+.lnTune input[type=range]::-moz-range-thumb{width:10px;height:13px}
+
+.pvBox{
+  position:relative;border:1px solid var(--line);background:transparent;overflow:hidden;
+  clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+  pointer-events:auto;
+}
+.pvBox .sl{
+  position:absolute;top:0;left:0;right:0;height:10px;line-height:10px;font-size:7px;
+  letter-spacing:.14em;color:var(--dim2);text-transform:uppercase;text-align:center;
+}
+.pv{position:absolute;inset:10px 1px 1px;background:transparent}
+#landHoldPnl{height:clamp(34px,8vh,56px)}
+#landNextPnl{flex:1;min-height:68px}
+#landHoldBox,#landNextBox{height:100%}
+
 /* ---------- compact mobile HUD strip ---------- */
 #strip{gap:7px;align-items:stretch}
 .stripBox{flex:none;background:linear-gradient(160deg,var(--panel2),var(--panel) 60%);border:1px solid var(--line);
@@ -219,7 +277,8 @@ body[data-mode="portrait"] #marquee,
 body[data-mode="portrait"] #hudLeft,
 body[data-mode="portrait"] #hudRight,
 body[data-mode="portrait"] #deck,
-body[data-mode="portrait"] #strip{display:none!important}
+body[data-mode="portrait"] #strip,
+body[data-mode="portrait"] #landTop{display:none!important}
 
 body[data-mode="portrait"] #boardWrap{
   align-items:center;justify-content:center;overflow:hidden;padding:0;margin:0;
@@ -232,33 +291,68 @@ body[data-mode="portrait"] #pad{
 body[data-mode="portrait"] #padL,body[data-mode="portrait"] #padR{display:grid}
 body[data-mode="portrait"] #padL{margin-bottom:6px}
 
-/* =============== MOBILE LANDSCAPE : board centred, HUD + pad on the sides =============== */
-body[data-mode="landscape"] #app{gap:8px;padding:8px;
-  grid-template-columns:minmax(104px,150px) minmax(0,1fr) minmax(104px,150px);
-  grid-template-rows:auto minmax(0,1fr) auto;
-  grid-template-areas:"head head head" "left board right" "strip board pad"}
-body[data-mode="landscape"] #hudRight,body[data-mode="landscape"] #deck,
-body[data-mode="landscape"] #pnlRun,body[data-mode="landscape"] #pnlTune,
-body[data-mode="landscape"] #pnlAct,body[data-mode="landscape"] #pnlStack{display:none}
-body[data-mode="landscape"] #strip{display:flex;flex-direction:column;min-height:0}
-body[data-mode="landscape"] #pad{display:block}
-body[data-mode="landscape"] #padL,body[data-mode="landscape"] #padR{display:grid;grid-template-columns:1fr 1fr}
-body[data-mode="landscape"] #padL{margin-bottom:6px}
-body[data-mode="landscape"] #marquee{padding-bottom:6px}
-body[data-mode="landscape"] .tagline{display:none}
-body[data-mode="landscape"] .mark{width:24px;height:24px;gap:2px}
-body[data-mode="landscape"] h1{font-size:clamp(20px,3.4vh,32px)}
-body[data-mode="landscape"] .chip.opt{display:none}
-body[data-mode="landscape"] .pnl{padding:7px 8px 8px}
-body[data-mode="landscape"] #holdBox{height:52px}
-body[data-mode="landscape"] #pnlNext{flex:1;display:flex;flex-direction:column;min-height:0}
-body[data-mode="landscape"] #nextBox{min-height:110px}
-body[data-mode="landscape"] #stripBox{flex:none}
-body[data-mode="landscape"] #miniStats{display:none}
-body[data-mode="landscape"] #miniHold,#miniNext{display:none}
-body[data-mode="landscape"] #miniRow{display:none}
-body[data-mode="landscape"] #strip{padding:0}
-body[data-mode="landscape"] #pad button{min-height:clamp(38px,11.5vh,58px)}
+/* =============== MOBILE LANDSCAPE : board full height, top-right corner HUD =============== */
+body[data-mode="landscape"] #marquee,
+body[data-mode="landscape"] #hudLeft,
+body[data-mode="landscape"] #hudRight,
+body[data-mode="landscape"] #deck,
+body[data-mode="landscape"] #strip,
+body[data-mode="landscape"] #pnlRun,
+body[data-mode="landscape"] #pnlTune,
+body[data-mode="landscape"] #pnlAct,
+body[data-mode="landscape"] #pnlStack{display:none!important}
+
+body[data-mode="landscape"] #app{
+  padding:0;gap:0;
+  grid-template-columns:1fr;
+  grid-template-rows:minmax(0,1fr);
+  grid-template-areas:"board";
+}
+body[data-mode="landscape"] #boardWrap{
+  position:relative;
+  width:100%;height:100%;min-height:0;
+  align-items:center;justify-content:center;
+  padding:0;border:0;overflow:hidden;
+}
+body[data-mode="landscape"] #boardBox{border:0}
+body[data-mode="landscape"] #overlay{border:0;border-radius:0}
+
+/* bottom-left: move left / move right / down */
+/* bottom-right: rotate / drop */
+body[data-mode="landscape"] #pad{
+  position:absolute!important;inset:auto 0 0 0!important;
+  display:block!important;
+  height:clamp(72px,24vh,148px);
+  padding:0;background:transparent;border:0;
+  pointer-events:none;z-index:7;
+}
+body[data-mode="landscape"] #padL,
+body[data-mode="landscape"] #padR{
+  position:absolute;bottom:0;display:grid;pointer-events:auto;gap:5px;
+}
+body[data-mode="landscape"] #padL{
+  left:0;
+  width:min(38vw,220px);
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  padding:0 4px;
+}
+body[data-mode="landscape"] #padR{
+  right:0;
+  width:min(27vw,138px);
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  padding:0 4px;
+}
+body[data-mode="landscape"] #pad button{
+  min-height:clamp(58px,17vh,110px);
+  border-radius:3px;
+  background:rgba(11,23,28,.84);
+  border-color:rgba(42,75,87,.75);
+}
+body[data-mode="landscape"] #padL button[data-act="drop"],
+body[data-mode="landscape"] #padR button[data-act="ccw"],
+body[data-mode="landscape"] #padR button[data-act="flip"],
+body[data-mode="landscape"] #padR button[data-act="hold"]{display:none!important}
+
 @media (prefers-reduced-motion:reduce){*{animation-duration:.001s!important}}
 </style>
 </head>
@@ -340,6 +434,37 @@ body[data-mode="landscape"] #pad button{min-height:clamp(38px,11.5vh,58px)}
       <div id="overlay" class="hide"><div class="pbox" id="pbox"></div></div>
     </div>
   </section>
+
+  <!-- landscape top-right corner: information / pause / sound / ghost / tuning / hold+next previews -->
+  <div id="landTop" aria-hidden="true">
+    <div class="lnInfo">
+      <div class="lnScore" id="lScore">0</div>
+      <div class="lnSub">lv <b id="lLv">1</b> · ln <b id="lLn">0</b> · best <b id="lBest">0</b></div>
+      <div class="lnState" id="lState">ready</div>
+    </div>
+
+    <div class="lnBtns">
+      <button class="lb" id="landPause" type="button" title="pause / resume">II</button>
+      <button class="lb" id="landSound" type="button" title="sound on / off">♪</button>
+      <button class="lb on" id="landGhost" type="button" title="ghost on / off">GHOST</button>
+      <button class="lb on" id="landTune" type="button" title="tuning">TUNE</button>
+    </div>
+
+    <div class="lnTune open" id="landTuneBox">
+      <label class="sld">DAS<input type="range" id="dasL" min="30" max="240" value="120"><em id="dasLV">120ms</em></label>
+      <label class="sld">ARR<input type="range" id="arrL" min="0" max="90" value="18"><em id="arrLV">18ms</em></label>
+    </div>
+
+    <div class="pvBox" id="landHoldPnl" title="tap hold preview to hold piece">
+      <span class="sl">hold</span>
+      <div class="pv" id="landHoldBox"></div>
+    </div>
+
+    <div class="pvBox" id="landNextPnl">
+      <span class="sl">next</span>
+      <div class="pv" id="landNextBox"></div>
+    </div>
+  </div>
 
   <section class="rail" id="hudRight">
     <div class="pnl" id="pnlNext" style="flex:1;display:flex;flex-direction:column">
@@ -607,7 +732,7 @@ void main(){
 
 const F_WELL=`
 precision highp float;varying vec2 vUV;
-uniform float uTime,uCellX,uCellY,uW,uH,uDanger,uCT,uCN;uniform vec4 uClear[4];
+uniform float uTime,uCellX,uCellY,uW,uH,uDanger,uCT,uCN,uFrame;uniform vec4 uClear[4];
 void main(){
  vec2 p=(vUV-.5)*vec2(uW,uH);vec2 hs=vec2(uW*.5,uH*.5);vec2 ap=p+hs;
  vec3 col=mix(vec3(.022,.048,.058),vec3(.028,.054,.064),vUV.y);
@@ -618,8 +743,8 @@ void main(){
  col+=vec3(.050,.128,.148)*line*.85;
  col+=vec3(.10,.30,.34)*crossm*.55;
  float frame=min(hs.x-abs(p.x),hs.y-abs(p.y));
- col+=vec3(.10,.30,.34)*(1.-smoothstep(.05,1.6,frame));
- col+=vec3(.055,.175,.20)*smoothstep(11.,0.,frame);
+ col+=vec3(.10,.30,.34)*(1.-smoothstep(.05,1.6,frame))*uFrame;
+ col+=vec3(.055,.175,.20)*smoothstep(11.,0.,frame)*uFrame;
  float sheen=exp(-pow((ap.y-mod(uTime*70.,uH))/55.,2.));
  col+=vec3(.02,.055,.06)*sheen;
  float band=0.;
@@ -1001,12 +1126,14 @@ function applyMode(force){
 const boardWrap=$('boardWrap'),boardBox=$('boardBox');
 const R={bx:0,by:0,bw:0,bh:0,cw:0,ch:0};
 const PREV=[
-  {el:$('holdBox'),  get:function(){return [G.hold];}},
-  {el:$('nextBox'),  get:function(){return G.state==='menu'?[0,5,2,3,6]:G.queue.slice(0,5);}},
-  {el:$('miniHold'), get:function(){return [G.hold];}},
-  {el:$('miniNext'), get:function(){return G.state==='menu'?[0,5,2]:G.queue.slice(0,3);}},
-  {el:$('ptHoldBox'),get:function(){return [G.hold];}},
-  {el:$('ptNextBox'),get:function(){return G.state==='menu'?[0,5,2]:G.queue.slice(0,3);}}
+  {el:$('holdBox'),   get:function(){return [G.hold];}},
+  {el:$('nextBox'),   get:function(){return G.state==='menu'?[0,5,2,3,6]:G.queue.slice(0,5);}},
+  {el:$('miniHold'),  get:function(){return [G.hold];}},
+  {el:$('miniNext'),  get:function(){return G.state==='menu'?[0,5,2]:G.queue.slice(0,3);}},
+  {el:$('ptHoldBox'), get:function(){return [G.hold];}},
+  {el:$('ptNextBox'), get:function(){return G.state==='menu'?[0,5,2]:G.queue.slice(0,3);}},
+  {el:$('landHoldBox'),get:function(){return [G.hold];}},
+  {el:$('landNextBox'),get:function(){return G.state==='menu'?[0,5,2,3]:G.queue.slice(0,4);}}
 ];
 let cellNow=0;
 function syncLayout(){
@@ -1097,7 +1224,7 @@ function render(){
   for(let i=0;i<Math.min(4,cn);i++)clearArr[i*4]=G.clearRows[i];
   rectQ(R.bx+shakeX,R.by+shakeY,R.bw,R.bh);
   drawProg(PROGS.well,{uTime:T,uCellX:R.cw,uCellY:R.ch,uW:R.bw,uH:R.bh,uDanger:danger(),
-    uCT:G.clearT,uCN:cn,uClear:clearArr});
+    uCT:G.clearT,uCN:cn,uClear:clearArr,uFrame:MODE==='landscape'?0:1});
 
   const glowA=.05+.04*Math.sin(T*2.2);
   for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
@@ -1188,7 +1315,8 @@ function loop(now){
 const ui={};
 ['score','chipScore','chipBest','chipLv','chipLn','chipPps','lv','ln','pcs','tm','lvSmall','lnSmall',
  'combo','b2b','actName','actPts','stateChip','segs','stk','holdState','title',
- 'mScore','mLv','mLn','mBest','pScore','pLv','pLn','pBest','pState','pAct','ptPause']
+ 'mScore','mLv','mLn','mBest','pScore','pLv','pLn','pBest','pState','pAct','ptPause',
+ 'lScore','lLv','lLn','lBest','lState','landPause','landSound','landGhost','landTune']
 .forEach(function(id){ui[id]=$(id);});
 (function(){
   ui.title.innerHTML='';
@@ -1206,16 +1334,20 @@ function hud(){
     if(ui.chipScore)ui.chipScore.textContent=s;
     if(ui.mScore)ui.mScore.textContent=s;
     if(ui.pScore)ui.pScore.textContent=s;
+    if(ui.lScore)ui.lScore.textContent=s;
   }
   if(ui.chipBest)ui.chipBest.textContent=fmt(G.best);
   if(ui.mBest)ui.mBest.textContent=fmt(G.best);
   if(ui.pBest)ui.pBest.textContent=fmt(G.best);
+  if(ui.lBest)ui.lBest.textContent=fmt(G.best);
   if(ui.chipLv)ui.chipLv.textContent=G.level;
   if(ui.mLv)ui.mLv.textContent=G.level;
   if(ui.pLv)ui.pLv.textContent=G.level;
+  if(ui.lLv)ui.lLv.textContent=G.level;
   if(ui.chipLn)ui.chipLn.textContent=G.lines;
   if(ui.mLn)ui.mLn.textContent=G.lines;
   if(ui.pLn)ui.pLn.textContent=G.lines;
+  if(ui.lLn)ui.lLn.textContent=G.lines;
   if(ui.chipPps)ui.chipPps.textContent=(G.pieces/Math.max(1,G.time)).toFixed(2);
   if(ui.lv)ui.lv.textContent=G.level;
   if(ui.ln)ui.ln.textContent=G.lines;
@@ -1240,7 +1372,17 @@ function hud(){
   const stateTxt=({menu:'READY',playing:'PLAYING',paused:'PAUSED',clearing:'CLEAR',over:'OVER'})[G.state]||'—';
   if(ui.stateChip)ui.stateChip.textContent=stateTxt;
   if(ui.pState)ui.pState.textContent=stateTxt;
+  if(ui.lState)ui.lState.textContent=stateTxt;
   if(ui.ptPause)ui.ptPause.textContent=G.state==='paused'?'▶':'II';
+  if(ui.landPause)ui.landPause.textContent=G.state==='paused'?'▶':'II';
+  if(ui.landSound){
+    const soundOn=A.sfxOn&&A.musOn;
+    ui.landSound.textContent='♪';
+    ui.landSound.classList.toggle('off',!soundOn);
+  }
+  if(ui.landGhost)ui.landGhost.classList.toggle('on',G.ghost);
+  const tuneBox=$('landTuneBox');
+  if(ui.landTune&&tuneBox)ui.landTune.classList.toggle('on',tuneBox.classList.contains('open'));
 }
 const toasts=$('toasts');
 function toast(txt,cls,small){
@@ -1272,8 +1414,8 @@ function showOverlay(kind){
     '</div><div class="prompt">&#8635; '+tap+' to run it back</div>';
 }
 function togglePause(){
-  if(G.state==='playing'){G.state='paused';showOverlay('pause');musicDuck();SFX.ui();$('btnPause').textContent='▶';}
-  else if(G.state==='paused'){G.state='playing';showOverlay('');musicStart();SFX.ui();$('btnPause').textContent='II';}
+  if(G.state==='playing'){G.state='paused';showOverlay('pause');musicDuck();SFX.ui();if($('btnPause'))$('btnPause').textContent='▶';}
+  else if(G.state==='paused'){G.state='playing';showOverlay('');musicStart();SFX.ui();if($('btnPause'))$('btnPause').textContent='II';}
 }
 
 /* ============================== input ============================== */
@@ -1327,7 +1469,11 @@ function getT(k){return k==='ghost'?G.ghost:k==='shake'?G.shake:k==='music'?A.mu
 function setT(k,v){
   v=!!v;
   const b=document.querySelector('.tg[data-t="'+k+'"]');
-  if(k==='ghost')G.ghost=v;
+  if(k==='ghost'){
+    G.ghost=v;
+    const lg=$('landGhost');
+    if(lg)lg.classList.toggle('on',v);
+  }
   else if(k==='shake')G.shake=v;
   else if(k==='music'){A.musOn=v;if(!v)musicDuck();else if(G.state==='playing')musicStart();}
   else{A.sfxOn=v;if(A.ok)A.sg.gain.value=v?.5:0;}
@@ -1345,14 +1491,91 @@ function syncSoundBtn(){
   const on=A.sfxOn&&A.musOn;
   b.textContent=on?'♪ ON':'♪ OFF';
   b.classList.toggle('off',!on);
+  const lb=$('landSound');
+  if(lb){
+    lb.textContent='♪';
+    lb.classList.toggle('off',!on);
+  }
 }
 document.querySelectorAll('.tg').forEach(function(b){
   b.addEventListener('click',function(){aResume();const k=b.dataset.t;setT(k,!getT(k));if(A.ok)SFX.ui();});
 });
 $('btnPause').addEventListener('click',function(){aResume();togglePause();});
 $('btnSound').addEventListener('click',function(){aResume();toggleSound();});
-$('das').addEventListener('input',function(){G.das=+$('das').value;$('dasV').textContent=G.das+'ms';});
-$('arr').addEventListener('input',function(){G.arr=+$('arr').value;$('arrV').textContent=G.arr+'ms';});
+
+$('das').addEventListener('input',function(){
+  G.das=+$('das').value;
+  $('dasV').textContent=G.das+'ms';
+  if($('dasL')){
+    $('dasL').value=G.das;
+    $('dasLV').textContent=G.das+'ms';
+  }
+});
+$('arr').addEventListener('input',function(){
+  G.arr=+$('arr').value;
+  $('arrV').textContent=G.arr+'ms';
+  if($('arrL')){
+    $('arrL').value=G.arr;
+    $('arrLV').textContent=G.arr+'ms';
+  }
+});
+
+if($('dasL')){
+  $('dasL').addEventListener('input',function(){
+    G.das=+this.value;
+    $('dasLV').textContent=G.das+'ms';
+    if($('das')){
+      $('das').value=G.das;
+      $('dasV').textContent=G.das+'ms';
+    }
+  });
+}
+if($('arrL')){
+  $('arrL').addEventListener('input',function(){
+    G.arr=+this.value;
+    $('arrLV').textContent=G.arr+'ms';
+    if($('arr')){
+      $('arr').value=G.arr;
+      $('arrV').textContent=G.arr+'ms';
+    }
+  });
+}
+
+const landPause=$('landPause');
+if(landPause)landPause.addEventListener('click',function(){aResume();togglePause();});
+
+const landSound=$('landSound');
+if(landSound)landSound.addEventListener('click',function(){aResume();toggleSound();});
+
+const landGhost=$('landGhost');
+if(landGhost)landGhost.addEventListener('click',function(){
+  aResume();
+  setT('ghost',!G.ghost);
+  if(A.ok)SFX.ui();
+});
+
+const landTune=$('landTune');
+const landTuneBox=$('landTuneBox');
+if(landTune&&landTuneBox){
+  landTune.addEventListener('click',function(){
+    aResume();
+    const open=landTuneBox.classList.toggle('open');
+    landTune.classList.toggle('on',open);
+    if(A.ok)SFX.ui();
+  });
+}
+
+const landHoldPnl=$('landHoldPnl');
+if(landHoldPnl){
+  landHoldPnl.addEventListener('pointerdown',function(e){
+    e.preventDefault();
+    aResume();
+    if(G.state==='playing'){
+      doHold();
+      if(A.ok)SFX.ui();
+    }
+  });
+}
 
 const ptPause=$('ptPause');
 if(ptPause)ptPause.addEventListener('click',function(){aResume();togglePause();});
@@ -1395,20 +1618,35 @@ document.addEventListener('dblclick',function(e){e.preventDefault();});
 document.addEventListener('visibilitychange',function(){if(document.hidden&&G.state==='playing')togglePause();});
 window.addEventListener('blur',function(){if(G.state==='playing'){stopDAS(-1);stopDAS(1);G.soft=false;}});
 
-/* ============================== per-mode panel placement ============================== */
+/* ============================== per-mode panel placement ==============================
+   Landscape:
+     - move DROP button to padR so bottom-right contains rotate + drop
+     - keep bottom-left as ◀ ▶ ▼
+*/
 const strip=$('strip'),pad=$('pad'),padL=$('padL'),padR=$('padR');
 const pnlNext=$('pnlNext'),hudRight=$('hudRight'),hudLeft=$('hudLeft');
 let nextHome=null;
+let dropBtn=document.querySelector('#padL button[data-act="drop"]');
+let dropHome=dropBtn?dropBtn.parentNode:null;
+
 function layoutPanels(){
   if(!nextHome)nextHome=pnlNext.parentNode;
+
+  if(!dropBtn){
+    dropBtn=document.querySelector('#padL button[data-act="drop"]');
+    if(dropBtn)dropHome=dropBtn.parentNode;
+  }
 
   const isPortrait=(MODE==='portrait');
   const isLandscape=(MODE==='landscape');
 
-  pad.style.display=isPortrait?'block':(isLandscape?'contents':'none');
-  padL.style.gridArea=isLandscape?'strip':'';
-  padR.style.gridArea=isLandscape?'pad':'';
-  pad.style.gridArea='pad';
+  if(isLandscape){
+    pad.style.display='block';
+    if(dropBtn && dropBtn.parentNode!==padR) padR.appendChild(dropBtn);
+  }else{
+    if(dropBtn && dropHome && dropBtn.parentNode!==dropHome) dropHome.appendChild(dropBtn);
+    pad.style.display=isPortrait?'block':'none';
+  }
 
   strip.style.display='none';
 
@@ -1419,9 +1657,6 @@ function layoutPanels(){
   }
 
   pnlNext.style.display='flex';
-  const holdPanel=$('pnlHold'), scorePanel=$('pnlScore');
-  if(holdPanel)holdPanel.style.display='';
-  if(scorePanel)scorePanel.style.display='';
 }
 
 /* ============================== resize / orientation ============================== */
@@ -1457,6 +1692,14 @@ setT('ghost',true);
 setT('shake',true);
 $('dasV').textContent=G.das+'ms';
 $('arrV').textContent=G.arr+'ms';
+if($('dasL')){
+  $('dasL').value=G.das;
+  $('dasLV').textContent=G.das+'ms';
+}
+if($('arrL')){
+  $('arrL').value=G.arr;
+  $('arrLV').textContent=G.arr+'ms';
+}
 showOverlay('menu');
 hud();
 syncLayout();
