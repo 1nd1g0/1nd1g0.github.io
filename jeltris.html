@@ -1,0 +1,2762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Jelltris</title>
+<style>
+:root{
+  --fg:#e8eeff;
+  --muted:#8fa0c8;
+  --a1:#55e6c1;
+  --a2:#b56cf0;
+  --a3:#f7d84a;
+  --gap:6px;
+  --btnH:clamp(42px,7.5vw,60px);
+  --btnSmall:clamp(34px,5.5vw,46px);
+  --hudH:clamp(46px,8.8vh,68px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  height:100%;
+  overflow:hidden;
+  background:radial-gradient(120% 100% at 50% 0%,#121a33 0%,#070a12 55%,#04050a 100%);
+  color:var(--fg);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+#stage{
+  position:fixed;
+  inset:0;
+  overflow:hidden;
+}
+#game{
+  position:absolute;
+  display:block;
+  background:#060911;
+  border:1px solid rgba(255,255,255,.09);
+  box-shadow:0 10px 35px rgba(0,0,0,.45), inset 0 0 40px rgba(0,0,0,.35);
+  touch-action:none;
+  z-index:1;
+  border-radius:10px;
+}
+body.landscape #game{
+  border-radius:0;
+  border-left:0;
+  border-right:0;
+}
+#touch{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:3;
+  display:none;
+}
+body[data-state="play"] #touch{display:block}
+body[data-state="play"]:not(.landscape) #touch{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  padding:6px max(6px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));
+  gap:8px;
+}
+#clusterLeft,#clusterRight{pointer-events:auto}
+body:not(.landscape) #clusterLeft{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:var(--gap);
+  flex:1 1 auto;
+  max-width:330px;
+}
+body:not(.landscape) #clusterRight{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:var(--gap);
+  align-content:end;
+  min-width:112px;
+}
+body.landscape{
+  --gap:5px;
+  --btnH:clamp(36px,8vh,54px);
+  --btnSmall:clamp(28px,6vh,40px);
+  --hudH:clamp(44px,9vh,64px);
+}
+body.landscape #clusterLeft{
+  position:absolute;
+  left:max(6px,env(safe-area-inset-left));
+  bottom:max(6px,env(safe-area-inset-bottom));
+  display:grid;
+  grid-template-columns:repeat(3,var(--btnH));
+  grid-auto-rows:var(--btnH);
+  gap:var(--gap);
+}
+body.landscape #clusterRight{
+  position:absolute;
+  right:max(6px,env(safe-area-inset-right));
+  bottom:max(6px,env(safe-area-inset-bottom));
+  display:grid;
+  grid-template-rows:auto auto;
+  gap:var(--gap);
+  justify-items:end;
+}
+body.landscape #rotateRow{
+  display:grid;
+  grid-template-columns:repeat(2,var(--btnH));
+  gap:var(--gap);
+}
+body.landscape #hudMountLandscape{
+  display:block;
+  width:calc(var(--btnH) * 2 + var(--gap));
+  height:max(44px,var(--btnH));
+}
+#rotateRow{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:var(--gap);
+}
+#hudMountPortrait{
+  position:absolute;
+  left:0;
+  right:0;
+  top:max(4px,env(safe-area-inset-top));
+  padding:0 max(6px,env(safe-area-inset-right)) 0 max(6px,env(safe-area-inset-left));
+  height:var(--hudH);
+  display:none;
+  pointer-events:none;
+  z-index:4;
+}
+body[data-state="play"]:not(.landscape) #hudMountPortrait{display:block}
+#hudMountLandscape{display:none}
+#hud{
+  position:relative;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+.panel{
+  position:absolute;
+  inset:0;
+  pointer-events:auto;
+  background:rgba(5,8,15,.74);
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:12px;
+  padding:4px 8px;
+  color:var(--fg);
+  box-shadow:0 4px 14px rgba(0,0,0,.25);
+  display:flex;
+  align-items:center;
+  overflow:hidden;
+  opacity:1;
+  visibility:visible;
+  transition:opacity .12s linear, visibility 0s linear 0s;
+}
+#panelStats{
+  gap:7px;
+  justify-content:flex-start;
+}
+#panelSys{
+  gap:6px;
+  justify-content:center;
+}
+#hud.hudPause #panelStats{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .12s linear, visibility 0s linear .12s;
+}
+#hud:not(.hudPause) #panelSys{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .12s linear, visibility 0s linear .12s;
+}
+#nextMini{
+  width:34px;
+  height:34px;
+  border-radius:8px;
+  background:#060911;
+  border:1px solid rgba(255,255,255,.08);
+  flex:0 0 auto;
+}
+body.landscape #nextMini{
+  width:30px;
+  height:30px;
+}
+.statMain{
+  flex:1 1 auto;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:2px;
+  overflow:hidden;
+}
+.statTop{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:6px;
+  min-width:0;
+}
+#score{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:clamp(18px,4.9vh,30px);
+  font-weight:900;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+body:not(.landscape) #score{
+  font-size:clamp(19px,5.4vw,30px);
+}
+.statClock{
+  flex:0 0 auto;
+  font-size:clamp(13px,3.2vh,21px);
+  font-weight:900;
+  line-height:1;
+  color:var(--a1);
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+body:not(.landscape) .statClock{
+  font-size:clamp(14px,3.9vw,22px);
+}
+.statSub{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:clamp(10px,2.35vh,14px);
+  line-height:1.1;
+  color:var(--muted);
+  font-variant-numeric:tabular-nums;
+}
+body:not(.landscape) .statSub{
+  font-size:clamp(10px,2.9vw,14px);
+}
+.miniBtn{
+  appearance:none;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.08);
+  color:var(--fg);
+  border-radius:10px;
+  width:clamp(42px,9vw,58px);
+  height:clamp(30px,6vh,40px);
+  font-size:clamp(14px,3.5vw,19px);
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  touch-action:manipulation;
+  flex:0 0 auto;
+}
+.miniBtn:active{transform:translateY(1px) scale(.98)}
+.ctl{
+  appearance:none;
+  border:1px solid rgba(255,255,255,.10);
+  background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.03));
+  color:var(--fg);
+  border-radius:14px;
+  height:var(--btnH);
+  min-width:var(--btnH);
+  font-size:clamp(18px,5vw,24px);
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 5px 16px rgba(0,0,0,.28);
+  cursor:pointer;
+  touch-action:manipulation;
+}
+body.landscape .ctl{font-size:clamp(16px,4.5vh,22px)}
+.ctl.small{
+  height:var(--btnSmall);
+  font-size:clamp(11px,3vw,14px);
+  letter-spacing:1px;
+  font-weight:800;
+}
+.ctl.on{
+  background:linear-gradient(180deg,rgba(85,230,193,.28),rgba(85,230,193,.10));
+  border-color:rgba(85,230,193,.45);
+  transform:translateY(1px);
+}
+#btnHard{
+  grid-column:1 / -1;
+  height:var(--btnSmall);
+  font-size:clamp(11px,3vw,14px);
+  letter-spacing:1px;
+  font-weight:800;
+  white-space:nowrap;
+}
+#overlay{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  background:rgba(4,6,12,.84);
+  z-index:10;
+  padding:14px;
+  touch-action:auto;
+}
+#overlay.hidden{display:none}
+#overlay > div{
+  width:100%;
+  max-width:390px;
+  max-height:100%;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+}
+#ovTitle{
+  font-size:clamp(26px,8vw,42px);
+  letter-spacing:3px;
+  margin-bottom:8px;
+  background:linear-gradient(90deg,var(--a1),var(--a2),var(--a3));
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+#ovText{
+  font-size:13px;
+  line-height:1.55;
+  color:#c7d2ef;
+  margin-bottom:10px;
+}
+#ovText b{color:var(--fg)}
+.smallNote{
+  display:block;
+  font-size:11px;
+  color:var(--muted);
+  margin-top:4px;
+}
+.chooseLabel{
+  font-size:10px;
+  letter-spacing:1.6px;
+  color:var(--muted);
+  margin:8px 0 4px;
+}
+.choiceRow{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  justify-content:center;
+  margin-bottom:4px;
+}
+.choiceBtn{
+  appearance:none;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:var(--fg);
+  border-radius:999px;
+  padding:8px 12px;
+  font-size:12px;
+  font-weight:850;
+  letter-spacing:.8px;
+  cursor:pointer;
+  touch-action:manipulation;
+  line-height:1;
+}
+.choiceBtn.sel{
+  background:linear-gradient(180deg,rgba(85,230,193,.34),rgba(85,230,193,.12));
+  border-color:rgba(85,230,193,.58);
+  color:#fff;
+}
+.modeDesc{
+  font-size:11px;
+  line-height:1.45;
+  color:#c7d2ef;
+  min-height:34px;
+  margin:6px 0 12px;
+}
+#volSlider{
+  width:100%;
+  max-width:280px;
+  margin:2px auto 14px;
+  display:block;
+  accent-color:var(--a1);
+  touch-action:pan-x;
+}
+.menuButtons{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  justify-content:center;
+}
+.ovPrimary,.ovSecondary{
+  appearance:none;
+  border-radius:999px;
+  padding:12px 22px;
+  font-size:14px;
+  font-weight:850;
+  letter-spacing:1.2px;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  touch-action:manipulation;
+  line-height:1;
+}
+.ovPrimary{
+  border:0;
+  color:#071018;
+  background:linear-gradient(180deg,#8affe0,#35c9a2);
+  box-shadow:0 8px 24px rgba(53,201,162,.25);
+}
+.ovSecondary{
+  color:var(--fg);
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);
+}
+.ovPrimary:active,.ovSecondary:active{transform:translateY(1px) scale(.99)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="game"></canvas>
+
+  <div id="hudMountPortrait"></div>
+
+  <div id="touch">
+    <div id="clusterLeft">
+      <button class="ctl" id="btnLeft">◀</button>
+      <button class="ctl" id="btnDown">▼</button>
+      <button class="ctl" id="btnRight">▶</button>
+      <button class="ctl small" id="btnHard">HARD DROP</button>
+    </div>
+
+    <div id="clusterRight">
+      <div id="rotateRow">
+        <button class="ctl" id="btnCCW">↺</button>
+        <button class="ctl" id="btnCW">↻</button>
+      </div>
+      <div id="hudMountLandscape"></div>
+    </div>
+  </div>
+
+  <div id="hud">
+    <div id="panelStats" class="panel">
+      <canvas id="nextMini" width="64" height="64"></canvas>
+      <div class="statMain">
+        <div class="statTop">
+          <div id="score">0</div>
+          <div id="timer" class="statClock">0:00</div>
+        </div>
+        <div class="statSub"><span id="lines">0</span><span id="target"></span> · LV<span id="level">1</span></div>
+      </div>
+    </div>
+    <div id="panelSys" class="panel">
+      <button id="btnPause" class="miniBtn" aria-label="Pause">II</button>
+      <button id="soundBtn" class="miniBtn" aria-label="Sound">🔊</button>
+    </div>
+  </div>
+
+  <div id="overlay"></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+const FIELD_W = 10;
+const FIELD_H = 20;
+const DT = 1/60;
+const TAU = Math.PI * 2;
+
+const PHYS_R = 0.5;
+const VIS_R = 0.47;
+const COVER_HALF = 0.5;
+const MIN_DIST = 1.0;
+const MIN_DIST2 = MIN_DIST * MIN_DIST;
+const FULL_MASK = (1 << FIELD_W) - 1;
+const EPS = 1e-4;
+
+const ua = navigator.userAgent || '';
+const LOW = /Android|iPhone|iPad|iPod|Mobile|Silk/i.test(ua) || (navigator.hardwareConcurrency || 4) <= 4;
+const ITER = LOW ? 2 : 3;
+const DPR_CAP = LOW ? 1.5 : 2;
+
+const MOVE_SPEED = 8.0;
+const FALL_BASE = 2.1;
+const FALL_LEVEL = 0.26;
+const SOFT_DROP = 8.0;
+const HARD_DROP = 27.0;
+
+const ROT_ACCEL = 10.0;
+const ROT_MAX = 12.0;
+const ROT_DAMP = 8.0;
+
+const ACTIVE_CTRL_BASE = 0.36;
+
+const GRAVITY = 26.0;
+const ACTIVE_DAMP = 0.968;
+const FALL_DAMP = 0.982;
+const CONS_STIFF = 0.72;
+const MAXV = 29.0;
+const MAXV2 = MAXV * MAXV;
+
+const HARD_LOCK_SPEED = 4.2;
+const SLEEP_SPEED = 0.18;
+const SLEEP_DELAY = LOW ? 0.45 : 0.65;
+
+const SUPPORT_DIST = 1.28;
+const SUPPORT_DIST2 = SUPPORT_DIST * SUPPORT_DIST;
+const WAKE_OVERLAP = 0.045;
+
+const PARTICLE_MASS = 1.0;
+const MASS_MIN = 0.25;
+const LOAD_TRANSFER = 0.055;
+const LOAD_CAP_MIN = 18.0;
+const LOAD_CAP_FACTOR = 7.0;
+const SLEEP_LOAD = 1000000.0;
+
+const SFX_BASE_GAIN = 1.68;
+const DEFAULT_VOLUME = 0.25;
+
+const DIFFS = [
+  {
+    name:'EASY',
+    desc:'Forgiving jelly. Lower coverage requirement, slower fall, more control.',
+    fallMul:1.0,
+    ctrlLoss:0.58,
+    fallRange:7.5,
+    jitter:1.9,
+    rotJitter:2.8,
+    slideGain:4.2,
+    slideThreshold:0.055,
+    lockDelay:0.18,
+    cellFill:0.26,
+    rowMember:0.26,
+    spawnDelay:0.12,
+    scoreMul:1.0
+  },
+  {
+    name:'NORMAL',
+    desc:'Balanced speed, stricter coverage, moderate loss of control.',
+    fallMul:1.28,
+    ctrlLoss:0.67,
+    fallRange:6.4,
+    jitter:2.35,
+    rotJitter:3.35,
+    slideGain:4.9,
+    slideThreshold:0.045,
+    lockDelay:0.15,
+    cellFill:0.35,
+    rowMember:0.35,
+    spawnDelay:0.10,
+    scoreMul:1.3
+  },
+  {
+    name:'HARD',
+    desc:'Fast fall, strict coverage, slippery jelly, earlier loss of control.',
+    fallMul:1.60,
+    ctrlLoss:0.77,
+    fallRange:5.3,
+    jitter:3.0,
+    rotJitter:4.1,
+    slideGain:5.6,
+    slideThreshold:0.035,
+    lockDelay:0.12,
+    cellFill:0.45,
+    rowMember:0.45,
+    spawnDelay:0.08,
+    scoreMul:1.7
+  },
+  {
+    name:'INSANE',
+    desc:'Very strict >50% coverage, very fast, almost no control while falling.',
+    fallMul:2.05,
+    ctrlLoss:0.88,
+    fallRange:4.2,
+    jitter:3.9,
+    rotJitter:5.2,
+    slideGain:6.5,
+    slideThreshold:0.024,
+    lockDelay:0.09,
+    cellFill:0.57,
+    rowMember:0.57,
+    spawnDelay:0.05,
+    scoreMul:2.2
+  }
+];
+
+const MODES = [
+  {
+    name:'MARATHON',
+    desc:'Endless classic. Level rises every 10 lines.',
+    target:0,
+    time:0
+  },
+  {
+    name:'SPRINT 40',
+    desc:'Clear 40 lines as fast as possible.',
+    target:40,
+    time:0
+  },
+  {
+    name:'ULTRA 2:00',
+    desc:'Score attack in two minutes.',
+    target:0,
+    time:120
+  },
+  {
+    name:'BLITZ 1:00',
+    desc:'One minute score attack.',
+    target:0,
+    time:60
+  }
+];
+
+const MAX_PARTICLES = 1024;
+const MAX_PIECES = 256;
+const MAX_CONS = MAX_PIECES * 6;
+
+const x = new Float32Array(MAX_PARTICLES);
+const y = new Float32Array(MAX_PARTICLES);
+const vx = new Float32Array(MAX_PARTICLES);
+const vy = new Float32Array(MAX_PARTICLES);
+const ox = new Float32Array(MAX_PARTICLES);
+const oy = new Float32Array(MAX_PARTICLES);
+const alive = new Uint8Array(MAX_PARTICLES);
+const pieceOf = new Int16Array(MAX_PARTICLES);
+const freeList = new Int16Array(MAX_PARTICLES);
+let freeCount = 0;
+let particleLimit = 0;
+
+const consA = new Uint8Array(MAX_CONS);
+const consB = new Uint8Array(MAX_CONS);
+const consRest = new Float32Array(MAX_CONS);
+
+const pieceAlive = new Uint8Array(MAX_PIECES);
+const pieceActive = new Uint8Array(MAX_PIECES);
+const pieceSleep = new Uint8Array(MAX_PIECES);
+const pieceCount = new Uint8Array(MAX_PIECES);
+const pieceColor = new Uint8Array(MAX_PIECES);
+const pieceParts = new Int16Array(MAX_PIECES * 4);
+const pieceOmega = new Float32Array(MAX_PIECES);
+const pieceLock = new Float32Array(MAX_PIECES);
+const pieceSleepTimer = new Float32Array(MAX_PIECES);
+
+const pieceMass = new Float32Array(MAX_PIECES);
+const pieceInvMass = new Float32Array(MAX_PIECES);
+const pieceLoadMass = new Float32Array(MAX_PIECES);
+const pieceLoadInv = new Float32Array(MAX_PIECES);
+const piecePressure = new Float32Array(MAX_PIECES);
+const pieceCarried = new Float32Array(MAX_PIECES);
+const pieceAvgY = new Float32Array(MAX_PIECES);
+
+const GRID_W = FIELD_W + 2;
+const GRID_H = FIELD_H + 6;
+const head = new Int16Array(GRID_W * GRID_H);
+const nextP = new Int16Array(MAX_PARTICLES);
+
+const rowMask = new Uint16Array(FIELD_H);
+const clearRows = new Int8Array(FIELD_H);
+const rowFlash = new Float32Array(FIELD_H);
+
+const POPCOUNT = new Uint8Array(1 << FIELD_W);
+for (let i = 1; i < POPCOUNT.length; i++) {
+  POPCOUNT[i] = POPCOUNT[i >> 1] + (i & 1);
+}
+
+const PAIR_A = [0,0,0,1,1,2];
+const PAIR_B = [1,2,3,2,3,3];
+
+const SHAPES = [
+  [[0,0],[1,0],[2,0],[3,0]],
+  [[0,0],[1,0],[0,1],[1,1]],
+  [[0,0],[1,0],[2,0],[1,1]],
+  [[1,0],[2,0],[0,1],[1,1]],
+  [[0,0],[1,0],[1,1],[2,1]],
+  [[0,0],[0,1],[1,1],[2,1]],
+  [[2,0],[0,1],[1,1],[2,1]]
+];
+
+const COLORS = [
+  '#39d7d7', '#f7d84a', '#b56cf0',
+  '#57d66b', '#ef5a5a', '#4a7bf7', '#f79a4a'
+];
+
+const OFFSETS = [];
+const RESTS = [];
+
+for (let s = 0; s < SHAPES.length; s++) {
+  const cells = SHAPES[s];
+  let ax = 0, ay = 0;
+  for (let i = 0; i < 4; i++) { ax += cells[i][0]; ay += cells[i][1]; }
+  ax /= 4; ay /= 4;
+  const offs = [];
+  for (let i = 0; i < 4; i++) offs.push([cells[i][0] - ax, cells[i][1] - ay]);
+  OFFSETS.push(offs);
+
+  const rests = [];
+  for (let c = 0; c < 6; c++) {
+    const a = PAIR_A[c], b = PAIR_B[c];
+    const dx = offs[a][0] - offs[b][0];
+    const dy = offs[a][1] - offs[b][1];
+    rests.push(Math.sqrt(dx*dx + dy*dy));
+  }
+  RESTS.push(rests);
+}
+
+const stage = document.getElementById('stage');
+const game = document.getElementById('game');
+const ctx = game.getContext('2d', { alpha: false });
+const touch = document.getElementById('touch');
+const hud = document.getElementById('hud');
+const hudMountPortrait = document.getElementById('hudMountPortrait');
+const hudMountLandscape = document.getElementById('hudMountLandscape');
+const nextMini = document.getElementById('nextMini');
+const nmctx = nextMini.getContext('2d', { alpha: false });
+
+const scoreEl = document.getElementById('score');
+const linesEl = document.getElementById('lines');
+const targetEl = document.getElementById('target');
+const levelEl = document.getElementById('level');
+const timerEl = document.getElementById('timer');
+const overlay = document.getElementById('overlay');
+const soundBtn = document.getElementById('soundBtn');
+const btnPause = document.getElementById('btnPause');
+
+const input = {
+  left:false, right:false, down:false,
+  ccw:false, cw:false, hard:false
+};
+
+let state = 'menu';
+let overlayMode = 'menu';
+let score = 0, lines = 0, level = 1;
+let lastScore = -1, lastLines = -1, lastLevel = -1;
+
+let activePiece = -1;
+let spawnDelay = 0;
+let activeGrounded = 0;
+let activeGroundedPrev = 0;
+let activeSupportX = 0;
+let activeSupportCount = 0;
+let activeCenterX = 0;
+let activeImbalance = 0;
+let activeFallFactor = 0;
+
+let bag = [];
+let nextType = 0;
+
+let lastClearRows = 0;
+let shake = 0;
+let shakeX = 0;
+let shakeY = 0;
+
+let moveSoundTimer = 0;
+let softSoundTimer = 0;
+let impactCandidate = 0;
+let hudSwapTimer = 0;
+let hudPhase = 0;
+
+let clock = 0;
+let timeLimit = 0;
+let targetLines = 0;
+
+function loadNum(key, def){
+  try {
+    const v = parseInt(localStorage.getItem(key), 10);
+    if (isFinite(v)) return v;
+  } catch(e){}
+  return def;
+}
+
+function saveNum(key, v){
+  try { localStorage.setItem(key, String(v)); } catch(e){}
+}
+
+let diffIndex = Math.max(0, Math.min(DIFFS.length - 1, loadNum('jelltrisDiff', 0)));
+let modeIndex = Math.max(0, Math.min(MODES.length - 1, loadNum('jelltrisMode', 0)));
+let currentDiff = DIFFS[diffIndex];
+let currentMode = MODES[modeIndex];
+
+function setSelected(){
+  currentDiff = DIFFS[diffIndex] || DIFFS[0];
+  currentMode = MODES[modeIndex] || MODES[0];
+}
+
+function formatTime(sec){
+  sec = Math.max(0, Math.floor(sec));
+  const m = (sec / 60) | 0;
+  const s = sec % 60;
+  return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+const SFX = {
+  ctx: null,
+  master: null,
+  comp: null,
+  pinkBuf: null,
+  brownBuf: null,
+  rotOsc: null,
+  rotGain: null,
+  rotLfo: null,
+  rotDepth: null,
+  enabled: true,
+  volume: (function(){
+    try {
+      const v = parseFloat(localStorage.getItem('jelltrisVolume'));
+      if (isFinite(v)) return Math.max(0, Math.min(1, v));
+    } catch(e){}
+    return DEFAULT_VOLUME;
+  })(),
+  gainScale: 1.0,
+  lastImpact: 0,
+
+  init(){
+    if (this.ctx) return;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      this.ctx = new AC();
+
+      this.master = this.ctx.createGain();
+      try {
+        this.comp = this.ctx.createDynamicsCompressor();
+        this.comp.threshold.value = -9;
+        this.comp.knee.value = 18;
+        this.comp.ratio.value = 9;
+        this.comp.attack.value = 0.003;
+        this.comp.release.value = 0.18;
+        this.master.connect(this.comp);
+        this.comp.connect(this.ctx.destination);
+      } catch(e) {
+        this.master.connect(this.ctx.destination);
+      }
+
+      const sr = this.ctx.sampleRate;
+      const len = Math.floor(sr * (LOW ? 0.55 : 0.85));
+
+      const pbuf = this.ctx.createBuffer(1, len, sr);
+      const pd = pbuf.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0;
+      for (let i = 0; i < len; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99765 * b0 + white * 0.0990460;
+        b1 = 0.96300 * b1 + white * 0.2965164;
+        b2 = 0.57000 * b2 + white * 1.0526913;
+        let v = (b0 + b1 + b2 + white * 0.1848) * 0.09;
+        if (v > 1) v = 1;
+        else if (v < -1) v = -1;
+        pd[i] = v;
+      }
+      this.pinkBuf = pbuf;
+
+      const bbuf = this.ctx.createBuffer(1, len, sr);
+      const bd = bbuf.getChannelData(0);
+      let last = 0;
+      for (let i = 0; i < len; i++) {
+        const white = Math.random() * 2 - 1;
+        last = (last + 0.020 * white) * 0.9985;
+        let v = last * 6.2;
+        if (v > 1) v = 1;
+        else if (v < -1) v = -1;
+        bd[i] = v;
+      }
+      this.brownBuf = bbuf;
+
+      const ro = this.ctx.createOscillator();
+      ro.type = 'sine';
+      ro.frequency.value = 55;
+
+      const rg = this.ctx.createGain();
+      rg.gain.value = 0;
+
+      const lo = this.ctx.createOscillator();
+      lo.type = 'sine';
+      lo.frequency.value = 6;
+
+      const ld = this.ctx.createGain();
+      ld.gain.value = 0;
+
+      lo.connect(ld);
+      ld.connect(rg.gain);
+      ro.connect(rg);
+      rg.connect(this.master);
+
+      ro.start();
+      lo.start();
+
+      this.rotOsc = ro;
+      this.rotGain = rg;
+      this.rotLfo = lo;
+      this.rotDepth = ld;
+
+      this.applyGain();
+    } catch (e) {
+      this.ctx = null;
+    }
+  },
+
+  unlock(){
+    this.init();
+    if (this.ctx && this.ctx.state !== 'running') {
+      const p = this.ctx.resume();
+      if (p && p.catch) p.catch(function(){});
+    }
+  },
+
+  ready(){
+    return !!this.ctx && this.enabled && !!this.master && this.volume > 0.001;
+  },
+
+  applyGain(){
+    if (!this.ctx || !this.master) return;
+    const g = this.enabled ? this.volume * SFX_BASE_GAIN : 0;
+    this.master.gain.setTargetAtTime(g, this.ctx.currentTime, 0.015);
+  },
+
+  setVolume(v){
+    this.volume = Math.max(0, Math.min(1, v));
+    this.applyGain();
+    saveNum('jelltrisVolume', Math.round(this.volume * 100));
+    updateSoundIcon();
+  },
+
+  _pk(p){
+    let v = p * this.gainScale;
+    if (v > 0.75) v = 0.75;
+    if (v < 0.0002) v = 0.0002;
+    return v;
+  },
+
+  _tone(type, f0, f1, dur, peak, t0, dest){
+    if (!this.ready()) return;
+    const c = this.ctx;
+    const t = t0 || (c.currentTime + 0.001);
+    const o = c.createOscillator();
+    const g = c.createGain();
+    const pk = this._pk(peak);
+
+    o.type = type;
+    o.frequency.setValueAtTime(Math.max(20, f0), t);
+    if (f1 && Math.abs(f1 - f0) > 1) {
+      o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+    }
+
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(pk, t + Math.min(0.012, dur * 0.25));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+    o.connect(g);
+    g.connect(dest || this.master);
+    o.start(t);
+    o.stop(t + dur + 0.03);
+  },
+
+  _noise(dur, peak, type, f0, f1, q, t0, playback){
+    if (!this.ready() || !this.pinkBuf) return;
+    const c = this.ctx;
+    const t = t0 || (c.currentTime + 0.001);
+    const src = c.createBufferSource();
+    src.buffer = this.pinkBuf;
+    if (dur > 0.42) src.loop = true;
+    src.playbackRate.value = playback || (0.85 + Math.random() * 0.3);
+
+    const g = c.createGain();
+    const filt = c.createBiquadFilter();
+    const pk = this._pk(peak);
+
+    filt.type = type || 'bandpass';
+    filt.frequency.setValueAtTime(Math.max(30, f0), t);
+    if (f1 && Math.abs(f1 - f0) > 1) {
+      filt.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t + dur);
+    }
+    filt.Q.value = q || 1;
+
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(pk, t + Math.min(0.01, dur * 0.2));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+    src.connect(filt);
+    filt.connect(g);
+    g.connect(this.master);
+    src.start(t);
+    src.stop(t + dur + 0.03);
+  },
+
+  updateRotate(power, playing){
+    if (!this.ctx || !this.rotGain || !this.rotDepth || !this.rotLfo || !this.rotOsc) return;
+    const t = this.ctx.currentTime;
+    const p = (this.enabled && this.volume > 0.001 && playing)
+      ? Math.max(0, Math.min(1, power))
+      : 0;
+
+    const amp = p <= 0.02 ? 0 : (0.055 + p * 0.13);
+    this.rotGain.gain.setTargetAtTime(amp * 0.5, t, 0.035);
+    this.rotDepth.gain.setTargetAtTime(amp * 0.5, t, 0.035);
+    this.rotLfo.frequency.setTargetAtTime(3.5 + p * 26, t, 0.035);
+    this.rotOsc.frequency.setTargetAtTime(44 + p * 42, t, 0.05);
+  },
+
+  squish(freq, dur, peak, dir){
+    if (!this.ready()) return;
+    const c = this.ctx;
+    const t = c.currentTime + 0.001;
+    const f = Math.max(70, freq);
+    const d = Math.max(0.04, dur);
+    const pk = this._pk(peak);
+
+    const o = c.createOscillator();
+    o.type = 'sine';
+    const g = c.createGain();
+    const filt = c.createBiquadFilter();
+    filt.type = 'lowpass';
+    filt.Q.value = 7;
+
+    o.frequency.setValueAtTime(f, t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(30, f * (dir >= 0 ? 1.75 : 0.62)), t + d * 0.18);
+    o.frequency.exponentialRampToValueAtTime(Math.max(30, f * (dir >= 0 ? 0.55 : 1.45)), t + d);
+
+    filt.frequency.setValueAtTime(f * 6, t);
+    filt.frequency.exponentialRampToValueAtTime(Math.max(80, f * 1.2), t + d);
+
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(pk, t + Math.min(0.012, d * 0.22));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+
+    o.connect(filt);
+    filt.connect(g);
+    g.connect(this.master);
+    o.start(t);
+    o.stop(t + d + 0.03);
+
+    this._noise(0.045, peak * 0.22, 'bandpass', f * 3.2, f * 1.1, 4, t + 0.01);
+  },
+
+  bounce(strength){
+    if (!this.ready()) return;
+    const t = this.ctx.currentTime + 0.001;
+    const s = Math.max(0, Math.min(1, strength / 12));
+    this._tone('triangle', 85 + s * 70, 210 + s * 190, 0.08 + s * 0.05, 0.035 + s * 0.055, t);
+    this._tone('sine', 170 + s * 130, 55, 0.12 + s * 0.06, 0.025 + s * 0.045, t + 0.008);
+    this._noise(0.035 + s * 0.03, 0.012 + s * 0.03, 'highpass', 900, 2600, 1, t);
+  },
+
+  impact(str){
+    if (!this.ready()) return;
+    const t = this.ctx.currentTime;
+    if (t - this.lastImpact < 0.045) return;
+    this.lastImpact = t;
+    this.bounce(Math.min(16, 1.5 + str * 1.05));
+  },
+
+  lock(hard){
+    if (!this.ready()) return;
+    const t = this.ctx.currentTime + 0.001;
+    if (hard) {
+      this._tone('sine', 95, 42, 0.22, 0.13, t);
+      this._noise(0.16, 0.075, 'lowpass', 1400, 120, 1, t);
+      this.squish(240, 0.18, 0.07, -1);
+    } else {
+      this._tone('sine', 125, 52, 0.15, 0.085, t);
+      this._noise(0.07, 0.03, 'lowpass', 800, 160, 1, t);
+    }
+  },
+
+  move(dir, repeat){
+    if (!this.ready()) return;
+    const t = this.ctx.currentTime + 0.001;
+    const pk = repeat ? 0.016 : 0.036;
+    this._tone('triangle', dir > 0 ? 360 : 315, dir > 0 ? 455 : 255, 0.05, pk, t);
+    this._noise(0.022, pk * 0.35, 'highpass', 1700, 3200, 1, t);
+  },
+
+  softPlop(){
+    if (!this.ready()) return;
+    const t = this.ctx.currentTime + 0.001;
+    this._tone('sine', 205, 115, 0.065, 0.028, t);
+    this._noise(0.028, 0.010, 'lowpass', 850, 260, 1, t);
+  },
+
+  hardWhoosh(){
+    if (!this.ready()) return;
+    const t = this.ctx.currentTime + 0.001;
+    this._noise(0.17, 0.05, 'bandpass', 380, 2300, 1.1, t);
+    this._tone('sawtooth', 170, 55, 0.17, 0.04, t);
+  },
+
+  spawn(){
+    if (!this.ready()) return;
+    const t = this.ctx.currentTime + 0.001;
+    this._tone('sine', 150, 500, 0.10, 0.055, t);
+    this._tone('sine', 500, 210, 0.16, 0.045, t + 0.085);
+    this._noise(0.045, 0.016, 'bandpass', 1100, 2300, 2, t + 0.01);
+  },
+
+  lineClear(rows){
+    if (!this.ready()) return;
+    const c = this.ctx;
+    const t = c.currentTime + 0.001;
+    const n = Math.max(1, Math.min(LOW ? 4 : 6, rows | 0));
+
+    for (let i = 0; i < n + 2; i++) {
+      const f = 250 * Math.pow(1.18, i);
+      this._tone(i % 2 ? 'square' : 'triangle', f, f * 1.55, 0.10, 0.05, t + i * 0.055);
+      this._noise(0.035, 0.018, 'bandpass', f * 4, f * 2, 4, t + i * 0.055);
+    }
+
+    const o = c.createOscillator();
+    o.type = 'sawtooth';
+    const g = c.createGain();
+    const filt = c.createBiquadFilter();
+    filt.type = 'lowpass';
+    filt.Q.value = 14;
+
+    const pk = this._pk(0.09);
+    o.frequency.setValueAtTime(200 + n * 45, t);
+    o.frequency.exponentialRampToValueAtTime(45, t + 0.34);
+
+    filt.frequency.setValueAtTime(2400, t);
+    filt.frequency.exponentialRampToValueAtTime(220, t + 0.34);
+
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(pk, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.34);
+
+    o.connect(filt);
+    filt.connect(g);
+    g.connect(this.master);
+    o.start(t);
+    o.stop(t + 0.38);
+
+    this._noise(0.28, 0.06, 'lowpass', 2400, 180, 1, t + 0.02);
+  },
+
+  gameOver(){
+    if (!this.ready()) return;
+    const c = this.ctx;
+    const t = c.currentTime + 0.001;
+
+    for (let i = 0; i < 6; i++) {
+      const f = 420 / (1 + i * 0.28);
+      const pk = 0.05 - i * 0.006;
+      if (pk > 0) {
+        this._tone(i % 2 ? 'triangle' : 'sine', f, f * 0.62, 0.16, pk, t + i * 0.11);
+      }
+    }
+
+    const start = t + 0.18;
+    const end = start + 0.85;
+    const o = c.createOscillator();
+    o.type = 'sawtooth';
+    const g = c.createGain();
+    const filt = c.createBiquadFilter();
+    filt.type = 'lowpass';
+
+    const pk = this._pk(0.065);
+    o.frequency.setValueAtTime(250, start);
+    o.frequency.exponentialRampToValueAtTime(38, end);
+
+    filt.frequency.setValueAtTime(1100, start);
+    filt.frequency.exponentialRampToValueAtTime(110, end);
+
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.exponentialRampToValueAtTime(pk, start + 0.08);
+    g.gain.exponentialRampToValueAtTime(0.0001, end);
+
+    o.connect(filt);
+    filt.connect(g);
+    g.connect(this.master);
+    o.start(start);
+    o.stop(end + 0.05);
+
+    this._noise(0.7, 0.035, 'lowpass', 1200, 120, 1, start + 0.05, 0.55);
+  },
+
+  win(){
+    if (!this.ready()) return;
+    const t = this.ctx.currentTime + 0.001;
+    this._tone('triangle', 420, 640, 0.10, 0.055, t);
+    this._tone('triangle', 640, 880, 0.12, 0.050, t + 0.10);
+    this._tone('sine', 880, 1180, 0.18, 0.045, t + 0.22);
+  },
+
+  ui(){
+    if (!this.ready()) return;
+    const t = this.ctx.currentTime + 0.001;
+    this._tone('square', 680, 1050, 0.035, 0.03, t);
+    this._noise(0.018, 0.010, 'highpass', 2200, 4200, 1, t);
+  }
+};
+
+function $(id){ return document.getElementById(id); }
+
+function setState(s){
+  state = s;
+  document.body.dataset.state = s;
+}
+
+function updateSoundIcon(){
+  soundBtn.textContent = (SFX.enabled && SFX.volume > 0.001) ? '🔊' : '🔇';
+}
+
+function applyHudPhase(){
+  hud.classList.toggle('hudPause', hudPhase === 1);
+}
+
+function syncStats(force) {
+  if (force || score !== lastScore) { scoreEl.textContent = score; lastScore = score; }
+  if (force || lines !== lastLines) { linesEl.textContent = lines; lastLines = lines; }
+  if (force || level !== lastLevel) { levelEl.textContent = level; lastLevel = level; }
+}
+
+function updateTargetHud(){
+  targetEl.textContent = targetLines > 0 ? ('/' + targetLines) : '';
+}
+
+function updateClockHud(){
+  if (timeLimit > 0) timerEl.textContent = formatTime(Math.max(0, timeLimit - clock));
+  else timerEl.textContent = formatTime(clock);
+}
+
+function refillBag() {
+  bag = [0,1,2,3,4,5,6];
+  for (let i = bag.length - 1; i > 0; i--) {
+    const j = (Math.random() * (i + 1)) | 0;
+    const t = bag[i]; bag[i] = bag[j]; bag[j] = t;
+  }
+}
+
+function takeNext() {
+  if (!bag.length) refillBag();
+  return bag.pop();
+}
+
+function allocParticle() {
+  if (freeCount > 0) return freeList[--freeCount];
+  if (particleLimit >= MAX_PARTICLES) return -1;
+  return particleLimit++;
+}
+
+function allocPiece() {
+  for (let i = 0; i < MAX_PIECES; i++) if (!pieceAlive[i]) return i;
+  return -1;
+}
+
+function capPieceLoad(pid, lm){
+  const base = Math.max(MASS_MIN, pieceMass[pid]);
+  const maxLoad = Math.max(LOAD_CAP_MIN, base * LOAD_CAP_FACTOR);
+  if (!isFinite(lm) || lm < base) lm = base;
+  if (lm > maxLoad) lm = maxLoad;
+  return lm;
+}
+
+function resetPieceMass(pid, baseMass){
+  if (baseMass < MASS_MIN) baseMass = MASS_MIN;
+  pieceMass[pid] = baseMass;
+  pieceInvMass[pid] = 1 / baseMass;
+
+  let carried = pieceCarried[pid];
+  if (!isFinite(carried) || carried < 0) carried = 0;
+
+  let lm = capPieceLoad(pid, baseMass + carried);
+  pieceLoadMass[pid] = lm;
+  pieceLoadInv[pid] = pieceSleep[pid] ? 0 : (1 / lm);
+  piecePressure[pid] = 0;
+}
+
+function killParticle(p) {
+  if (!alive[p]) return;
+  alive[p] = 0;
+  freeList[freeCount++] = p;
+
+  const pid = pieceOf[p];
+  if (pid >= 0 && pid < MAX_PIECES && pieceAlive[pid]) {
+    const oldCount = pieceCount[pid];
+    if (oldCount > 0) pieceCount[pid]--;
+
+    if (pieceCount[pid] <= 0) {
+      pieceAlive[pid] = 0;
+      pieceActive[pid] = 0;
+      pieceSleep[pid] = 0;
+      pieceMass[pid] = 0;
+      pieceInvMass[pid] = 0;
+      pieceLoadMass[pid] = 0;
+      pieceLoadInv[pid] = 0;
+      piecePressure[pid] = 0;
+      pieceCarried[pid] = 0;
+      pieceAvgY[pid] = 0;
+      if (activePiece === pid) activePiece = -1;
+    } else {
+      const newCount = pieceCount[pid];
+      if (oldCount > 0) pieceCarried[pid] = pieceCarried[pid] * (newCount / oldCount);
+      if (!isFinite(pieceCarried[pid]) || pieceCarried[pid] < 0) pieceCarried[pid] = 0;
+      resetPieceMass(pid, newCount * PARTICLE_MASS);
+    }
+  }
+}
+
+function wakePiece(pid) {
+  if (pid < 0 || pid === activePiece) return;
+  if (!pieceAlive[pid] || !pieceSleep[pid]) return;
+
+  pieceSleep[pid] = 0;
+  pieceSleepTimer[pid] = 0;
+  resetPieceMass(pid, Math.max(MASS_MIN, pieceCount[pid] * PARTICLE_MASS));
+
+  const base = pid * 4;
+  for (let k = 0; k < 4; k++) {
+    const p = pieceParts[base + k];
+    if (p >= 0 && alive[p] && pieceOf[p] === pid) {
+      vx[p] = 0; vy[p] = 0;
+      ox[p] = x[p]; oy[p] = y[p];
+    }
+  }
+}
+
+function wakeAll() {
+  for (let pid = 0; pid < MAX_PIECES; pid++) {
+    if (!pieceAlive[pid] || pid === activePiece) continue;
+    if (pieceSleep[pid]) wakePiece(pid);
+    pieceSleepTimer[pid] = 0;
+  }
+}
+
+function clearLines() {
+  for (let r = 0; r < FIELD_H; r++) rowMask[r] = 0;
+
+  const cellFill = currentDiff.cellFill;
+  const rowMember = currentDiff.rowMember;
+
+  for (let p = 0; p < particleLimit; p++) {
+    if (!alive[p]) continue;
+    const cx = x[p], cy = y[p];
+    if (cx < -COVER_HALF || cx > FIELD_W + COVER_HALF ||
+        cy < -COVER_HALF || cy > FIELD_H + COVER_HALF) continue;
+
+    let minC = Math.floor(cx - COVER_HALF + EPS);
+    let maxC = Math.floor(cx + COVER_HALF - EPS);
+    let minR = Math.floor(cy - COVER_HALF + EPS);
+    let maxR = Math.floor(cy + COVER_HALF - EPS);
+    if (minC < 0) minC = 0;
+    if (maxC > FIELD_W - 1) maxC = FIELD_W - 1;
+    if (minR < 0) minR = 0;
+    if (maxR > FIELD_H - 1) maxR = FIELD_H - 1;
+
+    for (let c = minC; c <= maxC; c++) {
+      let left = cx - COVER_HALF; if (left < c) left = c;
+      let right = cx + COVER_HALF; if (right > c + 1) right = c + 1;
+      const oxArea = right - left;
+      if (oxArea <= 0) continue;
+
+      for (let r = minR; r <= maxR; r++) {
+        let top = cy - COVER_HALF; if (top < r) top = r;
+        let bot = cy + COVER_HALF; if (bot > r + 1) bot = r + 1;
+        const oyArea = bot - top;
+        if (oyArea <= 0) continue;
+        if (oxArea * oyArea >= cellFill - EPS) {
+          rowMask[r] |= (1 << c);
+        }
+      }
+    }
+  }
+
+  let rc = 0;
+  for (let r = 0; r < FIELD_H; r++) {
+    if (POPCOUNT[rowMask[r]] >= FIELD_W) clearRows[rc++] = r;
+  }
+
+  lastClearRows = rc;
+  if (!rc) return 0;
+
+  for (let i = 0; i < rc; i++) rowFlash[clearRows[i]] = 1;
+
+  let killed = 0;
+  for (let p = 0; p < particleLimit; p++) {
+    if (!alive[p]) continue;
+    const cy = y[p];
+    for (let i = 0; i < rc; i++) {
+      const r = clearRows[i];
+      let top = cy - COVER_HALF; if (top < r) top = r;
+      let bot = cy + COVER_HALF; if (bot > r + 1) bot = r + 1;
+      const oyArea = bot - top;
+      if (oyArea >= rowMember - EPS) {
+        killParticle(p);
+        killed++;
+        break;
+      }
+    }
+  }
+
+  lines += rc;
+  const baseScore = rc === 1 ? 100 : rc === 2 ? 300 : rc === 3 ? 500 : 800;
+  score += Math.round((baseScore * level + killed * 10) * currentDiff.scoreMul);
+  level = 1 + ((lines / 10) | 0);
+  syncStats(false);
+  wakeAll();
+  return killed;
+}
+
+function spawnNext() {
+  if (state !== 'play') return;
+
+  const type = nextType;
+  nextType = takeNext();
+
+  if (freeCount + (MAX_PARTICLES - particleLimit) < 4) { endGame(false, 'Top out'); return; }
+  const pid = allocPiece();
+  if (pid < 0) { endGame(false, 'Top out'); return; }
+
+  const offs = OFFSETS[type];
+  const rests = RESTS[type];
+  const sx = FIELD_W * 0.5;
+  const sy = 1.75;
+  const spawnDist2 = 0.86 * 0.86;
+
+  for (let i = 0; i < 4; i++) {
+    const px = sx + offs[i][0];
+    const py = sy + offs[i][1];
+    if (px < PHYS_R - 0.02 || px > FIELD_W - PHYS_R + 0.02) { endGame(false, 'Top out'); return; }
+    for (let j = 0; j < particleLimit; j++) {
+      if (!alive[j]) continue;
+      const dx = px - x[j];
+      const dy = py - y[j];
+      if (dx*dx + dy*dy < spawnDist2) { endGame(false, 'Top out'); return; }
+    }
+  }
+
+  pieceAlive[pid] = 1;
+  pieceActive[pid] = 1;
+  pieceSleep[pid] = 0;
+  pieceSleepTimer[pid] = 0;
+  pieceCount[pid] = 0;
+  pieceColor[pid] = type;
+  pieceOmega[pid] = 0;
+  pieceLock[pid] = 0;
+  pieceAvgY[pid] = 0;
+  piecePressure[pid] = 0;
+  pieceCarried[pid] = 0;
+
+  const baseP = pid * 4;
+  const baseC = pid * 6;
+
+  for (let i = 0; i < 4; i++) pieceParts[baseP + i] = -1;
+
+  for (let i = 0; i < 4; i++) {
+    const p = allocParticle();
+    if (p < 0) {
+      for (let k = 0; k < i; k++) {
+        const q = pieceParts[baseP + k];
+        if (q >= 0) {
+          alive[q] = 0;
+          freeList[freeCount++] = q;
+          pieceOf[q] = -1;
+        }
+      }
+      pieceAlive[pid] = 0;
+      pieceActive[pid] = 0;
+      pieceSleep[pid] = 0;
+      pieceCount[pid] = 0;
+      pieceMass[pid] = 0;
+      pieceInvMass[pid] = 0;
+      pieceLoadMass[pid] = 0;
+      pieceLoadInv[pid] = 0;
+      pieceCarried[pid] = 0;
+      endGame(false, 'Top out');
+      return;
+    }
+
+    alive[p] = 1;
+    pieceOf[p] = pid;
+    pieceParts[baseP + i] = p;
+    pieceCount[pid]++;
+    x[p] = sx + offs[i][0];
+    y[p] = sy + offs[i][1];
+    ox[p] = x[p];
+    oy[p] = y[p];
+    vx[p] = 0;
+    vy[p] = 0;
+  }
+
+  resetPieceMass(pid, pieceCount[pid] * PARTICLE_MASS);
+
+  for (let c = 0; c < 6; c++) {
+    consA[baseC + c] = PAIR_A[c];
+    consB[baseC + c] = PAIR_B[c];
+    consRest[baseC + c] = rests[c];
+  }
+
+  activePiece = pid;
+  activeGroundedPrev = 0;
+  activeGrounded = 0;
+  activeSupportCount = 0;
+  activeSupportX = 0;
+  activeCenterX = 0;
+  activeImbalance = 0;
+  activeFallFactor = 0;
+  spawnDelay = 0;
+  SFX.spawn();
+}
+
+function lockActive() {
+  const pid = activePiece;
+  if (pid < 0) return;
+
+  pieceActive[pid] = 0;
+  const base = pid * 4;
+  for (let k = 0; k < 4; k++) {
+    const p = pieceParts[base + k];
+    if (p >= 0 && alive[p] && pieceOf[p] === pid) {
+      vx[p] *= 0.15;
+      vy[p] *= 0.15;
+    }
+  }
+
+  activePiece = -1;
+  activeGroundedPrev = 0;
+  activeGrounded = 0;
+  activeSupportCount = 0;
+  activeSupportX = 0;
+  activeCenterX = 0;
+  activeImbalance = 0;
+  activeFallFactor = 0;
+  input.hard = false;
+
+  SFX.lock(false);
+
+  const killed = clearLines();
+  const rows = lastClearRows;
+
+  if (rows > 0) {
+    SFX.lineClear(rows);
+    shake = Math.min(0.34, 0.055 * rows + 0.05);
+  } else {
+    shake = Math.max(shake, 0.025);
+  }
+
+  if (targetLines > 0 && lines >= targetLines) {
+    endGame(true, 'Target reached');
+    return;
+  }
+
+  spawnDelay = rows ? 0.28 : (killed ? 0.22 : currentDiff.spawnDelay);
+}
+
+function getFallSpeed() {
+  let v = (FALL_BASE + Math.min(level - 1, 24) * FALL_LEVEL) * currentDiff.fallMul;
+  if (input.down) v += SOFT_DROP * currentDiff.fallMul;
+  if (input.hard) v = HARD_DROP * Math.min(1.55, currentDiff.fallMul);
+  return v;
+}
+
+function updateActiveOmega(dt) {
+  const pid = activePiece;
+  if (pid < 0 || !pieceAlive[pid]) return;
+
+  const dir = (input.cw ? 1 : 0) - (input.ccw ? 1 : 0);
+  let om = pieceOmega[pid];
+
+  if (dir) om += dir * ROT_ACCEL * dt;
+  else om -= om * ROT_DAMP * dt;
+
+  const jitter = currentDiff.rotJitter * activeFallFactor;
+  if (jitter > 0.02) {
+    om += (Math.random() - 0.5) * jitter * dt * (dir ? 0.35 : 1);
+  }
+
+  if (om > ROT_MAX) om = ROT_MAX;
+  else if (om < -ROT_MAX) om = -ROT_MAX;
+
+  pieceOmega[pid] = om;
+}
+
+function applyActiveControl(dt) {
+  const pid = activePiece;
+  if (pid < 0 || !pieceAlive[pid]) return;
+
+  const base = pid * 4;
+  let cx = 0, cy = 0, sumVy = 0, n = 0;
+
+  for (let k = 0; k < 4; k++) {
+    const p = pieceParts[base + k];
+    if (p >= 0 && alive[p] && pieceOf[p] === pid) {
+      cx += x[p];
+      cy += y[p];
+      sumVy += vy[p];
+      n++;
+    }
+  }
+  if (!n) return;
+
+  cx /= n;
+  cy /= n;
+
+  const avgVy = sumVy / n;
+  let moveDir = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+  let moveV = moveDir * MOVE_SPEED;
+
+  if (activeGroundedPrev && activeSupportCount > 0) {
+    const imbalance = activeImbalance;
+    if (Math.abs(imbalance) > currentDiff.slideThreshold) {
+      moveV += imbalance * currentDiff.slideGain;
+    }
+  }
+
+  const maxSlide = MOVE_SPEED * 1.75;
+  if (moveV > maxSlide) moveV = maxSlide;
+  else if (moveV < -maxSlide) moveV = -maxSlide;
+
+  let commandedFall = getFallSpeed();
+  if (activeGroundedPrev) {
+    if (!input.down && !input.hard) commandedFall = 0;
+    else commandedFall = Math.min(commandedFall, 1.6 * currentDiff.fallMul);
+  }
+
+  const actualFall = Math.max(commandedFall, avgVy);
+  activeFallFactor = Math.max(0, Math.min(1, (actualFall - FALL_BASE) / currentDiff.fallRange));
+
+  if (input.hard && !activeGroundedPrev) activeFallFactor = 1;
+  else if (input.down && !activeGroundedPrev) activeFallFactor = Math.max(activeFallFactor, 0.62);
+
+  const ctrl = ACTIVE_CTRL_BASE * (1 - currentDiff.ctrlLoss * activeFallFactor);
+  const jitterAmt = activeFallFactor * currentDiff.jitter;
+  const omega = pieceOmega[pid];
+
+  for (let k = 0; k < 4; k++) {
+    const p = pieceParts[base + k];
+    if (p < 0 || !alive[p] || pieceOf[p] !== pid) continue;
+
+    const relx = x[p] - cx;
+    const rely = y[p] - cy;
+
+    let desVx = moveV - rely * omega;
+    let desVy = commandedFall + relx * omega;
+
+    if (jitterAmt > 0.02) {
+      desVx += (Math.random() - 0.5) * jitterAmt;
+      desVy += (Math.random() - 0.5) * jitterAmt * 0.25;
+    }
+
+    vx[p] += (desVx - vx[p]) * ctrl;
+    vy[p] += (desVy - vy[p]) * ctrl;
+  }
+}
+
+function prepareGrid() {
+  head.fill(-1);
+
+  for (let pid = 0; pid < MAX_PIECES; pid++) {
+    if (!pieceAlive[pid]) continue;
+
+    pieceAvgY[pid] = 0;
+    piecePressure[pid] = 0;
+
+    if (pieceMass[pid] < MASS_MIN) pieceMass[pid] = MASS_MIN;
+    if (pieceInvMass[pid] <= 0 || !isFinite(pieceInvMass[pid])) pieceInvMass[pid] = 1 / pieceMass[pid];
+
+    if (pieceSleep[pid]) {
+      pieceLoadMass[pid] = SLEEP_LOAD;
+      pieceLoadInv[pid] = 0;
+    } else {
+      let carried = pieceCarried[pid];
+      if (!isFinite(carried) || carried < 0) carried = 0;
+      const lm = capPieceLoad(pid, pieceMass[pid] + carried);
+      pieceLoadMass[pid] = lm;
+      pieceLoadInv[pid] = 1 / lm;
+    }
+  }
+
+  for (let p = 0; p < particleLimit; p++) {
+    if (!alive[p]) continue;
+
+    const pid = pieceOf[p];
+    if (pid >= 0 && pid < MAX_PIECES && pieceAlive[pid]) {
+      pieceAvgY[pid] += y[p];
+    }
+
+    let gx = Math.floor(x[p]) + 1;
+    let gy = Math.floor(y[p]) + 3;
+    if (gx < 0) gx = 0; else if (gx >= GRID_W) gx = GRID_W - 1;
+    if (gy < 0) gy = 0; else if (gy >= GRID_H) gy = GRID_H - 1;
+    const idx = gy * GRID_W + gx;
+    nextP[p] = head[idx];
+    head[idx] = p;
+  }
+
+  for (let pid = 0; pid < MAX_PIECES; pid++) {
+    if (!pieceAlive[pid]) continue;
+    if (pieceCount[pid] > 0) pieceAvgY[pid] /= pieceCount[pid];
+    else pieceAvgY[pid] = 0;
+  }
+}
+
+function solveConstraints() {
+  for (let pid = 0; pid < MAX_PIECES; pid++) {
+    if (!pieceAlive[pid] || pieceSleep[pid]) continue;
+    const cnt = pieceCount[pid];
+    const baseP = pid * 4;
+    const baseC = pid * 6;
+
+    for (let c = 0; c < 6; c++) {
+      const rest = consRest[baseC + c];
+      if (cnt < 4 && rest > 1.05) continue;
+
+      const a = pieceParts[baseP + consA[baseC + c]];
+      const b = pieceParts[baseP + consB[baseC + c]];
+      if (a < 0 || b < 0 || !alive[a] || !alive[b]) continue;
+      if (pieceOf[a] !== pid || pieceOf[b] !== pid) continue;
+
+      let dx = x[b] - x[a];
+      let dy = y[b] - y[a];
+      let d2 = dx*dx + dy*dy;
+      if (d2 < 1e-8) continue;
+
+      const d = Math.sqrt(d2);
+      const diff = (d - rest) / d;
+      const scale = diff * 0.5 * CONS_STIFF;
+      const mx = dx * scale;
+      const my = dy * scale;
+
+      x[a] += mx; y[a] += my;
+      x[b] -= mx; y[b] -= my;
+    }
+  }
+}
+
+function solveCollisions(accumulatePressure) {
+  for (let i = 0; i < particleLimit; i++) {
+    if (!alive[i]) continue;
+
+    let gx = Math.floor(x[i]) + 1;
+    let gy = Math.floor(y[i]) + 3;
+    if (gx < 0) gx = 0; else if (gx >= GRID_W) gx = GRID_W - 1;
+    if (gy < 0) gy = 0; else if (gy >= GRID_H) gy = GRID_H - 1;
+
+    for (let ny = gy - 1; ny <= gy + 1; ny++) {
+      if (ny < 0 || ny >= GRID_H) continue;
+      const rowBase = ny * GRID_W;
+
+      for (let nx = gx - 1; nx <= gx + 1; nx++) {
+        if (nx < 0 || nx >= GRID_W) continue;
+
+        for (let j = head[rowBase + nx]; j !== -1; j = nextP[j]) {
+          if (j <= i) continue;
+
+          let dx = x[j] - x[i];
+          let dy = y[j] - y[i];
+          let d2 = dx*dx + dy*dy;
+          if (d2 >= MIN_DIST2) continue;
+          if (d2 < 1e-8) { dx = 0.001; dy = 0; d2 = 0.000001; }
+
+          const d = Math.sqrt(d2);
+          const overlap = MIN_DIST - d;
+          if (overlap <= 0) continue;
+
+          const nxn = dx / d;
+          const nyn = dy / d;
+
+          const pi = pieceOf[i];
+          const pj = pieceOf[j];
+          if (pi < 0 || pj < 0 || pi >= MAX_PIECES || pj >= MAX_PIECES) continue;
+          if (!pieceAlive[pi] || !pieceAlive[pj]) continue;
+
+          const si = pieceSleep[pi];
+          const sj = pieceSleep[pj];
+
+          let wi, wj;
+
+          if (pi === pj) {
+            if (si) continue;
+            wi = 0.5;
+            wj = 0.5;
+          } else {
+            if (si && sj) continue;
+
+            if (si) {
+              wi = 0;
+              wj = 1;
+            } else if (sj) {
+              wi = 1;
+              wj = 0;
+            } else {
+              const invI = pieceLoadInv[pi];
+              const invJ = pieceLoadInv[pj];
+              const tot = invI + invJ;
+              if (tot <= 0) continue;
+              wi = invI / tot;
+              wj = invJ / tot;
+            }
+
+            if (accumulatePressure && !si && !sj) {
+              const ayI = pieceAvgY[pi];
+              const ayJ = pieceAvgY[pj];
+              const loadFactor = Math.min(1, overlap * 9);
+
+              if (ayI + 0.05 < ayJ) {
+                piecePressure[pj] += pieceLoadMass[pi] * LOAD_TRANSFER * loadFactor;
+              } else if (ayJ + 0.05 < ayI) {
+                piecePressure[pi] += pieceLoadMass[pj] * LOAD_TRANSFER * loadFactor;
+              } else {
+                const add = (pieceLoadMass[pi] + pieceLoadMass[pj]) * 0.012 * loadFactor;
+                piecePressure[pi] += add;
+                piecePressure[pj] += add;
+              }
+            }
+
+            if (overlap > WAKE_OVERLAP) {
+              if (si) wakePiece(pi);
+              if (sj) wakePiece(pj);
+            }
+          }
+
+          const rv = (vx[j] - vx[i]) * nxn + (vy[j] - vy[i]) * nyn;
+          if (rv < -0.8 && overlap > 0.012) {
+            const st = (-rv) * Math.min(1, overlap * 10);
+            if (st > impactCandidate) impactCandidate = st;
+          }
+
+          if (pi !== pj && (-rv > 2.2 && overlap > 0.012)) {
+            if (si) wakePiece(pi);
+            if (sj) wakePiece(pj);
+          }
+
+          x[i] -= nxn * overlap * wi;
+          y[i] -= nyn * overlap * wi;
+          x[j] += nxn * overlap * wj;
+          y[j] += nyn * overlap * wj;
+        }
+      }
+    }
+  }
+}
+
+function solveWalls() {
+  for (let p = 0; p < particleLimit; p++) {
+    if (!alive[p]) continue;
+    const pid = pieceOf[p];
+    if (pid < 0 || pid >= MAX_PIECES || !pieceAlive[pid]) continue;
+    if (pieceSleep[pid]) continue;
+
+    if (x[p] < PHYS_R) x[p] = PHYS_R;
+    else if (x[p] > FIELD_W - PHYS_R) x[p] = FIELD_W - PHYS_R;
+
+    if (y[p] > FIELD_H - PHYS_R) {
+      y[p] = FIELD_H - PHYS_R;
+    } else if (y[p] < -2.0) {
+      y[p] = -2.0;
+    }
+  }
+}
+
+function finalizeMass() {
+  for (let pid = 0; pid < MAX_PIECES; pid++) {
+    if (!pieceAlive[pid]) continue;
+
+    if (pieceSleep[pid]) {
+      pieceLoadMass[pid] = SLEEP_LOAD;
+      pieceLoadInv[pid] = 0;
+      continue;
+    }
+
+    if (pieceMass[pid] < MASS_MIN) pieceMass[pid] = MASS_MIN;
+
+    let lm = pieceLoadMass[pid] + piecePressure[pid];
+    lm = capPieceLoad(pid, lm);
+
+    pieceLoadMass[pid] = lm;
+    pieceLoadInv[pid] = 1 / lm;
+    pieceCarried[pid] = Math.max(0, lm - pieceMass[pid]);
+  }
+}
+
+function computeActiveSupport() {
+  activeGrounded = 0;
+  activeSupportX = 0;
+  activeSupportCount = 0;
+  activeCenterX = 0;
+  activeImbalance = 0;
+
+  const pid = activePiece;
+  if (pid < 0 || !pieceAlive[pid]) return;
+
+  const base = pid * 4;
+  let sumCX = 0;
+  let nCX = 0;
+
+  for (let k = 0; k < 4; k++) {
+    const p = pieceParts[base + k];
+    if (p >= 0 && alive[p] && pieceOf[p] === pid) {
+      sumCX += x[p];
+      nCX++;
+    }
+  }
+  if (!nCX) return;
+
+  activeCenterX = sumCX / nCX;
+
+  let sumSX = 0;
+  let sumW = 0;
+  let count = 0;
+
+  for (let k = 0; k < 4; k++) {
+    const p = pieceParts[base + k];
+    if (p < 0 || !alive[p] || pieceOf[p] !== pid) continue;
+
+    const px = x[p];
+    const py = y[p];
+
+    if (py >= FIELD_H - PHYS_R - 0.12) {
+      activeGrounded = 1;
+      sumSX += px;
+      sumW += 1;
+      count++;
+    }
+
+    for (let q = 0; q < particleLimit; q++) {
+      if (!alive[q]) continue;
+
+      const qid = pieceOf[q];
+      if (qid === pid || qid < 0 || qid >= MAX_PIECES || !pieceAlive[qid]) continue;
+
+      const dy = y[q] - py;
+      if (dy < 0.02 || dy > SUPPORT_DIST) continue;
+
+      const dx = x[q] - px;
+      if (dx < -1.08 || dx > 1.08) continue;
+
+      const d2 = dx*dx + dy*dy;
+      if (d2 < SUPPORT_DIST2) {
+        activeGrounded = 1;
+        const w = pieceSleep[qid] ? 1.0 : Math.max(MASS_MIN, pieceLoadMass[qid]);
+        sumSX += x[q] * w;
+        sumW += w;
+        count++;
+      }
+    }
+  }
+
+  if (sumW > 0) {
+    activeSupportX = sumSX / sumW;
+    activeSupportCount = count;
+    activeImbalance = activeCenterX - activeSupportX;
+  }
+}
+
+function updatePieceStates(dt) {
+  if (activePiece >= 0) {
+    const pid = activePiece;
+    if (!pieceAlive[pid] || pieceCount[pid] === 0) {
+      pieceActive[pid] = 0;
+      activePiece = -1;
+      activeFallFactor = 0;
+      activeGrounded = 0;
+      activeSupportCount = 0;
+      spawnDelay = currentDiff.spawnDelay;
+    } else {
+      const base = pid * 4;
+      let sum = 0, n = 0;
+      for (let k = 0; k < 4; k++) {
+        const p = pieceParts[base + k];
+        if (p >= 0 && alive[p] && pieceOf[p] === pid) {
+          sum += Math.abs(vx[p]) + Math.abs(vy[p]);
+          n++;
+        }
+      }
+
+      const avg = n ? sum / n : 999;
+      const grounded = activeGrounded;
+      const translating = input.left || input.right;
+      const rotating = Math.abs(pieceOmega[pid]) > 1.0;
+
+      if (grounded && !activeGroundedPrev && avg > 0.30) {
+        SFX.bounce(Math.min(14, avg * 1.15));
+        pieceLock[pid] += 0.05;
+      }
+
+      if (grounded && avg < (1.55 + currentDiff.fallMul * 0.18)) {
+        if (translating || rotating || Math.abs(activeImbalance) > 0.20) {
+          pieceLock[pid] = 0;
+        } else {
+          pieceLock[pid] += dt;
+        }
+      } else {
+        pieceLock[pid] = 0;
+      }
+
+      activeGroundedPrev = grounded ? 1 : 0;
+
+      if (pieceLock[pid] >= currentDiff.lockDelay ||
+          (input.hard && grounded && avg < HARD_LOCK_SPEED)) {
+        if (input.hard) {
+          SFX.lock(true);
+          shake = Math.max(shake, 0.10);
+        }
+        lockActive();
+      }
+    }
+  }
+
+  for (let pid = 0; pid < MAX_PIECES; pid++) {
+    if (!pieceAlive[pid] || pid === activePiece || pieceSleep[pid]) continue;
+
+    const base = pid * 4;
+    let sum = 0, n = 0;
+    for (let k = 0; k < 4; k++) {
+      const p = pieceParts[base + k];
+      if (p >= 0 && alive[p] && pieceOf[p] === pid) {
+        sum += Math.abs(vx[p]) + Math.abs(vy[p]);
+        n++;
+      }
+    }
+
+    if (!n) { pieceAlive[pid] = 0; continue; }
+
+    const avg = sum / n;
+    if (avg < SLEEP_SPEED) {
+      pieceSleepTimer[pid] += dt;
+      if (pieceSleepTimer[pid] >= SLEEP_DELAY) {
+        pieceSleep[pid] = 1;
+        pieceSleepTimer[pid] = 0;
+        pieceLoadMass[pid] = SLEEP_LOAD;
+        pieceLoadInv[pid] = 0;
+        piecePressure[pid] = 0;
+
+        for (let k = 0; k < 4; k++) {
+          const p = pieceParts[base + k];
+          if (p >= 0 && alive[p] && pieceOf[p] === pid) {
+            vx[p] = 0; vy[p] = 0;
+          }
+        }
+      }
+    } else {
+      pieceSleepTimer[pid] = 0;
+    }
+  }
+}
+
+function step(dt) {
+  if (activePiece >= 0) updateActiveOmega(dt);
+
+  for (let p = 0; p < particleLimit; p++) {
+    if (!alive[p]) continue;
+    const pid = pieceOf[p];
+    if (pid < 0 || pid >= MAX_PIECES || !pieceAlive[pid]) continue;
+    if (pieceSleep[pid]) continue;
+    ox[p] = x[p]; oy[p] = y[p];
+    if (!pieceActive[pid]) vy[p] += GRAVITY * dt;
+  }
+
+  if (activePiece >= 0) {
+    applyActiveControl(dt);
+
+    const dir = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+    if (dir) {
+      moveSoundTimer -= dt;
+      if (moveSoundTimer <= 0) {
+        SFX.move(dir, true);
+        moveSoundTimer = LOW ? 0.24 : 0.17;
+      }
+    } else {
+      moveSoundTimer = 0;
+    }
+
+    if (input.down && !input.hard) {
+      softSoundTimer -= dt;
+      if (softSoundTimer <= 0) {
+        SFX.softPlop();
+        softSoundTimer = LOW ? 0.20 : 0.14;
+      }
+    } else {
+      softSoundTimer = 0;
+    }
+  } else {
+    activeFallFactor = 0;
+    moveSoundTimer = 0;
+    softSoundTimer = 0;
+  }
+
+  for (let p = 0; p < particleLimit; p++) {
+    if (!alive[p]) continue;
+    const pid = pieceOf[p];
+    if (pid < 0 || pid >= MAX_PIECES || !pieceAlive[pid]) continue;
+    if (pieceSleep[pid]) continue;
+
+    let s2 = vx[p]*vx[p] + vy[p]*vy[p];
+    if (s2 > MAXV2) {
+      const s = MAXV / Math.sqrt(s2);
+      vx[p] *= s; vy[p] *= s;
+    }
+    x[p] += vx[p] * dt;
+    y[p] += vy[p] * dt;
+  }
+
+  impactCandidate = 0;
+  prepareGrid();
+
+  for (let it = 0; it < ITER; it++) {
+    solveConstraints();
+    solveCollisions(it === 0);
+    solveWalls();
+  }
+
+  finalizeMass();
+  computeActiveSupport();
+
+  for (let p = 0; p < particleLimit; p++) {
+    if (!alive[p]) continue;
+    const pid = pieceOf[p];
+    if (pid < 0 || pid >= MAX_PIECES || !pieceAlive[pid]) continue;
+    if (pieceSleep[pid]) continue;
+
+    let nvx = (x[p] - ox[p]) / dt;
+    let nvy = (y[p] - oy[p]) / dt;
+    const damp = pieceActive[pid] ? ACTIVE_DAMP : FALL_DAMP;
+    nvx *= damp; nvy *= damp;
+
+    let s2 = nvx*nvx + nvy*nvy;
+    if (s2 > MAXV2) {
+      const s = MAXV / Math.sqrt(s2);
+      nvx *= s; nvy *= s;
+    }
+    vx[p] = nvx;
+    vy[p] = nvy;
+  }
+
+  if (impactCandidate > 0.38) SFX.impact(impactCandidate);
+  impactCandidate = 0;
+
+  updatePieceStates(dt);
+
+  if (state === 'play' && activePiece < 0) {
+    spawnDelay -= dt;
+    if (spawnDelay <= 0) spawnNext();
+  }
+}
+
+function layout() {
+  const vw = stage.clientWidth;
+  const vh = stage.clientHeight;
+  const landscape = vw > vh;
+
+  document.body.classList.toggle('landscape', landscape);
+
+  const mount = landscape ? hudMountLandscape : hudMountPortrait;
+  if (hud.parentElement !== mount) mount.appendChild(hud);
+
+  let availW = vw;
+  let availH = vh;
+  let topOffset = 0;
+
+  if (!landscape && state === 'play') {
+    const touchH = touch.offsetHeight || 0;
+    const hudH = hudMountPortrait.offsetHeight || 48;
+    topOffset = hudH + 4;
+    availH = Math.max(120, vh - touchH - hudH - 10);
+  }
+
+  let w = availH * 0.5;
+  if (w > availW) w = availW;
+  let h = w * 2;
+  if (h > availH) {
+    h = availH;
+    w = h * 0.5;
+  }
+
+  game.style.width = w + 'px';
+  game.style.height = h + 'px';
+
+  const left = Math.round((vw - w) * 0.5);
+  const top = landscape ? 0 : Math.round(topOffset + (availH - h) * 0.5);
+  game.style.left = left + 'px';
+  game.style.top = top + 'px';
+
+  const dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
+  game.width = Math.max(1, Math.round(w * dpr));
+  game.height = Math.max(1, Math.round(h * dpr));
+  ctx.setTransform(game.width / FIELD_W, 0, 0, game.height / FIELD_H, 0, 0);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+}
+
+function renderNextMini() {
+  const S = nextMini.width;
+  nmctx.fillStyle = '#060911';
+  nmctx.fillRect(0, 0, S, S);
+
+  const type = nextType;
+  const offs = OFFSETS[type];
+  const rests = RESTS[type];
+  const sc = S / 5.0;
+
+  nmctx.save();
+  nmctx.translate(S / 2, S / 2);
+  nmctx.scale(sc, sc);
+  nmctx.strokeStyle = COLORS[type];
+  nmctx.fillStyle = COLORS[type];
+  nmctx.lineWidth = 0.82;
+  nmctx.lineCap = 'round';
+  nmctx.globalAlpha = 0.96;
+
+  for (let c = 0; c < 6; c++) {
+    if (rests[c] < 1.05) {
+      const a = PAIR_A[c], b = PAIR_B[c];
+      nmctx.beginPath();
+      nmctx.moveTo(offs[a][0], offs[a][1]);
+      nmctx.lineTo(offs[b][0], offs[b][1]);
+      nmctx.stroke();
+    }
+  }
+
+  for (let i = 0; i < 4; i++) {
+    nmctx.beginPath();
+    nmctx.arc(offs[i][0], offs[i][1], 0.40, 0, TAU);
+    nmctx.fill();
+  }
+
+  nmctx.restore();
+  nmctx.globalAlpha = 1;
+}
+
+function render() {
+  ctx.fillStyle = '#060911';
+  ctx.fillRect(0, 0, FIELD_W, FIELD_H);
+
+  ctx.save();
+  ctx.translate(shakeX, shakeY);
+
+  ctx.fillStyle = '#060911';
+  ctx.fillRect(-0.35, -0.35, FIELD_W + 0.7, FIELD_H + 0.7);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.045)';
+  ctx.lineWidth = 0.02;
+  ctx.beginPath();
+  for (let c = 1; c < FIELD_W; c++) {
+    ctx.moveTo(c, 0); ctx.lineTo(c, FIELD_H);
+  }
+  for (let r = 1; r < FIELD_H; r++) {
+    ctx.moveTo(0, r); ctx.lineTo(FIELD_W, r);
+  }
+  ctx.stroke();
+
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  for (let pid = 0; pid < MAX_PIECES; pid++) {
+    if (!pieceAlive[pid]) continue;
+
+    const col = COLORS[pieceColor[pid]];
+    const act = pid === activePiece;
+    const sleep = pieceSleep[pid];
+    ctx.globalAlpha = act ? 1.0 : (sleep ? 0.76 : 0.90);
+    ctx.strokeStyle = col;
+    ctx.fillStyle = col;
+    ctx.lineWidth = VIS_R * 1.72;
+
+    const baseP = pid * 4;
+    const baseC = pid * 6;
+
+    for (let c = 0; c < 6; c++) {
+      if (consRest[baseC + c] >= 1.05) continue;
+      const a = pieceParts[baseP + consA[baseC + c]];
+      const b = pieceParts[baseP + consB[baseC + c]];
+      if (a < 0 || b < 0 || !alive[a] || !alive[b]) continue;
+      if (pieceOf[a] !== pid || pieceOf[b] !== pid) continue;
+      ctx.beginPath();
+      ctx.moveTo(x[a], y[a]);
+      ctx.lineTo(x[b], y[b]);
+      ctx.stroke();
+    }
+
+    for (let k = 0; k < 4; k++) {
+      const p = pieceParts[baseP + k];
+      if (p < 0 || !alive[p] || pieceOf[p] !== pid) continue;
+      ctx.beginPath();
+      ctx.arc(x[p], y[p], VIS_R, 0, TAU);
+      ctx.fill();
+    }
+
+    if (act) {
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      for (let k = 0; k < 4; k++) {
+        const p = pieceParts[baseP + k];
+        if (p < 0 || !alive[p] || pieceOf[p] !== pid) continue;
+        ctx.beginPath();
+        ctx.arc(x[p] - 0.12, y[p] - 0.13, 0.15, 0, TAU);
+        ctx.fill();
+      }
+    }
+  }
+
+  for (let r = 0; r < FIELD_H; r++) {
+    if (rowFlash[r] > 0) {
+      ctx.globalAlpha = rowFlash[r] * 0.20;
+      ctx.fillStyle = '#dfffff';
+      ctx.fillRect(0, r, FIELD_W, 1);
+    }
+  }
+
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = 'rgba(255,255,255,0.13)';
+  ctx.lineWidth = 0.07;
+  ctx.strokeRect(0, 0, FIELD_W, FIELD_H);
+
+  ctx.restore();
+
+  renderNextMini();
+}
+
+function hideOverlay() {
+  overlay.classList.add('hidden');
+  overlay.innerHTML = '';
+}
+
+function bindOverlay() {
+  const primary = document.getElementById('ovBtn');
+  if (primary) {
+    primary.addEventListener('click', function(e){
+      e.preventDefault();
+      primary.blur();
+      SFX.unlock();
+      SFX.ui();
+      if (overlayMode === 'pause') resumeGame();
+      else startGame();
+    });
+  }
+
+  const restart = document.getElementById('restartBtn');
+  if (restart) {
+    restart.addEventListener('click', function(e){
+      e.preventDefault();
+      restart.blur();
+      SFX.unlock();
+      SFX.ui();
+      startGame();
+    });
+  }
+
+  const slider = document.getElementById('volSlider');
+  if (slider) {
+    slider.addEventListener('pointerdown', function(e){
+      e.stopPropagation();
+      SFX.unlock();
+    });
+    slider.addEventListener('input', function(){
+      const v = parseInt(slider.value, 10) / 100;
+      SFX.setVolume(v);
+      const val = document.getElementById('volVal');
+      if (val) val.textContent = Math.round(v * 100) + '%';
+    });
+  }
+
+  const diffRow = document.getElementById('diffRow');
+  if (diffRow) {
+    diffRow.addEventListener('click', function(e){
+      const b = e.target.closest('[data-diff]');
+      if (!b) return;
+      e.preventDefault();
+      b.blur();
+      SFX.unlock();
+      SFX.ui();
+      diffIndex = Math.max(0, Math.min(DIFFS.length - 1, parseInt(b.getAttribute('data-diff'), 10) || 0));
+      saveNum('jelltrisDiff', diffIndex);
+      setSelected();
+      showMenu();
+    });
+  }
+
+  const modeRow = document.getElementById('modeRow');
+  if (modeRow) {
+    modeRow.addEventListener('click', function(e){
+      const b = e.target.closest('[data-mode]');
+      if (!b) return;
+      e.preventDefault();
+      b.blur();
+      SFX.unlock();
+      SFX.ui();
+      modeIndex = Math.max(0, Math.min(MODES.length - 1, parseInt(b.getAttribute('data-mode'), 10) || 0));
+      saveNum('jelltrisMode', modeIndex);
+      setSelected();
+      showMenu();
+    });
+  }
+}
+
+function showMenu() {
+  setState('menu');
+  overlayMode = 'menu';
+  setSelected();
+
+  const diffHtml = DIFFS.map(function(d, i){
+    return '<button class="choiceBtn' + (i === diffIndex ? ' sel' : '') + '" data-diff="' + i + '">' + d.name + '</button>';
+  }).join('');
+
+  const modeHtml = MODES.map(function(m, i){
+    return '<button class="choiceBtn' + (i === modeIndex ? ' sel' : '') + '" data-mode="' + i + '">' + m.name + '</button>';
+  }).join('');
+
+  overlay.innerHTML =
+    '<div>' +
+      '<div id="ovTitle">JELLTRIS</div>' +
+      '<div id="ovText">' +
+        'Jelly tetromino soft-body puzzle.<br>' +
+        'Hold ↺ / ↻ to accelerate rotation.<br>' +
+        'Rotation emits a pulsating sine bass.<br>' +
+        'Blocks have real mass and load adds up.' +
+      '</div>' +
+
+      '<div class="chooseLabel">DIFFICULTY</div>' +
+      '<div class="choiceRow" id="diffRow">' + diffHtml + '</div>' +
+
+      '<div class="chooseLabel">MODE</div>' +
+      '<div class="choiceRow" id="modeRow">' + modeHtml + '</div>' +
+
+      '<div class="modeDesc">' + currentMode.desc + '<br>' + currentDiff.desc + '</div>' +
+
+      '<div class="menuButtons">' +
+        '<button id="ovBtn" class="ovPrimary">START ' + currentDiff.name + ' ' + currentMode.name + '</button>' +
+        '<a class="ovSecondary" href="https://1nd1g0.github.io/" target="_blank" rel="noopener noreferrer">HOME</a>' +
+      '</div>' +
+    '</div>';
+
+  overlay.classList.remove('hidden');
+  bindOverlay();
+  layout();
+}
+
+function showPause() {
+  setState('pause');
+  overlayMode = 'pause';
+  clearInputs();
+  if (activePiece >= 0 && pieceAlive[activePiece]) pieceOmega[activePiece] = 0;
+  SFX.updateRotate(0, false);
+
+  const volPct = Math.round(SFX.volume * 100);
+  overlay.innerHTML =
+    '<div>' +
+      '<div id="ovTitle">PAUSED</div>' +
+      '<div id="ovText">' +
+        'Volume <b id="volVal">' + volPct + '%</b>' +
+        '<span class="smallNote">25% ≈ original loudness</span>' +
+      '</div>' +
+      '<input id="volSlider" type="range" min="0" max="100" value="' + volPct + '" aria-label="Volume">' +
+      '<div class="menuButtons">' +
+        '<button id="ovBtn" class="ovPrimary">RESUME</button>' +
+        '<button id="restartBtn" class="ovSecondary">RESTART</button>' +
+        '<a class="ovSecondary" href="https://1nd1g0.github.io/" target="_blank" rel="noopener noreferrer">HOME</a>' +
+      '</div>' +
+    '</div>';
+  overlay.classList.remove('hidden');
+  bindOverlay();
+  layout();
+}
+
+function showResult(title, reason) {
+  setState('over');
+  overlayMode = 'result';
+  clearInputs();
+  SFX.updateRotate(0, false);
+
+  const shownTime = timeLimit > 0 ? Math.min(clock, timeLimit) : clock;
+
+  overlay.innerHTML =
+    '<div>' +
+      '<div id="ovTitle">' + title + '</div>' +
+      '<div id="ovText">' +
+        reason + '<br>' +
+        'SCORE <b>' + score + '</b><br>' +
+        'LINES <b>' + lines + '</b><br>' +
+        'LEVEL <b>' + level + '</b><br>' +
+        'TIME <b>' + formatTime(shownTime) + '</b>' +
+      '</div>' +
+      '<div class="menuButtons">' +
+        '<button id="ovBtn" class="ovPrimary">RESTART</button>' +
+        '<a class="ovSecondary" href="https://1nd1g0.github.io/" target="_blank" rel="noopener noreferrer">HOME</a>' +
+      '</div>' +
+    '</div>';
+  overlay.classList.remove('hidden');
+  bindOverlay();
+  layout();
+}
+
+function endGame(win, reason) {
+  if (state === 'over') return;
+  const title = win ? 'COMPLETE' : 'GAME OVER';
+  const msg = reason || (win ? 'Target reached' : 'Top out');
+  if (win) SFX.win(); else SFX.gameOver();
+  showResult(title, msg);
+}
+
+function clearInputs() {
+  input.left = input.right = input.down = false;
+  input.ccw = input.cw = input.hard = false;
+  const ons = document.querySelectorAll('.ctl.on');
+  for (let i = 0; i < ons.length; i++) ons[i].classList.remove('on');
+}
+
+function resetGame() {
+  alive.fill(0);
+  pieceAlive.fill(0);
+  pieceActive.fill(0);
+  pieceSleep.fill(0);
+  pieceCount.fill(0);
+  pieceOmega.fill(0);
+  pieceLock.fill(0);
+  pieceSleepTimer.fill(0);
+  pieceMass.fill(0);
+  pieceInvMass.fill(0);
+  pieceLoadMass.fill(0);
+  pieceLoadInv.fill(0);
+  piecePressure.fill(0);
+  pieceCarried.fill(0);
+  pieceAvgY.fill(0);
+  rowFlash.fill(0);
+
+  freeCount = 0;
+  particleLimit = 0;
+  activePiece = -1;
+  activeGrounded = 0;
+  activeGroundedPrev = 0;
+  activeSupportX = 0;
+  activeSupportCount = 0;
+  activeCenterX = 0;
+  activeImbalance = 0;
+  activeFallFactor = 0;
+  spawnDelay = 0;
+
+  score = 0;
+  lines = 0;
+  level = 1;
+  bag = [];
+  nextType = takeNext();
+
+  lastClearRows = 0;
+  shake = 0;
+  shakeX = 0;
+  shakeY = 0;
+  moveSoundTimer = 0;
+  softSoundTimer = 0;
+  impactCandidate = 0;
+  hudSwapTimer = 0;
+  hudPhase = 0;
+  applyHudPhase();
+
+  SFX.lastImpact = 0;
+
+  syncStats(true);
+}
+
+function startGame() {
+  SFX.unlock();
+  setSelected();
+  resetGame();
+
+  targetLines = currentMode.target || 0;
+  timeLimit = currentMode.time || 0;
+  clock = 0;
+
+  setState('play');
+  hideOverlay();
+  layout();
+  updateTargetHud();
+  updateClockHud();
+  spawnNext();
+}
+
+function pauseGame() {
+  if (state !== 'play') return;
+  showPause();
+}
+
+function resumeGame() {
+  if (state !== 'pause') return;
+  setState('play');
+  hideOverlay();
+  layout();
+}
+
+function actionSound(prop) {
+  if (prop === 'left') SFX.move(-1, false);
+  else if (prop === 'right') SFX.move(1, false);
+  else if (prop === 'down') SFX.softPlop();
+  else if (prop === 'hard') SFX.hardWhoosh();
+}
+
+function setInput(prop, val) {
+  if (val) {
+    if (!input[prop]) {
+      input[prop] = true;
+      SFX.unlock();
+      if (state === 'play') actionSound(prop);
+    }
+  } else {
+    input[prop] = false;
+  }
+}
+
+function toggleSound() {
+  SFX.unlock();
+  SFX.enabled = !SFX.enabled;
+  if (SFX.enabled && SFX.volume < 0.03) SFX.setVolume(DEFAULT_VOLUME);
+  SFX.applyGain();
+  updateSoundIcon();
+  if (SFX.enabled) SFX.ui();
+}
+
+function bindHold(id, prop) {
+  const el = $(id);
+  el.addEventListener('pointerdown', function(e){
+    e.preventDefault();
+    try { el.setPointerCapture(e.pointerId); } catch(_) {}
+    SFX.unlock();
+    setInput(prop, true);
+    el.classList.add('on');
+  }, { passive: false });
+
+  function off(e) {
+    if (e) e.preventDefault();
+    setInput(prop, false);
+    el.classList.remove('on');
+  }
+  el.addEventListener('pointerup', off);
+  el.addEventListener('pointercancel', off);
+  el.addEventListener('lostpointercapture', off);
+  el.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+}
+
+bindHold('btnLeft', 'left');
+bindHold('btnRight', 'right');
+bindHold('btnDown', 'down');
+bindHold('btnCCW', 'ccw');
+bindHold('btnCW', 'cw');
+bindHold('btnHard', 'hard');
+
+btnPause.addEventListener('pointerdown', function(e){
+  e.preventDefault();
+  SFX.unlock();
+  SFX.ui();
+  if (state === 'play') pauseGame();
+  else if (state === 'pause') resumeGame();
+});
+
+soundBtn.addEventListener('pointerdown', function(e){
+  e.preventDefault();
+  toggleSound();
+});
+
+window.addEventListener('pointerdown', function(){ SFX.unlock(); }, { passive: true });
+window.addEventListener('keydown', function(){ SFX.unlock(); }, { passive: true });
+
+window.addEventListener('keydown', function(e){
+  const tag = e.target && e.target.tagName;
+  if (tag === 'INPUT') return;
+  if (tag === 'BUTTON' && (e.code === 'Enter' || e.code === 'Space')) return;
+
+  if (e.code === 'ArrowLeft') { setInput('left', true); e.preventDefault(); }
+  else if (e.code === 'ArrowRight') { setInput('right', true); e.preventDefault(); }
+  else if (e.code === 'ArrowDown') { setInput('down', true); e.preventDefault(); }
+  else if (e.code === 'ArrowUp' || e.code === 'KeyX') { setInput('cw', true); e.preventDefault(); }
+  else if (e.code === 'KeyZ' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') { setInput('ccw', true); e.preventDefault(); }
+  else if (e.code === 'Space') { setInput('hard', true); e.preventDefault(); }
+  else if (e.code === 'KeyM') { toggleSound(); }
+  else if (e.code === 'KeyP' || e.code === 'Escape') {
+    if (state === 'play') pauseGame();
+    else if (state === 'pause') resumeGame();
+  } else if (e.code === 'Enter') {
+    if (state === 'menu' || state === 'over') startGame();
+    else if (state === 'pause') resumeGame();
+  }
+});
+
+window.addEventListener('keyup', function(e){
+  const tag = e.target && e.target.tagName;
+  if (tag === 'INPUT') return;
+
+  if (e.code === 'ArrowLeft') setInput('left', false);
+  else if (e.code === 'ArrowRight') setInput('right', false);
+  else if (e.code === 'ArrowDown') setInput('down', false);
+  else if (e.code === 'ArrowUp' || e.code === 'KeyX') setInput('cw', false);
+  else if (e.code === 'KeyZ' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') setInput('ccw', false);
+  else if (e.code === 'Space') setInput('hard', false);
+});
+
+window.addEventListener('resize', layout);
+window.addEventListener('orientationchange', function(){ setTimeout(layout, 80); });
+
+let last = performance.now();
+let acc = 0;
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  let delta = (now - last) / 1000;
+  last = now;
+  if (delta > 0.1) delta = 0.1;
+
+  if (state === 'play') {
+    clock += delta;
+
+    acc += delta;
+    let guard = 0;
+    while (acc >= DT && guard < 4) {
+      step(DT);
+      acc -= DT;
+      guard++;
+      if (state !== 'play') break;
+    }
+    if (acc > DT * 4) acc = 0;
+
+    if (state === 'play' && timeLimit > 0 && clock >= timeLimit) {
+      endGame(false, 'Time up');
+    }
+
+    hudSwapTimer += delta;
+    if (hudSwapTimer >= 3) {
+      hudSwapTimer = 0;
+      hudPhase ^= 1;
+      applyHudPhase();
+    }
+
+    updateClockHud();
+  } else {
+    acc = 0;
+  }
+
+  const rotActive = state === 'play' && activePiece >= 0 && pieceAlive[activePiece] === 1;
+  const rotPower = rotActive ? Math.min(1, Math.abs(pieceOmega[activePiece]) / ROT_MAX) : 0;
+  SFX.updateRotate(rotPower, state === 'play');
+
+  for (let r = 0; r < FIELD_H; r++) {
+    if (rowFlash[r] > 0) {
+      rowFlash[r] -= delta * 3.0;
+      if (rowFlash[r] < 0) rowFlash[r] = 0;
+    }
+  }
+
+  if (shake > 0.001) {
+    shake *= Math.exp(-7.5 * delta);
+    shakeX = (Math.random() - 0.5) * shake;
+    shakeY = (Math.random() - 0.5) * shake;
+  } else {
+    shake = 0;
+    shakeX = 0;
+    shakeY = 0;
+  }
+
+  render();
+}
+
+setSelected();
+updateSoundIcon();
+applyHudPhase();
+layout();
+syncStats(true);
+updateTargetHud();
+updateClockHud();
+showMenu();
+render();
+requestAnimationFrame(frame);
+
+})();
+</script>
+</body>
+</html>
