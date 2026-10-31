@@ -89,6 +89,19 @@ background:linear-gradient(90deg,var(--acc),var(--acc2));
 opacity:0;transition:opacity .2s
 }
 .card:hover::before,.card:focus::before{opacity:1}
+.shot{
+display:block;width:calc(100% + 2.8rem);margin:-1.4rem -1.4rem .3rem;
+aspect-ratio:16/9;object-fit:cover;border-radius:13px 13px 0 0;
+border-bottom:1px solid var(--border);
+transition:filter .2s;
+}
+.card:hover .shot,.card:focus .shot{filter:brightness(1.08)}
+
+/* SIZE BADGE */
+.card-size{
+position:absolute;bottom:.75rem;right:1rem;
+font-size:.7rem;color:var(--dim);letter-spacing:.04em;
+}
 
 /* EMPTY STATE */
 .empty{
@@ -110,6 +123,7 @@ footer a{color:var(--acc);text-decoration:none}
 header{padding:1.5rem .5rem 1rem}
 .wrap{padding:.8rem}
 .card{padding:1.2rem}
+.shot{width:calc(100% + 2.4rem);margin:-1.2rem -1.2rem .3rem;border-radius:13px 13px 0 0}
 }
 @media(min-width:1400px){
 .grid{grid-template-columns:repeat(4,1fr)}
@@ -132,7 +146,7 @@ header{padding:1.5rem .5rem 1rem}
 <header>
 <h1>1nd1g0 Games</h1>
 <p>Free browser-based retro game collection — no installs, no ads</p>
-<div class="stats"><span><b id="count">20</b> games available</span></div>
+<div class="stats"><span><b id="count">21</b> games available</span></div>
 </header>
 
 <div class="search-wrap">
@@ -144,163 +158,234 @@ header{padding:1.5rem .5rem 1rem}
 <div class="grid" id="grid">
 
 <a href="asteroids.html" class="card">
+<img class="shot" src="shots/asteroids.jpg" alt="asteroids gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">☄️</span>
 <span class="card-name">Asteroids</span>
 <div class="card-tags">
 <span class="tag">arcade</span><span class="tag">shooter</span><span class="tag">space</span>
 </div>
+
+<span class="card-size">31.7 KB</span>
 </a>
 
 <a href="billiards.html" class="card">
+<img class="shot" src="shots/billiards.jpg" alt="billiards gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">🎱</span>
 <span class="card-name">Billiards</span>
 <div class="card-tags">
 <span class="tag">sport</span><span class="tag">puzzle</span><span class="tag">physics</span>
 </div>
+
+<span class="card-size">49.4 KB</span>
 </a>
 
 <a href="bomberman.html" class="card">
+<img class="shot" src="shots/bomberman.jpg" alt="bomberman gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">💣</span>
 <span class="card-name">Bomberman</span>
 <div class="card-tags">
 <span class="tag">arcade</span><span class="tag">maze</span><span class="tag">action</span>
 </div>
+
+<span class="card-size">82.9 KB</span>
 </a>
 
 <a href="bowling32.html" class="card">
+<img class="shot" src="shots/bowling32.jpg" alt="bowling32 gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">🎳</span>
 <span class="card-name">Bowling 32</span>
 <div class="card-tags">
 <span class="tag">sport</span>
 </div>
+
+<span class="card-size">26.4 KB</span>
 </a>
 
 <a href="bullethell.html" class="card">
+<img class="shot" src="shots/bullethell.jpg" alt="bullethell gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">🔫</span>
 <span class="card-name">Bullet Hell</span>
 <div class="card-tags">
 <span class="tag">arcade</span><span class="tag">shooter</span><span class="tag">action</span>
 </div>
+
+<span class="card-size">116 KB</span>
 </a>
 
 <a href="defender.html" class="card">
+<img class="shot" src="shots/defender.jpg" alt="defender gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">🛡️</span>
 <span class="card-name">Defender</span>
 <div class="card-tags">
 <span class="tag">arcade</span><span class="tag">shooter</span><span class="tag">defense</span>
 </div>
+
+<span class="card-size">84.2 KB</span>
 </a>
 
 <a href="earth.html" class="card">
+<img class="shot" src="shots/earth.jpg" alt="earth gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">🌍</span>
 <span class="card-name">Earth</span>
 <div class="card-tags">
 <span class="tag">simulation</span>
 </div>
+
+<span class="card-size">140 KB</span>
 </a>
 
 <a href="jeltris.html" class="card">
+<img class="shot" src="shots/jeltris.jpg" alt="jeltris gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">🫟</span>
 <span class="card-name">JELTRIS</span>
 <div class="card-tags">
 <span class="tag">puzzle</span><span class="tag">classic</span><span class="tag">sandbox</span>
 </div>
+
+<span class="card-size">70.4 KB</span>
 </a>
   
 <a href="lander.html" class="card">
+<img class="shot" src="shots/lander.jpg" alt="lander gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">🚀</span>
 <span class="card-name">Lander</span>
 <div class="card-tags">
 <span class="tag">simulation</span><span class="tag">arcade</span>
 </div>
+
+<span class="card-size">95.3 KB</span>
 </a>
 
 <a href="lemmings.html" class="card">
+<img class="shot" src="shots/lemmings.jpg" alt="lemmings gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">🐹</span>
 <span class="card-name">Lemmings</span>
 <div class="card-tags">
 <span class="tag">puzzle</span><span class="tag">strategy</span>
 </div>
+
+<span class="card-size">85.7 KB</span>
 </a>
 
 <a href="minigolf3D.html" class="card">
+<img class="shot" src="shots/minigolf3D.jpg" alt="minigolf3D gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">⛳</span>
 <span class="card-name">Mini Golf 3D</span>
 <div class="card-tags">
 <span class="tag">sport</span><span class="tag">3d</span>
 </div>
+
+<span class="card-size">71.2 KB</span>
 </a>
 
 <a href="noid.html" class="card">
+<img class="shot" src="shots/noid.jpg" alt="noid gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">🧱</span>
 <span class="card-name">Noid</span>
 <div class="card-tags">
 <span class="tag">arcade</span><span class="tag">breakout</span>
 </div>
+
+<span class="card-size">67.8 KB</span>
 </a>
 
 <a href="pinball32.html" class="card">
+<img class="shot" src="shots/pinball32.jpg" alt="pinball32 gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">🎰</span>
 <span class="card-name">Pinball 32</span>
 <div class="card-tags">
 <span class="tag">arcade</span><span class="tag">sport</span>
 </div>
+
+<span class="card-size">42.3 KB</span>
 </a>
 
 <a href="quad.html" class="card">
+<img class="shot" src="shots/quad.jpg" alt="quad gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">🚁</span>
 <span class="card-name">Quadcopter</span>
 <div class="card-tags">
 <span class="tag">racing</span><span class="tag">sport</span>
 </div>
+
+<span class="card-size">92.2 KB</span>
 </a>
 
 <a href="stuntcarracer.html" class="card">
+<img class="shot" src="shots/stuntcarracer.jpg" alt="stuntcarracer gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">🏎️</span>
 <span class="card-name">Stunt Car Racer</span>
 <div class="card-tags">
 <span class="tag">racing</span><span class="tag">arcade</span>
 </div>
+
+<span class="card-size">51.9 KB</span>
 </a>
 
 <a href="moto.html" class="card">
+<img class="shot" src="shots/moto.jpg" alt="moto gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">🛵</span>
 <span class="card-name">Scooter</span>
 <div class="card-tags">
 <span class="tag">simulation</span><span class="tag">arcade</span>
 </div>
+
+<span class="card-size">107 KB</span>
 </a>
   
 <a href="tanks.html" class="card">
+<img class="shot" src="shots/tanks.jpg" alt="tanks gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">🔰</span>
 <span class="card-name">Tanks</span>
 <div class="card-tags">
 <span class="tag">arcade</span><span class="tag">action</span><span class="tag">shooter</span>
 </div>
+
+<span class="card-size">92.9 KB</span>
 </a>
 
 <a href="tanks_editor.html" class="card">
+<img class="shot" src="shots/tanks_editor.jpg" alt="tanks_editor gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">🛠️</span>
 <span class="card-name">Tanks Editor</span>
 <div class="card-tags">
 <span class="tag">editor</span><span class="tag">utility</span>
 </div>
+
+<span class="card-size">47.5 KB</span>
 </a>
 
 <a href="tetris2.html" class="card">
+<img class="shot" src="shots/tetris2.jpg" alt="tetris2 gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">🟩</span>
 <span class="card-name">TE3S</span>
 <div class="card-tags">
 <span class="tag">puzzle</span><span class="tag">classic</span>
 </div>
+
+<span class="card-size">44.0 KB</span>
 </a>
 
 <a href="tetro.html" class="card">
+<img class="shot" src="shots/tetro.jpg" alt="tetro gameplay" loading="lazy" decoding="async" width="600" height="338">
 <span class="card-icon">⬛⬛⬛⬛</span>
 <span class="card-name">TETRO</span>
 <div class="card-tags">
 <span class="tag">puzzle</span><span class="tag">classic</span>
 </div>
+
+<span class="card-size">92.9 KB</span>
+</a>
+
+<a href="tilt.html" class="card">
+<img class="shot" src="shots/tilt.jpg" alt="tilt gameplay" loading="lazy" decoding="async" width="600" height="338">
+<span class="card-icon">🔮</span>
+<span class="card-name">Crystal Ball in a Tilted Maze</span>
+<div class="card-tags">
+<span class="tag">puzzle</span><span class="tag">arcade</span>
+</div>
+
+<span class="card-size">169 KB</span>
 </a>
   
 </div>
