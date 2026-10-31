@@ -1,0 +1,2399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#141210">
+<title>Crystal Ball in a Tilted Maze</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#0d0b08;color:#e8e0d0;
+ font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+ touch-action:none;user-select:none;-webkit-user-select:none}
+#cv{position:fixed;inset:0;display:block;transform-origin:50% 52%;will-change:transform}
+#vig{position:fixed;inset:0;z-index:2;pointer-events:none;
+ background:radial-gradient(circle at 50% 50%,rgba(0,0,0,0) 40%,rgba(0,0,0,.55) 92%)}
+#tiltT{position:fixed;top:8px;right:8px;width:35px;height:35px;z-index:6;pointer-events:none}
+.ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
+ justify-content:center;gap:10px;background:rgba(10,8,6,.88);z-index:10;padding:18px;text-align:center}
+#hud{position:fixed;top:0;left:0;right:0;display:flex;gap:14px;padding:6px 12px;
+ font-size:13px;color:#d8cfb8;z-index:5;pointer-events:none;text-shadow:0 1px 2px #000}
+#hint{position:fixed;bottom:6px;left:0;right:0;text-align:center;font-size:11px;color:#9a8f78;z-index:5;pointer-events:none;text-shadow:0 1px 2px #000}
+h1{font-size:26px;letter-spacing:2px;color:#f2d98a;text-shadow:0 2px 8px rgba(242,217,138,.25)}
+h2{font-size:22px;color:#f2d98a}
+h3{font-size:14px;color:#c9b98f;margin-top:8px}
+.sub{font-size:11px;color:#8a7f6a;max-width:340px}
+input[type=text]{background:#241f17;border:1px solid #55482f;color:#f0e6cc;
+ padding:10px 12px;border-radius:8px;font-size:16px;width:210px;text-align:center;min-width:0}
+.btn{background:#3a3223;border:1px solid #6b5a37;color:#f0e2b8;padding:12px 22px;
+ border-radius:9px;font-size:15px;cursor:pointer;min-width:130px}
+.btn:active{background:#4d4230}
+.btn.pri{background:#6b4d13;border-color:#c9a23f;color:#fff3cf;font-weight:600}
+.btn.sq{min-width:44px;padding:10px 14px}
+.btn.sm{min-width:64px;padding:9px 12px;font-size:13px}
+.btn.on{background:#6b4d13;border-color:#c9a23f;color:#fff3cf;font-weight:600}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+input[type=range]{-webkit-appearance:none;appearance:none;width:170px;height:20px;
+ background:#241f17;border:1px solid #55482f;border-radius:6px;touch-action:auto}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;
+ border-radius:12px;background:#c9a23f;border:1px solid #f2d98a}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:11px;
+ background:#c9a23f;border:1px solid #f2d98a}
+select{background:#241f17;border:1px solid #55482f;color:#f0e6cc;
+ padding:8px 10px;border-radius:8px;font-size:14px}
+.gx{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;text-align:left;font-size:15px;
+color:#c9b98f;background:#1d1912;border:1px solid #37301f;border-radius:8px;
+padding:10px 14px;width:min(500px,92vw);max-height:38vh;overflow-y:auto;touch-action:auto}
+.gx label{display:flex;align-items:center;gap:10px;cursor:pointer;padding:5px 0}
+.gx input[type=checkbox]{width:22px;height:22px;accent-color:#c9a23f;flex:none}
+.gx .fd{grid-column:1/-1;font-size:12.5px;line-height:1.45;color:#8a7f6a;padding-bottom:4px}
+.ctl{font-size:14.5px;line-height:1.55;color:#b3a888;max-width:min(620px,94vw);background:#1d1912;
+border:1px solid #37301f;border-radius:8px;padding:12px 16px;text-align:left}
+.ctl b{color:#d8c9a0}
+.ok{color:#9fc46f}.warn{color:#d8a24a}
+#pause,#win,#calb,#opts,#ctls,#lang{display:none}
+/* the controls page is long on purpose - it carries the full help AND the
+ tuning tree - so the overlay itself scrolls instead of clipping. */
+#ctls{justify-content:flex-start;overflow-y:auto}
+/* the page itself scrolls, so a tab panel must not grow its own inner
+ scrollbar too - one scrollbar for the whole page, never nested */
+#ctls .gx{max-height:none;overflow:visible}
+#ctlTab button{margin:0 2px}
+.gx[hidden]{display:none}
+.gx .sl{grid-column:1/-1;display:flex;align-items:center;gap:10px}
+.gx .slT{min-width:96px}
+.gx .slP{min-width:48px;text-align:right;color:#8a7f6a;font-size:13.5px}
+.gx input[type=range]{flex:1}
+#ctls .gx button.btn{grid-column:1/-1;min-width:0;margin-top:6px}
+a.btn{display:inline-block;text-decoration:none}
+#calCv{width:min(250px,62vw);height:min(250px,62vw);background:#191510;border:1px solid #37301f;border-radius:10px}
+.gybtn{display:none}
+#mbc{position:fixed;inset:0;width:100%;height:100%;z-index:12;pointer-events:none}
+a{color:#c9a23f}
+/* language picker: big flag buttons, native names; the grid keeps them tidy
+   on phones (2 columns) and wide screens alike */
+#langB{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:560px}
+.btn.lgb{width:168px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px}
+.lgb svg{width:56px;height:37px;border:1px solid #574a33;border-radius:4px;display:block}
+.lgb b{font-size:15px}
+.lgb span{font-size:12px;color:#8a7f6a}
+/* title-screen language button: current flag inline before the word */
+#langB2 svg{width:21px;height:14px;vertical-align:-2px;margin:0 6px 0 0;
+ border:1px solid #574a33;border-radius:2px;display:inline-block}
+#camT{position:fixed;right:6px;top:26px;width:144px;height:81px;background:#000;border:1px solid #3a2c1c;opacity:.85;z-index:5;image-rendering:pixelated}
+/* the corner the preview walks to when the marble would sit under it */
+#camT.bl{right:auto;left:6px;top:auto;bottom:26px}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="vig"></div>
+<canvas id="tiltT" width="70" height="70"></canvas>
+<div id="hud"><span id="hLv"></span><span id="hSeed"></span><span id="hStars"></span><span id="hTime"></span><span id="hBest"></span></div>
+<div id="hint"></div>
+<canvas id="camT" width="96" height="54" hidden></canvas>
+<canvas id="mbc"></canvas>
+<div id="menu" class="ov">
+ <h1>&#9678; <span data-t="titleT">Crystal Ball in a Tilted Maze</span></h1>
+ <div class="sub" data-t="menuSub">Roll the crystal ball through procedurally generated wooden mazes &mdash; pits, water, ice, conveyors, fans, crumbling planks and moving barriers. Every level comes from your seed.</div>
+ <div class="row"><input id="seed" type="text" spellcheck="false" autocomplete="off" placeholder="SEED" maxlength="16" data-ph="seedPh">
+ <button class="btn sq" id="dice" title="Random seed" data-tip="diceTip">&#127922;</button></div>
+ <div class="row"><span class="sub" data-t="lvStart">start at level</span><input id="lv" type="text" inputmode="numeric" pattern="[0-9]*" style="width:60px" value="1"></div>
+ <button class="btn pri" id="play" data-t="btnPlay">PLAY</button>
+ <div class="row"><button class="btn" id="optB" data-t="btnOptions">SOUND &amp; GRAPHICS</button><button class="btn" id="helpB" data-t="btnControls">CONTROLS</button><button class="btn gybtn" id="gyro" data-t="btnGyro">USE GYROSCOPE
+  </button><button class="btn gybtn" id="camB" data-t="btnCam">USE CAMERA</button><button class="btn" id="camF" hidden>CAM: FRONT</button><button class="btn" id="langB2">LANGUAGE</button><a class="btn" id="homeB" href="https://1nd1g0.github.io/" target="_blank" rel="noopener" data-t="btnHome">HOME</a></div>
+</div>
+<div id="pause" class="ov">
+ <h2 data-t="hPause">PAUSED</h2>
+ <div class="sub" id="pInfo"></div>
+ <div class="row"><button class="btn pri" id="resume" data-t="btnResume">RESUME</button><button class="btn" id="restart" data-t="btnRestart">RESTART LEVEL</button></div>
+ <div class="row"><button class="btn" id="pmenu" data-t="btnMenu">MENU</button><button class="btn" id="optP" data-t="btnOptions2">OPTIONS</button><button class="btn" id="ctlsP" data-t="btnControls">CONTROLS</button><button class="btn" id="calB2" data-t="btnCal">CALIBRATE</button></div>
+ <div class="row"><span class="sub" data-t="volume">volume</span><input id="volQ" type="range" min="0" max="100" step="5" value="50"><span id="volQP" class="sub">50%</span></div>
+</div>
+<div id="win" class="ov">
+ <h2 id="wTitle" data-t="hWin">LEVEL COMPLETE</h2>
+ <div class="sub" id="wInfo"></div>
+ <div class="row"><button class="btn pri" id="next" data-t="btnNext">NEXT LEVEL</button><button class="btn" id="again" data-t="btnReplay">REPLAY</button><button class="btn" id="wmenu" data-t="btnMenu">MENU</button></div>
+</div>
+<div id="opts" class="ov">
+ <h2 data-t="hOpts">OPTIONS</h2>
+ <h3 data-t="hSound">SOUND</h3>
+ <div class="row"><span class="sub" data-t="volume">volume</span><input id="volS" type="range" min="0" max="100" step="5" value="50"><span id="volSP" class="sub">50%</span></div>
+ <div class="row"><button class="btn" id="muteT2">SOUND: ON</button><button class="btn" id="vibT">VIBRATION: ON</button></div>
+ <h3 data-t="hGraphics">GRAPHICS</h3>
+ <div class="row" id="gfxP">
+  <button class="btn sm" data-p="max" data-t="preMax">MAXIMUM</button><button class="btn sm" data-p="high" data-t="preHigh">HIGH</button><button class="btn sm" data-p="med" data-t="preMed">MEDIUM</button><button class="btn sm" data-p="low" data-t="preLow">LOW (FAST)</button>
+ </div>
+ <div class="gx" id="gxF">
+  <span class="fd" data-t="fxNote">The whole game is drawn live from code &mdash; no pre-baked art. Pick a preset above, or build your own look by checking exactly the effects you want; anything you uncheck also helps weak devices.</span>
+  <label><input type="checkbox" data-f="par"><span data-t="fxPar">3D depth &amp; wall faces</span></label>
+  <label><input type="checkbox" data-f="shadow"><span data-t="fxShadow">Drop shadows</span></label>
+  <label><input type="checkbox" data-f="caustic"><span data-t="fxCaustic">Light pools &amp; caustics</span></label>
+  <label><input type="checkbox" data-f="spec"><span data-t="fxSpec">Specular highlights</span></label>
+  <label><input type="checkbox" data-f="water"><span data-t="fxWater">Water animation</span></label>
+  <label id="reflL"><input type="checkbox" data-f="refl"><span data-t="fxRefl">Room reflections (needs camera on)</span></label>
+ </div>
+ <div class="row"><span class="sub" data-t="resLabel">resolution</span><select id="resS">
+  <option value="1" data-t="resFull">Full (native)</option><option value="0.75" data-t="resHigh">High (75%)</option><option value="0.66" data-t="resMed">Medium (66%)</option><option value="0.5" data-t="resLow">Low (50%)</option></select></div>
+ <div class="sub" id="gfxInfo"></div>
+ <div class="row"><button class="btn pri" id="optX" data-t="btnClose">CLOSE</button></div>
+</div>
+<div id="ctls" class="ov">
+ <h2 data-t="hControls">CONTROLS</h2>
+ <h3 data-t="hTune">TUNE EACH INPUT</h3>
+ <div class="row" id="ctlTab">
+  <button class="btn sm" data-m="cam" data-t="tabCam">CAMERA</button><button class="btn sm" data-m="gyro" data-t="tabGyro">GYROSCOPE</button><button class="btn sm" data-m="key" data-t="tabKey">KEYS &middot; PAD &middot; MOUSE &middot; TOUCH</button>
+ </div>
+ <div class="gx" id="ctlCam">
+  <span class="fd" data-t="noteCam">Applies while USE CAMERA steers the game. The camera slides the crystal ball by following the picture; these correct which way the picture moves.</span>
+  <label><input type="checkbox" data-c="cam.fx"><span data-t="flipX">Flip X &mdash; reverse left/right</span></label>
+  <label><input type="checkbox" data-c="cam.fy"><span data-t="flipYud">Flip Y &mdash; reverse up/down</span></label>
+  <label><input type="checkbox" data-c="cam.ad"><span data-t="antiDrift">Anti-drift &mdash; re-level the neutral point while you hold still</span></label>
+  <label class="sl"><span class="slT" data-t="sensLabel">Sensitivity</span><input type="range" id="senCam" min="50" max="200" step="5" value="100"><span class="slP" id="senCamP">100%</span></label>
+  <button class="btn sm" id="calW1" data-t="calWizard">CALIBRATE &mdash; one-minute wizard for this device</button>
+ </div>
+ <div class="gx" id="ctlGyro" hidden>
+  <span class="fd" data-t="noteGyro">Applies while USE GYROSCOPE steers the game. The CALIBRATE wizard below already learns your axes; these are your own corrections on top of it.</span>
+  <label><input type="checkbox" data-c="gyro.fx"><span data-t="flipX">Flip X &mdash; reverse left/right</span></label>
+  <label><input type="checkbox" data-c="gyro.fy"><span data-t="flipYfb">Flip Y &mdash; reverse forward/back</span></label>
+  <label><input type="checkbox" data-c="gyro.ad"><span data-t="antiDrift">Anti-drift &mdash; re-level the neutral point while you hold still</span></label>
+  <label class="sl"><span class="slT" data-t="sensLabel">Sensitivity</span><input type="range" id="senGyro" min="50" max="200" step="5" value="100"><span class="slP" id="senGyroP">100%</span></label>
+  <button class="btn sm" id="calW2" data-t="calWizard">CALIBRATE &mdash; one-minute wizard for this device</button>
+ </div>
+ <div class="gx" id="ctlKey" hidden>
+  <span class="fd" data-t="noteKey">Applies to keyboard, gamepad stick, mouse-drag and touch-drag together. There is no neutral point to drift from here, so no anti-drift &mdash; only axes and gain.</span>
+  <label><input type="checkbox" data-c="key.fx"><span data-t="flipX">Flip X &mdash; reverse left/right</span></label>
+  <label><input type="checkbox" data-c="key.fy"><span data-t="flipYud">Flip Y &mdash; reverse up/down</span></label>
+  <label class="sl"><span class="slT" data-t="sensLabel">Sensitivity</span><input type="range" id="senKey" min="50" max="200" step="5" value="100"><span class="slP" id="senKeyP">100%</span></label>
+ </div>
+ <h3 data-t="hHelp">HOW EACH INPUT WORKS</h3>
+ <div class="ctl">
+  <span data-h="helpCam"></span><br>
+  <span data-h="helpLight"></span><br>
+  <span data-h="helpTilt"></span><br>
+  <span data-h="helpKey"></span><br>
+  <span data-h="helpTouch"></span><br>
+  <span data-h="helpPad"></span><br>
+  <span data-h="helpFall"></span>
+ </div>
+ <div class="row"><button class="btn pri" id="ctlsX" data-t="btnClose">CLOSE</button></div>
+</div>
+<div id="calb" class="ov">
+ <h2 data-t="hCal">CALIBRATION</h2>
+ <div class="sub" id="calTxt" data-t="calIntro">Tune the tilt/camera to YOUR device. Follow the on-screen prompts; the result is saved, so any device plays the same way.</div>
+ <canvas id="calCv" width="280" height="280"></canvas>
+ <div class="sub" id="calMsg" style="min-height:2.6em"></div>
+ <div class="row"><button class="btn pri" id="calGo" data-t="btnStart">START</button><button class="btn" id="calX" data-t="btnCancel">CANCEL</button></div>
+</div>
+<div id="lang" class="ov">
+ <h1>&#9678; <span data-t="titleT">Crystal Ball in a Tilted Maze</span></h1>
+ <h2 id="langQ">LANGUAGE</h2>
+ <div class="sub" id="langSub"></div>
+ <div id="langB"></div>
+ <div class="row"><button class="btn pri" id="langX" hidden data-t="btnClose">CLOSE</button></div>
+</div>
+<script>
+'use strict';
+/* ============ CRYSTAL BALL IN A TILTED MAZE — single-file offline game engine ============
+   Everything (mazes, textures, sounds) is generated in software from a seed. */
+
+// ---------- tiny helpers ----------
+var $=function(id){return document.getElementById(id)};
+var clamp=function(v,a,b){return v<a?a:(v>b?b:v)};
+var lerp=function(a,b,t){return a+(b-a)*t};
+var TAU=Math.PI*2;
+
+// ---------- seeded PRNG (xmur3 hash + mulberry32) ----------
+function xmur3(str){var h=1779033703^str.length;for(var i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19}
+ return function(){h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);h^=h>>>16;return h>>>0}}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function mkRng(seedStr,salt){var h=xmur3(String(seedStr)+'|'+(salt||0));return mulberry32(h())}
+function ri(rng,n){return (rng()*n)|0}
+function pick(rng,arr){return arr[(rng()*arr.length)|0]}
+function shuffle(rng,a){for(var i=a.length-1;i>0;i--){var j=(rng()*(i+1))|0,t=a[i];a[i]=a[j];a[j]=t}return a}
+
+// ---------- value noise (2D, seeded) ----------
+function mkNoise(rng){
+ var p=new Uint8Array(512),i,t;
+ for(i=0;i<256;i++)p[i]=i; shuffle(rng,p);
+ for(i=0;i<256;i++)p[256+i]=p[i];
+ function hsh(x,y){return p[(p[x&255]+y)&255]/255}
+ function sm(t){return t*t*(3-2*t)}
+ return function(x,y){
+  var xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,
+      a=hsh(xi,yi),b=hsh(xi+1,yi),c=hsh(xi,yi+1),d=hsh(xi+1,yi+1),
+      u=sm(xf),v=sm(yf);
+  return lerp(lerp(a,b,u),lerp(c,d,u),v)}}
+function fbm(nz,x,y,oct){var s=0,a=.5,f=1;for(var i=0;i<oct;i++){s+=a*nz(x*f,y*f);f*=2;a*=.5}return s}
+// ---------- user preferences (all persisted in localStorage) ----------
+// Sound and graphics options survive reloads; the calibration wizard already
+// stores its own key. The only control setting that persists is the view
+// flip; sensors (tilt, camera) are started by hand, never restored.
+var OPT={vol:0.5,muted:false,gfx:'max',res:1,vib:1,
+ fx:{par:1,shadow:1,caustic:1,spec:1,water:1,refl:1}};
+// Control settings are NOT stored as sensor state (tilt/camera are always
+// started by hand), but the TUNING of each input kind is: flips, anti-drift
+// and sensitivity belong to the device in your hands and survive reloads.
+// fx/fy = axis flips; ad = silent neutral-point re-levelling (default ON);
+// s = gain in percent (100 = the shipped tuning).
+var CTLX={cam:{fx:0,fy:0,ad:1,s:100},gyro:{fx:0,fy:0,ad:1,s:100},
+ key:{fx:0,fy:0,s:100}};
+var CTAB='cam'; // last-open tuning tab (session memory)
+function ctlSave(){try{store('tll:ctl',JSON.stringify(CTLX))}catch(e){}}
+function ctlLoad(){try{var j=JSON.parse(store('tll:ctl'));if(!j)return;
+ var g,k,ks=['fx','fy','ad','s'];
+ for(g in CTLX)if(j[g])for(k in CTLX[g])
+  if(j[g][k]!==undefined)CTLX[g][k]=k==='s'?clamp(+j[g].s||100,50,200):(j[g][k]?1:0)}
+ catch(e){}}
+// Graphics presets. The effect names are the checkbox rows; every one is an
+// INDEPENDENT draw feature worth its cost, so custom profiles mix freely.
+// Options that are meaningless without another were merged into one:
+//  par = the 3D projection: parallax of walls, props and the marble, and the
+//        wall side faces (without the projection those faces are zero-area)
+//  shadow = drop shadows of barriers and bumpers
+//  caustic = light pools: the glass caustic and the stars' warm glow
+//  spec = specular highlight on the glass marble
+//  water = water surface animation
+//  refl = the room projected inside the glass; only meaningful while the
+//        camera runs, so the panel dims it when no camera is active
+// res = internal render scale; the LOW preset (flat board, half resolution)
+// is the one that crawls least on ancient hardware.
+var GFXP={max:{fx:{},res:1},high:{fx:{refl:0,caustic:0},res:1},
+ med:{fx:{par:1,shadow:1},res:0.66},low:{fx:{},res:0.5}};
+var FXK=['par','shadow','caustic','spec','water','refl'];
+// DEGRADE: the engine's automatic floor on devices that cannot hold the frame
+// rate; it force-disables the expensive features no matter what was chosen.
+var DEGRADE=0;
+function FX(k){
+ if(DEGRADE&&(k==='par'||k==='water'||k==='caustic'||k==='spec'||k==='refl'))return false;
+ return !!OPT.fx[k]}
+function presetFx(p){var g=GFXP[p],on={},i;
+ if(!g)return on;
+ for(i=0;i<FXK.length;i++)on[FXK[i]]=
+  p==='max'?1:p==='low'?0:
+  p==='high'?(FXK[i]==='refl'||FXK[i]==='caustic')?0:1:
+  g.fx[FXK[i]]?1:0;return on}
+function setPreset(p){if(!GFXP[p])return;OPT.gfx=p;OPT.res=GFXP[p].res;
+ OPT.fx=presetFx(p);optSave();syncOpts();resize()}
+function toggleFx(k,v){OPT.fx[k]=v?1:0;OPT.gfx='custom';optSave();syncOpts()}
+function setRes(r){OPT.res=clamp(+r,0.4,1);OPT.gfx='custom';optSave();syncOpts();resize()}
+function optLoad(){try{var j=JSON.parse(store('tll:opts'));if(!j)return;
+ if(isFinite(j.vol))OPT.vol=clamp(+j.vol,0,1);
+ OPT.muted=!!j.muted;
+ if(GFXP[j.gfx])OPT.gfx=j.gfx;else if(j.gfx==='custom')OPT.gfx='custom';
+ if(isFinite(j.res))OPT.res=clamp(+j.res,0.4,1);
+ if(j.vib!==undefined)OPT.vib=j.vib?1:0;
+ var i;if(j.fx)for(i=0;i<FXK.length;i++)if(j.fx[FXK[i]]!==undefined)
+  OPT.fx[FXK[i]]=j.fx[FXK[i]]?1:0}catch(e){}}
+function optSave(){try{store('tll:opts',JSON.stringify(OPT))}catch(e){}}
+
+// ---------- procedural audio + haptics ----------
+// Haptic feedback rides the event sounds: every action the player would HEAR
+// the phone can also FEEL (navigator.vibrate; a no-op where unsupported).
+// It is independent of the sound switch on purpose - a silent phone in a
+// pocket still answers. Long events get real vibration rhythms instead of
+// one flat buzz.
+function vibe(p){if(OPT.vib&&navigator.vibrate)try{navigator.vibrate(p)}catch(e){}}
+// The bus ends in a soft limiter, so the master can be driven to FULL VOLUME
+// without stacking sound effects ever clipping: many collisions, stars and
+// ambience at once stay solid. Volume (default 50%) scales the master gain.
+var AU={ctx:null,bus:null,master:null,muted:false,vol:0.5,
+ init:function(){if(AU.ctx||AU.muted)return;try{var C=window.AudioContext||window.webkitAudioContext;
+  if(!C)return;AU.ctx=new C();AU.bus=AU.ctx.createGain();
+  var tail=AU.bus;try{var K=AU.ctx.createDynamicsCompressor();
+   K.threshold.value=-10;K.knee.value=4;K.ratio.value=12;K.attack.value=.003;K.release.value=.15;
+   AU.bus.connect(K);tail=K}catch(e){}
+  AU.master=AU.ctx.createGain();AU.master.gain.value=AU.vol*1.7;tail.connect(AU.master);
+  AU.master.connect(AU.ctx.destination)}catch(e){}},
+ setVol:function(v){AU.vol=clamp(v,0,1);if(AU.master)AU.master.gain.value=AU.muted?0:AU.vol*1.7},
+ resume:function(){if(AU.ctx&&AU.ctx.state==='suspended')AU.ctx.resume()},
+ tone:function(f0,f1,dur,type,vol,delay){var c=AU.ctx;if(!c||AU.muted)return;var t=c.currentTime+(delay||0);
+  var o=c.createOscillator(),g=c.createGain();o.type=type||'sine';
+  o.frequency.setValueAtTime(f0,t);if(f1)o.frequency.exponentialRampToValueAtTime(Math.max(1,f1),t+dur);
+  g.gain.setValueAtTime(vol||.3,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(g).connect(AU.bus);o.start(t);o.stop(t+dur+.02)},
+ noise:function(dur,vol,fc,q,delay){var c=AU.ctx;if(!c||AU.muted)return;var t=c.currentTime+(delay||0);
+  var n=Math.max(1,(c.sampleRate*dur)|0),b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);
+  for(var i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
+  var s=c.createBufferSource();s.buffer=b;var f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=fc;f.Q.value=q||1;
+  var g=c.createGain();g.gain.value=vol;s.connect(f).connect(g).connect(AU.bus);s.start(t)},
+ click:function(v){v=clamp(v,0,1);this.tone(190,90,.05,'square',.10+.12*v);this.noise(.04,.10+.2*v,2400+2200*v,2)},
+ wood:function(v){this.noise(.07,.18,700+400*v,1.4);this.tone(150,70,.08,'triangle',.12);
+  if(v>0.35)vibe(Math.round(4+12*v))}, // only real bumps hum the pocket
+ pit:function(){this.tone(620,90,.55,'sine',.3);this.noise(.3,.18,300,.8,.28);vibe(70)},
+ star:function(){this.tone(980,980,.09,'sine',.22);this.tone(1318,1318,.09,'sine',.22,.07);this.tone(1760,1760,.14,'sine',.22,.14);vibe(12)},
+ boing:function(){this.tone(180,650,.14,'sine',.3);this.noise(.05,.1,1800,3);vibe(25)},
+ crumble:function(){this.noise(.25,.22,900,1.1);this.noise(.2,.14,450,.9,.09);vibe(18)},
+ goal:function(){var n=[523,659,784,1047,1319],i;for(i=0;i<5;i++)this.tone(n[i],n[i],.4,'triangle',.22,i*.09);this.tone(1568,1568,.5,'sine',.15,.46);vibe([50,80,160])},
+ ui:function(){this.tone(660,880,.06,'square',.08);vibe(4)},
+ levelup:function(){var n=[392,523,659,784],i;for(i=0;i<4;i++)this.tone(n[i],n[i],.25,'triangle',.18,i*.12);vibe([30,60,120])},
+ splash:function(){this.noise(.18,.12,700,.7);vibe(10)}};
+
+// ---------- procedural textures (all offscreen canvases) ----------
+function cnv(w,h){var c=document.createElement('canvas');c.width=w;c.height=h;return c}
+function texWood(rng,size,base,streaks){var c=cnv(size,size),g=c.getContext('2d'),nz=mkNoise(rng),x,y;
+ var img=g.createImageData(size,size),d=img.data;
+ for(y=0;y<size;y++)for(x=0;x<size;x++){
+  var n=fbm(nz,x*.045,y*.011,4),ring=Math.sin((y*.32+nz(x*.02,y*.02)*22)*1.7)*.5+.5,
+      grain=fbm(nz,x*.6,y*.02,2),v=n*.55+ring*.25+grain*.2,
+      i=(y*size+x)*4;
+  d[i]=base[0]+v*streaks;d[i+1]=base[1]+v*streaks*.9;d[i+2]=base[2]+v*streaks*.7;d[i+3]=255}
+ g.putImageData(img,0,0);
+ g.globalAlpha=.16;g.strokeStyle='#000';g.lineWidth=1;
+ for(var k=0;k<3;k++){g.beginPath();g.moveTo(0,k*size/3+2);g.lineTo(size,k*size/3+2);g.stroke()}
+ g.globalAlpha=1;return c}
+// small soft highlight sprite: drawn on the marble at wherever the CURRENT
+// light sits (the studio default light is baked into the floor textures; this
+// dynamic one rides wherever the camera-detected lamp actually is).
+function texSpec(){var c=cnv(32,32),g=c.getContext('2d'),
+ q=g.createRadialGradient(16,13,0,16,16,16);
+ q.addColorStop(0,'rgba(248,255,255,.85)');q.addColorStop(.3,'rgba(220,250,250,.35)');
+ q.addColorStop(1,'rgba(200,245,245,0)');g.fillStyle=q;g.fillRect(0,0,32,32);return c}
+// light through navy blue-green glass: the caustic spot and the glass body
+// tint, baked ONCE at load (they are static). Both marbles then cost a few
+// cheap drawImage calls per frame - no per-frame gradient objects, which is
+// what matters on software-rendered phone canvas. The look, not the physics.
+function texCaustic(){var c=cnv(48,48),g=c.getContext('2d'),
+ q=g.createRadialGradient(24,24,0,24,24,24);
+ q.addColorStop(0,'rgba(150,255,238,.85)');q.addColorStop(.45,'rgba(60,215,235,.4)');
+ q.addColorStop(1,'rgba(30,160,190,0)');g.fillStyle=q;g.fillRect(0,0,48,48);return c}
+function texGlass(){var c=cnv(64,64),g=c.getContext('2d'),
+ q=g.createRadialGradient(32,32,4,32,32,32);
+ q.addColorStop(0,'rgba(150,245,235,.24)');q.addColorStop(.55,'rgba(30,120,150,.22)');
+ q.addColorStop(1,'rgba(8,42,78,.62)');g.fillStyle=q;g.fillRect(0,0,64,64);return c}
+var GLF={caustic:texCaustic(),glass:texGlass(),spec:texSpec()};
+function texStar(size,col){var c=cnv(size,size),g=c.getContext('2d'),cx=size/2;
+ g.translate(cx,cx);g.fillStyle=col||'#ffd94a';g.strokeStyle='#8a6a12';g.lineWidth=size*.045;
+ g.beginPath();for(var i=0;i<10;i++){var r=(i%2===0)?size*.44:size*.19,a=-Math.PI/2+i*Math.PI/5;
+  g[i?'lineTo':'moveTo'](Math.cos(a)*r,Math.sin(a)*r)}g.closePath();g.fill();g.stroke();
+ g.fillStyle='rgba(255,255,255,.55)';g.beginPath();g.arc(-size*.08,-size*.10,size*.07,0,TAU);g.fill();return c}
+function texIce(size,rng){var c=cnv(size,size),g=c.getContext('2d'),nz=mkNoise(rng);
+ g.fillStyle='#bcd8ec';g.fillRect(0,0,size,size);
+ g.globalAlpha=.5;g.strokeStyle='#e8f4fb';g.lineWidth=1.5;
+ for(var k=0;k<7;k++){var x0=nz(k*7.1,3.3)*size,y0=nz(k*3.7,9.1)*size;
+  g.beginPath();g.moveTo(x0,y0);g.lineTo(x0+(nz(k,5)-.5)*size,y0+(nz(k,6)-.5)*size);g.stroke()}
+ g.globalAlpha=.12;g.fillStyle='#5f86a8';g.fillRect(0,0,size,size);g.globalAlpha=1;return c}
+function texWater(size,rng){var c=cnv(size,size),g=c.getContext('2d'),nz=mkNoise(rng),x,y;
+ var img=g.createImageData(size,size),d=img.data;
+ for(y=0;y<size;y++)for(x=0;x<size;x++){var n=fbm(nz,x*.09,y*.09,3),i=(y*size+x)*4;
+  d[i]=26+n*30;d[i+1]=74+n*60;d[i+2]=118+n*70;d[i+3]=255}
+ g.putImageData(img,0,0);return c}
+function texCrumb(size,rng){var c=texWood(rng,size,[126,102,72],70),g=c.getContext('2d'),nz=mkNoise(rng);
+ g.strokeStyle='rgba(30,20,10,.65)';g.lineWidth=1.4;
+ for(var k=0;k<5;k++){var x=nz(k*11.3,2.7)*size,y=nz(k*5.9,8.2)*size;
+  g.beginPath();g.moveTo(x,y);for(var s=0;s<4;s++){x+=(nz(k,s+1)-.5)*size*.4;y+=(nz(s,k+1)-.5)*size*.4;g.lineTo(x,y)}g.stroke()}
+ return c}
+function texBumper(size){var c=cnv(size,size),g=c.getContext('2d'),r=size/2,
+ grd=g.createRadialGradient(r*.6,r*.55,r*.1,r,r,r);
+ grd.addColorStop(0,'#ff9d5c');grd.addColorStop(.6,'#e0512a');grd.addColorStop(1,'#8f2a12');
+ g.fillStyle=grd;g.beginPath();g.arc(r,r,r-1,0,TAU);g.fill();
+ g.strokeStyle='#ffd9b8';g.lineWidth=2;g.beginPath();g.arc(r,r,r*.62,0,TAU);g.stroke();return c}
+
+var TEX=null;
+function buildTextures(seed){
+ var rng=mkRng(seed,'tex');
+ TEX={wood:texWood(rng,192,[122,90,52],85),
+      dark:texWood(rng,96,[70,50,28],60),
+      star:texStar(48),starOff:texStar(48,'#5a5443'),
+      ice:texIce(64,rng),water:texWater(96,rng),
+      crumb:texCrumb(64,rng),bumper:texBumper(48)};
+}
+// ---------- translations ----------
+// ONE block holds every user-visible string of the game in all supported
+// languages. Keys are shared; missing keys fall back to English. The UI
+// markup carries only data-t / data-h / data-ph / data-tip attributes that
+// name these keys; applyLang() paints them, and all live text (HUD, hints,
+// buttons, wizard messages, result screens) re-reads them on the fly, so a
+// language change repaints everything without a reload. {name} fields in a
+// translation are substituted by tt(). Languages: English, Spanish, Brazilian
+// Portuguese, Russian, Simplified Chinese.
+var TR={
+en:{
+titleT:'Crystal Ball in a Tilted Maze',
+btnPlay:'PLAY',btnOptions:'SOUND & GRAPHICS',btnControls:'CONTROLS',btnGyro:'USE GYROSCOPE',btnCam:'USE CAMERA',btnHome:'HOME',btnMenu:'MENU',btnResume:'RESUME',btnRestart:'RESTART LEVEL',btnCal:'CALIBRATE',btnOptions2:'OPTIONS',btnClose:'CLOSE',btnStart:'START',btnCancel:'CANCEL',btnNext:'NEXT LEVEL',btnReplay:'REPLAY',btnLang:'LANGUAGE',
+hPause:'PAUSED',hWin:'LEVEL COMPLETE',hOpts:'OPTIONS',hSound:'SOUND',hGraphics:'GRAPHICS',hControls:'CONTROLS',hTune:'TUNE EACH INPUT',hHelp:'HOW EACH INPUT WORKS',hCal:'CALIBRATION',hLang:'LANGUAGE',
+menuSub:'Roll the crystal ball through procedurally generated wooden mazes — pits, water, ice, conveyors, fans, crumbling planks and moving barriers. Every level comes from your seed.',
+seedPh:'SEED',lvStart:'start at level',diceTip:'Random seed',volume:'volume',
+sndOn:'SOUND: ON',sndOff:'SOUND: OFF',vibOn:'VIBRATION: ON',vibOff:'VIBRATION: OFF',
+preMax:'MAXIMUM',preHigh:'HIGH',preMed:'MEDIUM',preLow:'LOW (FAST)',
+fxNote:'The whole game is drawn live from code — no pre-baked art. Pick a preset above, or build your own look by checking exactly the effects you want; anything you uncheck also helps weak devices.',
+fxPar:'3D depth & wall faces',fxShadow:'Drop shadows',fxCaustic:'Light pools & caustics',fxSpec:'Specular highlights',fxWater:'Water animation',fxRefl:'Room reflections (needs camera on)',
+resLabel:'resolution',resFull:'Full (native)',resHigh:'High (75%)',resMed:'Medium (66%)',resLow:'Low (50%)',
+infoMax:'Everything on at full resolution: the complete crystal-ball show.',infoHigh:'All effects, resolution untouched; only the room reflection and the light pools are off.',infoMed:'Full 3D board with depth and drop shadows; light effects off, 66% resolution.',infoLow:'Flat top-down board, no effects, 50% resolution — built for ancient devices.',infoCustom:'Custom profile: exactly the effects you checked.',
+tabCam:'CAMERA',tabGyro:'GYROSCOPE',tabKey:'KEYS · PAD · MOUSE · TOUCH',
+noteCam:'Applies while USE CAMERA steers the game. The camera slides the crystal ball by following the picture; these correct which way the picture moves.',
+noteGyro:'Applies while USE GYROSCOPE steers the game. The CALIBRATE wizard below already learns your axes; these are your own corrections on top of it.',
+noteKey:'Applies to keyboard, gamepad stick, mouse-drag and touch-drag together. There is no neutral point to drift from here, so no anti-drift — only axes and gain.',
+flipX:'Flip X — reverse left/right',flipYud:'Flip Y — reverse up/down',flipYfb:'Flip Y — reverse forward/back',antiDrift:'Anti-drift — re-level the neutral point while you hold still',sensLabel:'Sensitivity',calWizard:'CALIBRATE — one-minute wizard for this device',
+helpCam:'<b>Camera steering:</b> press "USE CAMERA", aim the back or front camera at any textured scene (desk, room, your hand). Tilting the device slides the scene and the crystal ball follows the slide; the small frame in the corner mirrors the view. "CAM:" switches front/back. No detail or resolution needed; low light and blank walls track poorly. Press C to recenter, the red frame means "lost".',
+helpLight:'<b>Light:</b> with the camera on, the game locates the lamp or window in your room and throws the crystal ball\u2019s shadow away from it; the crystal ball reflects the room itself (rebuilt about once a second, so it is free).',
+helpTilt:'<b>Tilt sensor:</b> press "USE GYROSCOPE", set device flat-ish. While you hold still the game silently re-levels the neutral point by itself; press C to force it, or CALIBRATE (on the CAMERA and GYROSCOPE tabs above) for a one-minute wizard that learns your device\u2019s axis directions, noise level and camera mirror — it is stored, every player should feel the same game.',
+helpKey:'<b>Keyboard:</b> Arrows / WASD tilt the board. R restart · C recalculate · M mute · Esc menu.',
+helpTouch:'<b>Mouse / Touch:</b> hold and drag on the screen to tilt toward the drag.',
+helpPad:'<b>Gamepad:</b> left stick tilts, Start = menu, A = resume/restart, guide button = random seed. D-pad aims the on-screen ball at any menu.',
+helpFall:'<b>Fall in a pit?</b> You respawn at the last checkpoint flag. Collect stars for score; reach the golden gate to finish the level.',
+calIntro:'Tune the tilt/camera to YOUR device. Follow the on-screen prompts; the result is saved, so any device plays the same way.',
+calIntroW:'Tune tilt & camera to YOUR device. Follow the prompts; the result is saved, so any device plays the same way.',
+hudLv:'LV',hudSeed:'SEED',hudBest:'BEST',
+hintMain:'drag the screen · arrows/WASD · gamepad · R restart · Esc menu',
+hintCamOn:'camera on: aim at a textured scene · move device to steer · C recenter',
+hintTilt:'Tilt device gently · press C to recenter',recCam:'camera recentered — hold device steady',recGyro:'recentered — hold device neutral',tiltDeny:'tilt permission denied',noTilt:'NO TILT SENSOR',gyroOn:'TILT: ON (C=CENTER)',
+sumFmt:'seed "{s}" level {n} ({w}×{h})',lTime:'time',lStars:'stars',lFalls:'falls',lSeed:'seed',
+winDone:'LEVEL {n} COMPLETE',winBest:' — NEW BEST!',wReplay:'replayable!',
+camOn:'CAMERA: ON (C=CENTER)',camPrefix:'CAMERA: ',camFront:'CAM: FRONT',camBack:'CAM: BACK',camFrontTap:'CAM: FRONT (TAP=BACK)',camBackTap:'CAM: BACK (TAP=FRONT)',camHintP:'camera: ',
+cfNoCam:'NO CAMERA FOUND',cfNoCamA:'another app or driver holds it',cfPlay:'PLAYBACK BLOCKED',cfPlayA:'browser refused the camera preview',cfHttps:'NEEDS HTTPS',cfHttpsA:'open the game at an https or localhost address',cfNoApi:'NOT SUPPORTED',cfNoApiA:'this browser has no camera API',cfDenied:'ACCESS DENIED',cfDeniedA:'allow camera in the browser’s site permissions',cfErr:'CAMERA REQUEST FAILED',cfErrA:'camera request failed',cfNoSig:'NO SIGNAL',cfNoSigA:'camera gave no frames; is it in use elsewhere?',
+calHoldStart:'Hold the device the way you play, then press START.',calNeutral:'HOLD THE DEVICE NEUTRAL AND STILL',calNoTiltCam:'NO TILT SENSOR ON THIS DEVICE — switch CAMERA ON, then run CALIBRATE to tune the feed only.',calHold:'HOLD STILL… ',calMoveRing:'MOVE THE DOT INTO THE GLOWING RING',calGot:'GOT IT — ',calNextTilt:'NEXT: TILT TOWARD THE NEW RING',calLastFlat:'LAST STEP: LAY FLAT AND HOLD STILL',calMeas:'MEASURING REST NOISE… ',calCenterRing:'HOLD THE DOT IN THE CENTRE RING',calFeedIntro:'No tilt sensor here — feed-only calibration. It learns whether your camera image is mirrored.',calTurn:'SLOWLY TURN ',calGotReady:'GOT IT — GET READY: SLOWLY TURN ',calLost:'CAMERA LOST — AIM AT A TEXTURED, LIT SCENE',calNeedTurn:'I NEED CAMERA MOTION — SLOWLY TURN {d} (or wave a hand through the view, then TURN)',calGotTurn:'NEXT: SLOWLY TURN ',calFeedSaved:'Feed calibration saved for this device.',calSaved:'Calibration saved for this device.',
+resFeed:'FEED: ',resMirrored:'MIRRORED',resNormal:'NORMAL',resKeep:' — CONTROLS UNCHANGED',resNoMot:'NOT ENOUGH CAMERA MOTION — FEED SETTING UNCHANGED',resAxes:'AXES',resA:'A:',resB:'B:',resSwapped:'SWAPPED',resStandard:'STANDARD',resFeedL:'FEED:',resNoise:'NOISE:',
+dL:'LEFT',dU:'UP',dR:'RIGHT',dD:'DOWN',
+langSub:'Choose your language — it is remembered for next time, and you can change it later from the title screen.'
+},
+es:{
+titleT:'Bola de Cristal en un Laberinto Inclinado',
+btnPlay:'JUGAR',btnOptions:'SONIDO Y GRÁFICOS',btnControls:'CONTROLES',btnGyro:'USAR GIROSCOPIO',btnCam:'USAR CÁMARA',btnHome:'INICIO',btnMenu:'MENÚ',btnResume:'CONTINUAR',btnRestart:'REINICIAR NIVEL',btnCal:'CALIBRAR',btnOptions2:'OPCIONES',btnClose:'CERRAR',btnStart:'EMPEZAR',btnCancel:'CANCELAR',btnNext:'SIGUIENTE NIVEL',btnReplay:'REPETIR',btnLang:'IDIOMA',
+hPause:'PAUSA',hWin:'NIVEL COMPLETADO',hOpts:'OPCIONES',hSound:'SONIDO',hGraphics:'GRÁFICOS',hControls:'CONTROLES',hTune:'AJUSTA CADA CONTROL',hHelp:'CÓMO FUNCIONA CADA CONTROL',hCal:'CALIBRACIÓN',hLang:'IDIOMA',
+menuSub:'Guía la bola de cristal por laberintos de madera generados por procedimiento: agujeros, agua, hielo, cintas, ventiladores, tablones que se desmoronan y barreras móviles. Cada nivel nace de tu semilla.',
+seedPh:'SEMILLA',lvStart:'empezar en el nivel',diceTip:'Semilla aleatoria',volume:'volumen',
+sndOn:'SONIDO: SÍ',sndOff:'SONIDO: NO',vibOn:'VIBRACIÓN: SÍ',vibOff:'VIBRACIÓN: NO',
+preMax:'MÁXIMO',preHigh:'ALTO',preMed:'MEDIO',preLow:'BAJO (RÁPIDO)',
+fxNote:'Todo el juego se dibuja en vivo desde código, sin arte precocinado. Elige un ajuste arriba, o construye tu propio aspecto marcando exactamente los efectos que quieras; todo lo que desmarques también ayuda a los dispositivos débiles.',
+fxPar:'Profundidad 3D y caras de muros',fxShadow:'Sombras proyectadas',fxCaustic:'Charcos de luz y cáusticas',fxSpec:'Brillos especulares',fxWater:'Animación del agua',fxRefl:'Reflejos de la sala (requiere cámara)',
+resLabel:'resolución',resFull:'Completa (nativa)',resHigh:'Alta (75%)',resMed:'Media (66%)',resLow:'Baja (50%)',
+infoMax:'Todo activado a resolución completa: el espectáculo completo de la bola de cristal.',infoHigh:'Todos los efectos, resolución intacta; solo se apagan el reflejo de la sala y los charcos de luz.',infoMed:'Tablero 3D completo con profundidad y sombras; efectos de luz apagados, resolución al 66%.',infoLow:'Tablero plano cenital, sin efectos, resolución al 50%: hecho para dispositivos antiguos.',infoCustom:'Perfil personalizado: exactamente los efectos que marcaste.',
+tabCam:'CÁMARA',tabGyro:'GIROSCOPIO',tabKey:'TECLAS · MANDO · RATÓN · TACTO',
+noteCam:'Se aplica mientras USAR CÁMARA dirige el juego. La cámara desliza la bola de cristal siguiendo la imagen; estos arreglan hacia dónde se mueve la imagen.',
+noteGyro:'Se aplica mientras USAR GIROSCOPIO dirige el juego. El asistente CALIBRAR de abajo ya aprende tus ejes; estos son tus correcciones personales encima.',
+noteKey:'Se aplica a la vez al teclado, el mando, el arrastre con ratón y el táctil. Aquí no hay punto neutro del que derivar, así que no hay anti-deriva: solo ejes y ganancia.',
+flipX:'Invertir X — cambiar izquierda/derecha',flipYud:'Invertir Y — cambiar arriba/abajo',flipYfb:'Invertir Y — cambiar adelante/atrás',antiDrift:'Anti-deriva — renivela el punto neutro mientras te quedas quieto',sensLabel:'Sensibilidad',calWizard:'CALIBRAR: asistente de un minuto para este dispositivo',
+helpCam:'<b>Dirección con cámara:</b> pulsa «USAR CÁMARA», apunta la cámara trasera o delantera a cualquier escena con textura (escritorio, sala, tu mano). Al inclinar el dispositivo la escena se desliza y la bola de cristal sigue el deslizamiento; el marco pequeño de la esquina refleja la vista. «CAM:» cambia entre delantera y trasera. No hace falta detalle ni resolución; con poca luz y paredes lisas se sigue mal. Pulsa C para recentrar; el marco rojo significa «perdida».',
+helpLight:'<b>Luz:</b> con la cámara activada, el juego localiza la lámpara o la ventana de tu sala y proyecta la sombra de la bola de cristal en su contra; la bola de cristal refleja la propia sala (se recalcula una vez por segundo, así que sale gratis).',
+helpTilt:'<b>Sensor de inclinación:</b> pulsa «USAR GIROSCOPIO» y deja el dispositivo más o menos plano. Mientras estás quieto el juego renivela el punto neutro solo; pulsa C para forzarlo, o CALIBRAR (en las pestañas CÁMARA y GIROSCOPIO de arriba) para un asistente de un minuto que aprende los ejes de tu dispositivo, su ruido y el espejo de la cámara: se guarda, todos los jugadores deben sentir el mismo juego.',
+helpKey:'<b>Teclado:</b> flechas / WASD inclinan el tablero. R reinicia · C recalcula · M silencia · Esc menú.',
+helpTouch:'<b>Ratón / Táctil:</b> mantén y arrastra sobre la pantalla para inclinar hacia el arrastre.',
+helpPad:'<b>Mando:</b> la palanca izquierda inclina, Start = menú, A = continuar/reiniciar, el botón guía = semilla aleatoria. La cruceta apunta la bola de cristal del menú.',
+helpFall:'<b>¿Caíste en un agujero?</b> Reapareces en la última bandera de control. Recoge estrellas para la puntuación; llega a la puerta dorada para terminar el nivel.',
+calIntro:'Ajusta la inclinación/cámara a TU dispositivo. Sigue los mensajes de la pantalla; el resultado se guarda, así cualquier dispositivo juega igual.',
+calIntroW:'Ajusta inclinación y cámara a TU dispositivo. Sigue los mensajes; el resultado se guarda, así cualquier dispositivo juega igual.',
+hudLv:'NIV',hudSeed:'SEMILLA',hudBest:'RÉCORD',
+hintMain:'arrastra la pantalla · flechas/WASD · mando · R reinicia · Esc menú',
+hintCamOn:'cámara activa: apunta a una escena con textura · mueve el dispositivo para dirigir · C recentra',
+hintTilt:'Inclina el dispositivo suavemente · pulsa C para recentrar',recCam:'cámara recentrada: mantén el dispositivo quieto',recGyro:'recentrado: mantén el dispositivo neutral',tiltDeny:'permiso de inclinación denegado',noTilt:'SIN SENSOR DE INCLINACIÓN',gyroOn:'INCLINACIÓN: SÍ (C=CENTRAR)',
+sumFmt:'semilla «{s}» nivel {n} ({w}×{h})',lTime:'tiempo',lStars:'estrellas',lFalls:'caídas',lSeed:'semilla',
+winDone:'NIVEL {n} COMPLETADO',winBest:': ¡NUEVO RÉCORD!',wReplay:'¡repetible!',
+camOn:'CÁMARA: ON (C=CENTRAR)',camPrefix:'CÁMARA: ',camFront:'CAM: FRONTAL',camBack:'CAM: TRASERA',camFrontTap:'CAM: FRONTAL (TOQUE=TRASERA)',camBackTap:'CAM: TRASERA (TOQUE=FRONTAL)',camHintP:'cámara: ',
+cfNoCam:'CÁMARA NO ENCONTRADA',cfNoCamA:'otra app o controlador la tiene ocupada',cfPlay:'REPRODUCCIÓN BLOQUEADA',cfPlayA:'el navegador negó la vista previa de la cámara',cfHttps:'REQUIERE HTTPS',cfHttpsA:'abre el juego en una dirección https o localhost',cfNoApi:'NO COMPATIBLE',cfNoApiA:'este navegador no tiene API de cámara',cfDenied:'ACCESO DENEGADO',cfDeniedA:'permite la cámara en los permisos del sitio del navegador',cfErr:'FALLO EN LA CÁMARA',cfErrA:'la solicitud de cámara falló',cfNoSig:'SIN SEÑAL',cfNoSigA:'la cámara no dio fotogramas; ¿está en uso en otra parte?',
+calHoldStart:'Sujeta el dispositivo como cuando juegas y pulsa EMPEZAR.',calNeutral:'SUJETA EL DISPOSITIVO NEUTRAL Y QUIETO',calNoTiltCam:'NO HAY SENSOR DE INCLINACIÓN EN ESTE DISPOSITIVO: activa la CÁMARA y ejecuta CALIBRAR para ajustar solo la señal de vídeo.',calHold:'MANTÉN QUIETO… ',calMoveRing:'MUEVE EL PUNTO AL ANILLO BRILLANTE',calGot:'LISTO — ',calNextTilt:'SIGUIENTE: INCLINA HACIA EL NUEVO ANILLO',calLastFlat:'ÚLTIMO PASO: DÉJALO PLANO Y QUIETO',calMeas:'MIDIENDO RUIDO EN REPOSO… ',calCenterRing:'MANTÉN EL PUNTO EN EL ANILLO CENTRAL',calFeedIntro:'Aquí no hay sensor de inclinación: calibración solo de vídeo. Aprende si la imagen de tu cámara está espejada.',calTurn:'GIRA LENTAMENTE A ',calGotReady:'LISTO — PREPÁRATE: GIRA LENTAMENTE A ',calLost:'CÁMARA PERDIDA: APUNTA A UNA ESCENA TEXTURIZADA Y CLARA',calNeedTurn:'NECESITO MOVIMIENTO DE CÁMARA: GIRA LENTAMENTE A {d} (o agita la mano frente a la vista y luego GIRA)',calGotTurn:'SIGUIENTE: GIRA LENTAMENTE A ',calFeedSaved:'Calibración de vídeo guardada para este dispositivo.',calSaved:'Calibración guardada para este dispositivo.',
+resFeed:'VÍDEO: ',resMirrored:'ESPEJADO',resNormal:'NORMAL',resKeep:' — CONTROLES SIN CAMBIOS',resNoMot:'NO HUBO BASTANTE MOVIMIENTO DE CÁMARA: EL AJUSTE DE VÍDEO NO CAMBIÓ',resAxes:'EJES',resA:'A:',resB:'B:',resSwapped:'INTERCAMBIADOS',resStandard:'ESTÁNDAR',resFeedL:'VÍDEO:',resNoise:'RUIDO:',
+dL:'IZQUIERDA',dU:'ARRIBA',dR:'DERECHA',dD:'ABAJO',
+langSub:'Elige tu idioma: se recordará para la próxima y podrás cambiarlo desde la pantalla de título.'
+},
+pt:{
+titleT:'Bola de Cristal em um Labirinto Inclinado',
+btnPlay:'JOGAR',btnOptions:'SOM E GRÁFICOS',btnControls:'CONTROLES',btnGyro:'USAR GIRONÔMETRO',btnCam:'USAR CÂMERA',btnHome:'INÍCIO',btnMenu:'MENU',btnResume:'CONTINUAR',btnRestart:'REINICIAR FASE',btnCal:'CALIBRAR',btnOptions2:'OPÇÕES',btnClose:'FECHAR',btnStart:'INICIAR',btnCancel:'CANCELAR',btnNext:'PRÓXIMA FASE',btnReplay:'REPETIR',btnLang:'IDIOMA',
+hPause:'PAUSADO',hWin:'FASE CONCLUÍDA',hOpts:'OPÇÕES',hSound:'SOM',hGraphics:'GRÁFICOS',hControls:'CONTROLES',hTune:'AJUSTE CADA CONTROLE',hHelp:'COMO CADA CONTROLE FUNCIONA',hCal:'CALIBRAÇÃO',hLang:'IDIOMA',
+menuSub:'Guie a bola de cristal por labirintos de madeira gerados proceduralmente: buracos, água, gelo, esteiras, ventiladores, tábuas que esfarelam e barreiras móveis. Cada fase vem da sua semente.',
+seedPh:'SEMENTE',lvStart:'começar na fase',diceTip:'Semente aleatória',volume:'volume',
+sndOn:'SOM: LIGADO',sndOff:'SOM: DESLIGADO',vibOn:'VIBRAÇÃO: LIGADA',vibOff:'VIBRAÇÃO: DESLIGADA',
+preMax:'MÁXIMO',preHigh:'ALTO',preMed:'MÉDIO',preLow:'BAIXO (RÁPIDO)',
+fxNote:'O jogo inteiro é desenhado ao vivo por código, sem arte pré-pronta. Escolha um preset acima ou monte seu próprio visual marcando exatamente os efeitos que quiser; tudo que você desmarcar também ajuda os dispositivos fracos.',
+fxPar:'Profundidade 3D e faces das paredes',fxShadow:'Sombras projetadas',fxCaustic:'Poças de luz e cáusticas',fxSpec:'Brilhos especulares',fxWater:'Animação da água',fxRefl:'Reflexos da sala (precisa da câmera ligada)',
+resLabel:'resolução',resFull:'Completa (nativa)',resHigh:'Alta (75%)',resMed:'Média (66%)',resLow:'Baixa (50%)',
+infoMax:'Tudo ligado na resolução completa: o espetáculo completo da bola de cristal.',infoHigh:'Todos os efeitos, resolução intacta; só o reflexo da sala e as poças de luz ficam desligados.',infoMed:'Tabuleiro 3D completo com profundidade e sombras; efeitos de luz desligados, resolução 66%.',infoLow:'Tabuleiro plano visto de cima, sem efeitos, resolução 50%: feito para dispositivos antigos.',infoCustom:'Perfil personalizado: exatamente os efeitos que você marcou.',
+tabCam:'CÂMERA',tabGyro:'GIRONÔMETRO',tabKey:'TECLAS · CONTROLE · MOUSE · TOQUE',
+noteCam:'Vale enquanto USAR CÂMERA conduz o jogo. A câmera desloca a bola de cristal acompanhando a imagem; estes ajustes corrigem para onde a imagem se move.',
+noteGyro:'Vale enquanto USAR GIRONÔMETRO conduz o jogo. O assistente CALIBRAR abaixo já aprende seus eixos; estes são os seus ajustes pessoais por cima.',
+noteKey:'Vale para teclado, analógico do controle, arrasto de mouse e de toque ao mesmo tempo. Aqui não há ponto neutro de onde derivar, então não há antidrift: só eixos e ganho.',
+flipX:'Inverter X — trocar esquerda/direita',flipYud:'Inverter Y — trocar cima/baixo',flipYfb:'Inverter Y — trocar frente/trás',antiDrift:'Antidrift — reequilibra o ponto neutro enquanto você fica parado',sensLabel:'Sensibilidade',calWizard:'CALIBRAR: assistente de um minuto para este dispositivo',
+helpCam:'<b>Direção pela câmera:</b> aperte «USAR CÂMERA», aponte a câmera traseira ou frontal para qualquer cena com textura (mesa, sala, sua mão). Inclinar o dispositivo desloca a cena e a bola de cristal acompanha o deslocamento; a moldura pequena no canto espelha a visão. «CAM:» alterna frontal/traseira. Não é preciso detalhe nem resolução; pouca luz e paredes lisas acompanham mal. Aperte C para recentrar; a moldura vermelha significa «perdida».',
+helpLight:'<b>Luz:</b> com a câmera ligada, o jogo localiza a lâmpada ou a janela da sua sala e joga a sombra da bola de cristal para o lado oposto; a bola de cristal reflete a própria sala (recalculado cerca de uma vez por segundo, então sai de graça).',
+helpTilt:'<b>Sensor de inclinação:</b> aperte «USAR GIRONÔMETRO» e deixe o dispositivo mais ou menos plano. Enquanto você fica parado, o jogo reequilibra o ponto neutro sozinho; aperte C para forçar, ou CALIBRAR (nas abas CÂMERA e GIRONÔMETRO acima) para um assistente de um minuto que aprende os eixos do seu dispositivo, o ruído e o espelho da câmera: fica salvo, todo jogador deve sentir o mesmo jogo.',
+helpKey:'<b>Teclado:</b> setas / WASD inclinam o tabuleiro. R reinicia · C recalcula · M silencia · Esc menu.',
+helpTouch:'<b>Mouse / Toque:</b> segure e arraste na tela para inclinar na direção do arraste.',
+helpPad:'<b>Controle:</b> o analógico esquerdo inclina, Start = menu, A = continuar/reiniciar, botão guide = semente aleatória. O direcional aponta a bolinha do menu.',
+helpFall:'<b>Caiu num buraco?</b> Você reaparece na última bandeira de checkpoint. Colete estrelas para pontuar; chegue ao portão dourado para concluir a fase.',
+calIntro:'Ajuste a inclinação/câmera ao SEU dispositivo. Siga os avisos da tela; o resultado fica salvo, então qualquer dispositivo joga igual.',
+calIntroW:'Ajuste inclinação e câmera ao SEU dispositivo. Siga os avisos; o resultado fica salvo, então qualquer dispositivo joga igual.',
+hudLv:'FASE',hudSeed:'SEMENTE',hudBest:'RECORDE',
+hintMain:'arraste a tela · setas/WASD · controle · R reinicia · Esc menu',
+hintCamOn:'câmera ligada: aponte para uma cena com textura · mova o dispositivo para conduzir · C recentra',
+hintTilt:'Incline o dispositivo suavemente · aperte C para recentrar',recCam:'câmera recentrada: segure o dispositivo parado',recGyro:'recentrado: segure o dispositivo neutro',tiltDeny:'permissão de inclinação negada',noTilt:'SEM SENSOR DE INCLINAÇÃO',gyroOn:'INCLINAÇÃO: LIGADA (C=CENTRAR)',
+sumFmt:'semente «{s}» fase {n} ({w}×{h})',lTime:'tempo',lStars:'estrelas',lFalls:'quedas',lSeed:'semente',
+winDone:'FASE {n} CONCLUÍDA',winBest:': NOVO RECORDE!',wReplay:'repetível!',
+camOn:'CÂMERA: ON (C=CENTRAR)',camPrefix:'CÂMERA: ',camFront:'CAM: FRONTAL',camBack:'CAM: TRASEIRA',camFrontTap:'CAM: FRONTAL (TOQUE=TRASEIRA)',camBackTap:'CAM: TRASEIRA (TOQUE=FRONTAL)',camHintP:'câmera: ',
+cfNoCam:'CÂMERA NÃO ENCONTRADA',cfNoCamA:'outro app ou driver a mantém ocupada',cfPlay:'REPRODUÇÃO BLOQUEADA',cfPlayA:'o navegador recusou a prévia da câmera',cfHttps:'PRECISA DE HTTPS',cfHttpsA:'abra o jogo num endereço https ou localhost',cfNoApi:'NÃO SUPORTADO',cfNoApiA:'este navegador não tem API de câmera',cfDenied:'ACESSO NEGADO',cfDeniedA:'permita a câmera nas permissões do site do navegador',cfErr:'FALHA NA CÂMERA',cfErrA:'o pedido de câmera falhou',cfNoSig:'SEM SINAL',cfNoSigA:'a câmera não enviou quadros; está em uso em outro lugar?',
+calHoldStart:'Segure o dispositivo como você joga e aperte INICIAR.',calNeutral:'SEGURE O DISPOSITIVO NEUTRO E PARADO',calNoTiltCam:'NÃO HÁ SENSOR DE INCLINAÇÃO NESTE DISPOSITIVO: ligue a CÂMERA e rode CALIBRAR para ajustar só o vídeo.',calHold:'FIQUE PARADO… ',calMoveRing:'MOVE O PONTO ATÉ O ANEL BRILHANTE',calGot:'PRONTO — ',calNextTilt:'PRÓXIMO: INCLINE PARA O NOVO ANEL',calLastFlat:'ÚLTIMO PASSO: DEITE NA MESA E FIQUE PARADO',calMeas:'MEDINDO RUÍDO DE REPOUSO… ',calCenterRing:'SEGURE O PONTO NO ANEL CENTRAL',calFeedIntro:'Sem sensor de inclinação aqui: calibração só de vídeo. Ela aprende se a imagem da sua câmera está espelhada.',calTurn:'VIRE DEVAGAR PARA ',calGotReady:'PRONTO — PREPARE-SE: VIRE DEVAGAR PARA ',calLost:'CÂMERA PERDIDA: APONTE PARA UMA CENA TEXTURIZADA E ILUMINADA',calNeedTurn:'PRECISO DE MOVIMENTO DA CÂMERA: VIRE DEVAGAR PARA {d} (ou acene a mão na frente da visão e depois VIRE)',calGotTurn:'PRÓXIMO: VIRE DEVAGAR PARA ',calFeedSaved:'Calibração de vídeo salva para este dispositivo.',calSaved:'Calibração salva para este dispositivo.',
+resFeed:'VÍDEO: ',resMirrored:'ESPELHADO',resNormal:'NORMAL',resKeep:' — CONTROLES SEM MUDANÇA',resNoMot:'MOVIMENTO DA CÂMERA INSUFICIENTE: O AJUSTE DE VÍDEO NÃO MUDOU',resAxes:'EIXOS',resA:'A:',resB:'B:',resSwapped:'TROCADOS',resStandard:'PADRÃO',resFeedL:'VÍDEO:',resNoise:'RUÍDO:',
+dL:'ESQUERDA',dU:'PARA CIMA',dR:'DIREITA',dD:'PARA BAIXO',
+langSub:'Escolha seu idioma: ele fica lembrado para a próxima e você pode mudá-lo depois na tela de título.'
+},
+ru:{
+titleT:'Хрустальный шарик в лабиринте',
+btnPlay:'ИГРАТЬ',btnOptions:'ЗВУК И ГРАФИКА',btnControls:'УПРАВЛЕНИЕ',btnGyro:'УПР.НАКЛОНОМ',btnCam:'УПР.КАМЕРОЙ',btnHome:'ДОМОЙ',btnMenu:'МЕНЮ',btnResume:'ПРОДОЛЖИТЬ',btnRestart:'ПЕРЕИГРАТЬ',btnCal:'КАЛИБРОВКА',btnOptions2:'НАСТРОЙКИ',btnClose:'ЗАКРЫТЬ',btnStart:'СТАРТ',btnCancel:'ОТМЕНА',btnNext:'СЛЕДУЮЩИЙ УРОВЕНЬ',btnReplay:'ПОВТОРИТЬ',btnLang:'ЯЗЫК',
+hPause:'ПАУЗА',hWin:'УРОВЕНЬ ПРОЙДЕН',hOpts:'НАСТРОЙКИ',hSound:'ЗВУК',hGraphics:'ГРАФИКА',hControls:'УПРАВЛЕНИЕ',hTune:'НАСТРОЙКА УПРАВЛЕНИЯ',hHelp:'ОПИСАНИЕ УПРАВЛЕНИЯ',hCal:'КАЛИБРОВКА',hLang:'ЯЗЫК',
+menuSub:'Катите хрустальный шарик по деревянным лабиринтам, которые создаёт программа: ямы, вода, лёд, конвейеры, вентиляторы, осыпающиеся доски и подвижные преграды. Каждый набор уровней рождается из уникального кода:',
+seedPh:'КОД',lvStart:'начать с уровня',diceTip:'Случайный код',volume:'громкость',
+sndOn:'ЗВУК: ВКЛ',sndOff:'ЗВУК: ВЫКЛ',vibOn:'ВИБРАЦИЯ: ВКЛ',vibOff:'ВИБРАЦИЯ: ВЫКЛ',
+preMax:'МАКСИМУМ',preHigh:'ВЫСОКАЯ',preMed:'СРЕДНЯЯ',preLow:'НИЗКАЯ (БЫСТРО)',
+fxNote:'Выберите готовый профиль выше или отметьте ровно те эффекты, которые хотите; ',
+fxPar:'3D глубина',fxShadow:'Тени',fxCaustic:'Преломлённый свет',fxSpec:'Блики',fxWater:'Анимация воды',fxRefl:'Отражение Вашей комнаты (нужна камера)',
+resLabel:'разрешение',resFull:'Полное (родное)',resHigh:'Высокое (75%)',resMed:'Среднее (66%)',resLow:'Низкое (50%)',
+infoMax:'Всё включено на полном разрешении.',infoHigh:'Все эффекты, разрешение без изменений; выключены лишь отражение комнаты и преломлённый свет.',infoMed:'Полный объёмный лабиринт с гранями и тенями; световые эффекты выключены, разрешение 66%.',infoLow:'Плоский 2D вид сверху, без эффектов, разрешение 50% — для слабых устройств.',infoCustom:'Свой профиль: ровно те эффекты, которые отмечены.',
+tabCam:'КАМЕРА',tabGyro:'ДАТЧИК НАКЛОНА (ГИРОСКОП)',tabKey:'КЛАВИШИ · ГЕЙМПАД · МЫШЬ · СЕНСОР',
+noteCam:'Действует, когда игрой управляет КАМЕРА. Игра определяет своё положение в пространстве по камере; если камера зеркалит, и калибровка не помогла.',
+noteGyro:'Действует, когда игрой управляет ДАТЧИК НАКЛОНА (ГИРОСКОП). Если не помог режим калибровки, это ваши личные поправки поверх него.',
+noteKey:'Действует одновременно на клавиатуру, стик геймпада, перетаскивание мышью и пальцем.',
+flipX:'Ось X — сменить влево/вправо',flipYud:'Ось Y — сменить вверх/вниз',flipYfb:'Ось Y — сменить вперёд/назад',antiDrift:'Антидрейф — выравнивать нейтральную точку в моменты покояю',sensLabel:'Чувствительность',calWizard:'КАЛИБРОВКА — обучить игру особенностям устройства.',
+helpCam:'<b>Управление камерой:</b> нажмите «КАМЕРА», направьте заднюю или фронтальную камеру на любую фактурную сцену (стол, комната, рука). Игра вычислит своё местоположение по окружению и шарик покатится при сдвиге; рамка в углу показывает вид. «CAM:» переключает переднюю/заднюю. При слабом освещении и на гладких стенах слежение плохое. Нажатие C центрирует; красная рамка = нет связи с камерой.',
+helpLight:'<b>Свет:</b> со включённой камерой игра находит лампу или окно в вашей комнате и шарик преломляет Ваш реальный источник освещения, даже отражает комнату.',
+helpTilt:'<b>Датчик наклона (Гироскоп):</b> нажмите «ДАТЧИК НАКЛОНА», держите устройство более-менее горизонтально. Пока вы неподвижны, игра сама тихонько выравнивает нейтральную точку; нажмите C, чтобы сделать это сразу, или КАЛИБРОВКА (на вкладках КАМЕРА и ДАТЧИК НАКЛОНА выше) — она выучит оси вашего устройства, погрешность и зеркальность. Всё сохраняется в кэше браузера',
+helpKey:'<b>Клавиатура:</b> стрелки / WASD наклоняют доску. R — заново · C — центровка датчиков · M — звук вкл/выкл · Esc — меню паузы.',
+helpTouch:'<b>Мышь / сенсор:</b> зажмите и ведите пальцем или мышью по экрану — доска наклоняется пропорционально.',
+helpPad:'<b>Геймпад:</b> левый стик наклоняет, Start = меню, A = продолжить/заново, кнопка guide = случайный код. Крестовина наводит шарик меню.',
+helpFall:'<b>Упали в яму?</b> Появитесь у последнего флажка-чекпоинта. Собирайте звёзды ради очков; дойдите до особого флажка, чтобы пройти уровень.',
+calIntro:'Подстройте наклон/камеру под ВАШЕ устройство. Следуйте подсказкам на экране; результат сохраняется.',
+calIntroW:'Подстройте наклон и камеру под ВАШЕ устройство. Следуйте подсказкам; результат сохраняется.',
+hudLv:'УР',hudSeed:'КОД',hudBest:'РЕКОРД',
+hintMain:'ведите пальцем · стрелки/WASD · геймпад · R заново · Esc меню',
+hintCamOn:'камера включена: наведите на фактурную сцену · наклоняйте устройство · C — центрировать',
+hintTilt:'Наклоняйте устройство плавно · нажмите C для центровки',recCam:'держите устройство неподвижно, в нейтральном положении',recGyro:'центр восстановлен — держите устройство ровно',tiltDeny:'разрешения на гироскоп не дали',noTilt:'НЕТ ДАТЧИКА НАКЛОНА',gyroOn:'НАКЛОН: ВКЛ (C=ЦЕНТР)',
+sumFmt:'код «{s}» уровень {n} ({w}×{h})',lTime:'время',lStars:'звёзды',lFalls:'падения',lSeed:'код',
+winDone:'УРОВЕНЬ {n} ПРОЙДЕН',winBest:' — НОВЫЙ РЕКОРД!',wReplay:'можно повторить!',
+camOn:'КАМЕРА: ВКЛ (C=ЦЕНТР)',camPrefix:'КАМЕРА: ',camFront:'ПЕРЕДНЯЯ',camBack:'ЗАДНЯЯ',camFrontTap:'ПЕРЕДНЯЯ (НАЖМИ=ЗАДНЯЯ)',camBackTap:'ЗАДНЯЯ (НАЖМИ=ПЕРЕДНЯЯ)',camHintP:'камера: ',
+cfNoCam:'КАМЕРА НЕ НАЙДЕНА',cfNoCamA:'её заняло другое приложение или драйвер',cfPlay:'ПРОСМОТР ЗАБЛОКИРОВАН',cfPlayA:'браузер запретил предпросмотр камеры',cfHttps:'НУЖЕН HTTPS',cfHttpsA:'откройте игру по адресу https или localhost',cfNoApi:'НЕ ПОДДЕРЖИВАЕТСЯ',cfNoApiA:'в этом браузере нет API камеры',cfDenied:'ДОСТУП ЗАПРЕЩЁН',cfDeniedA:'разрешите камеру в настройках сайта браузера',cfErr:'СБОЙ ЗАПРОСА КАМЕРЫ',cfErrA:'запрос камеры не удался',cfNoSig:'НЕТ СИГНАЛА',cfNoSigA:'камера не даёт кадров; возможно, она занята?',
+calHoldStart:'Держите устройство так, как вы играете, затем нажмите СТАРТ.',calNeutral:'ДЕРЖИТЕ УСТРОЙСТВО РОВНО И НЕПОДВИЖНО',calNoTiltCam:'В ЭТОМ УСТРОЙСТВЕ НЕТ ДАТЧИКА НАКЛОНА — включите КАМЕРУ, затем запустите КАЛИБРОВКУ, чтобы настроить только видеопоток.',calHold:'ДЕРЖИТЕ НЕПОДВИЖНО… ',calMoveRing:'ВЕДИТЕ ТОЧКУ В СВЕТЯЩЕЕСЯ КОЛЬЦО',calGot:'ГОТОВО — ',calNextTilt:'ДАЛЬШЕ: НАКЛОНИТЕ К НОВОМУ КОЛЬЦУ',calLastFlat:'ПОСЛЕДНИЙ ШАГ: ОСТАВЬТЕ ПЛАШМЯ, НЕПОДВИЖНО',calMeas:'ИЗМЕРЯЮ ШУМ В ПОКОЕ… ',calCenterRing:'ДЕРЖИТЕ ТОЧКУ В ЦЕНТРАЛЬНОМ КОЛЬЦЕ',calFeedIntro:'Датчика наклона здесь нет — калибровка только видеопотока. Она узнаёт, зеркальна ли картинка вашей камеры.',calTurn:'МЕДЛЕННО ПОВЕРНИТЕ ',calGotReady:'ГОТОВО — ПРИГОТОВЬТЕСЬ: МЕДЛЕННО ПОВЕРНИТЕ ',calLost:'КАМЕРА ПОТЕРЯНА — НАВЕДИТЕ НА ФАКТУРНУЮ ОСВЕЩЁННУЮ СЦЕНУ',calNeedTurn:'НУЖНО ДВИЖЕНИЕ КАМЕРЫ — МЕДЛЕННО ПОВЕРНИТЕ {d} (или помашите рукой перед камерой, потом ПОВЕРНИТЕ)',calGotTurn:'ДАЛЬШЕ: МЕДЛЕННО ПОВЕРНИТЕ ',calFeedSaved:'Калибровка видеопотока сохранена для этого устройства.',calSaved:'Калибровка сохранена для этого устройства.',
+resFeed:'ВИДЕО: ',resMirrored:'ЗЕРКАЛЬНО',resNormal:'ОБЫЧНО',resKeep:' — УПРАВЛЕНИЕ НЕ ИЗМЕНЕНО',resNoMot:'ДВИЖЕНИЯ КАМЕРЫ НЕ ХВАТИЛО — НАСТРОЙКА ВИДЕО НЕ ИЗМЕНЕНА',resAxes:'ОСИ',resA:'A:',resB:'B:',resSwapped:'СМЕНА',resStandard:'ОБЫЧНО',resFeedL:'ВИДЕО:',resNoise:'ШУМ:',
+dL:'ВЛЕВО',dU:'ВВЕРХ',dR:'ВПРАВО',dD:'ВНИЗ',
+langSub:'Выберите язык — он запомнится, и позже его можно сменить на титульном экране.'
+},
+zh:{
+titleT:'倾斜迷宫中的水晶球',
+btnPlay:'开始游戏',btnOptions:'声音与画面',btnControls:'操作方式',btnGyro:'使用陀螺仪',btnCam:'使用摄像头',btnHome:'主页',btnMenu:'菜单',btnResume:'继续',btnRestart:'重玩本关',btnCal:'校准',btnOptions2:'选项',btnClose:'关闭',btnStart:'开始',btnCancel:'取消',btnNext:'下一关',btnReplay:'重玩',btnLang:'语言',
+hPause:'已暂停',hWin:'关卡完成',hOpts:'选项',hSound:'声音',hGraphics:'画面',hControls:'操作方式',hTune:'逐项调节输入',hHelp:'每种操作说明',hCal:'校准',hLang:'语言',
+menuSub:'让水晶球穿过程序生成的木质迷宫——深坑、水流、冰面、传送带、风扇、碎裂的木板和移动的屏障。每一关都来自你的种子码。',
+seedPh:'种子码',lvStart:'从第几关开始',diceTip:'随机种子',volume:'音量',
+sndOn:'声音: 开',sndOff:'声音: 关',vibOn:'振动: 开',vibOff:'振动: 关',
+preMax:'最高',preHigh:'高',preMed:'中',preLow:'低（流畅）',
+fxNote:'整个游戏全部由代码实时绘制——没有预制的美术。可以在上方选一套预设，或勾选你想要的效果自己搭配；取消勾选的任何效果也都会帮到低端设备。',
+fxPar:'3D 景深与墙面',fxShadow:'投影',fxCaustic:'光斑与焦散',fxSpec:'镜面高光',fxWater:'水面动画',fxRefl:'房间反射（需开启摄像头）',
+resLabel:'分辨率',resFull:'全分辨率（原生）',resHigh:'高（75%）',resMed:'中（66%）',resLow:'低（50%）',
+infoMax:'全分辨率开启全部效果：完整的水晶球视觉秀。',infoHigh:'全部效果，分辨率不变；仅关闭房间反射与光斑。',infoMed:'完整 3D 棋盘，有景深和投影；关闭光效，分辨率 66%。',infoLow:'俯视平面棋盘，无任何特效，分辨率 50%——专为老旧设备设计。',infoCustom:'自定义配置：只保留你勾选的效果。',
+tabCam:'摄像头',tabGyro:'陀螺仪',tabKey:'键盘 · 手柄 · 鼠标 · 触屏',
+noteCam:'在“使用摄像头”操控游戏时生效。摄像头通过追随画面上推动水晶球；这里校正画面移动的方向。',
+noteGyro:'在“使用陀螺仪”操控游戏时生效。下方的“校准”向导已经学习了你的轴向；这些是你在此基础上的个人微调。',
+noteKey:'同时作用于键盘、手柄摇杆、鼠标拖动和触屏拖动。这里没有会漂移的中立点，所以没有防漂移项——只有轴向和灵敏度。',
+flipX:'翻转 X——左右互换',flipYud:'翻转 Y——上下互换',flipYfb:'翻转 Y——前后互换',antiDrift:'防漂移——静止时自动重新校准中立点',sensLabel:'灵敏度',calWizard:'校准——为这台设备运行一分钟向导',
+helpCam:'<b>摄像头操控：</b>按“使用摄像头”，把后置或前置摄像头对准任何有纹理的实景（桌面、房间、你的手）。转动设备时画面随之平移，水晶球跟着平移走；角落的小窗显示实时画面。“CAM:”切换前后摄像头。不需要细节或分辨率；光线昏暗或墙面空白时追踪很差。按 C 重新对中，红框表示“丢失”。',
+helpLight:'<b>光照：</b>开启摄像头后，游戏会找到你房间里的灯或窗户，并把水晶球的影子背对它投射；水晶球还会反射房间本身（约每秒重建一次，因此几乎不耗性能）。',
+helpTilt:'<b>倾斜传感器：</b>按“使用陀螺仪”，把设备大致放平。你保持静止时，游戏会悄悄重新校准中立点；按 C 可立即执行，或运行“校准”（在上方“摄像头”和“陀螺仪”标签页里）——一分钟向导会学习这台设备的轴向、噪声水平和摄像头镜像，结果会保存，每位玩家都应得到完全相同的游戏手感。',
+helpKey:'<b>键盘：</b>方向键 / WASD 倾斜棋盘。R 重开 · C 重新计算 · M 静音 · Esc 菜单。',
+helpTouch:'<b>鼠标 / 触屏：</b>按住并向拖动方向倾斜。',
+helpPad:'<b>手柄：</b>左摇杆倾斜，Start = 菜单，A = 继续/重开，guide 键 = 随机种子。十字键可对准菜单上的小球。',
+helpFall:'<b>掉进坑里了？</b>你会在最近的旗帜检查点重生。收集星星得分；到达金色大门即通关。',
+calIntro:'针对*你的*设备调节倾斜/摄像头。按屏幕提示操作；结果会保存，任何设备玩起来手感都一样。',
+calIntroW:'针对你的设备调节倾斜与摄像头。按提示操作；结果会保存，任何设备玩起来手感都一样。',
+hudLv:'第',hudSeed:'种子码',hudBest:'最佳',
+hintMain:'拖动屏幕 · 方向键/WASD · 手柄 · R 重开 · Esc 菜单',
+hintCamOn:'摄像头已开：对准有纹理的实景 · 转设备来操控 · C 对中',
+hintTilt:'轻轻倾斜设备 · 按 C 对中',recCam:'摄像头已对中——请保持设备静止',recGyro:'已对中——请保持设备水平静止',tiltDeny:'倾斜权限被拒绝',noTilt:'无倾斜传感器',gyroOn:'倾斜控制: 开（C=对中）',
+sumFmt:'种子“{s}” 第 {n} 关（{w}×{h}）',lTime:'用时',lStars:'星星',lFalls:'坠落',lSeed:'种子码',
+winDone:'第 {n} 关完成',winBest:'——新纪录！',wReplay:'可重玩！',
+camOn:'摄像头: 开（C=对中）',camPrefix:'摄像头: ',camFront:'摄像头: 前置',camBack:'摄像头: 后置',camFrontTap:'摄像头: 前置（点按=后置）',camBackTap:'摄像头: 后置（点按=前置）',camHintP:'摄像头: ',
+cfNoCam:'未找到摄像头',cfNoCamA:'另一个应用或驱动正占用它',cfPlay:'预览被阻止',cfPlayA:'浏览器拒绝了摄像头预览',cfHttps:'需要 HTTPS',cfHttpsA:'请用 https 或 localhost 地址打开游戏',cfNoApi:'不支持',cfNoApiA:'此浏览器没有摄像头接口',cfDenied:'访问被拒绝',cfDeniedA:'请在浏览器的站点权限里允许摄像头',cfErr:'摄像头请求失败',cfErrA:'摄像头请求失败',cfNoSig:'无信号',cfNoSigA:'摄像头没有输出画面；是否已被别处占用？',
+calHoldStart:'按你平时玩的方式拿好设备，然后按“开始”。',calNeutral:'请保持设备水平静止',calNoTiltCam:'这台设备没有倾斜传感器——请先开启摄像头，再运行“校准”，只调校摄像头画面。',calHold:'请保持静止… ',calMoveRing:'把圆点移进发光的圆环',calGot:'很好—— ',calNextTilt:'下一步：朝新圆环的方向倾斜',calLastFlat:'最后一步：把设备放平并保持静止',calMeas:'正在测量静止噪声… ',calCenterRing:'请把圆点保持在中心圆环内',calFeedIntro:'这里没有倾斜传感器——只校摄像头画面。系统将判断你的摄像头画面是否镜像。',calTurn:'慢慢转向',calGotReady:'很好——准备：慢慢转向',calLost:'摄像头丢失——请对准明亮且有纹理的场景',calNeedTurn:'需要摄像头画面移动——请慢慢转向{d}（或在画面前挥手，然后再转向）',calGotTurn:'下一步：慢慢转向',calFeedSaved:'此设备的画面校准备已保存。',calSaved:'此设备的校准备已保存。',
+resFeed:'画面: ',resMirrored:'镜像',resNormal:'正常',resKeep:'——操作保持不变',resNoMot:'摄像头移动不足——画面设置未更改',resAxes:'轴向',resA:'A:',resB:'B:',resSwapped:'已互换',resStandard:'标准',resFeedL:'画面:',resNoise:'噪声:',
+dL:'左',dU:'上',dR:'右',dD:'下',
+langSub:'选择你的语言——会被记住，之后也可在标题界面更改。'
+}};
+// Language list: code, endonym, the word "language" in that language, and a
+// small hand-drawn flag. The picker shows each language in its own spelling
+// plus its own word for "language", so a player who cannot read English can
+// still find theirs. Flags are inline SVG — no image files exist anywhere.
+var LANGS=[
+['en','English','Language','<svg viewBox="0 0 60 40"><rect width="60" height="40" fill="#012169"/><path d="M0 0 60 40M60 0 0 40" stroke="#fff" stroke-width="8"/><path d="M0 0 60 40M60 0 0 40" stroke="#C8102E" stroke-width="4"/><rect x="25" width="10" height="40" fill="#fff"/><rect y="15" width="60" height="10" fill="#fff"/><rect x="27" width="6" height="40" fill="#C8102E"/><rect y="17" width="60" height="6" fill="#C8102E"/></svg>'],
+['es','Español','Idioma','<svg viewBox="0 0 60 40"><rect width="60" height="40" fill="#AA151B"/><rect y="10" width="60" height="20" fill="#F1BF00"/></svg>'],
+['pt','Português (Brasil)','Idioma','<svg viewBox="0 0 60 40"><rect width="60" height="40" fill="#009C3B"/><polygon points="30,5 55,20 30,35 5,20" fill="#FFDF00"/><circle cx="30" cy="20" r="8" fill="#002776"/><path d="M23 19q7-4 14 0" stroke="#fff" stroke-width="1.6" fill="none"/></svg>'],
+['ru','Русский','Язык','<svg viewBox="0 0 60 40"><rect width="60" height="40" fill="#fff"/><rect y="13.3" width="60" height="13.4" fill="#0039A6"/><rect y="26.6" width="60" height="13.4" fill="#D52B1E"/></svg>'],
+['zh','简体中文','语言','<svg viewBox="0 0 60 40"><rect width="60" height="40" fill="#DE2910"/><polygon points="10,6 12.4,13.2 19.9,13.2 13.8,17.7 16.1,25 10,20.5 3.9,25 6.2,17.7 0.1,13.2 7.6,13.2" fill="#FFDE00"/></svg>']];
+var LANG='';// no language yet: every lookup falls back to English until the player chooses
+function t(k){var b=TR[LANG];var s=b?b[k]:null;if(s===undefined||s===null)s=TR.en[k];return s===undefined||s===null?k:s}
+// t with {field} substitution — keeps word order in the translator's hands:
+// 'I NEED CAMERA MOTION — SLOWLY TURN {d}' can become 'VEZIRAVA {d}' with
+// the words anywhere the language needs them.
+function tt(k,v){var s=t(k);if(v)for(var p in v)s=s.split('{'+p+'}').join(v[p]);return s}
+// Paint every static string from the markup's data-t/h/ph/tip attributes and
+// re-render every live string the game currently shows.
+function applyLang(){if(!TR[LANG])LANG='en';
+ document.documentElement.lang=LANG;document.title=t('titleT');
+ var els,i,e;
+ els=document.querySelectorAll('[data-t]');
+ for(i=0;i<els.length;i++){e=els[i];e.textContent=t(e.getAttribute('data-t'))}
+ els=document.querySelectorAll('[data-h]');
+ for(i=0;i<els.length;i++){e=els[i];e.innerHTML=t(e.getAttribute('data-h'))}
+ els=document.querySelectorAll('[data-ph]');
+ for(i=0;i<els.length;i++){e=els[i];e.placeholder=t(e.getAttribute('data-ph'))}
+ els=document.querySelectorAll('[data-tip]');
+ for(i=0;i<els.length;i++){e=els[i];e.title=t(e.getAttribute('data-tip'))}
+ // live surfaces
+ syncOpts(); // option labels + gfx info line
+ setHudTexts(G.L); // in-game HUD captions
+ G.hintT=G.camOn?t('hintCamOn'):G.gyroOn?t('hintTilt'):t('hintMain');
+ $('hint').textContent=G.hintT;
+ $('gyro').textContent=G.gyroOn?t('gyroOn'):t('btnGyro');
+ $('camB').textContent=G.camOn?t('camOn'):t('btnCam');
+ langBtnUi(); // title button: current flag + word
+ if(G.camOn)$('camF').textContent=G.camFacing==='environment'?t('camBackTap'):t('camFrontTap');
+ setPInfo(); // pause line, if a pause is on screen
+ if(G.state==='win'){$('wTitle').textContent=tt('winDone',{n:G.L.idx});
+  $('wInfo').textContent=t('lTime')+' '+fmt(G.time)+' \u00b7 '+t('lStars')+' '+G.starsGot+'/'+G.totalStars+
+   ' \u00b7 '+t('lFalls')+' '+G.deaths+' \u00b7 '+t('lSeed')+' '+G.L.seed+' ('+t('wReplay')+')'}
+}
+function setLang(c){LANG=c;store('tll:lang',c);applyLang()}
+// the language picker: one big button per language — flag, endonym, and the
+// word for "language" written in that language itself
+function langBuild(){var h='';
+ for(var i=0;i<LANGS.length;i++)h+='<button class="btn lgb" data-lang="'+LANGS[i][0]+'">'+LANGS[i][3]+'<b>'+LANGS[i][1]+'</b><span>'+LANGS[i][2]+'</span></button>';
+ $('langB').innerHTML=h;langQ()}
+// Before a language is chosen the screen cannot address the player in one —
+// so its title spells the word "language" in ALL five, and every button
+// carries the flag, the native name and the native word for "language".
+// After a choice, the screen speaks that language and offers CLOSE.
+function langQ(){var i,p=[];
+ if(LANG&&TR[LANG]){$('langQ').textContent=t('hLang');$('langSub').textContent=t('langSub')}
+ else{for(i=0;i<LANGS.length;i++)if(p.indexOf(LANGS[i][2])<0)p.push(LANGS[i][2]);
+  $('langQ').textContent=p.join(' \u00b7 ')}
+ $('langX').hidden=!LANG}
+function langOpen(){langBuild();$('langX').hidden=!LANG;
+ show('lang',true)}
+// Title-screen language button: the current language's flag, then that
+// language's own word for "language" — findable without reading English,
+// and it shows at a glance which language the game is speaking now.
+function langBtnUi(){var f='';
+ for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===LANG)f=LANGS[i][3];
+ $('langB2').innerHTML=f+t('btnLang')}
+// ---------- level constants ----------
+var CELL=36, WALLT=5, WALLH=16;
+var T_FLOOR=0,T_ICE=1,T_WATER=2,T_CRUMB=3,T_BELT=4;
+var DIRX=[1,0,-1,0],DIRY=[0,1,0,-1];
+
+// ---------- procedural level generation ----------
+function genLevel(seedStr,idx){
+ var rng=mkRng(seedStr,'lvl'+idx),lvl=idx,
+  cw=Math.min(10+2*(lvl-1),26),ch=Math.min(8+2*(lvl-1),18),
+  L={idx:idx,seed:seedStr,cw:cw,ch:ch,W:cw*CELL,H:ch*CELL};
+ // walls: v[y][x]=wall on LEFT edge of cell (y,x); h[y][x]=wall on TOP edge of cell (y,x)
+ var v=[],h2=[],y,x;
+ for(y=0;y<ch;y++){v[y]=[];for(x=0;x<=cw;x++)v[y][x]=1}
+ for(y=0;y<=ch;y++){h2[y]=[];for(x=0;x<cw;x++)h2[y][x]=1}
+ // perfect maze: iterative backtracker
+ var vis=new Uint8Array(cw*ch),st=[[ (rng()*cw)|0,(rng()*ch)|0 ]];
+ vis[st[0][1]*cw+st[0][0]]=1;
+ var DL=[[1,0,0],[0,1,1],[-1,0,0],[0,-1,1]]; // dx,dy,orient(0=v,1=h)
+ while(st.length){
+  var cx=st[st.length-1][0],cy=st[st.length-1][1],opts=[],d;
+  for(d=0;d<4;d++){var nx=cx+DL[d][0],ny=cy+DL[d][1];
+   if(nx<0||ny<0||nx>=cw||ny>=ch||vis[ny*cw+nx])continue;
+   opts.push([nx,ny,DL[d][2],d])}
+  if(!opts.length){st.pop();continue}
+  var o=opts[(rng()*opts.length)|0];
+  if(o[2]===0)v[cy][o[0]>cx?o[0]:cx]=0;else h2[o[1]>cy?o[1]:cy][cx]=0;
+  vis[o[1]*cw+o[0]]=1;st.push([o[0],o[1]])}
+ // extra loops so pits/barriers never fully block progress
+ var loops=Math.floor(cw*ch*0.035)+Math.min(lvl,6),t;
+ for(t=0;t<loops;t++){
+  if(rng()<.5){var lx=1+ri(rng,cw-1),ly=ri(rng,ch);v[ly][lx]=0}
+  else{var hx=ri(rng,cw),hy=1+ri(rng,ch-1);h2[hy][hx]=0}}
+ L.v=v;L.h=h2;
+
+ // adjacency helpers
+ function open(cx,cy,d){var nx=cx+DIRX[d],ny=cy+DIRY[d];
+  if(nx<0||ny<0||nx>=cw||ny>=ch)return false;
+  return d===0?!v[cy][cx+1]:(d===2?!v[cy][cx]:(d===1?!h2[cy+1][cx]:!h2[cy][cx]))}
+ L.open=open;
+ L.bfs=bfs;
+ function blocked(cx,cy,holeSet){return holeSet&&holeSet[cy*cw+cx]}
+ function bfs(sx,sy,holeSet,parent){
+  var dist=new Int16Array(cw*ch).fill(-1),q=[sy*cw+sx],qi=0;
+  dist[sy*cw+sx]=0;
+  while(qi<q.length){var c=q[qi++],cx=c%cw,cy=(c/cw)|0,d2;
+   for(d2=0;d2<4;d2++){var nx=cx+DIRX[d2],ny=cy+DIRY[d2];
+    if(nx<0||ny<0||nx>=cw||ny>=ch)continue;
+    if(dist[ny*cw+nx]>=0||!open(cx,cy,d2)||blocked(nx,ny,holeSet))continue;
+    dist[ny*cw+nx]=dist[c]+1;if(parent)parent[ny*cw+nx]=c;q.push(ny*cw+nx)}}
+  return dist}
+
+ // pick start corner, goal = farthest cell
+ var cs=[[0,0],[cw-1,0],[0,ch-1],[cw-1,ch-1]],sc=pick(rng,cs);
+ var dist=bfs(sc[0],sc[1]),best=-1,goal=0,i;
+ for(i=0;i<cw*ch;i++)if(dist[i]>best){best=dist[i];goal=i}
+ L.start={x:sc[0]*CELL+CELL/2,y:sc[1]*CELL+CELL/2};
+ L.goal={x:(goal%cw)*CELL+CELL/2,y:((goal/cw)|0)*CELL+CELL/2,open:false};
+ // solution path (backtrace from goal)
+ var par=new Int32Array(cw*ch).fill(-1);bfs(sc[0],sc[1],null,par);
+ var path=[],c=goal;while(c>=0){path.push(c);c=par[c]}path.reverse();
+ L.path=path;L.dist=dist;
+ return L;
+}
+function decorateLevel(L){
+ var rng=mkRng(L.seed,'dec'+L.idx),cw=L.cw,ch=L.ch,lvl=L.idx,i,j,cx,cy,c,
+  holeSet={},holes=[],path=L.path,pathSet={},dist=L.dist;
+ for(i=0;i<path.length;i++)pathSet[path[i]]=1;
+ function farFromStart(c2){return dist[c2]>3&&dist[c2]<dist[path[path.length-1]]-1}
+
+ // ---- pits: keep a hole only if the marble can still WALK to every
+ // remaining floor cell from start. A pit sitting in a corridor with no
+ // loop around it severs everything behind it off forever - stars past it
+ // (or the whole area) could then never be collected, making 100%
+ // impossible. Candidate order prefers the solution path (pits on the
+ // expected route read as designed traps) but also offers dead-end cells
+ // and side corridors, which are always legal.
+ var pits=Math.min(2+lvl,16);
+ var pitC=[],otherC=[],c2;
+ for(c2=1;c2<cw*ch-1;c2++){
+  if(holeSet[c2]||!farFromStart(c2))continue;
+  if(pathSet[c2])pitC.push(c2);else otherC.push(c2)}
+ shuffle(rng,pitC);shuffle(rng,otherC);
+ var interleave=[],pi=0,oi=0;
+ while(pi<pitC.length||oi<otherC.length){ // path-weighted: 2 path : 1 other
+  for(k=0;k<2&&pi<pitC.length;k++)interleave.push(pitC[pi++]);
+  if(oi<otherC.length)interleave.push(otherC[oi++])}
+ for(var pci=0;pci<interleave.length&&holes.length<pits;pci++){
+  c=interleave[pci];
+  if(holeSet[c])continue;
+  holeSet[c]=1;
+  var d=L.bfs((L.start.x/CELL)|0,(L.start.y/CELL)|0,holeSet);
+  var g=(L.goal.y/CELL|0)*cw+(L.goal.x/CELL|0);
+  var allOK=d[g]>=0;
+  if(allOK)for(var q2=0;q2<cw*ch;q2++)if(!holeSet[q2]&&d[q2]<0){allOK=false;break}
+  if(!allOK){delete holeSet[c];continue}
+  holes.push({x:(c%cw)*CELL+CELL/2,y:((c/cw)|0)*CELL+CELL/2,r:CELL*0.42})}
+ L.holes=holes;
+
+ // ---- tiles: ice / water / crumbling planks / belts ----
+ L.tile=new Uint8Array(cw*ch);L.tdir=new Uint8Array(cw*ch);L.tstate=new Float32Array(cw*ch);
+ function blob(type,count,dirMode){
+  var tries2=0;
+  while(count>0&&tries2<80){tries2++;
+   cx=ri(rng,cw);cy=ri(rng,ch);c=cy*cw+cx;
+   if(L.tile[c]!==T_FLOOR||holeSet[c]||pathSet[c]&&dist[c]<4)continue;
+   var fr=mkRng(L.seed,'bl'+c),d4=ri(rng,4),q=[c],qi=0;
+   while(qi<q.length&&count>0){var cc=q[qi++],qx=cc%cw,qy=(cc/cw)|0;
+    if(L.tile[cc]!==T_FLOOR||holeSet[cc])continue;
+    L.tile[cc]=type;if(dirMode)L.tdir[cc]=d4;count--;
+    for(var d=0;d<4;d++)if(fr()<.5&&qx+DIRX[d]>=0&&qy+DIRY[d]>=0&&qx+DIRX[d]<cw&&qy+DIRY[d]<ch)q.push((qy+DIRY[d])*cw+qx+DIRX[d])}}}
+ if(lvl>=2)blob(T_ICE,Math.min(4+lvl,16));
+ if(lvl>=2)blob(T_WATER,Math.min(3+lvl,14),1);
+ if(lvl>=3)blob(T_CRUMB,Math.min(2+lvl,10));
+ // belts along straight corridors
+ var beltN=lvl>=3?Math.min(1+(lvl/3|0),3):0,bt=0;
+ for(i=0;i<cw*ch&&bt<beltN;i++)if(rng()<.5){
+  cx=i%cw;cy=(i/cw)|0;c=i;
+  if(L.tile[c]!==T_FLOOR||holeSet[c])continue;
+  var dirs=[];if(L.open(cx,cy,0)&&L.open(cx,cy,2))dirs.push(0);
+  if(L.open(cx,cy,1)&&L.open(cx,cy,3))dirs.push(1);
+  if(!dirs.length)continue;
+  var ax=pick(rng,dirs),len=2+ri(rng,2);
+  for(j=0;j<len;j++){var bx=cx+(ax===0?j:0),by=cy+(ax===1?j:0);
+   if(bx<0||by<0||bx>=cw||by>=ch)break;
+   if(L.open(bx,by,ax)===false&&j<len-1)break;
+   L.tile[by*cw+bx]=T_BELT;L.tdir[by*cw+bx]=ax===0?(rng()<.5?0:2):1}
+  bt++}
+ // ---- fans: force fields across a corridor run ----
+ L.fans=[];var fanN=lvl>=4?(lvl>=8?2:1):0,ft=0;
+ for(i=0;i<cw*ch&&ft<fanN;i++)if(rng()<.7){
+  cx=i%cw;cy=(i/cw)|0;
+  var ax2=rng()<.5?0:1,len2=3,j2,ok=true,cells2=[];
+  for(j2=0;j2<len2;j2++){var fx=cx+DIRX[ax2]*j2,fy=cy+DIRY[ax2]*j2;
+   if(fx<0||fy<0||fx>=cw||fy>=ch){ok=false;break}
+   if(L.tile[fy*cw+fx]!==T_FLOOR||holeSet[fy*cw+fx]){ok=false;break}
+   if(j2<len2-1&&!L.open(fx,fy,ax2)){ok=false;break}
+   cells2.push([fx,fy])}
+  if(!ok)continue;
+  var d2b=ri(rng,4);
+  L.fans.push({x:cx*CELL,y:cy*CELL,w:(ax2===0?len2:1)*CELL,h:(ax2===1?len2:1)*CELL,
+   dx:DIRX[d2b]*900,dy:DIRY[d2b]*900});ft++}
+
+ // ---- moving barriers: sliding gates in a corridor. A gate's face spans
+ // the corridor's FULL cross-section (it overlaps the side walls' footprints,
+ // where there is no gap to pass) and it slides between two connected cells,
+ // its travel bounded by the corridor's own end walls: it NEVER crosses a
+ // wall face, so a marble caught between a gate and a wall always escapes -
+ // a gate can never carry the ball through a wall or off the board.
+ L.bars=[];var barN=lvl>=4?Math.min(1+((lvl-4)/2|0),4):0,b2=0;
+ for(i=0;i<cw*ch&&b2<barN;i++)if(rng()<.6){
+  cx=i%cw;cy=(i/cw)|0;
+  var d3b=ri(rng,4),nx3=cx+DIRX[d3b],ny3=cy+DIRY[d3b];
+  if(nx3<0||ny3<0||nx3>=cw||ny3>=ch)continue;
+  if(!L.open(cx,cy,d3b))continue;
+  if(L.tile[ny3*cw+nx3]!==T_FLOOR||L.tile[cy*cw+cx]!==T_FLOOR)continue;
+  var horiz=d3b===0||d3b===2,
+   lo=horiz?(d3b===0?cx:nx3)*CELL:(d3b===1?cy:ny3)*CELL, // the two cells
+   hi=lo+2*CELL,
+   gT=CELL*0.4, // gate thickness along travel, face across the corridor
+   xL=lo+(L.open(Math.min(cx,nx3),Math.min(cy,ny3),horiz?2:3)?0:WALLT/2),
+   xR=hi-(L.open(Math.max(cx,nx3),Math.max(cy,ny3),horiz?0:1)?0:WALLT/2)-gT,
+   rng4=xR-xL;
+  if(rng4<CELL*0.5)continue;
+  L.bars.push({x0:horiz?(d3b===0?xL:xR):cx*CELL,
+   y0:horiz?cy*CELL:(d3b===1?xL:xR),
+   w:horiz?gT:CELL,h:horiz?CELL:gT,
+   ax:d3b,range:rng4,spd:1.1+rng()*1.2,ph:rng()*TAU,x:0,y:0});
+  b2++}
+
+ // ---- bumpers at open junctions ----
+ L.bumpers=[];var bN=lvl>=5?Math.min(1+((lvl-5)/3|0),3):0,k;
+ for(i=0;i<cw*ch&&L.bumpers.length<bN;i++)if(rng()<.6){
+  cx=i%cw;cy=(i/cw)|0;var nd=0;
+  for(k=0;k<4;k++)if(L.open(cx,cy,k))nd++;
+  if(nd<3||L.tile[cy*cw+cx]!==T_FLOOR||holeSet[cy*cw+cx])continue;
+  L.bumpers.push({x:cx*CELL+CELL/2,y:cy*CELL+CELL/2,r:CELL*0.4,anim:0})}
+
+ // ---- checkpoints on the path ----
+ L.checks=[];
+ var cpDs=[0.35,0.7],cc;
+ for(k=0;k<cpDs.length;k++){
+  var di=Math.floor(path.length*cpDs[k]);c=path[di];
+  if(holeSet[c])continue;
+  L.checks.push({x:(c%cw)*CELL+CELL/2,y:((c/cw)|0)*CELL+CELL/2,got:false})}
+ // ---- stars: on the solution path + tucked in dead ends ----
+ // (a star at a bumper cell center can NEVER be picked up: the bumper's
+ // collision circle keeps the marble centre bp.r+r = 25.2 away, but the
+ // pickup radius is r+9 = 19.8)
+ L.stars=[];
+ var bumpC={};
+ for(k=0;k<L.bumpers.length;k++)
+  bumpC[((L.bumpers[k].y/CELL)|0)*cw+((L.bumpers[k].x/CELL)|0)]=1;
+ var starPts=[],pathN=Math.min(4+((lvl/3)|0),8),pl=path.length;
+ for(k=0;k<pathN;k++){var cpos=Math.floor(pl*(k+0.7)/(pathN+0.6));
+  if(cpos>0&&cpos<pl-1)starPts.push(path[cpos])}
+ var ends=[];
+ for(i=0;i<cw*ch;i++){var ex=i%cw,ey=(i/cw)|0,nd2=0;
+  for(k=0;k<4;k++)if(L.open(ex,ey,k))nd2++;
+  if(nd2===1&&!holeSet[i]&&!bumpC[i]&&L.dist[i]>6)ends.push(i)}
+ shuffle(rng,ends);
+ for(k=0;k<Math.min(ends.length,2+((lvl/4)|0));k++)starPts.push(ends[k]);
+ for(k=0;k<starPts.length;k++){var s2=starPts[k];
+  if(!holeSet[s2]&&!bumpC[s2])L.stars.push({x:(s2%cw)*CELL+CELL/2,y:((s2/cw)|0)*CELL+CELL/2,got:false})}
+
+ // ---- merged wall rectangles (collision primitives). Corner nodes are
+ // overlapped: each run extends WALLT/2 into the perpendicular run it meets,
+ // so at an L/T junction the two boxes truly intersect in 3D and their
+ // projected faces merge into one continuous volume (no step at the corner).
+ // e0/e1 mark ends embedded in another box: rendering skips those end faces.
+ var W=[],v=L.v,h2=L.h;
+ function vrun(xx,y0,y1){
+  var e0=y0>0&&h2[y0][xx]?1:0,e1=y1+1<ch&&h2[y1+1][xx]?1:0;
+  W.push({x:xx*CELL-WALLT/2,y:y0*CELL-(e0?WALLT/2:0),w:WALLT,
+   h:(y1-y0+1)*CELL+(e0?WALLT/2:0)+(e1?WALLT/2:0),e0:e0,e1:e1})}
+ function hrun(x0,y2,x1){
+  // a run end is embedded when the boundary it ends at continues as a
+  // vertical wall on either side of the corner node
+  var e0=x0>0&&(v[y2-1][x0]||v[y2][x0])?1:0,
+   e1=x1+1<cw&&(v[y2-1][x1+1]||v[y2][x1+1])?1:0;
+  W.push({x:x0*CELL-(e0?WALLT/2:0),y:y2*CELL-WALLT/2,
+   w:(x1-x0+1)*CELL+(e0?WALLT/2:0)+(e1?WALLT/2:0),h:WALLT,e0:e0,e1:e1})}
+ for(var xx=1;xx<cw;xx++)for(var yy=0;yy<ch;){ // interior vertical runs
+  // column-major scan (see horizontal note)
+  if(!v[yy][xx]){yy++;continue}var y0=yy;
+  while(yy+1<ch&&v[yy+1][xx])yy++;
+  vrun(xx,y0,yy);yy++}
+ for(var yy2=1;yy2<ch;yy2++)for(var xx2=0;xx2<cw;){ // interior horizontal runs
+  // row-major scan; the run extension advances xx2 itself (an x-outer order
+  // would silently skip every column an extended run consumed)
+  if(!h2[yy2][xx2]){xx2++;continue}var x0=xx2;
+  while(xx2+1<cw&&h2[yy2][xx2+1])xx2++;
+  hrun(x0,yy2,xx2);xx2++}
+ var m=WALLT; // outer border (inside bounds)
+ W.push({x:0,y:0,w:L.W,h:m},{x:0,y:L.H-m,w:L.W,h:m},
+  {x:0,y:0,w:m,h:L.H},{x:L.W-m,y:0,w:m,h:L.H});
+ L.walls=W;
+ return L;
+}
+function levelSummary(L){return tt('sumFmt',{s:L.seed,n:L.idx,w:L.cw,h:L.ch})}
+// ---------- canvas, view, adaptive quality ----------
+var cv=$('cv'),ctx=cv.getContext('2d'),DW=0,DH=0,DPR=1,rScale=1,
+ view={x:0,y:0,s:1};
+function resize(){
+ DPR=Math.min(1.5,(window.devicePixelRatio||1));
+ DW=Math.max(240,window.innerWidth|0);DH=Math.max(240,window.innerHeight|0);
+ // the internal buffer: the player's resolution choice, times the engine's
+ // automatic floor when the device cannot hold the frame rate
+ rScale=Math.max(0.4,OPT.res*(DEGRADE?0.66:1));
+ cv.width=(DW*rScale*DPR)|0;cv.height=(DH*rScale*DPR)|0;
+ cv.style.width=DW+'px';cv.style.height=DH+'px';
+ MB.cv=null;MB.cg=null; // menu ball canvas re-inits at new size
+ if(G&&G.L)fitView()} // rotation/toolbar change: re-fit the running board
+window.addEventListener('resize',resize);
+
+// ---------- static level baking (wooden BRIO-style board) ----------
+var baked=null,bakedW=null;
+function bakeLevel(L){
+ var c=cnv(L.W,L.H),g=c.getContext('2d'),x,y,i;
+ var pW=g.createPattern(TEX.wood,'repeat');g.fillStyle=pW;g.fillRect(0,0,L.W,L.H);
+ // board seams + faint cell grid
+ g.strokeStyle='rgba(30,20,10,.28)';g.lineWidth=1;
+ for(x=0;x<=L.cw;x++){g.beginPath();g.moveTo(x*CELL+.5,0);g.lineTo(x*CELL+.5,L.H);g.stroke()}
+ for(y=0;y<=L.ch;y++){g.beginPath();g.moveTo(0,y*CELL+.5);g.lineTo(L.W,y*CELL+.5);g.stroke()}
+ // hazard tiles
+ for(i=0;i<L.cw*L.ch;i++){var t=L.tile[i];if(!t)continue;
+  var tx=(i%L.cw)*CELL,ty=((i/L.cw)|0)*CELL;
+  if(t===T_ICE)g.drawImage(TEX.ice,tx,ty,CELL,CELL);
+  else if(t===T_WATER)g.drawImage(TEX.water,tx,ty,CELL,CELL);
+  else if(t===T_CRUMB)g.drawImage(TEX.crumb,tx,ty,CELL,CELL);
+  else if(t===T_BELT){g.fillStyle='#3d372c';g.fillRect(tx,ty,CELL,CELL)}}
+ // pits (dark graded holes with rim shadow)
+ function pit(px,py,r,rim){var grd=g.createRadialGradient(px,py,r*.15,px,py,r);
+  grd.addColorStop(0,'#000');grd.addColorStop(.7,'#0b0806');grd.addColorStop(1,'#241a10');
+  g.fillStyle=grd;g.beginPath();g.arc(px,py,r,0,TAU);g.fill();
+  if(rim){g.strokeStyle=rim;g.lineWidth=3;g.beginPath();g.arc(px,py,r+1,0,TAU);g.stroke()}
+  g.strokeStyle='rgba(0,0,0,.55)';g.lineWidth=2;g.beginPath();g.arc(px,py,r,0,TAU);g.stroke()}
+ for(i=0;i<L.holes.length;i++)pit(L.holes[i].x,L.holes[i].y,L.holes[i].r);
+ pit(L.goal.x,L.goal.y,CELL*0.46,'#c9a23f');
+ // start ring
+ g.strokeStyle='rgba(240,230,200,.5)';g.lineWidth=2;g.setLineDash([4,4]);
+ g.beginPath();g.arc(L.start.x,L.start.y,CELL*0.36,0,TAU);g.stroke();g.setLineDash([]);
+ // walls: the slot shadow bakes just below the wall's own base footprint
+ // (+1.5,+2.5): the top 1.5px is covered by the wall's bottom edge (contact),
+ // the rest reads as the cast shadow. The raised-TOP layer (bakedW) exists for
+ // the low-quality flat fallback only.
+ g.fillStyle='rgba(0,0,0,.5)';g.beginPath();
+ for(i=0;i<L.walls.length;i++)g.rect(L.walls[i].x+1.5,L.walls[i].y+2.5,L.walls[i].w,L.walls[i].h);
+ g.fill();
+ baked=c;
+ var wc=cnv(L.W,L.H),q=wc.getContext('2d'),pD=q.createPattern(TEX.dark,'repeat');
+ for(i=0;i<L.walls.length;i++){var w2=L.walls[i];
+  q.fillStyle=pD;q.fillRect(w2.x,w2.y,w2.w,w2.h);
+  q.fillStyle='rgba(255,240,200,.14)';q.fillRect(w2.x,w2.y,w2.w,1.5);q.fillRect(w2.x,w2.y,1.5,w2.h);
+  q.fillStyle='rgba(0,0,0,.35)';q.fillRect(w2.x,w2.y+w2.h-1.5,w2.w,1.5);q.fillRect(w2.x+w2.w-1.5,w2.y,1.5,w2.h)}
+ bakedW=wc}
+// ---------- game state ----------
+var G={state:'menu',seed:'MOOD',L:null,bx:0,by:0,vx:0,vy:0,r:CELL*0.30,
+ fall:0,resp:0,inv:0,time:0,starsGot:0,totalStars:0,deaths:0,
+ tiltT:{x:0,y:0},tilt:{x:0,y:0},gyroOn:false,camOn:false,camFacing:'user',calB:45,calG:0,
+ startedAt:0,autoNext:0,hintT:'',hudT:0,padPrev:{}};
+var GRAV=2350,MAXTILT=0.235,VMAX=620;
+
+// ---------- input: keyboard, pointer drag, gamepad, gyroscope ----------
+var keys={};
+window.addEventListener('keydown',function(e){
+ if(e.repeat)return;keys[e.code]=1;AU.init();AU.resume();
+ if(e.code==='Escape'){
+  if(CALB.on)return; // the wizard owns Esc while open (its own handler closes it)
+  if(closeOpts()||closeCtls())return; // open sub-panels own Esc first
+  if(G.state==='play')pause();
+  else if(G.state==='pause')resumeGame();
+  else if(G.state==='win')toMenu()}
+ if(e.code==='KeyR'&&(G.state==='play'||G.state==='pause')){restartLevel()}
+ if(e.code==='KeyC')calibrate();
+ if(e.code==='KeyM')toggleMute();
+ if((e.code==='Space'||e.code==='Enter')&&G.state!=='play'&&!mbType()){
+  mbActivate();e.preventDefault()} // confirm in any menu: aimed or default
+ else if(e.code==='Enter'&&G.state==='menu'&&!CALB.on)startGame(); // Enter in the seed field
+ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code)>=0)e.preventDefault()});
+window.addEventListener('keyup',function(e){keys[e.code]=0});
+// pointer (mouse + touch unified): hold & drag to tilt
+var drag={on:false,x0:0,y0:0,x:0,y:0,id:-1};
+function pdn(e){if(G.state!=='play')return;var p=pt(e);
+ drag.on=true;drag.id=e.pointerId!==undefined?e.pointerId:1;drag.x0=p.x;drag.y0=p.y;drag.x=0;drag.y=0;
+ AU.init();AU.resume();e.preventDefault()}
+function pmv(e){if(!drag.on||(e.pointerId!==undefined&&e.pointerId!==drag.id))return;
+ var p=pt(e);drag.x=clamp((p.x-drag.x0)*0.009,-1,1);drag.y=clamp((p.y-drag.y0)*0.009,-1,1);e.preventDefault()}
+function pup(e){if(!drag.on)return;
+ if(e.pointerId!==undefined&&e.pointerId!==drag.id)return;drag.on=false;drag.x=0;drag.y=0}
+function pt(e){var r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+cv.addEventListener('pointerdown',pdn);window.addEventListener('pointermove',pmv);
+window.addEventListener('pointerup',pup);window.addEventListener('pointercancel',pup);
+// gyroscope / accelerometer
+function gyroSupport(){return 'DeviceOrientationEvent' in window}
+// Per-device calibration solved by the wizard (p17) and stored: axis signs (+/-),
+// axis swap, sensor noise floor, and whether the camera feed is mirrored.
+// Every player then gets the same feel regardless of phone/driver quirks.
+var CAL={sx:1,sy:1,swap:false,noise:0.8,mirror:0};
+function calLoad(){try{var j=JSON.parse(store('tll:cal'));if(j){CAL.sx=j.sx===-1?-1:1;
+ CAL.sy=j.sy===-1?-1:1;CAL.swap=!!j.swap;CAL.mirror=j.mirror?1:0;
+ CAL.noise=clamp(+j.noise||0.8,0.2,4)}}catch(e){}}
+function calSave(){try{localStorage.setItem('tll:cal',JSON.stringify(CAL))}catch(e){}}
+calLoad();
+// Gyro path with the classic motion-control survival kit (Wii/Switch-style):
+//  - stillness-detected bias: while the device is at rest whatever deviation
+//    remains is drift, so the neutral point slowly re-levels toward it; frozen
+//    during real motion (never eats a gesture), faster bleed after long rest,
+//    hard anti-windup clamp so compensation can never run away;
+//  - noise-adaptive SOFT dead zone: dead-zone size = measured noise floor,
+//    applied with a smooth ramp (no jitter, no sticky onset);
+//  - double filtering: EMA here + the physics tilt lerp in step();
+//  - manual Center (C) = the Wii "set neutral" moment.
+var GY={px:null,py:null,pt:0,nz:0.8,stillT:0,ix:0,iy:0,seen:0};
+function softDZ(v,dz){var m=Math.abs(v);if(m<=dz)return 0;
+ var u=clamp((m-dz)/(dz+2.2),0,1);u=u*u*(3-2*u);return v*u}
+// Sensor response is NON-linear: near neutral the gain is 0.4, so small
+// gentle wrist moves are precise aim; the effect multiplier then grows
+// smoothly with deflection (never a sudden step), and full board tilt is
+// reached at ~80% of the physical range - the player never has to drive
+// the device to its limit to get the maximum ball speed.
+function tCurve(v){var m=Math.abs(v);if(m>1)m=1;
+ m=m*(0.4+1.33*m*m);if(m>1)m=1;return v<0?-m:m}
+window.addEventListener('deviceorientation',function(e){
+ if(e.beta==null)return;
+ var now=performance.now(),dtE=clamp((now-GY.pt)/1000,0.003,0.1);GY.pt=now;
+ GY.seen=now;
+ if(!G.gyroOn||G.camOn||e.gamma===null)return;
+ var g=e.gamma,b=e.beta;
+ if(GY.px===null){GY.px=g;GY.py=b;return}
+ var dg=g-GY.px,db=b-GY.py;GY.px=g;GY.py=b;
+ var rate=(Math.abs(dg)+Math.abs(db))/dtE; // deg/s
+ var dz=0.6+0.35*GY.nz;
+ GY.nz+=(Math.min(rate,GY.nz*1.6+6)-GY.nz)*0.01; // slow noise-floor estimate
+ var still=rate<1.2+1.5*GY.nz;
+ GY.stillT=still?GY.stillT+dtE:0;
+ if(still&&CTLX.gyro.ad){ // anti-drift (default on): neutral creeps toward
+  var k=(GY.stillT>4?0.02:0.003)*dtE*60; // the resting pose you hold still
+  G.calG+=(g-G.calG)*k;G.calB+=(b-G.calB)*k}
+ var gx=g-G.calG,gb=b-G.calB; // anti-windup: controls saturate at 20 deg;
+ if(gx>24)gx=24;if(gx<-24)gx=-24; // never let bias compensation run past that
+ if(gb>24)gb=24;if(gb<-24)gb=-24;
+ if(CAL.swap){var tq=gx;gx=gb;gb=tq}
+ // the calibration wizard's learned axes, then the player's own flips from
+ // the CONTROLS page on top
+ gx*=CAL.sx*(CTLX.gyro.fx?-1:1);gb*=CAL.sy*(CTLX.gyro.fy?-1:1);
+ gx=softDZ(gx,dz);gb=softDZ(gb,dz);
+ gx*=CTLX.gyro.s/100;gb*=CTLX.gyro.s/100; // sensitivity: scales past the
+ // dead-zone, so it shifts the whole response curve, not just the trigger
+ var ke=1-Math.exp(-9*dtE); // EMA filter (second one is the physics lerp)
+ GY.ix+=(gx-GY.ix)*ke;GY.iy+=(gb-GY.iy)*ke;
+ G.tiltT.x=tCurve(clamp(GY.ix/20,-1,1));G.tiltT.y=tCurve(clamp(GY.iy/20,-1,1))});
+function calibrate(){ // manual Center
+ if(G.camOn){CAM.pos.x=CAM.pos.y=0;CAM.bx=CAM.by=0;$('hint').textContent=t('recCam');return}
+ if(G.gyroOn){G.calB=lastBeta;G.calG=lastGamma;GY.ix=GY.iy=0;GY.stillT=0;GY.px=null;
+ $('hint').textContent=t('recGyro')}}
+function gyroEnable(on){
+ if(on){
+  if(G.camOn)camEnable(false);
+  if(!gyroSupport()){$('gyro').textContent=t('noTilt');return}
+  var go=function(){G.gyroOn=true;$('gyro').textContent=t('gyroOn');
+   $('hint').textContent=t('hintTilt');calibrate()};
+  if(DeviceOrientationEvent.requestPermission)
+   DeviceOrientationEvent.requestPermission().then(function(s){if(s==='granted')go();
+    else $('hint').textContent=t('tiltDeny')}).catch(function(){});
+  else go();
+ }else{G.gyroOn=false;GY.px=null;GY.ix=GY.iy=0;GY.nz=0.8;GY.stillT=0;
+  G.tiltT={x:0,y:0};$('gyro').textContent=t('btnGyro');$('hint').textContent=G.hintT}}
+var lastBeta=45,lastGamma=0;
+window.addEventListener('deviceorientation',function(e){if(e.beta!=null){lastBeta=e.beta;lastGamma=e.gamma}});
+function pollGamepad(){
+ if(!navigator.getGamepads)return null;var gp=null,gs=navigator.getGamepads(),i;
+ for(i=0;i<gs.length;i++)if(gs[i]){gp=gs[i];break}if(!gp)return null;
+ var ax=gp.axes&&gp.axes.length>1?gp.axes[0]:0,ay=gp.axes&&gp.axes.length>1?gp.axes[1]:0,
+  btn=function(n){return gp.buttons&&gp.buttons[n]&&gp.buttons[n].pressed},
+  edge=function(name,now){var was=G.padPrev[name];G.padPrev[name]=now;return now&&!was};
+ // Start / A confirm: on menus that is mbActivate, which takes the aimed
+ // button when one was reached deliberately, else the menu's default action.
+ if(edge('start',btn(9))){if(G.state==='play')pause();else mbActivate()}
+ if(edge('a',btn(0))){if(G.state==='play')restartLevel();else mbActivate()}
+ // B is cancel everywhere: pause the game, leave menus, drop the wizard.
+ if(edge('b',btn(1))){if(CALB.on)calClose();
+  else if(closeOpts()||closeCtls()){} // pad B closes open sub-panels first
+  else if(G.state==='play')pause();else if(G.state==='pause')resumeGame();
+  else if(G.state==='win')toMenu()}
+ if(edge('guide',btn(8))&&G.state==='menu')$('seed').value=randSeed();
+ if(Math.abs(ax)<.12)ax=0;if(Math.abs(ay)<.12)ay=0;
+ // d-pad drives the menu marble exactly like the stick does
+ var dxx=(btn(15)?1:0)-(btn(14)?1:0),dyy=(btn(12)?1:0)-(btn(13)?1:0);
+ return{ax:ax,ay:ay,dxx:dxx,dyy:dyy}}
+// ---------- fixed-step physics ----------
+var lastHitSnd=0;
+// Haptics: the phone's vibration motor reproduces the marble's knock. Short and
+// subtle: a single pulse scaled by impact force, weak contacts skipped, minimum
+// gap so a roll along a wall is one soft buzz not a rattle. iOS Safari and
+// desktops have no Vibration API -- navigator.vibrate is absent, buz() no-ops.
+var VIB=typeof navigator!=='undefined'&&!!navigator.vibrate,lastVib=0;
+function buz(ms){
+ if(!VIB||ms<4)return; // contacts softer than this are silent, not buzzed
+ var n=performance.now();
+ if(n-lastVib<45)return;
+ lastVib=n;try{navigator.vibrate(Math.round(ms))}catch(e){VIB=0}}
+function collideRect(B,By,vx,vy,r,w,rest){ // returns updated state via G scratch
+ var cx=clamp(B,w.x,w.x+w.w),cy=clamp(By,w.y,w.y+w.h),
+  dx=B-cx,dy=By-cy,d2=dx*dx+dy*dy;
+ if(d2>r*r)return null;
+ var d=Math.sqrt(d2)||.0001,nx=dx/d,ny=dy/d,pen=r-d,
+  hit={x:0,y:0,vx:0,vy:0,imp:0};
+ // center inside rect: push out along shallowest axis
+ if(d2<0.0001){var l=B-w.x,rr=w.x+w.w-B,t=By-w.y,bm=w.y+w.h-By,
+  m=Math.min(l,rr,t,bm);
+  nx=m===l?-1:(m===rr?1:0);ny=m===t?-1:(m===bm?1:0);pen=r+m}
+ B+=nx*pen;By+=ny*pen;
+ var vn=vx*nx+vy*ny;
+ if(vn<0){hit.imp=-vn;vx-=(1+rest)*vn*nx;vy-=(1+rest)*vn*ny}
+ hit.x=B;hit.y=By;hit.vx=vx;hit.vy=vy;return hit}
+function barPos(b,t){var s=Math.sin(t*b.spd+b.ph)*0.5+0.5,off=b.range*s,
+ vel=b.range*0.5*b.spd*Math.cos(t*b.spd+b.ph),
+ px=b.ax===0?off:b.ax===2?-off:0,py=b.ax===1?off:b.ax===3?-off:0;
+ return{x:b.x0+px,y:b.y0+py,vx:vel*(b.ax===0?1:b.ax===2?-1:0),vy:vel*(b.ax===1?1:b.ax===3?-1:0),w:b.w,h:b.h}}
+function step(dt){
+ var L=G.L,i,t=G.time;
+ var kk=1-Math.exp(-7*dt);
+ G.tilt.x=lerp(G.tilt.x,G.tiltT.x,kk);G.tilt.y=lerp(G.tilt.y,G.tiltT.y,kk);
+ if(G.inv>0)G.inv-=dt;
+ if(G.fall>0){G.fall-=dt;if(G.fall<=0)respawn();return}
+ var B=G.bx,By=G.by,vx=G.vx,vy=G.vy,r=G.r;
+ var thx=G.tilt.x*MAXTILT,thy=G.tilt.y*MAXTILT,
+  ax=GRAV*Math.sin(thx),ay=GRAV*Math.sin(thy),
+  cx=(B/CELL)|0,cy=(By/CELL)|0,inb=cx>=0&&cy>=0&&cx<L.cw&&cy<L.ch,
+  ti=inb?L.tile[cy*L.cw+cx]:0,fric=2.6,rest=0.35;
+ if(ti===T_ICE){fric=0.15;rest=0.85}
+ else if(ti===T_WATER){fric=5.5;var wd=L.tdir[cy*L.cw+cx];
+  ax+=DIRX[wd]*170;ay+=DIRY[wd]*170;
+  G.splashT=(G.splashT||0)-dt;
+  if(G.splashT<=0&&Math.abs(vx)+Math.abs(vy)>70){AU.splash();G.splashT=0.4}}
+ else if(ti===T_CRUMB){var sI=cy*L.cw+cx;
+  if(L.tstate[sI]>=0){L.tstate[sI]+=dt;if(L.tstate[sI]>0.55){L.tstate[sI]=-1;AU.crumble()}}}
+ else if(ti===T_BELT){var bd=L.tdir[cy*L.cw+cx],bs=135,
+  cp2=Math.min(1,3*dt);
+  vx+=(DIRX[bd]*bs-vx)*cp2;vy+=(DIRY[bd]*bs-vy)*cp2}
+ for(i=0;i<L.fans.length;i++){var f=L.fans[i];
+  if(B>f.x&&B<f.x+f.w&&By>f.y&&By<f.y+f.h){ax+=f.dx;ay+=f.dy}}
+ vx+=ax*dt;vy+=ay*dt;
+ var damp=Math.exp(-fric*dt);vx*=damp;vy*=damp;
+ var sp=Math.hypot(vx,vy);if(sp>VMAX){vx*=VMAX/sp;vy*=VMAX/sp}
+ if(vx!==vx||vy!==vy){vx=vy=0}
+ B+=vx*dt;By+=vy*dt;
+ // walls
+ for(i=0;i<L.walls.length;i++){var w=L.walls[i];
+  if(B+w.r<w.x||B-w.r>w.x+w.w||By+w.r<w.y||By-w.r>w.y+w.h)continue;
+  var hit=collideRect(B,By,vx,vy,r,w,rest);
+  if(hit){B=hit.x;By=hit.y;vx=hit.vx;vy=hit.vy;
+   if(hit.imp>110&&t-lastHitSnd>.09){if(t-lastHitSnd>.25)AU.wood(clamp(hit.imp/380,0,1));else AU.click(clamp(hit.imp/380,0,1));lastHitSnd=t}
+   buz(Math.min(15,hit.imp/380*18))}}
+ // moving barriers
+ for(i=0;i<L.bars.length;i++){var b=barPos(L.bars[i],t);
+  if(B+r<b.x||B-r>b.x+b.w||By+r<b.y||By-r>b.y+b.h)continue;
+  var hb=collideRect(B,By,vx,vy,r,b,0.1);
+  if(hb){B=hb.x;By=hb.y;
+   var nx2=clamp(B-(b.x+b.w/2),-1,1),ny2=clamp(By-(b.y+b.h/2),-1,1);
+   var dotv=b.vx*nx2+b.vy*ny2;
+   if(dotv>0){vx+=b.vx*0.9;vy+=b.vy*0.9}
+   else{vx+=dotv*nx2*1.4;vy+=dotv*ny2*1.4}
+   if(t-lastHitSnd>.12){AU.wood(0.6);lastHitSnd=t}
+   buz(Math.min(15,Math.abs(dotv)/300*18))}
+  // a gate push must never leave the ball inside a wall: re-solve walls
+  // right after being pushed, so a gate can never squeeze the marble
+  // through a wall it stands against
+  if(hb)for(var wI=0;wI<L.walls.length;wI++){var wB=L.walls[wI];
+   if(B+r<wB.x||B-r>wB.x+wB.w||By+r<wB.y||By-r>wB.y+wB.h)continue;
+   var hw=collideRect(B,By,vx,vy,r,wB,rest);
+   if(hw){B=hw.x;By=hw.y;vx=hw.vx;vy=hw.vy}}}
+ // bumpers
+ for(i=0;i<L.bumpers.length;i++){var bp=L.bumpers[i],
+  dx=B-bp.x,dy=By-bp.y,rr=r+bp.r,d3=Math.hypot(dx,dy);
+  if(d3<rr){var nx3=dx/(d3||1),ny3=dy/(d3||1);
+   B=bp.x+nx3*rr;By=bp.y+ny3*rr;vx=nx3*440;vy=ny3*440;bp.anim=1;AU.boing();buz(15)}}
+ // checkpoints
+ for(i=0;i<L.checks.length;i++){var cp=L.checks[i];
+  if(!cp.got&&Math.hypot(B-cp.x,By-cp.y)<CELL*0.45){cp.got=true;AU.ui()}}
+ // stars
+ for(i=0;i<L.stars.length;i++){var st=L.stars[i];
+  if(!st.got&&Math.hypot(B-st.x,By-st.y)<r+9){st.got=true;G.starsGot++;AU.star()}}
+ // pits (regular + freshly crumbled planks)
+ if(G.inv<=0){
+  for(i=0;i<L.holes.length;i++){var ho=L.holes[i];
+   if(Math.hypot(B-ho.x,By-ho.y)<ho.r-r*0.35){startFall();return}}
+  if(inb&&L.tile[cy*L.cw+cx]===T_CRUMB&&L.tstate[cy*L.cw+cx]===-1)
+   if(Math.hypot(B-(cx*CELL+CELL/2),By-(cy*CELL+CELL/2))<CELL*0.42-r*0.35){startFall();return}}
+ // out of board safety
+ if(B<-CELL||By<-CELL||B>L.W+CELL||By>L.H+CELL)startFall();
+ // goal
+ if(Math.hypot(B-L.goal.x,By-L.goal.y)<CELL*0.30){winLevel();return}
+ G.bx=B;G.by=By;G.vx=vx;G.vy=vy}
+function startFall(){G.fall=0.75;G.deaths++;AU.pit();
+ G.vx*=0.2;G.vy*=0.2}
+function respawn(){var L=G.L,best=null,i;
+ for(i=0;i<L.checks.length;i++){var cp=L.checks[i];
+  if(cp.got&&(!best||Math.hypot(G.bx-cp.x,G.by-cp.y)<Math.hypot(G.bx-best.x,G.by-best.y)))best=cp}
+ if(!best)best=L.start;
+ G.bx=best.x;G.by=best.y;G.vx=G.vy=0;G.inv=1.2;
+ for(i=0;i<L.tstate.length;i++)if(L.tstate[i]===-1)L.tstate[i]=0; // planks restore
+ G.fall=0}
+// ---------- camera steering engine ----------
+// The webcam gives an image of the world; rotating/tilting the device slides
+// that image. We measure the slide with a low-res block-translation search
+// (80x60 gray, 25 fps) and turn it into board tilt: content sliding right =
+// device rolled right = ball rolls right. No gyroscope needed.
+var CAM={vs:null,vid:null,el:null,cv:null,ctx:null,W:80,H:60,vw:0,vh:0,gseq:0,
+ prev:null,cur:null,px:null,predX:0,predY:0,pos:{x:0,y:0},
+ varc:0,lost:0,acc:0,ready:false,tv:0,tc:null,wd:null,primed:false,
+ bx:0,by:0,stT:0,lx:0,ly:0,lightOK:false,lseen:0,fdx:0,fdy:0,pG:0,pB:0};
+// pure tracker: find integer offset (ox,oy) minimizing mean |cur-prev| over a
+// box of radius R centered on prediction (px,py). Region excludes margins so
+// every sampled pixel pair is always valid.
+function camTrack(cur,prev,W,H,px,py,R){
+ var M=12,x,y,ox,oy,s,sx,sy,best=1e18,bx=0,by=0,n=0,
+  lo=Math.max(-M+1,px-R),hi=Math.min(M-1,px+R),
+  lo2=Math.max(-M+1,py-R),hi2=Math.min(M-1,py+R);
+ for(oy=lo2;oy<=hi2;oy++)for(ox=lo;ox<=hi;ox++){
+  s=0;
+  for(y=M;y<H-M;y+=2)for(x=M;x<W-M;x+=2)s+=Math.abs(cur[y*W+x]-prev[(y+oy)*W+x+ox]);
+  n=((H-2*M)>>1)*((W-2*M)>>1);s/=n;
+  if(s<best){best=s;bx=ox;by=oy}}
+ return{dx:bx,dy:by,cost:best};
+}
+// match the processing buffer to the TRUE video aspect: square pixels, no
+// anisotropic stretch, no crop -- so both optical-flow measurements and the
+// ball reflection keep the world's real shape.
+function camSize(){
+ var v=CAM.vid,vw=v.videoWidth|0,vh=v.videoHeight|0;
+ if(vw<32||vh<32)return false;
+ if(vw===CAM.vw&&vh===CAM.vh)return true;
+ var w=80,h=Math.round(80*vh/vw);
+ if(h<40){h=40;w=Math.round(40*vw/vh)}
+ if(h>96){h=96;w=Math.round(96*vw/vh)}
+ if(w>96)w=96;if(w<40)w=40;
+ CAM.W=w;CAM.H=h;CAM.vw=vw;CAM.vh=vh;
+ CAM.cv=cnv(w,h);CAM.ctx=CAM.cv.getContext('2d',{willReadFrequently:true});
+ CAM.prev=new Uint8Array(w*h);CAM.cur=new Uint8Array(w*h);
+ CAM.primed=false;CAM.gseq++;
+ return true}
+// one tracking step (throttled ~25 Hz): grab frame, gray-convert, match, steer
+function camTick(dt){
+ CAM.acc+=dt;
+ var step=0.04;if(CAM.acc<step)return;var tdt=CAM.acc;CAM.acc=0;
+ if(!CAM.ready||!camSize())return;
+ try{CAM.ctx.drawImage(CAM.vid,0,0,CAM.W,CAM.H)}catch(e){return}
+ var d;try{d=CAM.ctx.getImageData(0,0,CAM.W,CAM.H).data}catch(e){return}
+ var w=CAM.W,h=CAM.H,cur=CAM.cur,n=w*h,i,l,sum=0,sum2=0,v,mx,mmax=0;
+ for(i=0;i<n;i++){l=(d[i*4]*77+d[i*4+1]*150+d[i*4+2]*29)>>8;cur[i]=l;sum+=l;sum2+=l*l;if(l>mmax)mmax=l}
+ mx=sum/n;v=sum2/n-mx*mx;
+ if(!CAM.primed){CAM.primed=true;CAM.varc=v;var t0=CAM.prev;CAM.prev=CAM.cur;CAM.cur=t0;return}
+ var r=camTrack(cur,CAM.prev,w,h,CAM.predX,CAM.predY,7);
+ // quality: matching a textured scene at the right offset = low cost vs high variance
+ var ok=v>40&&r.cost<Math.max(12,v*0.6);
+ // Stillness-detected bias (same trick as the gyro path): optical flow carries
+ // a slow bias from lighting shifts and noise, so the ball creeps even when the
+ // device holds still. If the device is physically still (motion sensor says
+ // so), whatever flow remains IS the bias: estimate and subtract it. Frozen
+ // while moving; hard clamp so it can never run away.
+ var mrate=0;
+ if(performance.now()-GY.seen<500){
+  var dbg=Math.abs(lastGamma-CAM.pG),dbc=Math.abs(lastBeta-CAM.pB);
+  CAM.pG=lastGamma;CAM.pB=lastBeta;
+  mrate=(dbg+dbc)/Math.max(tdt,0.02)}
+ if(mrate<2&&CTLX.cam.ad&&performance.now()-GY.seen<500){
+  CAM.stT+=tdt;
+  if(CAM.stT>0.35){CAM.bx+=(r.dx-CAM.bx)*0.1;CAM.by+=(r.dy-CAM.by)*0.1;
+   if(CAM.bx>3)CAM.bx=3;if(CAM.bx<-3)CAM.bx=-3;
+   if(CAM.by>3)CAM.by=3;if(CAM.by<-3)CAM.by=-3}}
+ else CAM.stT=0;
+ // learned mirror, then the player's own Flip X / Flip Y from the CONTROLS
+ // page. Flips sign the FLOW before it accumulates into CAM.pos, so turning
+ // one around mid-level never teleports the accumulated position.
+ var sgnx=(CAL.mirror?-1:1)*(CTLX.cam.fx?-1:1),sgny=CTLX.cam.fy?-1:1;
+ CAM.fdx=0;CAM.fdy=0;
+ if(ok){CAM.pos.x-=sgnx*(r.dx-CAM.bx);CAM.pos.y+=sgny*(r.dy-CAM.by);
+  CAM.predX=Math.max(-5,Math.min(5,r.dx));CAM.predY=Math.max(-5,Math.min(5,r.dy));
+  CAM.fdx=r.dx;CAM.fdy=r.dy;CAM.lost=0} // RAW flow, for the calibrator
+ else{CAM.lost=Math.min(1,CAM.lost+dt*2);CAM.predX=0;CAM.predY=0}
+ CAM.pos.x*=Math.exp(CAM.lost?-4:0)*Math.exp(-0.6*dt);
+ CAM.pos.y*=Math.exp(CAM.lost?-4:0)*Math.exp(-0.6*dt);
+ if(CAM.pos.x>34)CAM.pos.x=34;if(CAM.pos.x<-34)CAM.pos.x=-34;
+ if(CAM.pos.y>26)CAM.pos.y=26;if(CAM.pos.y<-26)CAM.pos.y=-26;
+ CAM.varc=v;
+ if(G.state==='play'||CALB.on||MB.on){ // menus read the pointer too
+  var csn=CTLX.cam.s/100; // sensitivity gain on the accumulated slide
+  G.tiltT.x=tCurve(clamp(CAM.pos.x/20*csn,-1,1));G.tiltT.y=tCurve(clamp(CAM.pos.y/15*csn,-1,1))}
+ // ---- light source: bright weighted centroid, sub-pixel, on this gray pass ----
+ if(mmax>170&&v>60){
+  var thr=mmax*0.86+12,wx=0,wy=0,wn=0,x,y,ww;
+  for(y=2;y<h-2;y++)for(x=2;x<w-2;x++){i=y*w+x;l=cur[i];
+   if(l>thr){ww=l-thr;wx+=x*ww;wy+=y*ww;wn+=ww}}
+  if(wn>6){CAM.lx=wx/wn/w*2-1;CAM.ly=wy/wn/h*2-1;CAM.lightOK=true;CAM.lseen=performance.now()}
+  else CAM.lightOK=false}
+ else CAM.lightOK=false;
+ refTick(dt,cur);
+ var t=CAM.prev;CAM.prev=CAM.cur;CAM.cur=t;
+ camThumb(ok);
+}
+// ---- marble reflection: the COMPLETE camera preview wrapped onto the marble by
+// a baked spherical LUT. All distortion math (circle->square map, barrel
+// compression, shading) runs once into integer index+shade tables; per camera
+// frame the bake is a pure-integer copy loop (typed-array reads, one multiply,
+// one shift, saturating stores) over ~1.3k disc px on the SAME gray frame the
+// tilt tracker just computed -- no extra sensor work. Marble draw stays one
+// drawImage+clip.
+var REF={cv:null,g:null,im:null,lut:null,sd:null,ok:false,mir:-1,gseq:-1};
+var RN=56,RH=RN/2;
+function refLut(){ // float math allowed here: runs once per mirror flip
+ var n=RN*RN,lut=new Int32Array(n),sd=new Uint8Array(n),px,py,dx,dy,rr2,k;
+ for(py=0;py<RN;py++)for(px=0;px<RN;px++){
+  k=py*RN+px;dx=(px+0.5)/RH-1;dy=(py+0.5)/RH-1;rr2=dx*dx+dy*dy;
+  if(rr2>1){lut[k]=-1;continue}
+  // STRETCH-to-ball: the frame maps linearly per axis onto the texture
+  // square (non-square pictures are stretched, as requested): no radial
+  // distortion, no clamping, no dead band. Frame corners simply sit outside
+  // the disc; the ball rim always shows the scene close to its true shape.
+  var sx=((CAM.W>>1)+dx*(CAM.W>>1))|0,sy=((CAM.H>>1)+dy*(CAM.H>>1))|0;
+  // convex marble mirror: the reflected room reads laterally FLIPPED vs a
+  // direct view of it; an already-mirrored (selfie) feed needs no extra flip.
+  if(!CAL.mirror)sx=CAM.W-1-sx;
+  if(sx<0)sx=0;if(sx>=CAM.W)sx=CAM.W-1;
+  if(sy<0)sy=0;if(sy>=CAM.H)sy=CAM.H-1;
+  lut[k]=sy*CAM.W+sx;
+  sd[k]=(196-150*rr2)*Math.max(0.35,1-0.75*rr2*rr2)}
+ REF.lut=lut;REF.sd=sd;REF.mir=CAL.mirror;REF.gseq=CAM.gseq}
+function refTick(dt,cur){ // runs on EVERY camera tick (~25 Hz): ~8x the old
+ if(!CAM.ready)return; // rate, comfortably above the 25%-of-preview target
+ if(!REF.cv){REF.cv=cnv(RN,RN);REF.g=REF.cv.getContext('2d');
+  REF.im=REF.g.createImageData(RN,RN)} // alpha-0 rim is never written again
+ if(CAL.mirror!==REF.mir||!REF.lut||REF.gseq!==CAM.gseq)refLut();
+ // write AT the disc position (k), not packed: the earlier packed write left
+ // the bottom rows transparent -- the light band across the ball's lower cap.
+ var d=REF.im.data,lut=REF.lut,sd=REF.sd,n=RN*RN,o=0,k,si,c;
+ for(k=0;k<n;k++,o+=4){si=lut[k];
+  if(si<0)continue;
+  c=(cur[si]*sd[k])>>8;
+  // cool cast: the room image is read THROUGH navy blue-green glass
+  d[o]=c;d[o+1]=c+14;d[o+2]=c+26;d[o+3]=255}
+ REF.g.putImageData(REF.im,0,0);REF.ok=true}
+// keep the preview from ever hiding the marble: the frame the ball would
+// sit under the thumbnail, the thumbnail hops to the OPPOSITE corner and
+// waits there until the ball would hide under THAT one instead. The hop is
+// edge-triggered (one per approach) so a ball circling a corner boundary
+// cannot make the preview ping-pong, and on a screen too small to escape
+// either corner the preview simply holds still.
+function camNudge(){var el=$('camT');if(el.hidden)return;
+ if(G.state!=='play'&&G.state!=='pause')return;
+ var s=view.s,mx=(G.bx-cam.x)*s+DW/2,my=(G.by-cam.y)*s+DH/2,rr=G.r*s+10,
+  bl=el.className==='bl',w=146,h=83,
+  x=bl?6:DW-w-6,y=bl?DH-h-6:26;
+ if(mx+rr>x&&mx-rr<x+w&&my+rr>y&&my-rr<y+h){
+  if(!CAM.tov){el.className=bl?'':'bl';CAM.tov=true}}
+ else CAM.tov=false}
+function camThumb(ok){
+ var tv=CAM.tv,tc=CAM.tc;if(!tv)return;
+ tc.fillStyle='#000';tc.fillRect(0,0,96,54);
+ // letterbox-fit the raw video: the preview keeps the scene's true shape
+ // (same aspect as the processing buffer), never anamorphic stretch.
+ try{var vw=CAM.vw||96,vh=CAM.vh||54,sc=Math.min(96/vw,54/vh),
+   dw=vw*sc,dh=vh*sc;
+  tc.drawImage(CAM.vid,(96-dw)/2,(54-dh)/2,dw,dh)}catch(e){}
+ tc.strokeStyle=ok?'#7ba428':'#a03030';tc.lineWidth=3;tc.strokeRect(1,1,94,52);
+ tc.fillStyle='#c9a23f';tc.fillRect(48+CAM.pos.x*1.2-2,27-CAM.pos.y*1.2-2,4,4);
+}
+function camGot(st){
+ if(!G.camOn){if(st)st.getTracks().forEach(function(t){t.stop()});return}
+ if(!st||!st.getVideoTracks||st.getVideoTracks().length===0){camFail(t('cfNoCam'),t('cfNoCamA'));return}
+ CAM.vs=st;CAM.vid.srcObject=st;
+ var p=CAM.vid.play();
+ if(p&&p.catch)p.catch(function(){camFail(t('cfPlay'),t('cfPlayA'))});
+}
+function camStart(){
+ if(!G.camOn)return;
+ G.camFacing=G.camFacing||'user';
+ CAM.ready=false;CAM.primed=false;
+ CAM.bx=CAM.by=0;CAM.stT=0;CAM.lightOK=false;REF.ok=false;REF.cv=null;REF.lut=null;REF.im=null;
+ if(CAM.vs){CAM.vs.getTracks().forEach(function(t){t.stop()});CAM.vs=null}
+ if(!window.isSecureContext){camFail(t('cfHttps'),t('cfHttpsA'));return}
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camFail(t('cfNoApi'),t('cfNoApiA'));return}
+ if(!CAM.vid){
+  CAM.vid=document.createElement('video');
+  CAM.vid.muted=true;CAM.vid.setAttribute('playsinline','');CAM.vid.autoplay=true;
+  CAM.vid.style.cssText='position:fixed;left:-9999px;width:1px;height:1px';
+  document.body.appendChild(CAM.vid);
+  CAM.cv=cnv(CAM.W,CAM.H);CAM.ctx=CAM.cv.getContext('2d',{willReadFrequently:true});
+  CAM.prev=new Uint8Array(CAM.W*CAM.H);CAM.cur=new Uint8Array(CAM.W*CAM.H);
+  CAM.vid.addEventListener('playing',function(){CAM.ready=true;
+   if(CAM.wd){clearTimeout(CAM.wd);CAM.wd=null}
+   $('hint').textContent=t('hintCamOn')});
+ }
+ var fr={width:{ideal:160},height:{ideal:120},facingMode:{ideal:G.camFacing}};
+ var again=function(){
+  try{navigator.mediaDevices.getUserMedia({video:true}).then(camGot,function(e){camFail(t('cfDenied'),t('cfDeniedA'))})}
+  catch(e){camFail(t('cfErr'),t('cfErrA'))}
+ };
+ try{
+  navigator.mediaDevices.getUserMedia({video:fr,audio:false}).then(camGot,again);
+ }catch(e){again()}
+ CAM.wd=setTimeout(function(){if(!CAM.ready&&G.camOn)camFail(t('cfNoSig'),t('cfNoSigA'))},6000);
+}
+function camFail(msg,advice){
+ if(CAM.wd){clearTimeout(CAM.wd);CAM.wd=null}
+ if(CAM.vs){CAM.vs.getTracks().forEach(function(t){t.stop()});CAM.vs=null}
+ CAM.ready=false;CAM.pos.x=CAM.pos.y=0;CAM.lost=0;CAM.predX=CAM.predY=0;
+ G.camOn=false;
+ $('camB').textContent=t('camPrefix')+msg;
+ $('camF').hidden=true;$('camT').hidden=true;
+ setTimeout(function(){if(!G.camOn)$('camB').textContent=t('btnCam')},4000);
+ $('hint').textContent=t('camHintP')+msg.toLowerCase()+(advice?' \u00b7 '+advice:'');
+ if(G.state==='play')G.hintT=$('hint').textContent;
+}
+function camEnable(on){
+ if(on){
+  if(G.gyroOn)gyroEnable(false);
+  G.camOn=true;$('camB').textContent=t('camOn');
+  $('camF').hidden=false;$('camF').textContent=G.camFacing==='user'?t('camFront'):t('camBack');
+  $('camT').hidden=false;
+  if(!CAM.tc){CAM.tv=$('camT');CAM.tc=CAM.tv.getContext('2d')}
+  CAM.pos.x=CAM.pos.y=0;CAM.lost=0;
+  camStart();
+ }else{
+  G.camOn=false;
+  if(CAM.wd){clearTimeout(CAM.wd);CAM.wd=null}
+  $('camB').textContent=t('btnCam');
+  $('camF').hidden=true;$('camT').hidden=true;
+  if(CAM.vs)CAM.vs.getTracks().forEach(function(t){t.stop()});
+  CAM.vs=null;CAM.ready=false;CAM.pos.x=CAM.pos.y=0;
+  if(G.state==='play')$('hint').textContent=G.hintT;
+  else $('hint').textContent='';
+ }
+ camUi();
+}
+function camUi(){
+ if(G.camFacing==='user')$('camF').textContent=t('camFrontTap');
+ else $('camF').textContent=t('camBackTap');
+}
+// ---------- rendering ----------
+var cam={x:0,y:0},frameAvg=16;
+function updView(dt){
+ var L=G.L,halfX=DW/(2*view.s),halfY=DH/(2*view.s);
+ if(L.W>halfX*2)cam.x=clamp(cam.x+ (G.bx+G.vx*0.25-cam.x)*(1-Math.exp(-6*dt)),halfX,L.W-halfX);
+ else cam.x=L.W/2;
+ if(L.H>halfY*2)cam.y=clamp(cam.y+ (G.by+G.vy*0.25-cam.y)*(1-Math.exp(-6*dt)),halfY,L.H-halfY);
+ else cam.y=L.H/2}
+function setView(){var R=DPR*rScale,s=view.s;
+ ctx.setTransform(R*s,0,0,R*s,-(cam.x-DW/(2*s))*R*s,-(cam.y-DH/(2*s))*R*s);
+ return{L:cam.x-DW/(2*s),T:cam.y-DH/(2*s),Rt:cam.x+DW/(2*s),B:cam.y+DH/(2*s)}}
+function fitView(){var L=G.L;
+ // ONE uniform scale for both axes: the board never distorts. The rule:
+ // - level fits inside the screen in both directions -> scale UP (never
+ //   down) so the level's smaller dimension fills the screen's counterpart
+ //   exactly (for LV 1 that is the vertical one); the other axis has margins.
+ // - level taller than the screen but narrower -> scale to fit the WIDTH
+ //   exactly and scroll vertically.
+ // - level wider than the screen but short enough -> scale to fit the
+ //   HEIGHT exactly (no black borders top/bottom) and scroll horizontally.
+ // - overflows both -> fit the constraining side exactly anyway: the view
+ //   is always fully covered and scrolling happens only along the
+ //   overflowing axis. There is no zoom CAP: the exact fit is required
+ //   even when it means upscaling the baked board past its texture size.
+ var sw=DW/L.W,sh=DH/L.H,s;
+ if(L.W<=DW&&L.H<=DH)s=Math.min(sw,sh);
+ else if(L.W<=DW)s=sw;
+ else if(L.H<=DH)s=sh;
+ else s=Math.max(sw,sh);
+ view.s=Math.max(0.55,s)} // floor: only ever hits on a tiny screen vs a huge level
+// Depth layers with true perspective, from ONE eye for the whole scene. The eye
+// sits at height VPD and behind (below on screen) the near edge by RE*VPD -- the
+// natural head position when holding a labyrinth board. A point at height h then
+// projects by (p-eye)*h/VPD, which splits into two readable parts:
+// 1) radial: outward from the eye's ground position -- the far (top) edge leans
+//    away strongly, the near (bottom) edge stays nearly flat, as in a real photo.
+// 2) tilt-reactive: tilting the board shifts the eye against the slope (the
+//    equivalent of looking over the high side), so every raised layer drifts
+//    downhill by TS*h*EY. h=0 (floor) never moves; higher layers move MORE:
+//    flag poles and wall tops most, then stars, the ball, gates, bumpers least.
+// Crucially, a VERTICAL segment (a flag pole standing on the deck) projects to a
+// segment: base fixed, top displaced by its height -- poles always stand up and
+// swing realistically with tilt, never collapse.
+var PX,PY,VPD=CELL*40,EYEX=0,EYEY=0,TS=0.25,RE=0.15,pDW=null;
+// parO projects a deck point (x,y) that sits at height h toward the eye.
+// With the parallax feature off everything renders at deck height: same
+// layout, flat top-down view - the cheapest draw mode there is.
+function parO(x,y,h){if(!FX('par')){PX=PY=0;return}
+ PX=((x-cam.x)+VPD*TS*EYEX)*h/VPD;PY=((y-cam.y)-VPD*(RE-TS*EYEY))*h/VPD}
+// World light direction (unit vector toward the light, screen axes). Default is
+// the studio key light that the baked textures assume: from above-left. If the
+// camera is on and its bright-centroid pass has found a lamp/window, the light
+// slowly moves to it and every shadow + the marble's specular follow.
+var LVX=-0.57,LVY=-0.75;
+function updateLight(dt){
+ var tx=LVX,ty=LVY;
+ if(CAM.ready&&CAM.lightOK&&performance.now()-CAM.lseen<2500){
+  // the marble is a convex mirror: its highlight and shadow follow the
+  // mirror-world image of the lamp -- one lateral flip MORE than the direct
+  // feed. A self-mirrored (selfie) feed already carries that flip: use as-is.
+  // VERTICAL has NO flip: CAM.ly is image space (y down), so the bright
+  // centroid at the TOP of the frame is CAM.ly<0 and light direction "toward
+  // the light" in screen axes is the SAME sign - a lamp at the frame top
+  // must light the board from the screen top, making shadows and the caustic
+  // pool fall DOWN, not up. (The old -CAM.ly inverted that.)
+  tx=CAM.lx*(CAL.mirror?1:-1);ty=CAM.ly;
+  var m=Math.hypot(tx,ty)||1;tx/=m;ty/=m}
+ else{tx=-0.57;ty=-0.75}
+ var k=1-Math.exp(-1.5*dt); // slow: light source position is not an actor
+ LVX+=(tx-LVX)*k;LVY+=(ty-LVY)*k;
+ var n=Math.hypot(LVX,LVY)||1;LVX/=n;LVY/=n}
+// A real vertical flag pole, anchored on the floor: the base sits at h=0 (no
+// offset), the top at h=FLAGH -- through parO that segment IS the perspective
+// projection of a vertical line (it leans away from the view centre exactly as
+// a pole seen under an angle should). The red triangular banner has its two
+// pole-side corners at the pole top and its midpoint, and the free corner at a
+// world point beside the pole, mid-height, flapping over time. Every corner is
+// projected at its own height, so tilting shears the pole, the banner and the
+// flap together, like a real cloth on a real pole.
+var FLAGH=CELL*1.15;
+function drawFlag(fx,fy,t,col){
+ var fw=CELL*0.38+CELL*0.12*Math.sin(t*2.6+fx*0.11),tx,ty,mx,my,bx2,by2;
+ if(FX('par')){
+  parO(fx,fy,FLAGH);tx=fx+PX;ty=fy+PY;
+  parO(fx,fy,FLAGH*0.5);mx=fx+PX;my=fy+PY;
+  parO(fx+fw,fy,FLAGH*0.72);bx2=fx+fw+PX;by2=fy+PY;
+ }else{ // parallax off: the flag becomes a plain upright sprite - a real flag
+  // in the picture, not a collapsed projection (tx=fx,ty=fy would be a point)
+  tx=fx;ty=fy-FLAGH;mx=fx;my=fy-FLAGH*0.5;
+  bx2=fx+fw;by2=fy-FLAGH*0.72}
+ ctx.fillStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.ellipse(fx,fy+2,5,2.2,0,0,TAU);ctx.fill();
+ ctx.strokeStyle='#d8d2c0';ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(fx,fy);ctx.lineTo(tx,ty);ctx.stroke();
+ ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(fx+1,fy);ctx.lineTo(tx+1,ty);ctx.stroke();
+ ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(mx,my);ctx.lineTo(bx2,by2);ctx.closePath();ctx.fill();
+ ctx.fillStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(mx,my);
+ ctx.lineTo((tx+mx)/2+(bx2-tx)*0.35,(ty+my)/2+(by2-ty)*0.35);ctx.closePath();ctx.fill()}
+function drawFrame(t,dt){
+ var L=G.L,R=DPR*rScale,s=view.s;
+ ctx.setTransform(R,0,0,R,0,0);
+ ctx.clearRect(0,0,DW,DH);
+ var b=setView(),vx0=b.L,vy0=b.T,vx1=b.Rt,vy1=b.B,i;
+ camNudge(); // the corner preview walks away from the marble it would cover
+ // static baked board (viewport-crop blit)
+ var sx=clamp(vx0,0,L.W),sy=clamp(vy0,0,L.H),
+  sw=Math.min(vx1,L.W)-sx,sh=Math.min(vy1,L.H)-sy;
+ if(sw>0&&sh>0)ctx.drawImage(baked,sx|0,sy|0,Math.ceil(sw),Math.ceil(sh),sx,sy,sw,sh);
+ ctx.save();
+ ctx.beginPath();ctx.rect(vx0,vy0,vx1-vx0,vy1-vy0);ctx.clip();
+ // water shimmer
+ if(FX('water'))for(i=0;i<L.cw*L.ch;i++)if(L.tile[i]===T_WATER){
+  var wx=(i%L.cw)*CELL,wy=((i/L.cw)|0)*CELL;
+  if(wx>vx1||wx+CELL<vx0||wy>vy1||wy+CELL<vy0)continue;
+  ctx.strokeStyle='rgba(210,240,255,.28)';ctx.lineWidth=1.4;
+  for(var k2=0;k2<2;k2++){var yy=wy+CELL*(0.3+0.4*k2)+Math.sin(t*2.2+i+k2)*3;
+   ctx.beginPath();ctx.moveTo(wx+3,yy);
+   ctx.quadraticCurveTo(wx+CELL/2,yy+3*Math.sin(t*3+i),wx+CELL-3,yy);ctx.stroke()}}
+ // conveyor stripes
+ for(i=0;i<L.cw*L.ch;i++)if(L.tile[i]===T_BELT){
+  var bx=(i%L.cw)*CELL,by=((i/L.cw)|0)*CELL;
+  if(bx>vx1||bx+CELL<vx0||by>vy1||by+CELL<vy0)continue;
+  var dd=L.tdir[i],off=(t*120)%(CELL/2),p;
+  ctx.fillStyle='#776c55';
+  for(p=-1;p<4;p++){var po=off+p*CELL/2;
+   if(dd===0||dd===2)ctx.fillRect(bx+((dd===2)?po:CELL-po-4),by+2,4,CELL-4);
+   else ctx.fillRect(bx+2,by+((dd===1)?po:CELL-po-4),CELL-4,4)}}
+ // fans
+ for(i=0;i<L.fans.length;i++){var f=L.fans[i];
+  if(f.x>vx1||f.x+f.w<vx0||f.y>vy1||f.y+f.h<vy0)continue;
+  var fd=Math.atan2(f.dy,f.dx),ph=(t*1.6)%1;
+  ctx.save();ctx.translate(f.x+f.w/2,f.y+f.h/2);ctx.rotate(fd);
+  ctx.strokeStyle='rgba(160,220,255,'+(0.25-0.15*ph)+')';ctx.lineWidth=3;
+  for(k2=0;k2<3;k2++){var px2=-Math.max(f.w,f.h)/2+((ph+k2/3)%1)*Math.max(f.w,f.h);
+   ctx.beginPath();ctx.moveTo(px2-8,-9);ctx.lineTo(px2,0);ctx.lineTo(px2-8,9);ctx.stroke()}
+  ctx.restore()}
+ // ---- board walls: perspective boxes. The top face (height WALLH, nearer the
+ // eye) is projected corner by corner through parO; side faces span base edges
+ // to their projected top edges. Drawn after floor effects so it occludes them,
+ // before furniture so taller objects (flags, stars, ball) overlap wall tops.
+ // Without the parallax projection there IS no depth: the side faces would
+ // all collapse to zero area, so the single parallax flag selects both the
+ // 3D wall boxes and the flat path.
+ if(FX('par')){
+  if(!pDW)pDW=ctx.createPattern(TEX.dark,'repeat');
+  // Two passes over all visible walls: FIRST every side face, THEN every top
+  // face. All wall tops share one height plane and every point projects through
+  // the same law, so wall rectangles meeting at a corner share identical
+  // projected corner points and merge seamlessly; drawing tops last means the
+  // top plane occludes any face that pokes into a neighbouring box -- the old
+  // per-box loop painted later walls' dark faces over earlier walls' tops,
+  // producing seams at joints that visibly slid around in motion.
+  for(var pass=0;pass<2;pass++)
+  for(i=0;i<L.walls.length;i++){var wL=L.walls[i];
+   if(wL.x-wL.w>vx1||wL.x+2*wL.w<vx0||wL.y-wL.h>vy1||wL.y+2*wL.h<vy0)continue;
+   var wx0=wL.x,wy0=wL.y,wx1=wL.x+wL.w,wy1=wL.y+wL.h;
+   parO(wx0,wy0,WALLH);var aX=PX,aY=PY;
+   parO(wx1,wy0,WALLH);var bX=PX,bY=PY;
+   parO(wx1,wy1,WALLH);var cX=PX,cY=PY;
+   parO(wx0,wy1,WALLH);var dX=PX,dY=PY;
+   var mX=(aX+bX+cX+dX)*0.25,mY=(aY+bY+cY+dY)*0.25;
+   if(pass===0){
+    // visible faces: the top leans away from the eye's ground point, so the
+    // exposed side face is the edge the top moved away from, spanning that
+    // base edge to its own projected edge
+    ctx.fillStyle='rgba(16,11,6,.9)';
+    // the end cap at a flag-embedded end is NOT drawn: it lies coplanar with
+    // a face of the box it runs into, which covers it exactly (drawn once).
+    var lenX=wL.w>=wL.h;
+    if(mX>0&&(!lenX||!wL.e0)){ctx.beginPath();ctx.moveTo(wx0,wy0);ctx.lineTo(wx0,wy1);ctx.lineTo(wx0+dX,wy1+dY);ctx.lineTo(wx0+aX,wy0+aY);ctx.closePath();ctx.fill()}
+    else if(mX<0&&(!lenX||!wL.e1)){ctx.beginPath();ctx.moveTo(wx1,wy0);ctx.lineTo(wx1,wy1);ctx.lineTo(wx1+cX,wy1+cY);ctx.lineTo(wx1+bX,wy0+bY);ctx.closePath();ctx.fill()}
+    if(mY>0&&(lenX||!wL.e0)){ctx.beginPath();ctx.moveTo(wx0,wy0);ctx.lineTo(wx1,wy0);ctx.lineTo(wx1+bX,wy0+bY);ctx.lineTo(wx0+aX,wy0+aY);ctx.closePath();ctx.fill()}
+    else if(mY<0&&(lenX||!wL.e1)){ctx.beginPath();ctx.moveTo(wx0,wy1);ctx.lineTo(wx1,wy1);ctx.lineTo(wx1+cX,wy1+cY);ctx.lineTo(wx0+dX,wy1+dY);ctx.closePath();ctx.fill()}}
+   else{
+    // the wood grain is fixed to the WALL, not to the world: patterns anchor to
+    // the current transform, so translate by this face's own offset before
+    // filling (vertices compensated back) -- otherwise the grain sits still in
+    // world space and the wall visibly slides across it while tilting.
+    ctx.fillStyle=pDW;ctx.save();ctx.translate(mX,mY);
+    ctx.beginPath();ctx.moveTo(wx0+aX-mX,wy0+aY-mY);ctx.lineTo(wx1+bX-mX,wy0+bY-mY);ctx.lineTo(wx1+cX-mX,wy1+cY-mY);ctx.lineTo(wx0+dX-mX,wy1+dY-mY);ctx.closePath();ctx.fill();ctx.restore()}}
+ }else{
+  // low quality: flat, no extrusion -- wall tops still drawn, just unstaggered
+  if(sw>0&&sh>0)ctx.drawImage(bakedW,sx|0,sy|0,Math.ceil(sw),Math.ceil(sh),sx,sy,sw,sh)}
+ // crumbling planks: crack progression before collapse
+ for(i=0;i<L.cw*L.ch;i++)if(L.tile[i]===T_CRUMB){
+  var st2=L.tstate[i];if(st2===0)continue;
+  var tx2=(i%L.cw)*CELL,ty2=((i/L.cw)|0)*CELL;
+  if(tx2>vx1||tx2+CELL<vx0||ty2>vy1||ty2+CELL<vy0)continue;
+  if(st2===-1){var grd=ctx.createRadialGradient(tx2+CELL/2,ty2+CELL/2,2,tx2+CELL/2,ty2+CELL/2,CELL*0.42);
+   grd.addColorStop(0,'#000');grd.addColorStop(1,'#241a10');
+   ctx.fillStyle=grd;ctx.beginPath();ctx.arc(tx2+CELL/2,ty2+CELL/2,CELL*0.42,0,TAU);ctx.fill()}
+  else{ctx.strokeStyle='rgba(15,8,3,'+(0.3+0.7*st2)+')';ctx.lineWidth=1.6;
+   ctx.beginPath();ctx.moveTo(tx2+4,ty2+CELL*.5);ctx.lineTo(tx2+CELL-4,ty2+CELL*.5+st2*6);
+   ctx.moveTo(tx2+CELL*.5,ty2+4);ctx.lineTo(tx2+CELL*.5-st2*5,ty2+CELL-4);ctx.stroke()}}
+ // bumpers
+ for(i=0;i<L.bumpers.length;i++){var bp=L.bumpers[i],sc=1+bp.anim*0.25;
+  bp.anim=Math.max(0,bp.anim-dt*3);
+  parO(bp.x,bp.y,CELL*0.22); // rubber cap sits low on the deck
+  if(FX('shadow')){ctx.fillStyle='rgba(0,0,0,.4)';ctx.beginPath();
+  ctx.arc(bp.x-LVX*bp.r*0.35,bp.y-LVY*bp.r*0.35,bp.r,0,TAU);ctx.fill()} // shadow on floor, away from light
+  ctx.save();ctx.translate(bp.x+PX,bp.y+PY);ctx.scale(sc,sc);
+  ctx.drawImage(TEX.bumper,-bp.r,-bp.r,bp.r*2,bp.r*2);ctx.restore()}
+ // stars: self-luminous -- they cast light, so they have NO drop shadow (that's
+ // for lit objects); instead each projects a breathing warm pool on the deck,
+ // on the walls, anywhere around it, which goes out the moment it is collected.
+ for(i=0;i<L.stars.length;i++){var st3=L.stars[i];
+  if(st3.got)continue;
+  if(st3.x<vx0-CELL*2||st3.x>vx1+CELL*2||st3.y<vy0-CELL*2||st3.y>vy1+CELL*2)continue;
+  if(FX('caustic')){
+   var pul=0.5+0.5*Math.sin(t*2+i*1.7);
+   var gl=ctx.createRadialGradient(st3.x,st3.y,2,st3.x,st3.y,CELL*(1.05+0.12*pul));
+   gl.addColorStop(0,'rgba(255,225,120,.34)');gl.addColorStop(.45,'rgba(255,200,80,.13)');
+   gl.addColorStop(1,'rgba(255,190,70,0)');
+   ctx.fillStyle=gl;ctx.beginPath();ctx.arc(st3.x,st3.y,CELL*1.2,0,TAU);ctx.fill()}
+  var bob=Math.sin(t*3+i)*2.2;
+  parO(st3.x,st3.y,CELL*0.45); // star hovers above the deck
+  ctx.save();ctx.translate(st3.x+PX,st3.y+bob+PY);ctx.rotate(Math.sin(t*1.3+i)*.15);
+  ctx.globalAlpha=.95;ctx.drawImage(TEX.star,-12,-12,24,24);ctx.restore();ctx.globalAlpha=1}
+ // checkpoints
+ for(i=0;i<L.checks.length;i++){var cp=L.checks[i];
+  ctx.fillStyle=cp.got?'rgba(140,220,110,.35)':'rgba(220,200,140,.18)';
+  ctx.beginPath();ctx.arc(cp.x,cp.y,CELL*0.34,0,TAU);ctx.fill();
+  drawFlag(cp.x,cp.y,t,'#d33')}
+ // goal beacon
+ var gp=L.goal,pl2=0.5+0.5*Math.sin(t*3);
+ var gg=ctx.createRadialGradient(gp.x,gp.y,4,gp.x,gp.y,CELL*(0.6+0.15*pl2));
+ gg.addColorStop(0,'rgba(255,215,90,.5)');gg.addColorStop(1,'rgba(255,215,90,0)');
+ ctx.fillStyle=gg;ctx.beginPath();ctx.arc(gp.x,gp.y,CELL*0.8,0,TAU);ctx.fill();
+ ctx.strokeStyle='rgba(255,220,90,'+(0.5+0.4*pl2)+')';ctx.lineWidth=2.5;
+ ctx.beginPath();ctx.arc(gp.x,gp.y,CELL*0.5+3*pl2,0,TAU);ctx.stroke();
+ drawFlag(gp.x,gp.y,t,'#d33')
+ // moving barriers
+ for(i=0;i<L.bars.length;i++){var bb=barPos(L.bars[i],t);
+  parO(bb.x+bb.w/2,bb.y+bb.h/2,CELL*0.3); // sliding gate rides just above the deck
+  var fx=bb.x+PX,fy=bb.y+PY;
+  if(FX('shadow')){ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(bb.x-LVX*4,bb.y-LVY*4,bb.w,bb.h)} // shadow on the floor
+  ctx.fillStyle='#6d4a26';ctx.fillRect(fx,fy,bb.w,bb.h);
+  ctx.fillStyle='rgba(255,220,160,.25)';ctx.fillRect(fx,fy,bb.w,2);
+  ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(fx,fy+bb.h-2,bb.w,2);
+  ctx.fillStyle='rgba(0,0,0,.25)';
+  var railA=L.bars[i],railH=(railA.ax&1)!==0,railNeg=railA.ax===2||railA.ax===3;
+  ctx.fillRect(railA.x0+(railH?railA.w/2-1:0)-(railNeg&&!railH?railA.range:0),
+   railA.y0+(railH?0:railA.h/2-1)-(railNeg&&railH?railA.range:0),
+   railH?2:railA.range+railA.w+2,railH?railA.range+railA.h+2:2)}
+ // the marble: NAVY BLUE-GREEN GLASS - the same effects as the menu marble.
+ // NO drop shadow: the marble is glass, it casts no shadow. The glass focuses
+ // a bright cool caustic at its head instead (brighter than the stars' warm
+ // pools); through the body the board itself is seen
+ // refracted (the spot under the ball, point-inverted + magnified - a
+ // uniform sphere's view does NOT rotate as it rolls), the room is projected
+ // across the glass by the spherical camera LUT, the glass deepens its color
+ // toward the rim, and a specular glint sits toward the light.
+ var fr=G.r,fallK=G.fall>0?clamp(G.fall/0.75,0.15,1):1;
+ parO(G.bx,G.by,fr); // ball is projected at its centre height: r above the deck
+ var cx2=G.bx-LVX*fr*1.2,cy2=G.by-LVY*fr*1.2,cr=fr*1.55; // caustic ahead, away from the light
+ if(FX('caustic')){ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=fallK;
+ ctx.drawImage(GLF.caustic,cx2-cr,cy2-cr,cr*2,cr*2);ctx.restore()}
+ var bs=fr*fallK;
+ ctx.save();ctx.translate(G.bx+PX,G.by+PY);
+ ctx.beginPath();ctx.arc(0,0,bs,0,TAU);ctx.clip();
+ if(baked){ // through a UNIFORM glass sphere the view never rotates when the
+  // ball rolls - optics only depend on position. What the body shows is the
+  // small circular spot of board right under the ball, point-inverted and
+  // magnified. Flat board: the spot sits exactly under the ball's center;
+  // when the board slopes the spot shifts DOWNHILL proportional to the tilt
+  // angle (the line of sight change). Integer math, one flipped blit.
+  var rc=(fr*0.55)|0,ox=(G.tilt.x*fr*0.45)|0,oy=(G.tilt.y*fr*0.45)|0,
+   sx=clamp(G.bx+ox-rc,0,L.W-rc*2),sy=clamp(G.by+oy-rc,0,L.H-rc*2);
+  // drawn OPAQUE: this spot already IS the board under the ball (inverted,
+  // magnified); glass color comes from the tint sprite above it. The old
+  // alpha .72 just let the board BEHIND the ball ghost through - a second,
+  // wrong copy of the deck under the wrong one.
+  ctx.save();
+  ctx.scale(-1,-1); // the sphere inverts the spot
+  ctx.drawImage(baked,sx,sy,rc*2,rc*2,-bs,-bs,bs*2,bs*2);ctx.restore()}
+ if(REF.ok&&CAM.ready&&FX('refl')&&bs*view.s*DPR>14){
+  // the room projected through the glass (same spherical LUT as the menu);
+  // only worth drawing when the ball is big enough on screen to show it
+  ctx.globalAlpha=.5;ctx.drawImage(REF.cv,-bs,-bs,bs*2,bs*2);ctx.globalAlpha=1}
+ // baked glass tint: the navy blue-green gathers toward the rim; drawn
+ // nudged toward the light, exactly where the thin glass passes more through
+ ctx.drawImage(GLF.glass,-bs*1.05+LVX*bs*0.18,-bs*1.05+LVY*bs*0.18,bs*2.1,bs*2.1);
+ ctx.restore();
+ // no bright outline circle - the glass edge reads from the tint sprite and
+ // the refracted spot itself; only a faint dark ring keeps it visible on
+ // light decks
+ ctx.strokeStyle='rgba(4,12,26,.4)';ctx.lineWidth=1;
+ ctx.beginPath();ctx.arc(G.bx+PX,G.by+PY,bs+1.2,0,TAU);ctx.stroke();
+ if(FX('spec')&&fallK>0.5){ // glint toward wherever the light actually is:
+  // SAME brightness as the caustic pool it pairs with (additive, alpha 1)
+  var sp=fr*1.3;
+  ctx.save();ctx.translate(G.bx+PX,G.by+PY);
+  ctx.globalCompositeOperation='lighter';
+  ctx.drawImage(GLF.spec,LVX*fr*0.45-sp/2,LVY*fr*0.45-sp/2,sp,sp);
+  ctx.restore()}
+ if(G.inv>0&&G.fall<=0){ctx.strokeStyle='rgba(180,230,255,'+(0.5*G.inv)+')';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(G.bx+PX,G.by+PY,fr+4,0,TAU);ctx.stroke()}
+ ctx.restore();ctx.setTransform(R,0,0,R,0,0);
+ dial()}
+// corner dial lives on its own DOM canvas so the 3D board transform never skews it
+var dcv=$('tiltT'),dctx=dcv.getContext('2d');
+function dial(){
+ dctx.clearRect(0,0,70,70);
+ dctx.strokeStyle='rgba(255,255,255,.28)';dctx.lineWidth=2;
+ dctx.beginPath();dctx.arc(35,35,28,0,TAU);dctx.stroke();
+ dctx.strokeStyle='rgba(180,160,110,.6)';dctx.lineWidth=1.5;
+ dctx.beginPath();dctx.arc(35,35,15,0,TAU);dctx.stroke();
+ dctx.strokeStyle='rgba(240,220,150,.85)';dctx.lineWidth=2.5;
+ dctx.beginPath();dctx.moveTo(35,35);dctx.lineTo(35+G.tilt.x*24,35+G.tilt.y*24);dctx.stroke();
+ dctx.fillStyle='rgba(240,220,150,.85)';dctx.beginPath();dctx.arc(35,35,3,0,TAU);dctx.fill()}
+// ---------- screens & flow ----------
+function show(id,on){$(id).style.display=on?'flex':'none';
+ if(id==='menu'||id==='pause'||id==='win'||id==='calb'||id==='lang'){
+  if(on&&!MB.on)mbOpen();else if(MB.on)MB.rt=0}}
+
+// ---------- menu aim-ball ----------
+// Menus speak the game's own language: a GLASS marble rolls around on the open
+// menu, steered by the same lean that steers the game (gyro or camera), by
+// keys, by the stick or the d-pad. With the camera live, the room is wrapped
+// across the glass through the SAME spherical LUT the game marble uses (REF),
+// and light passing through the glass drops a cool caustic spot onto the
+// menu's own lit surfaces (buttons, the seed field) - positioned away from
+// the light by the same LVX/LVY solver the game's shadows follow.
+// The button's timer starts only when the marble center has actually ROLLED
+// into the button - deliberate motion; resting at spawn or sensor noise never
+// fires (the old self-activating default). A golden frame around that button
+// shows the timer filling to the activation threshold; the center staying
+// inside for the whole time tuned for the button (the menu's default action
+// fills about 2.5x faster than a secondary one) fires it. Space / Enter /
+// A / Start confirm: the button the marble rests on, else the menu's default.
+// B / Esc cancel. Mouse and touch tap buttons directly, as always.
+var MB={on:false,x:0,y:0,vx:0,vy:0,r:12,tgt:null,def:null,items:null,itemsOld:null,
+ surf:null,prog:0,rt:0,act:0,W:0,H:0,ox:0,oy:0,cv:null,cg:null,was:false};
+function mbType(){var a=document.activeElement;
+ return a&&(a.id==='seed'||a.id==='lv')}
+function mbScan(){
+ var ids=['lang','calb','win','opts','ctls','pause','menu'],root=null,i,j; // topmost overlay wins:
+ for(i=0;i<ids.length;i++)if($(ids[i]).style.display==='flex'){root=$(ids[i]);break}
+ // calb opens on top of menu/pause without hiding them
+ if(!root){MB.on=false;return}
+ // Draw and clamp inside the canvas' OWN box: on mobile the layout viewport
+ // (innerWidth/innerHeight) and the visible area a fixed canvas actually
+ // covers can differ - trusting innerHeight sent the marble rolling into a
+ // strip of screen the player can never see. The box is the truth.
+ var cr=$('mbc').getBoundingClientRect();
+ if(cr.width>32&&cr.height>32){MB.W=cr.width;MB.H=cr.height;MB.ox=cr.left;MB.oy=cr.top}
+ else if(!MB.W){MB.W=innerWidth;MB.H=innerHeight;MB.ox=MB.oy=0}
+ var els=root.querySelectorAll('button');MB.items=[];MB.def=null;MB.surf=[];
+ for(j=0;j<els.length;j++){var el=els[j];
+  if(!el.offsetParent)continue; // hidden on this device (gyro/cam layers)
+  // wizard locked mid-steps ONLY: once CALB.done the button has become
+ // CLOSE and is live again (the feed path ends with done=1, step=2)
+ if(el.id==='calGo'&&CALB.on&&!CALB.done&&CALB.step>=0&&CALB.step<5)continue;
+  var rc=el.getBoundingClientRect();if(rc.width<4)continue;
+  var it={el:el,x:rc.left,y:rc.top,w:rc.width,h:rc.height,
+   def:el.classList.contains('pri')};
+  MB.items.push(it);if(it.def&&!MB.def)MB.def=it;
+  MB.surf.push(it)} // buttons are bright: the caustic lands on them
+ var ins=root.querySelectorAll('input'); // the seed field catches light too
+ for(i=0;i<ins.length;i++){if(!ins[i].offsetParent)continue;
+  var qr=ins[i].getBoundingClientRect();if(qr.width<4)continue;
+  MB.surf.push({x:qr.left,y:qr.top,w:qr.width,h:qr.height})}
+ // a measurement pass that saw nothing real (frozen tab, mid-transition):
+ // keep the last good geometry rather than losing every target
+ if(!MB.items.length&&MB.itemsOld&&MB.itemsOld.length){MB.items=MB.itemsOld;
+  MB.surf=MB.items}
+ MB.itemsOld=MB.items}
+function mbOpen(){MB.on=true;MB.tgt=null;MB.prog=0;MB.rt=0;MB.act=0;mbScan();
+ // Bottom-center is the one place that never hides the buttons behind the
+ // marble... unless a tight layout puts a button row right there (short
+ // landscape phones): that resting overlap IS the mysterious self-activation.
+ // Step clear of anything the spawn happens to land on.
+ MB.x=MB.ox+MB.W/2;MB.y=MB.oy+MB.H-MB.r-8;MB.vx=MB.vy=0;
+ for(var t=0;t<24;t++){var hit=null;
+  for(var i=0;i<(MB.items||[]).length;i++){var it=MB.items[i];
+   if(MB.x>it.x-2&&MB.x<it.x+it.w+2&&MB.y>it.y-2&&MB.y<it.y+it.h+2){hit=it;break}}
+  if(!hit)break;
+  MB.x=hit.x-MB.r-4;if(MB.x<MB.ox+MB.r)MB.x=hit.x+hit.w+MB.r+4}
+ if(MB.x>MB.ox+MB.W-MB.r)MB.x=MB.ox+MB.W-MB.r;
+ if(MB.x<MB.ox+MB.r)MB.x=MB.ox+MB.r}
+function mbActivate(){if(!MB.on)return;
+ var t=(MB.tgt&&MB.prog>0.08)?MB.tgt:MB.def;
+ if(!t)return;MB.tgt=null;MB.prog=0;MB.vx=MB.vy=0;t.el.click()}
+ function mbUpd(dt,gp){
+ if(!(dt>0)||dt>0.25)dt=0.016; // frame-timestamp gap guard (tab restore)
+ if(!MB.on){mbDraw();return}
+ if(mbType()){mbDraw();return} // typing a seed: the field owns the keys
+ MB.rt-=dt;if(MB.rt<=0){mbScan();MB.rt=0.45} // menus edited, rotated, resized
+ if(!MB.on){mbDraw();return} // the scan found every menu closed
+ var tx=0,ty=0;
+ if(keys.ArrowLeft||keys.KeyA)tx-=1;
+ if(keys.ArrowRight||keys.KeyD)tx+=1;
+ if(keys.ArrowUp||keys.KeyW)ty-=1;
+ if(keys.ArrowDown||keys.KeyS)ty+=1;
+ if(gp){tx+=gp.ax+gp.dxx;ty+=gp.ay+gp.dyy}
+ if(G.gyroOn||G.camOn){tx+=G.tiltT.x;ty+=G.tiltT.y} // the same lean drives menus too
+ tx=clamp(tx,-1,1);ty=clamp(ty,-1,1);
+ // same feel as the game marble: lean accelerates, rolling friction eases
+ MB.vx=(MB.vx+tx*1650*dt)*Math.exp(-2.1*dt);
+ MB.vy=(MB.vy+ty*1650*dt)*Math.exp(-2.1*dt);
+ MB.x+=MB.vx*dt;MB.y+=MB.vy*dt;
+ var W=MB.W,H=MB.H,ox=MB.ox,oy=MB.oy,R=MB.r,BN=0.45; // bounces off the screen edge
+ if(MB.x<ox+R){MB.x=ox+R;MB.vx=-MB.vx*BN}else if(MB.x>ox+W-R){MB.x=ox+W-R;MB.vx=-MB.vx*BN}
+ if(MB.y<oy+R){MB.y=oy+R;MB.vy=-MB.vy*BN}else if(MB.y>oy+H-R){MB.y=oy+H-R;MB.vy=-MB.vy*BN}
+ // deliberate motion only: once the player has actually steered or rolled the
+ // marble it answers everywhere; at rest (spawn, idle sensor noise) nothing
+ // ever self-activates
+ var sp=MB.vx*MB.vx+MB.vy*MB.vy;
+ if(sp>3600||Math.abs(tx)+Math.abs(ty)>0.2)MB.act=1;
+ var t=null;
+ for(var i=0;i<MB.items.length;i++){var it=MB.items[i];
+  if(MB.x>it.x&&MB.x<it.x+it.w&&MB.y>it.y&&MB.y<it.y+it.h){t=it;break}}
+ // a rescan rebuilds items while dwelling: the button is the same, keep filling
+ if(t&&MB.tgt&&t.el===MB.tgt.el)MB.tgt=t;
+ else if(t!==MB.tgt){MB.tgt=t;MB.prog=0}
+ if(t&&MB.act){MB.prog+=dt/(t.def?0.4:1.1);
+  if(MB.prog>=1){MB.prog=0;MB.tgt=null;t.el.click()}} // frame closed -> fire
+ mbDraw()}
+function mbDraw(){
+ if(!MB.was&&!MB.on)return; // nothing on screen and nothing to clear
+ if(!MB.on){if(MB.cg){MB.cg.setTransform(1,0,0,1,0,0);
+  MB.cg.clearRect(0,0,MB.cv.width,MB.cv.height)}MB.was=false;return}
+ MB.was=true;
+ if(!MB.cg){MB.cv=$('mbc');MB.cg=MB.cv.getContext('2d')}
+ var c=MB.cv,g=MB.cg,
+  W=Math.max(1,MB.W||innerWidth),H=Math.max(1,MB.H||innerHeight),
+  bw=(W*DPR)|0,bh=(H*DPR)|0;
+ if(c.width!==bw||c.height!==bh){c.width=bw;c.height=bh} // box changed (rotate, toolbar)
+ // Canvas coordinates = page coordinates: the marble and the buttons meet in
+ // the same rect space, so a hit is exactly what it looks like.
+ g.setTransform(DPR,0,0,DPR,-MB.ox*DPR,-MB.oy*DPR);
+ g.clearRect(MB.ox,MB.oy,W,H);
+ var R=MB.r,mx=MB.x,my=MB.y;
+ // ---- light through the glass: a cool caustic spot, colored by the marble's
+ // navy blue-green glass, landing on the menu's bright surfaces (never on
+ // empty black), away from the light - placed by the same LVX/LVY the game's
+ // shadows follow. Sprites baked once at load: menus cost drawImage only.
+ if(MB.surf&&MB.surf.length&&FX('caustic')){
+  var dx=-LVX,dy=-LVY; // light travel direction
+  g.save();
+  g.beginPath();
+  for(var s=0;s<MB.surf.length;s++){var q=MB.surf[s];g.rect(q.x,q.y,q.w,q.h)}
+  g.clip();
+  g.globalCompositeOperation='lighter';
+  var cx=mx+dx*R*1.15,cy=my+dy*R*1.15,cr=R*1.55;
+  g.save();g.translate(cx,cy);g.rotate(Math.atan2(dy,dx));g.scale(1.45,0.85);
+  g.drawImage(GLF.caustic,-cr,-cr,cr*2,cr*2);g.restore();
+  g.globalCompositeOperation='source-over';g.restore()}
+ if(MB.tgt){var it=MB.tgt,x=it.x-3,y=it.y-3,w=it.w+6,h=it.h+6,
+  rem=MB.prog*2*(w+h),s;
+  g.strokeStyle='rgba(12,9,6,.55)';g.lineWidth=5;g.strokeRect(x,y,w,h);
+  g.strokeStyle=it.def?'#f2d98a':'#c9a23f';g.lineWidth=3;g.lineCap='round';
+  g.beginPath();
+  if(rem>0){g.moveTo(x,y);s=Math.min(rem,w);g.lineTo(x+s,y);rem-=s}
+  if(rem>0){g.moveTo(x+w,y);s=Math.min(rem,h);g.lineTo(x+w,y+s);rem-=s}
+  if(rem>0){g.moveTo(x+w,y+h);s=Math.min(rem,w);g.lineTo(x+w-s,y+h);rem-=s}
+  if(rem>0){g.moveTo(x,y+h);s=Math.min(rem,h);g.lineTo(x,y+h-s)}
+  g.stroke();g.lineCap='butt'}
+ // ---- the glass marble. Navy blue-green glass, the SAME look and sprites as
+ // the game marble; with the camera live, the room is wrapped across it via
+ // the SAME spherical LUT the game marble uses. No camera: just glass
+ // catching the studio key light.
+ if(REF.ok&&CAM.ready&&FX('refl')){
+  g.save();g.beginPath();g.arc(mx,my,R,0,TAU);g.clip();
+  g.globalAlpha=0.5;g.drawImage(REF.cv,mx-R,my-R,R*2,R*2);g.restore()}
+ g.save();g.beginPath();g.arc(mx,my,R,0,TAU);g.clip();
+ g.drawImage(GLF.glass,mx-R*1.05+LVX*R*0.18,my-R*1.05+LVY*R*0.18,R*2.1,R*2.1);
+ if(FX('spec')){
+ var gx2=mx+LVX*R*0.5,gy2=my+LVY*R*0.5,gs=R*1.2;
+ g.globalCompositeOperation='lighter';
+ g.drawImage(GLF.spec,gx2-gs/2,gy2-gs/2,gs,gs);}
+ g.restore();
+ // no bright outline circle (same as the game marble): the dark edge is
+ // only for contrast on light backgrounds
+ g.strokeStyle='rgba(4,12,26,.35)';g.lineWidth=1;
+ g.beginPath();g.arc(mx,my,R+1.2,0,TAU);g.stroke()}
+function randSeed(){var A='BCDFGHJKLMNPRSTVWXZ',s='',i;
+ for(i=0;i<4;i++)s+=A[(Math.random()*A.length)|0];
+ s+='-'+((Math.random()*900+100)|0);return s}
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+function setHudTexts(L){if(!L)return;
+ $('hLv').textContent=t('hudLv')+' '+L.idx;
+ $('hSeed').textContent=t('hudSeed')+' '+L.seed;
+ $('hStars').textContent='\u2605 '+G.starsGot+'/'+G.totalStars;
+ $('hTime').textContent=fmt(G.time);
+ var b=store('tll:'+L.seed+':'+L.idx);$('hBest').textContent=b?t('hudBest')+' '+fmt(+b):''}
+function fmt(s){var m=(s/60)|0,ss=(s%60)|0;return m+':'+(ss<10?'0':'')+ss}
+function loadLevel(idx,seed){
+ G.L=decorateLevel(genLevel(seed,idx));var L=G.L;
+ G.totalStars=L.stars.length;G.starsGot=0;G.time=0;G.deaths=0;
+ G.bx=L.start.x;G.by=L.start.y;G.vx=G.vy=0;G.fall=0;G.inv=0.8;G.state='play';
+ G.tilt.x=G.tilt.y=G.tiltT.x=G.tiltT.y=0;klvl[0]=klvl[1]=0;
+ cam.x=L.start.x;cam.y=L.start.y;fitView();
+ buildTextures(seed);bakeLevel(L);
+ show('menu',false);show('pause',false);show('win',false);
+ G.hintT=t('hintMain');
+ if(!G.gyroOn)$('hint').textContent=G.hintT;
+ setHudTexts(L)}
+function startGame(){
+ var s=($('seed').value||'').trim()||randSeed(),lv=Math.max(1,parseInt($('lv').value||'1',10)||1);
+ $('seed').value=s;store('tll:lastseed',s);G.seed=s;
+ G.hs=1;armBack(); // arm the browser-back = pause gesture
+ AU.init();AU.resume();AU.ui();loadLevel(lv,s)}
+function restartLevel(){
+ var L=G.L,i;
+ for(i=0;i<L.stars.length;i++)L.stars[i].got=false;
+ for(i=0;i<L.checks.length;i++)L.checks[i].got=false;
+ for(i=0;i<L.tstate.length;i++)L.tstate[i]=0;
+ G.bx=L.start.x;G.by=L.start.y;G.vx=G.vy=0;G.fall=0;G.inv=0.8;
+ G.starsGot=0;G.time=0;G.state='play';
+ show('pause',false);show('win',false);setHudTexts(L);AU.ui()}
+// one place builds the pause line so a language change can repaint it live
+function setPInfo(){if(!G.L)return;
+ $('pInfo').textContent=levelSummary(G.L)+' \u00b7 \u2605'+G.starsGot+'/'+G.totalStars+' \u00b7 '+t('lTime')+' '+fmt(G.time)}
+function pause(){if(G.state!=='play')return;G.state='pause';
+ setPInfo();
+ show('pause',true)}
+function resumeGame(){if(G.state!=='pause')return;G.state='play';show('pause',false)}
+function winLevel(){
+ if(G.state!=='play')return;G.state='win';AU.goal();
+ var L=G.L,key='tll:'+L.seed+':'+L.idx,b=+(store(key)||0),best='';
+ if(!b||G.time<b){store(key,String(G.time));best=t('winBest')}
+ $('wTitle').textContent=tt('winDone',{n:L.idx})+best;
+ $('wInfo').textContent=t('lTime')+' '+fmt(G.time)+' \u00b7 '+t('lStars')+' '+G.starsGot+'/'+G.totalStars+
+  ' \u00b7 '+t('lFalls')+' '+G.deaths+' \u00b7 '+t('lSeed')+' '+L.seed+' ('+t('wReplay')+')';
+ show('win',true);AU.levelup()}
+function nextLevel(){show('win',false);loadLevel(G.L.idx+1,G.L.seed)}
+// ---------- UI wiring ----------
+function syncOpts(){ // reflect OPT into every widget that shows it
+ var v=Math.round(OPT.vol*100),i,el;
+ $('volS').value=v;$('volSP').textContent=v+'%';
+ $('volQ').value=v;$('volQP').textContent=v+'%';
+ el=t(OPT.muted?'sndOff':'sndOn');
+ $('muteT2').textContent=el;
+ el=t(OPT.vib?'vibOn':'vibOff');
+ $('vibT').textContent=el;
+ // phones without a vibrator get no dead button
+ $('vibT').style.display=navigator.vibrate?'':'none';
+ // room reflections are only rendered while the camera runs; an unchecked
+ // world inside the glass would be a promise the panel cannot keep
+ $('reflL').style.opacity=(G.camOn||!OPT.fx.refl)?'':'.45';
+ var gb=$('gxF').getElementsByTagName('input');
+ for(i=0;i<gb.length;i++)gb[i].checked=!!OPT.fx[gb[i].getAttribute('data-f')];
+ var pb=$('gfxP').getElementsByTagName('button');
+ for(i=0;i<pb.length;i++)pb[i].className='btn sm'+
+  (pb[i].getAttribute('data-p')===OPT.gfx?' on':'');
+ $('resS').value=String(OPT.res);
+ $('gfxInfo').textContent={
+  max:t('infoMax'),high:t('infoHigh'),med:t('infoMed'),low:t('infoLow'),
+  custom:t('infoCustom')}[OPT.gfx]||t('infoCustom')}
+function toggleMute(){AU.muted=OPT.muted=!AU.muted;optSave();
+ if(!AU.muted){AU.init();AU.setVol(OPT.vol)}
+ syncOpts()}
+function toMenu(skipPop){G.state='menu';show('menu',true);show('pause',false);show('win',false);
+ if(skipPop){G.hs=0;if(location.hash)location.replace(location.href.split('#')[0])}
+ else if(G.hs){G.hs=0;history.back()}} // drop our armed entry with the exit
+// Browser back = walk ONE interface layer down, always to whatever screen was
+// before it: wizard -> the page that opened it, options/controls -> their
+// parent, play -> pause, pause -> title. One armed entry is carried along;
+// it is re-armed after every step that leaves something behind, and dropped
+// when the walk reaches the title. Entering play arms it; the options and
+// controls pages arm it if nothing is armed yet. pushState is used where
+// allowed; hash-replace is the fallback where it is blocked (file:// origins).
+function armBack(){G.hs=1;try{history.pushState({tll:1},'');G.hm=1}
+ catch(e){G.hm=0;location.replace(location.href.split('#')[0]+'#play')}}
+function anySub(){return CALB.on||$('opts').style.display==='flex'||
+ $('ctls').style.display==='flex'}
+// a submenu closed by button/Esc/pad leaves its armed entry on the stack;
+// drop it when nothing is being covered anymore, so the NEXT back press is
+// the browser's own (leave the page), not a silent no-op
+function unarmIfIdle(){if(G.hs&&G.state==='menu'&&!anySub()){G.hs=0;
+ if(G.hm)history.back();else if(location.hash)location.replace(location.href.split('#')[0])}}
+function onBack(){
+ G.hs=0; // whatever popped, it consumed the armed entry
+ var closed=false;
+ if(CALB.on){calClose();closed=true} // the wizard is on top: back drops it
+ else if(closeOpts()||closeCtls())closed=true; // close the topmost submenu
+ if(closed){ // one layer down; keep one armed entry while anything remains
+  if(anySub()||G.state!=='menu')armBack();
+  else if(location.hash)location.replace(location.href.split('#')[0])
+  return}
+ if(G.state==='play'){pause();armBack()}
+ else if(G.state==='pause')toMenu(true);
+ else if(G.state==='win'){armBack()} // back must not dismiss the results screen
+ else if(location.hash)location.replace(location.href.split('#')[0])}
+window.addEventListener('popstate',onBack);
+window.addEventListener('hashchange',function(){if(G.hs&&!/#play/.test(location.hash))onBack()});
+$('play').onclick=startGame;
+$('dice').onclick=function(){$('seed').value=randSeed();AU.ui()};
+$('muteT2').onclick=toggleMute;
+$('vibT').onclick=function(){AU.init();AU.resume();OPT.vib=!OPT.vib;
+ optSave();syncOpts();AU.ui();vibe(30)}; // the change answers by feel
+// options panel: reachable from the title AND the pause menu; it stacks on
+// top, so closing it returns exactly where it was opened
+function openOpts(){AU.init();AU.resume();AU.ui();syncOpts();
+ if(!G.hs)armBack() // from the title the panel is the way back
+ show('opts',true)}
+function closeOpts(){if($('opts').style.display!=='flex')return false;
+ show('opts',false);unarmIfIdle();AU.ui();return true}
+$('optB').onclick=openOpts;$('optP').onclick=openOpts;$('optX').onclick=closeOpts;
+// ---------- controls page: help + a tuning tree per input family ----------
+// Camera, gyroscope and keys/pad/mouse/touch each get their own tab with
+// the corrections that make sense for THAT input. Everything applies live:
+// the engine reads CTLX directly on every input frame.
+function openCtls(){AU.init();AU.resume();AU.ui();$('ctls').scrollTop=0;
+ if(!G.hs)armBack() // from the title the page is the way back
+ syncCtl();show('ctls',true)}
+function closeCtls(){if($('ctls').style.display!=='flex')return false;
+ show('ctls',false);unarmIfIdle();AU.ui();return true}
+function syncCtl(){var cb=$('ctls').getElementsByTagName('input'),i,k,gi,
+ ids=['Cam','Gyro','Key'],grps=[CTLX.cam,CTLX.gyro,CTLX.key];
+ for(i=0;i<cb.length;i++){k=cb[i].getAttribute('data-c');
+  if(k){gi=CTLX[k.slice(0,k.indexOf('.'))];cb[i].checked=!!gi[k.slice(k.indexOf('.')+1)]}}
+ for(i=0;i<3;i++){$('sen'+ids[i]).value=grps[i].s;
+  $('sen'+ids[i]+'P').textContent=grps[i].s+'%'}
+ var tb=$('ctlTab').getElementsByTagName('button');
+ for(i=0;i<tb.length;i++)tb[i].className='btn sm'+
+  (tb[i].getAttribute('data-m')===CTAB?' on':'');
+ $('ctlCam').hidden=CTAB!=='cam';$('ctlGyro').hidden=CTAB!=='gyro';
+ $('ctlKey').hidden=CTAB!=='key'}
+$('helpB').onclick=openCtls;$('ctlsP').onclick=openCtls;$('ctlsX').onclick=closeCtls;
+(function(){var tb=$('ctlTab').getElementsByTagName('button'),i;
+ for(i=0;i<tb.length;i++)tb[i].onclick=function(){CTAB=this.getAttribute('data-m');
+  syncCtl();AU.ui()}})();
+(function(){var cb=$('ctls').getElementsByTagName('input'),i,p;
+ for(i=0;i<cb.length;i++)if((p=cb[i].getAttribute('data-c')))
+  cb[i].onchange=function(){var q=this.getAttribute('data-c');
+   CTLX[q.slice(0,q.indexOf('.'))][q.slice(q.indexOf('.')+1)]=this.checked?1:0;
+   ctlSave();AU.ui()}})();
+// sensitivity sliders: live while dragging (the game reacts immediately),
+// stored on release; each step answers with the usual UI blip
+$('senCam').oninput=function(){CTLX.cam.s=+this.value;
+ $('senCamP').textContent=this.value+'%';AU.ui()};
+$('senGyro').oninput=function(){CTLX.gyro.s=+this.value;
+ $('senGyroP').textContent=this.value+'%';AU.ui()};
+$('senKey').oninput=function(){CTLX.key.s=+this.value;
+ $('senKeyP').textContent=this.value+'%';AU.ui()};
+$('senCam').onchange=$('senGyro').onchange=$('senKey').onchange=function(){ctlSave()};
+// volume: live while dragging (both sliders), stored on release; every step
+// answers with the same UI blip the rest of the interface uses, so the
+// control confirms itself by ear (at 0% or muted the blip is silent too)
+$('volS').oninput=$('volQ').oninput=function(){
+ AU.init();AU.resume();OPT.vol=clamp(+this.value/100,0,1);AU.setVol(OPT.vol);
+ syncOpts();AU.ui()};
+$('volS').onchange=$('volQ').onchange=function(){optSave()};
+// graphics: presets are one tap; every feature is also its own checkbox
+(function(){var pb=$('gfxP').getElementsByTagName('button'),
+ gb=$('gxF').getElementsByTagName('input'),i;
+ for(i=0;i<pb.length;i++)pb[i].onclick=function(){setPreset(this.getAttribute('data-p'));AU.ui()};
+ for(i=0;i<gb.length;i++)gb[i].onchange=function(){
+  toggleFx(this.getAttribute('data-f'),this.checked);AU.ui()}})();
+$('resS').onchange=function(){setRes(this.value);AU.ui()};
+// Tilt and camera are manual-only: no sensor ever switches itself on at
+// boot, the player taps the button when they want it (permissions, table
+// posture, battery). Nothing about them is stored between sessions.
+$('gyro').onclick=function(){AU.init();AU.resume();gyroEnable(!G.gyroOn);
+ syncOpts()};
+$('camB').onclick=function(){AU.init();AU.resume();camEnable(!G.camOn);
+ syncOpts()};
+$('camF').onclick=function(){G.camFacing=G.camFacing==='user'?'environment':'user';
+ camUi();if(G.camOn)camStart()};
+// language picker: the big flag buttons choose; CLOSE leaves the choice as it
+// was. Delegation on #langB — the buttons are built at boot, never inline.
+$('langB2').onclick=function(){AU.init();AU.resume();AU.ui();langOpen()};
+$('langB').onclick=function(e){var b=e.target;
+ while(b&&b!==$('langB')&&!(b.getAttribute&&b.getAttribute('data-lang')))b=b.parentNode;
+ if(!b||b===$('langB'))return;
+ AU.init();AU.resume();AU.ui();
+ setLang(b.getAttribute('data-lang'));
+ show('lang',false);show('menu',true)};
+$('langX').onclick=function(){show('lang',false)};
+$('resume').onclick=resumeGame;
+$('restart').onclick=restartLevel;
+$('again').onclick=restartLevel;
+$('pmenu').onclick=toMenu;$('wmenu').onclick=toMenu;
+$('next').onclick=nextLevel;
+if(gyroSupport())$('gyro').style.display='inline-block';
+$('camB').style.display='inline-block';
+window.addEventListener('contextmenu',function(e){e.preventDefault()});
+document.addEventListener('visibilitychange',function(){if(document.hidden&&G.state==='play')pause()});
+
+// ---------- main loop + adaptive quality ----------
+var lastTs=0,badF=0,goodF=0,klvl=[0,0];
+// Keyboard / d-pad levels: holding a direction ramps that axis toward its
+// extreme over ~0.4s, so the board keeps leaning further the longer the
+// key is held, and eases back on release. Analog stick and drag mix in
+// raw; the whole mix then passes through the same response curve.
+function frame(ts){
+ requestAnimationFrame(frame);
+ var dt=Math.min(0.05,(ts-lastTs)/1000);lastTs=ts;if(!(dt>0))dt=0.016;
+ var t0=performance.now(),gp=pollGamepad(),i;
+ if(G.state==='play'){
+  if(!G.gyroOn&&!G.camOn){
+   var dxx=gp?gp.dxx:0,dyy=gp?gp.dyy:0,
+   kx=((keys.ArrowLeft||keys.KeyA)?-1:0)+((keys.ArrowRight||keys.KeyD)?1:0)+dxx,
+   ky=((keys.ArrowUp||keys.KeyW)?-1:0)+((keys.ArrowDown||keys.KeyS)?1:0)+dyy,
+   kk=1-Math.exp(-2.6*dt);
+   klvl[0]+=((kx>0?1:kx<0?-1:0)-klvl[0])*kk;
+   klvl[1]+=((ky>0?1:ky<0?-1:0)-klvl[1])*kk;
+   var tx=klvl[0]+(gp?gp.ax:0),ty=klvl[1]+(gp?gp.ay:0);
+   if(drag.on){tx+=drag.x;ty+=drag.y}
+   // axis flips and gain from the CONTROLS page: sign the MIX, so every
+   // source on that axis (keys, stick, drag) turns together
+   if(CTLX.key.fx)tx=-tx;if(CTLX.key.fy)ty=-ty;
+   if(CTLX.key.s!==100){tx*=CTLX.key.s/100;ty*=CTLX.key.s/100}
+   G.tiltT.x=tCurve(clamp(tx,-1,1));G.tiltT.y=tCurve(clamp(ty,-1,1))}
+  else if(G.camOn)camTick(dt);
+  G.time+=dt;
+  var acc=Math.min(dt,0.05),h=1/120,n=0;
+  while(acc>1e-4&&n<8){step(acc>h?h:acc);acc-=h;n++;if(G.state!=='play')break}
+  updView(dt);
+  G.hudT-=dt;if(G.hudT<=0){G.hudT=0.3;if(G.L)setHudTexts(G.L)}}
+ else if(!G.gyroOn){G.tiltT.x*=Math.pow(.001,dt);G.tiltT.y*=Math.pow(.001,dt);
+  G.tilt.x*=Math.pow(.001,dt);G.tilt.y*=Math.pow(.001,dt)}
+ if(CALB.on){calTick(dt);if(G.camOn)camTick(dt)} // wizard runs over menu/pause
+ else if(G.state!=='play'&&G.camOn)camTick(dt); // menus are camera-steerable too
+ mbUpd(dt,gp); // the marble steers every menu; clears itself when none is open
+ updateLight(dt); // light direction eases toward camera-detected lamp or default
+ var ekk=1-Math.exp(-6*dt);EYEX+=(G.tilt.x-EYEX)*ekk;EYEY+=(G.tilt.y-EYEY)*ekk;
+ if(G.L&&document.visibilityState!=='hidden')drawFrame(ts/1000,dt);
+ // adaptive: keep ~30fps floor on weak devices. The user's chosen profile is
+ // the CEILING; DEGRADE can only turn features off below it, never above.
+ var cost=performance.now()-t0;frameAvg=frameAvg*0.9+cost*0.1;
+ badF=frameAvg>30?badF+1:0;goodF=frameAvg<12&&DEGRADE?goodF+1:0;
+ if(badF>90){badF=0;
+  if(!DEGRADE){DEGRADE=1;resize()}
+  else if(DEGRADE<2&&OPT.res>0.4){DEGRADE=2;resize()}}
+ if(goodF>600){goodF=0;
+  if(DEGRADE){DEGRADE--;resize()}}}
+
+// ---------- boot ----------
+optLoad();ctlLoad(); // stored preferences: sound, haptics, graphics, input tunings
+AU.muted=OPT.muted;AU.vol=OPT.vol; // (calibration lives in its own stored key)
+resize();buildTextures('BOOT');
+// Language comes FIRST: on a fresh install the title screen would otherwise
+// be untranslated. A stored choice paints the whole UI in that language;
+// without one, the game intro IS the language screen and no other screen
+// opens until a flag is tapped.
+var savedLang=store('tll:lang');
+langBuild();
+if(savedLang&&TR[savedLang]){LANG=savedLang;applyLang();show('menu',true)}
+else{show('menu',false);langOpen()}
+show('pause',false);show('win',false);
+$('seed').value=store('tll:lastseed')||randSeed();
+requestAnimationFrame(frame);
+// ---------- calibration wizard ----------
+// One guided minute on the player's OWN device learns what no generic filter
+// can know: which way the tilt axes point, whether they are swapped, how much
+// noise the sensor has, and whether the camera feed is mirrored. Stored in
+// CAL (p8) and used by every input path afterwards. Same tricks as the
+// classic motion controllers: guided gestures at known targets + hold-still
+// sampling of everything that disagrees with them.
+var CALB={on:false,step:-1,g0:0,b0:0,mg:0,mb:0,pmg:0,pmb:0,mvx:0,mvy:0,
+ gotEvt:0,startAt:0,capt:0,from:'menu',hold:0,accG:0,accB:0,accN:0,
+ fx:0,fy:0,fn:0,rsum:0,rn:0,done:0,cam:0,cmx:0,fs:0,ft:0,mot:0,got:0};
+// guided pans for the sensorless fallback: raw frame flow is the only signal
+var CAMCAL=[{tx:-1,n:'dL'},{tx:1,n:'dR'}];
+// raw tilt stream for the wizard marker: always on while open, independent of
+// the game's filtered path, so what the user sees is the sensor itself.
+window.addEventListener('deviceorientation',function(e){
+ if(!CALB.on||e.gamma===null||e.beta===null)return;
+ CALB.mg=e.gamma;CALB.mb=e.beta;CALB.gotEvt=1});
+var CALDIR=[{tx:-1,ty:0,n:'dL'},{tx:0,ty:-1,n:'dU'},{tx:1,ty:0,n:'dR'},
+ {tx:0,ty:1,n:'dD'}];
+function calOpen(from){
+ CALB.on=true;CALB.from=from||'menu';CALB.step=-1;CALB.done=0;CALB.hold=0;
+ CALB.gotEvt=0;CALB.capt=0;CALS=null;CALB.cam=0;CALB.cmx=0;CALB.fs=CALB.ft=0;CALB.mot=0;CALB.got=0;
+ $('calGo').textContent=t('btnStart');$('calX').style.display='';
+ $('calMsg').textContent=t('calHoldStart');
+ $('calTxt').textContent=t('calIntroW');
+ show('calb',true)}
+function calClose(){CALB.on=false;show('calb',false);
+ // back to whatever the wizard covered: pause re-shows itself, the controls
+ // page is still displayed underneath (calb never hid it), title re-shows.
+ if(CALB.from==='pause')show('pause',true);
+ else if(CALB.from!=='ctls')show('menu',true);$('hint').textContent=G.hintT}
+$('calGo').addEventListener('click',function(){
+ if(CALB.done){calClose();return}
+ if(CALB.step<0){ // begin: neutral = whatever pose the player settles in
+  CALB.step=0;CALB.capt=performance.now();CALB.startAt=performance.now();
+  CALB.locked=0;CALB.g0=CALB.mg;CALB.b0=CALB.mb;CALB.pmg=CALB.mg;CALB.pmb=CALB.mb;
+  CALB.accG=CALB.accB=CALB.accN=0;CALB.fx=CALB.fy=CALB.fn=0;
+  CALB.rsum=CALB.rn=0;CALB.hold=0;
+  $('calGo').textContent='...'; // CANCEL stays reachable during the steps
+  return}
+ if(CALB.step>=5){calClose();return}});
+$('calX').addEventListener('click',calClose);
+$('calB2').addEventListener('click',function(){calOpen('pause')});
+// the wizard also opens from the CONTROLS submenu (camera + gyro tabs);
+// closing it drops back onto the page that is still open underneath
+$('calW1').addEventListener('click',function(){calOpen('ctls')});
+$('calW2').addEventListener('click',function(){calOpen('ctls')});
+window.addEventListener('keydown',function(e){
+ if(e.key==='Escape'&&CALB.on){e.preventDefault();calClose()}});
+var CALS=null,ccx=null,CC=280,CR=88,CX=140;
+function calTick(dt){
+ if(!ccx)ccx=$('calCv').getContext('2d');
+ if(!CALS)CALS={dg:[],db:[],tx:[],ty:[],fx:[],ok:[]};
+ var g=ccx,now=performance.now();
+ if(!CALB.gotEvt){
+  if(now-CALB.startAt>1600&&CALB.step>=0){
+   if(!CAM.ready){$('calMsg').textContent=t('calNoTiltCam');
+    calDraw(g,-1,0);return}
+   if(!CALB.cam)calCamMode(); // camera becomes the sensor: feed-only calibration
+   calCamTick(dt,g);return}
+  $('calMsg').textContent=t('calNeutral');
+  calDraw(g,-1,0);return}
+ if(CALB.capt&&now>CALB.capt+700&&!CALB.locked){ // let the hand settle, then
+  CALB.locked=1;CALB.g0=CALB.mg;CALB.b0=CALB.mb;CALB.pmg=CALB.mg;CALB.pmb=CALB.mb}
+ if(CALB.step<0||CALB.step>=5){calDraw(g,CALB.step,0);return}
+ var dx=CALB.mg-CALB.g0,dy=CALB.mb-CALB.b0,
+  mx=CX+dx/15*CR,my=CX+dy/15*CR,
+  rr=Math.hypot(mx-CX,my-CX),lim=CR*1.4;
+ if(rr>lim){mx=CX+(mx-CX)*lim/rr;my=CX+(my-CX)*lim/rr}
+ var vdeg=(Math.abs(CALB.mg-CALB.pmg)+Math.abs(CALB.mb-CALB.pmb))/Math.max(dt,0.004);
+ CALB.pmg=CALB.mg;CALB.pmb=CALB.mb;
+ CALB.mvx+=(vdeg-CALB.mvx)*0.25;
+ if(CALB.step<4){
+  var st=CALB.step,tgt=CALDIR[st],
+   tx=CX+tgt.tx*CR,ty=CX+tgt.ty*CR, // square canvas: centre is (CX,CX)
+   d=Math.hypot(mx-tx,my-ty);
+  if(d<17&&CALB.mvx<40){ // in the target and at rest: sample and hold
+   CALB.hold+=dt;CALB.accG+=dx;CALB.accB+=dy;CALB.accN++;
+   if(CAM.ready){CALB.fx+=CAM.fdx;CALB.fy+=CAM.fdy;CALB.fn++}
+   $('calMsg').textContent=t('calHold')+Math.min(1,CALB.hold/0.55).toFixed(1)}
+  else{CALB.hold*=Math.max(0,1-dt*4);$('calMsg').textContent=t('calMoveRing')}
+  if(CALB.hold>=0.55){
+   CALS.dg.push(CALB.accG/CALB.accN);CALS.db.push(CALB.accB/CALB.accN);
+   CALS.tx.push(tgt.tx);CALS.ty.push(tgt.ty);
+   CALS.fx.push(CALB.fn?CALB.fx/CALB.fn:0);CALS.ok.push(CALB.fn>0);
+   CALB.step++;CALB.hold=0;CALB.accG=CALB.accB=CALB.accN=0;CALB.fx=CALB.fy=CALB.fn=0;
+   $('calMsg').textContent=t('calGot')+(CALB.step<4?t('calNextTilt'):t('calLastFlat'))}
+  calDraw(g,CALB.step,d<17&&CALB.mvx<40)}
+ else{ // still-centre step: noise floor of this device
+  var d0=Math.hypot(mx-CX,my-CX);
+  if(d0<20&&CALB.mvx<25){CALB.hold+=dt;CALB.rsum+=CALB.mvx*dt;CALB.rn+=dt;
+   $('calMsg').textContent=t('calMeas')+Math.min(1,CALB.hold/1.3).toFixed(1)}
+  else{CALB.hold*=Math.max(0,1-dt*4);$('calMsg').textContent=t('calCenterRing')}
+  calDraw(g,4,d0<20&&CALB.mvx<25);
+  if(CALB.hold>=1.3){CALB.noise=clamp(CALB.rsum/Math.max(CALB.rn,0.3),0.2,4);calFinish()}
+ }}
+function calCamMode(){ // no gyro on this device: the camera itself is the
+ CALB.cam=1;CALB.step=0;CALB.cmx=0;CALB.fs=0;CALB.ft=0;CALB.mot=0; // sensor.
+ CALS={fx:[],ok:[]}; // Two guided pans: which way frame-flow goes when the
+ $('calTxt').textContent=t('calFeedIntro');
+ $('calMsg').textContent=t('calTurn')+t(CAMCAL[0].n)}
+function calCamTick(dt,g){
+ var tgt=CAMCAL[CALB.step],now=performance.now();
+ if(CALB.done){calDraw(g,2,0);return} // after the result: idle canvas, no reads
+ if(now<CALB.got){$('calMsg').textContent=t('calGotReady')+t(tgt.n);
+  calDraw(g,CALB.step,0);return} // hold the confirmation a beat before prompting
+ if(!CALB.mot)CALB.mot=now;
+ if(CAM.lost>0.5){$('calMsg').textContent=t('calLost');calDraw(g,CALB.step,0);return}
+ CALB.cmx+=CAM.fdx*2.6;CALB.cmx*=Math.max(0,1-dt*0.7); // integrate own frame
+ if(Math.abs(CAM.fdx)>0.45){CALB.fs+=CAM.fdx;CALB.ft++;CALB.mot=now} // flow
+ if(now-CALB.mot>5000&&CALB.ft<4){CALB.cmx=0; // no camera motion at all:
+  $('calMsg').textContent=tt('calNeedTurn',{d:t(tgt.n)});
+  calDraw(g,CALB.step,0);return}
+ var amt=Math.min(Math.abs(CALB.cmx),CR*1.4),ing=amt>CR-20;
+ $('calMsg').textContent=t('calTurn')+t(tgt.n)+'… '+Math.min(1,amt/CR).toFixed(1);
+ calDraw(g,CALB.step,ing);
+ if(amt>=CR){ // turned far enough: log mean flow sign for this commanded dir
+  CALS.fx.push(CALB.ft?CALB.fs/CALB.ft:0);CALS.ok.push(CALB.ft>=4);
+  CALB.step++;CALB.cmx=0;CALB.fs=0;CALB.ft=0;
+  if(CALB.step>=2)calFinishCam();
+  else{CALB.got=performance.now()+900;
+   $('calMsg').textContent=t('calGot')+t('calGotTurn')+t(CAMCAL[CALB.step].n)}}
+}
+function calFinishCam(){
+ // r.dx from the tracker is NEGATED content displacement: facing the commanded
+ // tx sends flow WITH tx on a normal feed, against it on a mirrored one.
+ var fxc=0,fabs=0,nf=0,i;
+ for(i=0;i<CALS.fx.length;i++)if(CALS.ok[i]&&i<2){
+  fxc+=CALS.fx[i]*CAMCAL[i].tx;fabs+=Math.abs(CALS.fx[i]*CAMCAL[i].tx);nf++}
+ if(nf>=2&&fabs>0.15)CAL.mirror=fxc<-fabs*0.3?1:0;
+ calSave();
+ CALB.done=1;CALB.step=2;
+ $('calGo').textContent=t('btnClose');
+ $('calTxt').textContent=t('calFeedSaved');
+ $('calMsg').textContent=nf>=2&&fabs>0.15?
+  t('resFeed')+(CAL.mirror?t('resMirrored'):t('resNormal'))+t('resKeep'):
+  t('resNoMot')}
+function calFinish(){
+ // derive the map from the four guided gestures: the axis that actually drove
+ // each screen direction wins; swap only if it is clearly the better fit.
+ var sNS=0,sS=0,dxNS=0,dyNS=0,fxc=0,fabs=0,nf=0,i,
+  dg,db,tx,ty,swap,gx,gy;
+ for(i=0;i<4;i++){dg=CALS.dg[i];db=CALS.db[i];tx=CALS.tx[i];ty=CALS.ty[i];
+  sNS+=Math.abs(dg*tx)+Math.abs(db*ty);
+  sS+=Math.abs(db*tx)+Math.abs(dg*ty)}
+ swap=sS>sNS*1.25;
+ for(i=0;i<4;i++){dg=CALS.dg[i];db=CALS.db[i];tx=CALS.tx[i];ty=CALS.ty[i];
+  gx=swap?db:dg;gy=swap?dg:db;
+  dxNS+=gx*tx;dyNS+=gy*ty;
+  if(CALS.ok[i]){fxc+=CALS.fx[i]*tx;fabs+=Math.abs(CALS.fx[i]*tx);nf++}}
+ CAL.sx=dxNS>=0?1:-1;CAL.sy=dyNS>=0?1:-1;CAL.swap=swap;
+ CAL.noise=CALB.noise||0.8;
+ if(nf>=2&&fabs>0.15)CAL.mirror=fxc>fabs*0.3?1:0;
+ calSave();
+ GY.px=null;GY.ix=GY.iy=0;GY.stillT=0;GY.nz=CAL.noise;
+ CALB.done=1;CALB.step=5;
+ $('calGo').textContent=t('btnClose');
+ $('calTxt').textContent=t('calSaved');
+ $('calMsg').textContent=t('resAxes')+' '+t('resA')+(CAL.sx>0?'+':'-')+' '+t('resB')+(CAL.sy>0?'+':'-')+
+  ' '+(CAL.swap?t('resSwapped'):t('resStandard'))+
+  (nf>=2?' \u00b7 '+t('resFeedL')+(CAL.mirror?t('resMirrored'):t('resNormal')):'')+
+  ' \u00b7 '+t('resNoise')+CAL.noise.toFixed(1)}
+function calDraw(g,step,ing){
+ g.clearRect(0,0,CC,CC);
+ var dirs=CALB.cam?CAMCAL:CALDIR,nr=dirs.length,i,x,y;
+ g.strokeStyle='rgba(216,201,160,.25)';g.lineWidth=1;
+ g.beginPath();g.arc(CX,CX,CR,0,TAU);g.stroke();
+ for(i=0;i<nr;i++){x=CX+dirs[i].tx*CR;y=CX+(dirs[i].ty||0)*CR;
+  if(i<step){g.strokeStyle='rgba(159,196,111,.5)';g.lineWidth=2}
+  else if(i===step){var pu=0.6+0.4*Math.sin(performance.now()/220);
+   g.strokeStyle='rgba(212,169,74,'+pu+')';g.lineWidth=3}
+  else{g.strokeStyle='rgba(150,140,120,.3)';g.lineWidth=1.5}
+  g.beginPath();g.arc(x,y,26,0,TAU);g.stroke()}
+ // center target: only meaningful for the still step, drawn faint always
+ g.strokeStyle=step===4?'rgba(212,169,74,.8)':'rgba(150,140,120,.18)';
+ g.lineWidth=step===4?3:1.5;g.beginPath();g.arc(CX,CX,20,0,TAU);g.stroke();
+ if(CALB.cam){ // flow-integration progress + honest marker: it runs to the
+  if(step>=0&&step<2){ // side the feed shows the pan -- a mirrored feed pulls
+   var amt=Math.min(Math.abs(CALB.cmx),CR*1.4); // it the other way; that IS
+   g.strokeStyle='#9fc46f';g.lineWidth=3;g.beginPath(); // the measurement
+   g.arc(CX+dirs[step].tx*CR,CX,26,-Math.PI/2,-Math.PI/2+TAU*Math.min(1,amt/CR));
+   g.stroke();
+   g.strokeStyle=ing?'#9fc46f':'#d88a5a';g.lineWidth=2;
+   g.beginPath();g.arc(CX+clamp(CALB.cmx,-CR*1.4,CR*1.4),CX,7,0,TAU);g.stroke();
+   g.moveTo(CX+CALB.cmx-12,CX);g.lineTo(CX+CALB.cmx+12,CX);g.stroke()}
+  return}
+ if(CALB.hold>0&&step>=0&&step<=4){ // progress ring closes around the target
+  var px2,py2;
+  if(step<4){px2=CX+CALDIR[step].tx*CR;py2=CX+CALDIR[step].ty*CR}
+  else{px2=CX;py2=CX}
+  g.strokeStyle='#9fc46f';g.lineWidth=3;g.beginPath();
+  g.arc(px2,py2,26,-Math.PI/2,-Math.PI/2+TAU*Math.min(1,CALB.hold/(step<4?0.55:1.3)));
+  g.stroke()}
+ if(!CALB.gotEvt||step<0){return}
+ // raw marker: exactly what the sensor says, no filters -- the user drives it
+ var mx=CX+clamp((CALB.mg-CALB.g0)/15*CR,-CR*1.4,CR*1.4),
+  my=CX+clamp((CALB.mb-CALB.b0)/15*CR,-CR*1.4,CR*1.4);
+ g.strokeStyle=ing?'#9fc46f':'#d88a5a';g.lineWidth=2;
+ g.beginPath();g.arc(mx,my,7,0,TAU);g.stroke();
+ g.beginPath();g.moveTo(mx-12,my);g.lineTo(mx+12,my);
+ g.moveTo(mx,my-12);g.lineTo(mx,my+12);g.stroke()}
+</script>
+</body>
+</html>
