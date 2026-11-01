@@ -55,11 +55,14 @@ border:1px solid #37301f;border-radius:8px;padding:12px 16px;text-align:left}
 .ok{color:#9fc46f}.warn{color:#d8a24a}
 #pause,#win,#calb,#opts,#ctls,#lang{display:none}
 /* the controls page is long on purpose - it carries the full help AND the
- tuning tree - so the overlay itself scrolls instead of clipping. */
-#ctls{justify-content:flex-start;overflow-y:auto}
+ tuning tree - and the wizard, the options page and the language grid can
+ all outgrow a landscape phone, so these overlays scroll instead of clipping
+ (touch-action:auto re-enables panning inside a body that set touch-action
+ :none; without it the scrollbar could not be dragged by finger). */
+#ctls,#calb,#opts,#lang{justify-content:flex-start;overflow-y:auto;touch-action:auto}
 /* the page itself scrolls, so a tab panel must not grow its own inner
  scrollbar too - one scrollbar for the whole page, never nested */
-#ctls .gx{max-height:none;overflow:visible}
+#ctls .gx,#opts .gx{max-height:none;overflow:visible}
 #ctlTab button{margin:0 2px}
 .gx[hidden]{display:none}
 .gx .sl{grid-column:1/-1;display:flex;align-items:center;gap:10px}
@@ -481,7 +484,7 @@ hintCamOn:'cámara activa: apunta a una escena con textura · mueve el dispositi
 hintTilt:'Inclina el dispositivo suavemente · pulsa C para recentrar',recCam:'cámara recentrada: mantén el dispositivo quieto',recGyro:'recentrado: mantén el dispositivo neutral',tiltDeny:'permiso de inclinación denegado',noTilt:'SIN SENSOR DE INCLINACIÓN',gyroOn:'INCLINACIÓN: SÍ (C=CENTRAR)',
 sumFmt:'semilla «{s}» nivel {n} ({w}×{h})',lTime:'tiempo',lStars:'estrellas',lFalls:'caídas',lSeed:'semilla',
 winDone:'NIVEL {n} COMPLETADO',winBest:': ¡NUEVO RÉCORD!',wReplay:'¡repetible!',
-camOn:'CÁMARA: ON (C=CENTRAR)',camPrefix:'CÁMARA: ',camFront:'CAM: FRONTAL',camBack:'CAM: TRASERA',camFrontTap:'CAM: FRONTAL (TOQUE=TRASERA)',camBackTap:'CAM: TRASERA (TOQUE=FRONTAL)',camHintP:'cámara: ',
+camOn:'CÁMARA: SÍ (C=CENTRAR)',camPrefix:'CÁMARA: ',camFront:'CAM: FRONTAL',camBack:'CAM: TRASERA',camFrontTap:'CAM: FRONTAL (TOQUE=TRASERA)',camBackTap:'CAM: TRASERA (TOQUE=FRONTAL)',camHintP:'cámara: ',
 cfNoCam:'CÁMARA NO ENCONTRADA',cfNoCamA:'otra app o controlador la tiene ocupada',cfPlay:'REPRODUCCIÓN BLOQUEADA',cfPlayA:'el navegador negó la vista previa de la cámara',cfHttps:'REQUIERE HTTPS',cfHttpsA:'abre el juego en una dirección https o localhost',cfNoApi:'NO COMPATIBLE',cfNoApiA:'este navegador no tiene API de cámara',cfDenied:'ACCESO DENEGADO',cfDeniedA:'permite la cámara en los permisos del sitio del navegador',cfErr:'FALLO EN LA CÁMARA',cfErrA:'la solicitud de cámara falló',cfNoSig:'SIN SEÑAL',cfNoSigA:'la cámara no dio fotogramas; ¿está en uso en otra parte?',
 calHoldStart:'Sujeta el dispositivo como cuando juegas y pulsa EMPEZAR.',calNeutral:'SUJETA EL DISPOSITIVO NEUTRAL Y QUIETO',calNoTiltCam:'NO HAY SENSOR DE INCLINACIÓN EN ESTE DISPOSITIVO: activa la CÁMARA y ejecuta CALIBRAR para ajustar solo la señal de vídeo.',calHold:'MANTÉN QUIETO… ',calMoveRing:'MUEVE EL PUNTO AL ANILLO BRILLANTE',calGot:'LISTO — ',calNextTilt:'SIGUIENTE: INCLINA HACIA EL NUEVO ANILLO',calLastFlat:'ÚLTIMO PASO: DÉJALO PLANO Y QUIETO',calMeas:'MIDIENDO RUIDO EN REPOSO… ',calCenterRing:'MANTÉN EL PUNTO EN EL ANILLO CENTRAL',calFeedIntro:'Aquí no hay sensor de inclinación: calibración solo de vídeo. Aprende si la imagen de tu cámara está espejada.',calTurn:'GIRA LENTAMENTE A ',calGotReady:'LISTO — PREPÁRATE: GIRA LENTAMENTE A ',calLost:'CÁMARA PERDIDA: APUNTA A UNA ESCENA TEXTURIZADA Y CLARA',calNeedTurn:'NECESITO MOVIMIENTO DE CÁMARA: GIRA LENTAMENTE A {d} (o agita la mano frente a la vista y luego GIRA)',calGotTurn:'SIGUIENTE: GIRA LENTAMENTE A ',calFeedSaved:'Calibración de vídeo guardada para este dispositivo.',calSaved:'Calibración guardada para este dispositivo.',
 resFeed:'VÍDEO: ',resMirrored:'ESPEJADO',resNormal:'NORMAL',resKeep:' — CONTROLES SIN CAMBIOS',resNoMot:'NO HUBO BASTANTE MOVIMIENTO DE CÁMARA: EL AJUSTE DE VÍDEO NO CAMBIÓ',resAxes:'EJES',resA:'A:',resB:'B:',resSwapped:'INTERCAMBIADOS',resStandard:'ESTÁNDAR',resFeedL:'VÍDEO:',resNoise:'RUIDO:',
@@ -490,7 +493,7 @@ langSub:'Elige tu idioma: se recordará para la próxima y podrás cambiarlo des
 },
 pt:{
 titleT:'Bola de Cristal em um Labirinto Inclinado',
-btnPlay:'JOGAR',btnOptions:'SOM E GRÁFICOS',btnControls:'CONTROLES',btnGyro:'USAR GIRONÔMETRO',btnCam:'USAR CÂMERA',btnHome:'INÍCIO',btnMenu:'MENU',btnResume:'CONTINUAR',btnRestart:'REINICIAR FASE',btnCal:'CALIBRAR',btnOptions2:'OPÇÕES',btnClose:'FECHAR',btnStart:'INICIAR',btnCancel:'CANCELAR',btnNext:'PRÓXIMA FASE',btnReplay:'REPETIR',btnLang:'IDIOMA',
+btnPlay:'JOGAR',btnOptions:'SOM E GRÁFICOS',btnControls:'CONTROLES',btnGyro:'USAR GIROSCÓPIO',btnCam:'USAR CÂMERA',btnHome:'INÍCIO',btnMenu:'MENU',btnResume:'CONTINUAR',btnRestart:'REINICIAR FASE',btnCal:'CALIBRAR',btnOptions2:'OPÇÕES',btnClose:'FECHAR',btnStart:'INICIAR',btnCancel:'CANCELAR',btnNext:'PRÓXIMA FASE',btnReplay:'REPETIR',btnLang:'IDIOMA',
 hPause:'PAUSADO',hWin:'FASE CONCLUÍDA',hOpts:'OPÇÕES',hSound:'SOM',hGraphics:'GRÁFICOS',hControls:'CONTROLES',hTune:'AJUSTE CADA CONTROLE',hHelp:'COMO CADA CONTROLE FUNCIONA',hCal:'CALIBRAÇÃO',hLang:'IDIOMA',
 menuSub:'Guie a bola de cristal por labirintos de madeira gerados proceduralmente: buracos, água, gelo, esteiras, ventiladores, tábuas que esfarelam e barreiras móveis. Cada fase vem da sua semente.',
 seedPh:'SEMENTE',lvStart:'começar na fase',diceTip:'Semente aleatória',volume:'volume',
@@ -500,14 +503,14 @@ fxNote:'O jogo inteiro é desenhado ao vivo por código, sem arte pré-pronta. E
 fxPar:'Profundidade 3D e faces das paredes',fxShadow:'Sombras projetadas',fxCaustic:'Poças de luz e cáusticas',fxSpec:'Brilhos especulares',fxWater:'Animação da água',fxRefl:'Reflexos da sala (precisa da câmera ligada)',
 resLabel:'resolução',resFull:'Completa (nativa)',resHigh:'Alta (75%)',resMed:'Média (66%)',resLow:'Baixa (50%)',
 infoMax:'Tudo ligado na resolução completa: o espetáculo completo da bola de cristal.',infoHigh:'Todos os efeitos, resolução intacta; só o reflexo da sala e as poças de luz ficam desligados.',infoMed:'Tabuleiro 3D completo com profundidade e sombras; efeitos de luz desligados, resolução 66%.',infoLow:'Tabuleiro plano visto de cima, sem efeitos, resolução 50%: feito para dispositivos antigos.',infoCustom:'Perfil personalizado: exatamente os efeitos que você marcou.',
-tabCam:'CÂMERA',tabGyro:'GIRONÔMETRO',tabKey:'TECLAS · CONTROLE · MOUSE · TOQUE',
+tabCam:'CÂMERA',tabGyro:'GIROSCÓPIO',tabKey:'TECLAS · CONTROLE · MOUSE · TOQUE',
 noteCam:'Vale enquanto USAR CÂMERA conduz o jogo. A câmera desloca a bola de cristal acompanhando a imagem; estes ajustes corrigem para onde a imagem se move.',
-noteGyro:'Vale enquanto USAR GIRONÔMETRO conduz o jogo. O assistente CALIBRAR abaixo já aprende seus eixos; estes são os seus ajustes pessoais por cima.',
+noteGyro:'Vale enquanto USAR GIROSCÓPIO conduz o jogo. O assistente CALIBRAR abaixo já aprende seus eixos; estes são os seus ajustes pessoais por cima.',
 noteKey:'Vale para teclado, analógico do controle, arrasto de mouse e de toque ao mesmo tempo. Aqui não há ponto neutro de onde derivar, então não há antidrift: só eixos e ganho.',
 flipX:'Inverter X — trocar esquerda/direita',flipYud:'Inverter Y — trocar cima/baixo',flipYfb:'Inverter Y — trocar frente/trás',antiDrift:'Antidrift — reequilibra o ponto neutro enquanto você fica parado',sensLabel:'Sensibilidade',calWizard:'CALIBRAR: assistente de um minuto para este dispositivo',
 helpCam:'<b>Direção pela câmera:</b> aperte «USAR CÂMERA», aponte a câmera traseira ou frontal para qualquer cena com textura (mesa, sala, sua mão). Inclinar o dispositivo desloca a cena e a bola de cristal acompanha o deslocamento; a moldura pequena no canto espelha a visão. «CAM:» alterna frontal/traseira. Não é preciso detalhe nem resolução; pouca luz e paredes lisas acompanham mal. Aperte C para recentrar; a moldura vermelha significa «perdida».',
 helpLight:'<b>Luz:</b> com a câmera ligada, o jogo localiza a lâmpada ou a janela da sua sala e joga a sombra da bola de cristal para o lado oposto; a bola de cristal reflete a própria sala (recalculado cerca de uma vez por segundo, então sai de graça).',
-helpTilt:'<b>Sensor de inclinação:</b> aperte «USAR GIRONÔMETRO» e deixe o dispositivo mais ou menos plano. Enquanto você fica parado, o jogo reequilibra o ponto neutro sozinho; aperte C para forçar, ou CALIBRAR (nas abas CÂMERA e GIRONÔMETRO acima) para um assistente de um minuto que aprende os eixos do seu dispositivo, o ruído e o espelho da câmera: fica salvo, todo jogador deve sentir o mesmo jogo.',
+helpTilt:'<b>Sensor de inclinação:</b> aperte «USAR GIROSCÓPIO» e deixe o dispositivo mais ou menos plano. Enquanto você fica parado, o jogo reequilibra o ponto neutro sozinho; aperte C para forçar, ou CALIBRAR (nas abas CÂMERA e GIROSCÓPIO acima) para um assistente de um minuto que aprende os eixos do seu dispositivo, o ruído e o espelho da câmera: fica salvo, todo jogador deve sentir o mesmo jogo.',
 helpKey:'<b>Teclado:</b> setas / WASD inclinam o tabuleiro. R reinicia · C recalcula · M silencia · Esc menu.',
 helpTouch:'<b>Mouse / Toque:</b> segure e arraste na tela para inclinar na direção do arraste.',
 helpPad:'<b>Controle:</b> o analógico esquerdo inclina, Start = menu, A = continuar/reiniciar, botão guide = semente aleatória. O direcional aponta a bolinha do menu.',
@@ -520,7 +523,7 @@ hintCamOn:'câmera ligada: aponte para uma cena com textura · mova o dispositiv
 hintTilt:'Incline o dispositivo suavemente · aperte C para recentrar',recCam:'câmera recentrada: segure o dispositivo parado',recGyro:'recentrado: segure o dispositivo neutro',tiltDeny:'permissão de inclinação negada',noTilt:'SEM SENSOR DE INCLINAÇÃO',gyroOn:'INCLINAÇÃO: LIGADA (C=CENTRAR)',
 sumFmt:'semente «{s}» fase {n} ({w}×{h})',lTime:'tempo',lStars:'estrelas',lFalls:'quedas',lSeed:'semente',
 winDone:'FASE {n} CONCLUÍDA',winBest:': NOVO RECORDE!',wReplay:'repetível!',
-camOn:'CÂMERA: ON (C=CENTRAR)',camPrefix:'CÂMERA: ',camFront:'CAM: FRONTAL',camBack:'CAM: TRASEIRA',camFrontTap:'CAM: FRONTAL (TOQUE=TRASEIRA)',camBackTap:'CAM: TRASEIRA (TOQUE=FRONTAL)',camHintP:'câmera: ',
+camOn:'CÂMERA: LIGADA (C=CENTRAR)',camPrefix:'CÂMERA: ',camFront:'CAM: FRONTAL',camBack:'CAM: TRASEIRA',camFrontTap:'CAM: FRONTAL (TOQUE=TRASEIRA)',camBackTap:'CAM: TRASEIRA (TOQUE=FRONTAL)',camHintP:'câmera: ',
 cfNoCam:'CÂMERA NÃO ENCONTRADA',cfNoCamA:'outro app ou driver a mantém ocupada',cfPlay:'REPRODUÇÃO BLOQUEADA',cfPlayA:'o navegador recusou a prévia da câmera',cfHttps:'PRECISA DE HTTPS',cfHttpsA:'abra o jogo num endereço https ou localhost',cfNoApi:'NÃO SUPORTADO',cfNoApiA:'este navegador não tem API de câmera',cfDenied:'ACESSO NEGADO',cfDeniedA:'permita a câmera nas permissões do site do navegador',cfErr:'FALHA NA CÂMERA',cfErrA:'o pedido de câmera falhou',cfNoSig:'SEM SINAL',cfNoSigA:'a câmera não enviou quadros; está em uso em outro lugar?',
 calHoldStart:'Segure o dispositivo como você joga e aperte INICIAR.',calNeutral:'SEGURE O DISPOSITIVO NEUTRO E PARADO',calNoTiltCam:'NÃO HÁ SENSOR DE INCLINAÇÃO NESTE DISPOSITIVO: ligue a CÂMERA e rode CALIBRAR para ajustar só o vídeo.',calHold:'FIQUE PARADO… ',calMoveRing:'MOVE O PONTO ATÉ O ANEL BRILHANTE',calGot:'PRONTO — ',calNextTilt:'PRÓXIMO: INCLINE PARA O NOVO ANEL',calLastFlat:'ÚLTIMO PASSO: DEITE NA MESA E FIQUE PARADO',calMeas:'MEDINDO RUÍDO DE REPOUSO… ',calCenterRing:'SEGURE O PONTO NO ANEL CENTRAL',calFeedIntro:'Sem sensor de inclinação aqui: calibração só de vídeo. Ela aprende se a imagem da sua câmera está espelhada.',calTurn:'VIRE DEVAGAR PARA ',calGotReady:'PRONTO — PREPARE-SE: VIRE DEVAGAR PARA ',calLost:'CÂMERA PERDIDA: APONTE PARA UMA CENA TEXTURIZADA E ILUMINADA',calNeedTurn:'PRECISO DE MOVIMENTO DA CÂMERA: VIRE DEVAGAR PARA {d} (ou acene a mão na frente da visão e depois VIRE)',calGotTurn:'PRÓXIMO: VIRE DEVAGAR PARA ',calFeedSaved:'Calibração de vídeo salva para este dispositivo.',calSaved:'Calibração salva para este dispositivo.',
 resFeed:'VÍDEO: ',resMirrored:'ESPELHADO',resNormal:'NORMAL',resKeep:' — CONTROLES SEM MUDANÇA',resNoMot:'MOVIMENTO DA CÂMERA INSUFICIENTE: O AJUSTE DE VÍDEO NÃO MUDOU',resAxes:'EIXOS',resA:'A:',resB:'B:',resSwapped:'TROCADOS',resStandard:'PADRÃO',resFeedL:'VÍDEO:',resNoise:'RUÍDO:',
@@ -590,9 +593,9 @@ helpKey:'<b>键盘：</b>方向键 / WASD 倾斜棋盘。R 重开 · C 重新计
 helpTouch:'<b>鼠标 / 触屏：</b>按住并向拖动方向倾斜。',
 helpPad:'<b>手柄：</b>左摇杆倾斜，Start = 菜单，A = 继续/重开，guide 键 = 随机种子。十字键可对准菜单上的小球。',
 helpFall:'<b>掉进坑里了？</b>你会在最近的旗帜检查点重生。收集星星得分；到达金色大门即通关。',
-calIntro:'针对*你的*设备调节倾斜/摄像头。按屏幕提示操作；结果会保存，任何设备玩起来手感都一样。',
+calIntro:'针对你自己的设备调节倾斜/摄像头。按屏幕提示操作；结果会保存，任何设备玩起来手感都一样。',
 calIntroW:'针对你的设备调节倾斜与摄像头。按提示操作；结果会保存，任何设备玩起来手感都一样。',
-hudLv:'第',hudSeed:'种子码',hudBest:'最佳',
+hudLv:'关卡',hudSeed:'种子码',hudBest:'最佳',
 hintMain:'拖动屏幕 · 方向键/WASD · 手柄 · R 重开 · Esc 菜单',
 hintCamOn:'摄像头已开：对准有纹理的实景 · 转设备来操控 · C 对中',
 hintTilt:'轻轻倾斜设备 · 按 C 对中',recCam:'摄像头已对中——请保持设备静止',recGyro:'已对中——请保持设备水平静止',tiltDeny:'倾斜权限被拒绝',noTilt:'无倾斜传感器',gyroOn:'倾斜控制: 开（C=对中）',
@@ -600,7 +603,7 @@ sumFmt:'种子“{s}” 第 {n} 关（{w}×{h}）',lTime:'用时',lStars:'星星
 winDone:'第 {n} 关完成',winBest:'——新纪录！',wReplay:'可重玩！',
 camOn:'摄像头: 开（C=对中）',camPrefix:'摄像头: ',camFront:'摄像头: 前置',camBack:'摄像头: 后置',camFrontTap:'摄像头: 前置（点按=后置）',camBackTap:'摄像头: 后置（点按=前置）',camHintP:'摄像头: ',
 cfNoCam:'未找到摄像头',cfNoCamA:'另一个应用或驱动正占用它',cfPlay:'预览被阻止',cfPlayA:'浏览器拒绝了摄像头预览',cfHttps:'需要 HTTPS',cfHttpsA:'请用 https 或 localhost 地址打开游戏',cfNoApi:'不支持',cfNoApiA:'此浏览器没有摄像头接口',cfDenied:'访问被拒绝',cfDeniedA:'请在浏览器的站点权限里允许摄像头',cfErr:'摄像头请求失败',cfErrA:'摄像头请求失败',cfNoSig:'无信号',cfNoSigA:'摄像头没有输出画面；是否已被别处占用？',
-calHoldStart:'按你平时玩的方式拿好设备，然后按“开始”。',calNeutral:'请保持设备水平静止',calNoTiltCam:'这台设备没有倾斜传感器——请先开启摄像头，再运行“校准”，只调校摄像头画面。',calHold:'请保持静止… ',calMoveRing:'把圆点移进发光的圆环',calGot:'很好—— ',calNextTilt:'下一步：朝新圆环的方向倾斜',calLastFlat:'最后一步：把设备放平并保持静止',calMeas:'正在测量静止噪声… ',calCenterRing:'请把圆点保持在中心圆环内',calFeedIntro:'这里没有倾斜传感器——只校摄像头画面。系统将判断你的摄像头画面是否镜像。',calTurn:'慢慢转向',calGotReady:'很好——准备：慢慢转向',calLost:'摄像头丢失——请对准明亮且有纹理的场景',calNeedTurn:'需要摄像头画面移动——请慢慢转向{d}（或在画面前挥手，然后再转向）',calGotTurn:'下一步：慢慢转向',calFeedSaved:'此设备的画面校准备已保存。',calSaved:'此设备的校准备已保存。',
+calHoldStart:'按你平时玩的方式拿好设备，然后按“开始”。',calNeutral:'请保持设备水平静止',calNoTiltCam:'这台设备没有倾斜传感器——请先开启摄像头，再运行“校准”，只调校摄像头画面。',calHold:'请保持静止… ',calMoveRing:'把圆点移进发光的圆环',calGot:'很好—— ',calNextTilt:'下一步：朝新圆环的方向倾斜',calLastFlat:'最后一步：把设备放平并保持静止',calMeas:'正在测量静止噪声… ',calCenterRing:'请把圆点保持在中心圆环内',calFeedIntro:'这里没有倾斜传感器——只校摄像头画面。系统将判断你的摄像头画面是否镜像。',calTurn:'慢慢转向',calGotReady:'很好——准备：慢慢转向',calLost:'摄像头丢失——请对准明亮且有纹理的场景',calNeedTurn:'需要摄像头画面移动——请慢慢转向{d}（或在画面前挥手，然后再转向）',calGotTurn:'下一步：慢慢转向',calFeedSaved:'此设备的画面校准已保存。',calSaved:'此设备的校准已保存。',
 resFeed:'画面: ',resMirrored:'镜像',resNormal:'正常',resKeep:'——操作保持不变',resNoMot:'摄像头移动不足——画面设置未更改',resAxes:'轴向',resA:'A:',resB:'B:',resSwapped:'已互换',resStandard:'标准',resFeedL:'画面:',resNoise:'噪声:',
 dL:'左',dU:'上',dR:'右',dD:'下',
 langSub:'选择你的语言——会被记住，之后也可在标题界面更改。'
@@ -911,11 +914,14 @@ function decorateLevel(L){
 }
 function levelSummary(L){return tt('sumFmt',{s:L.seed,n:L.idx,w:L.cw,h:L.ch})}
 // ---------- canvas, view, adaptive quality ----------
-var cv=$('cv'),ctx=cv.getContext('2d'),DW=0,DH=0,DPR=1,rScale=1,
+var cv=$('cv'),ctx=cv.getContext('2d'),DW=0,DH=0,DPR=1,rScale=1,SMALL=0,
  view={x:0,y:0,s:1};
 function resize(){
  DPR=Math.min(1.5,(window.devicePixelRatio||1));
  DW=Math.max(240,window.innerWidth|0);DH=Math.max(240,window.innerHeight|0);
+ // phone-class viewport (small logical screen - the high-DPI companions):
+ // fitView switches to the COVER rule there, see its comment
+ SMALL=Math.min(DW,DH)<=480?1:0;
  // the internal buffer: the player's resolution choice, times the engine's
  // automatic floor when the device cannot hold the frame rate
  rScale=Math.max(0.4,OPT.res*(DEGRADE?0.66:1));
@@ -984,8 +990,8 @@ window.addEventListener('keydown',function(e){
   else if(G.state==='pause')resumeGame();
   else if(G.state==='win')toMenu()}
  if(e.code==='KeyR'&&(G.state==='play'||G.state==='pause')){restartLevel()}
- if(e.code==='KeyC')calibrate();
- if(e.code==='KeyM')toggleMute();
+ if(e.code==='KeyC'&&!mbType())calibrate();
+ if(e.code==='KeyM'&&!mbType())toggleMute();
  if((e.code==='Space'||e.code==='Enter')&&G.state!=='play'&&!mbType()){
   mbActivate();e.preventDefault()} // confirm in any menu: aimed or default
  else if(e.code==='Enter'&&G.state==='menu'&&!CALB.on)startGame(); // Enter in the seed field
@@ -1027,7 +1033,7 @@ calLoad();
 //    applied with a smooth ramp (no jitter, no sticky onset);
 //  - double filtering: EMA here + the physics tilt lerp in step();
 //  - manual Center (C) = the Wii "set neutral" moment.
-var GY={px:null,py:null,pt:0,nz:0.8,pdg:0,pdb:0,stillT:0,ix:0,iy:0,seen:0};
+var GY={px:null,py:null,pt:0,nz:CAL.noise,pdg:0,pdb:0,stillT:0,ix:0,iy:0,seen:0};
 function softDZ(v,dz){var m=Math.abs(v);if(m<=dz)return 0;
  var u=clamp((m-dz)/(dz+2.2),0,1);u=u*u*(3-2*u);return v*u}
 // Sensor response is NON-linear: near neutral the gain is 0.4, so small
@@ -1097,7 +1103,7 @@ function gyroEnable(on){
    DeviceOrientationEvent.requestPermission().then(function(s){if(s==='granted')go();
     else $('hint').textContent=t('tiltDeny')}).catch(function(){});
   else go();
- }else{G.gyroOn=false;GY.px=null;GY.ix=GY.iy=0;GY.nz=0.8;GY.stillT=0;
+ }else{G.gyroOn=false;GY.px=null;GY.ix=GY.iy=0;GY.nz=CAL.noise;GY.stillT=0;
   G.tiltT={x:0,y:0};$('gyro').textContent=t('btnGyro');$('hint').textContent=G.hintT}}
 var lastBeta=45,lastGamma=0;
 window.addEventListener('deviceorientation',function(e){if(e.beta!=null){lastBeta=e.beta;lastGamma=e.gamma}});
@@ -1119,14 +1125,15 @@ function pollGamepad(){
  if(edge('guide',btn(8))&&G.state==='menu')$('seed').value=randSeed();
  if(Math.abs(ax)<.12)ax=0;if(Math.abs(ay)<.12)ay=0;
  // d-pad drives the menu marble exactly like the stick does
- var dxx=(btn(15)?1:0)-(btn(14)?1:0),dyy=(btn(12)?1:0)-(btn(13)?1:0);
+ var dxx=(btn(15)?1:0)-(btn(14)?1:0),dyy=(btn(13)?1:0)-(btn(12)?1:0);
  return{ax:ax,ay:ay,dxx:dxx,dyy:dyy}}
 // ---------- fixed-step physics ----------
 var lastHitSnd=0;
 // Haptics: the phone's vibration motor reproduces the marble's knock. Short and
 // subtle: a single pulse scaled by impact force, weak contacts skipped, minimum
-// gap so a roll along a wall is one soft buzz not a rattle. iOS Safari and
-// desktops have no Vibration API -- navigator.vibrate is absent, buz() no-ops.
+// gap so a roll along a wall is one soft buzz not a rattle. Vibration is
+// capability-detected: where navigator.vibrate is absent (desktops, older
+// iOS) buz() simply no-ops; modern iPhone buzzes like any other device.
 var VIB=typeof navigator!=='undefined'&&!!navigator.vibrate,lastVib=0;
 function buz(ms){
  if(!VIB||ms<4)return; // contacts softer than this are silent, not buzzed
@@ -1181,7 +1188,7 @@ function step(dt){
  B+=vx*dt;By+=vy*dt;
  // walls
  for(i=0;i<L.walls.length;i++){var w=L.walls[i];
-  if(B+w.r<w.x||B-w.r>w.x+w.w||By+w.r<w.y||By-w.r>w.y+w.h)continue;
+  if(B+r<w.x||B-r>w.x+w.w||By+r<w.y||By-r>w.y+w.h)continue;
   var hit=collideRect(B,By,vx,vy,r,w,rest);
   if(hit){B=hit.x;By=hit.y;vx=hit.vx;vy=hit.vy;
    if(hit.imp>110&&t-lastHitSnd>.09){if(t-lastHitSnd>.25)AU.wood(clamp(hit.imp/380,0,1));else AU.click(clamp(hit.imp/380,0,1));lastHitSnd=t}
@@ -1242,19 +1249,24 @@ function respawn(){var L=G.L,best=null,i;
 // device rolled right = ball rolls right. No gyroscope needed.
 var CAM={vs:null,vid:null,el:null,cv:null,ctx:null,W:80,H:60,vw:0,vh:0,gseq:0,
  prev:null,cur:null,px:null,predX:0,predY:0,pos:{x:0,y:0},
- varc:0,lost:0,acc:0,ready:false,tv:0,tc:null,wd:null,primed:false,
+ varc:0,lost:0,acc:0,ready:false,tv:0,tc:null,wd:null,primed:false,cgen:0,
  bx:0,by:0,stT:0,lx:0,ly:0,lightOK:false,lseen:0,fdx:0,fdy:0,pG:0,pB:0};
 // pure tracker: find integer offset (ox,oy) minimizing mean |cur-prev| over a
 // box of radius R centered on prediction (px,py). Region excludes margins so
 // every sampled pixel pair is always valid.
 function camTrack(cur,prev,W,H,px,py,R){
- var M=12,x,y,ox,oy,s,sx,sy,best=1e18,bx=0,by=0,n=0,
+ var M=12,x,y,ox,oy,s,sx,sy,best=1e18,bx=0,by=0,
+  // EXACT number of samples the inner loop takes: rows/cols every 2 px from
+  // M to <size-M. Floor would undercount when (H-2M) is odd (e.g. 80x45 for
+  // 16:9), inflating the mean cost ~10% and making good matches fail the
+  // quality gate.
+  n=Math.ceil((H-2*M)/2)*Math.ceil((W-2*M)/2),
   lo=Math.max(-M+1,px-R),hi=Math.min(M-1,px+R),
   lo2=Math.max(-M+1,py-R),hi2=Math.min(M-1,py+R);
  for(oy=lo2;oy<=hi2;oy++)for(ox=lo;ox<=hi;ox++){
   s=0;
   for(y=M;y<H-M;y+=2)for(x=M;x<W-M;x+=2)s+=Math.abs(cur[y*W+x]-prev[(y+oy)*W+x+ox]);
-  n=((H-2*M)>>1)*((W-2*M)>>1);s/=n;
+  s/=n;
   if(s<best){best=s;bx=ox;by=oy}}
  return{dx:bx,dy:by,cost:best};
 }
@@ -1300,7 +1312,10 @@ function camTick(dt){
   mrate=(dbg+dbc)/Math.max(tdt,0.02)}
  if(mrate<2&&CTLX.cam.ad&&performance.now()-GY.seen<500){
   CAM.stT+=tdt;
-  if(CAM.stT>0.35){CAM.bx+=(r.dx-CAM.bx)*0.1;CAM.by+=(r.dy-CAM.by)*0.1;
+  // only a CONFIRMED match feeds the bias: on a featureless wall ok is
+  // false and r.dx/r.dy are just where the search window happened to
+  // start - feeding those in invents a phantom bias
+  if(ok&&CAM.stT>0.35){CAM.bx+=(r.dx-CAM.bx)*0.1;CAM.by+=(r.dy-CAM.by)*0.1;
    if(CAM.bx>3)CAM.bx=3;if(CAM.bx<-3)CAM.bx=-3;
    if(CAM.by>3)CAM.by=3;if(CAM.by<-3)CAM.by=-3}}
  else CAM.stT=0;
@@ -1313,8 +1328,10 @@ function camTick(dt){
   CAM.predX=Math.max(-5,Math.min(5,r.dx));CAM.predY=Math.max(-5,Math.min(5,r.dy));
   CAM.fdx=r.dx;CAM.fdy=r.dy;CAM.lost=0} // RAW flow, for the calibrator
  else{CAM.lost=Math.min(1,CAM.lost+dt*2);CAM.predX=0;CAM.predY=0}
- CAM.pos.x*=Math.exp(CAM.lost?-4:0)*Math.exp(-0.6*dt);
- CAM.pos.y*=Math.exp(CAM.lost?-4:0)*Math.exp(-0.6*dt);
+ // lost is a graded 0..1 confidence, not a flag: a single missed frame
+ // must trim the accumulated slide proportionally, not collapse it to zero
+ CAM.pos.x*=Math.exp(-4*CAM.lost)*Math.exp(-0.6*dt);
+ CAM.pos.y*=Math.exp(-4*CAM.lost)*Math.exp(-0.6*dt);
  if(CAM.pos.x>34)CAM.pos.x=34;if(CAM.pos.x<-34)CAM.pos.x=-34;
  if(CAM.pos.y>26)CAM.pos.y=26;if(CAM.pos.y<-26)CAM.pos.y=-26;
  CAM.varc=v;
@@ -1384,7 +1401,7 @@ function camNudge(){var el=$('camT');if(el.hidden)return;
  if(G.state!=='play'&&G.state!=='pause')return;
  var s=view.s,mx=(G.bx-cam.x)*s+DW/2,my=(G.by-cam.y)*s+DH/2,rr=G.r*s+10,
   bl=el.className==='bl',w=146,h=83,
-  x=bl?6:DW-w-6,y=bl?DH-h-6:26;
+  x=bl?6:DW-w-6,y=bl?DH-h-26:26; // corners MUST match #camT / #camT.bl CSS
  if(mx+rr>x&&mx-rr<x+w&&my+rr>y&&my-rr<y+h){
   if(!CAM.tov){el.className=bl?'':'bl';CAM.tov=true}}
  else CAM.tov=false}
@@ -1397,7 +1414,10 @@ function camThumb(ok){
    dw=vw*sc,dh=vh*sc;
   tc.drawImage(CAM.vid,(96-dw)/2,(54-dh)/2,dw,dh)}catch(e){}
  tc.strokeStyle=ok?'#7ba428':'#a03030';tc.lineWidth=3;tc.strokeRect(1,1,94,52);
- tc.fillStyle='#c9a23f';tc.fillRect(48+CAM.pos.x*1.2-2,27-CAM.pos.y*1.2-2,4,4);
+ // 0.95 keeps the 4px dot inside the 96x54 frame for any clamped offset
+ // (pos is clamped to +-34/+-26; the old 1.2 ran the dot off the top/bottom
+ // edges exactly when the slide was biggest)
+ tc.fillStyle='#c9a23f';tc.fillRect(48+CAM.pos.x*0.95-2,27-CAM.pos.y*0.95-2,4,4);
 }
 function camGot(st){
  if(!G.camOn){if(st)st.getTracks().forEach(function(t){t.stop()});return}
@@ -1410,6 +1430,8 @@ function camStart(){
  if(!G.camOn)return;
  G.camFacing=G.camFacing||'user';
  CAM.ready=false;CAM.primed=false;
+ CAM.cgen++;CAM.tov=false; // new camera session: stale async answers must
+ // lose, and the preview-hop edge trigger starts fresh
  CAM.bx=CAM.by=0;CAM.stT=0;CAM.lightOK=false;REF.ok=false;REF.cv=null;REF.lut=null;REF.im=null;
  if(CAM.vs){CAM.vs.getTracks().forEach(function(t){t.stop()});CAM.vs=null}
  if(!window.isSecureContext){camFail(t('cfHttps'),t('cfHttpsA'));return}
@@ -1426,14 +1448,20 @@ function camStart(){
    $('hint').textContent=t('hintCamOn')});
  }
  var fr={width:{ideal:160},height:{ideal:120},facingMode:{ideal:G.camFacing}};
+ // rapid FRONT/BACK toggles: several getUserMedia can be in flight at once.
+ // Only the newest request may install a stream or report a failure; late
+ // answers from superseded requests get their tracks stopped instead.
+ var gen=CAM.cgen;
+ var got=function(st){if(gen!==CAM.cgen){if(st)st.getTracks().forEach(function(t){t.stop()});return}camGot(st)};
+ var fail=function(m,a){if(gen===CAM.cgen)camFail(m,a)};
  var again=function(){
-  try{navigator.mediaDevices.getUserMedia({video:true}).then(camGot,function(e){camFail(t('cfDenied'),t('cfDeniedA'))})}
-  catch(e){camFail(t('cfErr'),t('cfErrA'))}
+  try{navigator.mediaDevices.getUserMedia({video:true}).then(got,function(e){fail(t('cfDenied'),t('cfDeniedA'))})}
+  catch(e){fail(t('cfErr'),t('cfErrA'))}
  };
  try{
-  navigator.mediaDevices.getUserMedia({video:fr,audio:false}).then(camGot,again);
+  navigator.mediaDevices.getUserMedia({video:fr,audio:false}).then(got,again);
  }catch(e){again()}
- CAM.wd=setTimeout(function(){if(!CAM.ready&&G.camOn)camFail(t('cfNoSig'),t('cfNoSigA'))},6000);
+ CAM.wd=setTimeout(function(){if(!CAM.ready&&G.camOn&&gen===CAM.cgen)camFail(t('cfNoSig'),t('cfNoSigA'))},6000);
 }
 function camFail(msg,advice){
  if(CAM.wd){clearTimeout(CAM.wd);CAM.wd=null}
@@ -1495,8 +1523,13 @@ function fitView(){var L=G.L;
  //   is always fully covered and scrolling happens only along the
  //   overflowing axis. There is no zoom CAP: the exact fit is required
  //   even when it means upscaling the baked board past its texture size.
+ // - EXCEPTION, phone-class screens (SMALL): letterboxing a small screen
+ //   wastes most of it on margins, so the first rule does NOT apply -
+ //   always fit the LARGEST dimension instead (cover). The other axis
+ //   overflows and the camera pans: even the first level scrolls there.
  var sw=DW/L.W,sh=DH/L.H,s;
- if(L.W<=DW&&L.H<=DH)s=Math.min(sw,sh);
+ if(SMALL)s=Math.max(sw,sh);
+ else if(L.W<=DW&&L.H<=DH)s=Math.min(sw,sh);
  else if(L.W<=DW)s=sw;
  else if(L.H<=DH)s=sh;
  else s=Math.max(sw,sh);
@@ -1964,7 +1997,7 @@ function loadLevel(idx,seed){
  cam.x=L.start.x;cam.y=L.start.y;fitView();
  buildTextures(seed);bakeLevel(L);
  show('menu',false);show('pause',false);show('win',false);
- G.hintT=t('hintMain');
+ G.hintT=G.camOn?t('hintCamOn'):G.gyroOn?t('hintTilt'):t('hintMain');
  if(!G.gyroOn)$('hint').textContent=G.hintT;
  setHudTexts(L)}
 function startGame(){
@@ -2020,11 +2053,17 @@ function syncOpts(){ // reflect OPT into every widget that shows it
   max:t('infoMax'),high:t('infoHigh'),med:t('infoMed'),low:t('infoLow'),
   custom:t('infoCustom')}[OPT.gfx]||t('infoCustom')}
 function toggleMute(){AU.muted=OPT.muted=!AU.muted;optSave();
- if(!AU.muted){AU.init();AU.setVol(OPT.vol)}
+ if(!AU.muted){AU.init();AU.resume();AU.setVol(OPT.vol)}
  syncOpts()}
 function toMenu(skipPop){G.state='menu';show('menu',true);show('pause',false);show('win',false);
- if(skipPop){G.hs=0;if(location.hash)location.replace(location.href.split('#')[0])}
- else if(G.hs){G.hs=0;history.back()}} // drop our armed entry with the exit
+ // skipPop===true ONLY when the back gesture already consumed the armed
+ // entry (onBack). Anything else - including a click event reaching this
+ // handler directly as a truthy argument - must drop the entry itself,
+ // the same pushState/hash split as unarmIfIdle, or the next back press
+ // pops an orphan instead of leaving the page.
+ if(skipPop===true){G.hs=0;if(location.hash)location.replace(location.href.split('#')[0])}
+ else if(G.hs){G.hs=0;if(G.hm)history.back();
+  else if(location.hash)location.replace(location.href.split('#')[0])}} // drop our armed entry with the exit
 // Browser back = walk ONE interface layer down, always to whatever screen was
 // before it: wizard -> the page that opened it, options/controls -> their
 // parent, play -> pause, pause -> title. One armed entry is carried along;
@@ -2182,6 +2221,9 @@ function frame(ts){
   updView(dt);
   G.hudT-=dt;if(G.hudT<=0){G.hudT=0.3;if(G.L)setHudTexts(G.L)}}
  else if(!G.gyroOn){G.tiltT.x*=Math.pow(.001,dt);G.tiltT.y*=Math.pow(.001,dt);
+  // the key/d-pad ramp lives in klvl: if a key was released during a pause,
+  // resume must not inherit a half-second of phantom tilt from it
+  klvl[0]*=Math.pow(.001,dt);klvl[1]*=Math.pow(.001,dt);
   G.tilt.x*=Math.pow(.001,dt);G.tilt.y*=Math.pow(.001,dt)}
  if(CALB.on){calTick(dt);if(G.camOn)camTick(dt)} // wizard runs over menu/pause
  else if(G.state!=='play'&&G.camOn)camTick(dt); // menus are camera-steerable too
@@ -2316,8 +2358,9 @@ function calCamMode(){ // no gyro on this device: the camera itself is the
  $('calTxt').textContent=t('calFeedIntro');
  $('calMsg').textContent=t('calTurn')+t(CAMCAL[0].n)}
 function calCamTick(dt,g){
- var tgt=CAMCAL[CALB.step],now=performance.now();
  if(CALB.done){calDraw(g,2,0);return} // after the result: idle canvas, no reads
+ var tgt=CAMCAL[CALB.step],now=performance.now(); // only safe once not done:
+ // after calFinishCam, step is CAMCAL.length -> tgt would be undefined
  if(now<CALB.got){$('calMsg').textContent=t('calGotReady')+t(tgt.n);
   calDraw(g,CALB.step,0);return} // hold the confirmation a beat before prompting
  if(!CALB.mot)CALB.mot=now;
@@ -2398,7 +2441,8 @@ function calDraw(g,step,ing){
    g.stroke();
    g.strokeStyle=ing?'#9fc46f':'#d88a5a';g.lineWidth=2;
    g.beginPath();g.arc(CX+clamp(CALB.cmx,-CR*1.4,CR*1.4),CX,7,0,TAU);g.stroke();
-   g.moveTo(CX+CALB.cmx-12,CX);g.lineTo(CX+CALB.cmx+12,CX);g.stroke()}
+   var mcx=clamp(CALB.cmx,-CR*1.4,CR*1.4); // the tick follows the clamped dot, never runs off the canvas
+   g.moveTo(CX+mcx-12,CX);g.lineTo(CX+mcx+12,CX);g.stroke()}
   return}
  if(CALB.hold>0&&step>=0&&step<=4){ // progress ring closes around the target
   var px2,py2;
