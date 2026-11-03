@@ -2370,8 +2370,8 @@ function prepareLevel() {
   entityZ = q.depth * 0.5 + 12;
 
   ship = {
-    x: terrain.startPoint.x,
-    y: terrain.startPoint.y,
+    x: terrain.padX,
+    y: terrain.padTopY + SHIP_R + 1,
     vx: 0,
     vy: 0,
     angle: 0,
@@ -2379,7 +2379,7 @@ function prepareLevel() {
     maxFuel: terrain.maxFuel,
     r: SHIP_R,
     alive: true,
-    grounded: false,
+    grounded: true,
     thrusting: false
   };
 
@@ -2394,6 +2394,13 @@ function prepareLevel() {
   camera.dist = baseDistance();
   updateSeedInputs();
   updateHUD();
+
+  var n = terrain.astronauts.length;
+  showMsg(
+    "Lift off \u2014 rescue all " + n + " astronaut" + (n === 1 ? "" : "s") +
+    ", then land back on the pad",
+    9000
+  );
 }
 
 function loadLevel() {
@@ -2529,6 +2536,7 @@ function updateShip(dt) {
   if (ship.grounded) {
     if (keys.thrust && ship.fuel > 0) {
       ship.grounded = false;
+      hideMsg();
     } else {
       ship.vx = 0;
       ship.vy = 0;
@@ -2820,12 +2828,17 @@ function updateSeedInputs() {
   $("seedPause").value = s;
 }
 
-function showMsg(text) {
+function showMsg(text, ms) {
   var el = $("msg");
   el.textContent = text;
   el.style.opacity = 1;
   clearTimeout(msgTimer);
-  msgTimer = setTimeout(function() { el.style.opacity = 0; }, 1800);
+  msgTimer = setTimeout(function() { el.style.opacity = 0; }, ms || 1800);
+}
+
+function hideMsg() {
+  clearTimeout(msgTimer);
+  $("msg").style.opacity = 0;
 }
 
 function setState(s) {
