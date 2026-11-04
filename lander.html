@@ -262,6 +262,7 @@ var QUALITIES = {
     stars:60,
     texW:256,
     texH:160,
+    texBlur:1,
     seg:8,
     depth:42,
     shadows:0,
@@ -278,6 +279,7 @@ var QUALITIES = {
     stars:95,
     texW:512,
     texH:320,
+    texBlur:1,
     seg:12,
     depth:58,
     shadows:1,
@@ -292,8 +294,9 @@ var QUALITIES = {
     chunkCols:12,
     maxParticles:240,
     stars:140,
-    texW:512,
-    texH:320,
+    texW:768,
+    texH:480,
+    texBlur:0,
     seg:16,
     depth:72,
     shadows:1,
@@ -401,11 +404,28 @@ var Snd = {
     var d = this.noiseBuf.getChannelData(0);
     for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
 
-    // Every sound routes through this bus; the bus feeds the destination
-    // directly (dry, exactly like before) plus a cave convolution whose wet
-    // level is driven by how deep the ship is below the surface.
+    // Every sound routes through this bus into the master limiter (dry path,
+    // exactly like before but limited) plus a cave convolution whose wet
+    // level is driven by how deep the ship is in the level.
+    // Master limiter: source gains are raised for loudness; the limiter
+    // keeps the destination from hard-clipping even when thrust + crash +
+    // pickups overlap, and the reverb wet path runs through it too.
+    var out = ctx.destination;
+    if (ctx.createDynamicsCompressor) {
+      try {
+        var comp = ctx.createDynamicsCompressor();
+        comp.threshold.value = -8;
+        comp.knee.value = 4;
+        comp.ratio.value = 12;
+        comp.attack.value = 0.003;
+        comp.release.value = 0.15;
+        comp.connect(ctx.destination);
+        this.comp = comp;
+        out = comp;
+      } catch (e) {}
+    }
     var bus = ctx.createGain();
-    bus.connect(ctx.destination);
+    bus.connect(out);
     this.bus = bus;
     this.wet = null;
     this.revAmt = -1;
@@ -421,7 +441,7 @@ var Snd = {
         bus.connect(conv);
         conv.connect(damp);
         damp.connect(wet);
-        wet.connect(ctx.destination);
+        wet.connect(out);
         this.wet = wet;
       } catch (e) {}
     }
@@ -479,7 +499,7 @@ var Snd = {
     var t = this.ctx.currentTime;
     var g = this.thrustGain.gain;
     g.cancelScheduledValues(t);
-    g.linearRampToValueAtTime(on ? 0.10 : 0.0, t + 0.05);
+    g.linearRampToValueAtTime(on ? 0.16 : 0.0, t + 0.05);
   },
   blip: function(f0, f1, dur, type, vol) {
     if (!this.ready) return;
@@ -489,16 +509,16 @@ var Snd = {
     o.type = type || "sine";
     o.frequency.setValueAtTime(Math.max(1, f0), t);
     o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur);
-    g.gain.setValueAtTime(vol || 0.10, t);
+    g.gain.setValueAtTime(vol || 0.16, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(g);
     g.connect(this.bus);
     o.start(t);
     o.stop(t + dur + 0.03);
   },
-  collect: function() { this.blip(720, 1320, 0.12, "square", 0.065); },
-  land: function() { this.blip(170, 80, 0.28, "sine", 0.13); },
-  click: function() { this.blip(440, 660, 0.05, "triangle", 0.055); },
+  collect: function() { this.blip(720, 1320, 0.12, "square", 0.11); },
+  land: function() { this.blip(170, 80, 0.28, "sine", 0.22); },
+  click: function() { this.blip(440, 660, 0.05, "triangle", 0.09); },
   crash: function() {
     if (!this.ready) return;
     var ctx = this.ctx, t = ctx.currentTime;
@@ -509,14 +529,14 @@ var Snd = {
     filt.frequency.setValueAtTime(1400, t);
     filt.frequency.exponentialRampToValueAtTime(120, t + 0.55);
     var g = ctx.createGain();
-    g.gain.setValueAtTime(0.32, t);
+    g.gain.setValueAtTime(0.5, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
     src.connect(filt);
     filt.connect(g);
     g.connect(this.bus);
     src.start(t);
     src.stop(t + 0.7);
-    this.blip(95, 38, 0.45, "sawtooth", 0.15);
+    this.blip(95, 38, 0.45, "sawtooth", 0.26);
   }
 };
 
@@ -1127,7 +1147,33 @@ function makeParticleTexture(renderer) {
   return renderer.createTexture(size, size, data, { repeat: false, mipmap: true });
 }
 
-function makeLevelTexture(renderer, seed, w, h) {
+// One-time post-generation smoothing on the CPU: [1,2,1]/4 separable passes.
+// A cheap stand-in for mip filtering on NPOT WebGL1 textures - it removes the
+// hard texel-scale steps so hardware bilinear reads as smooth rock instead of
+// colored blocks. Zero GPU cost; only runs once per level in JS.
+function smoothTextureRGBA(data, w, h, passes) {
+  var tmp = new Uint8Array(data.length);
+  for (var p = 0; p < passes; p++) {
+    for (var y = 0; y < h; y++) {
+      var row = y * w * 4;
+      for (var x = 0; x < w; x++) {
+        var xl = (x > 0 ? x - 1 : 0) * 4, xr = (x < w - 1 ? x + 1 : w - 1) * 4;
+        for (var c = 0; c < 4; c++) {
+          tmp[row + x * 4 + c] = (data[row + xl + c] + 2 * data[row + x * 4 + c] + data[row + xr + c]) >> 2;
+        }
+      }
+    }
+    for (var y2 = 0; y2 < h; y2++) {
+      var yu = (y2 > 0 ? y2 - 1 : 0) * w * 4, yd = (y2 < h - 1 ? y2 + 1 : h - 1) * w * 4;
+      var row2 = y2 * w * 4;
+      for (var x2 = 0; x2 < w * 4; x2++) {
+        data[row2 + x2] = (tmp[yu + x2] + 2 * tmp[row2 + x2] + tmp[yd + x2]) >> 2;
+      }
+    }
+  }
+}
+
+function makeLevelTexture(renderer, seed, w, h, blur) {
   w = Math.max(64, w | 0);
   h = Math.max(64, h | 0);
   var data = new Uint8Array(w * h * 4);
@@ -1150,10 +1196,12 @@ function makeLevelTexture(renderer, seed, w, h) {
       var micro = noise2(u * 51.0 + base * 4.0, v * 51.0 + ridge * 4.0, seed + 67);
 
       var veinRaw = fbm2(u * 9.0 + ridge * 2.5, v * 9.0 + base * 2.5, seed + 83, 3);
-      var vein = Math.pow(Math.max(0.0, 1.0 - Math.abs(veinRaw - 0.53) * 11.0), 2.0);
+      var veinT = Math.max(0.0, 1.0 - Math.abs(veinRaw - 0.53) * 11.0);
+      var vein = veinT * veinT;
 
       var craterRaw = noise2(u * 21.0 + base * 5.0, v * 21.0 + ridge * 5.0, seed + 97);
-      var crater = Math.pow(Math.max(0.0, 1.0 - Math.abs(craterRaw - 0.67) * 9.0), 2.0);
+      var craterT = Math.max(0.0, 1.0 - Math.abs(craterRaw - 0.67) * 9.0);
+      var crater = craterT * craterT;
 
       var strata = 0.5 + 0.5 * Math.sin(v * 37.0 + base * 14.0 + fine * 5.0);
       var patch = fbm2(u * 2.5 + ridge, v * 2.5 + base, seed + 101, 3);
@@ -1167,7 +1215,8 @@ function makeLevelTexture(renderer, seed, w, h) {
       var gn = fbm2(su * 11.0 + 7.0, sv * 11.0 + 3.0, seed + 157, 3);
       var gmott = Math.max(0.0, gn - 0.68) * 3.1;
       var mott = Math.max(0.0, base - 0.66) * 3.0;
-      var pStrata = Math.pow(strata, 6.0);
+      var s2 = strata * strata;
+      var pStrata = s2 * s2 * s2;
       var pRidge = Math.pow(Math.max(0.0, ridge - 0.55) * 2.2, 1.6);
       var patRaw = mott * 0.62 + gmott * 0.35 + vein * 0.85 + crater * 0.6 + pStrata * 0.45 + pRidge * 0.45 + Math.max(0.0, micro - 0.62) * 0.35;
       var pat = Math.min(1.0, Math.max(0.0, patRaw - 0.17) * 2.4);
@@ -1191,12 +1240,14 @@ function makeLevelTexture(renderer, seed, w, h) {
       b = clamp(b, 0.28, 1.0);
 
       var i = (y * w + x) * 4;
-      data[i] = Math.floor(r * 255);
-      data[i+1] = Math.floor(g * 255);
-      data[i+2] = Math.floor(b * 255);
-      data[i+3] = Math.floor(pat * 255);
+      data[i] = (r * 255) | 0;
+      data[i+1] = (g * 255) | 0;
+      data[i+2] = (b * 255) | 0;
+      data[i+3] = (pat * 255) | 0;
     }
   }
+
+  if (blur > 0) smoothTextureRGBA(data, w, h, blur);
 
   return renderer.createTexture(w, h, data, { repeat: false, mipmap: false });
 }
@@ -2503,7 +2554,7 @@ function prepareLevel() {
   resetKeys();
 
   if (renderer.levelTex) renderer.disposeTexture(renderer.levelTex);
-  renderer.levelTex = makeLevelTexture(renderer, hash32(seed, level * 7919 + 12345), q.texW, q.texH);
+  renderer.levelTex = makeLevelTexture(renderer, hash32(seed, level * 7919 + 12345), q.texW, q.texH, q.texBlur);
 
   disposeTerrain(terrain);
   terrain = generateLevel(level, seed, q);
@@ -2798,21 +2849,14 @@ function updatePickups() {
 
 function updateReverb() {
   if (!Snd.ready || !ship || !terrain) return;
-  // Driven PURELY by the ship's depth inside the terrain: independent of the
-  // visual roof-shade path (uRoofOn/uShadeK only darkens surfaces). A roof
-  // counts only where both columns straddling the ship carry rock, so open
-  // sky next to a cliff wall contributes nothing; at or above the surface
-  // the mix is exactly 0.
-  var t = terrain;
-  var gx = Math.floor(ship.x / t.cell);
-  function roofAt(g) {
-    if (g < 0 || g >= t.cols || t.tops[g] < 0) return 0;
-    return (t.tops[g] + 1) * t.cell;
-  }
-  var ry = Math.min(roofAt(gx), roofAt(gx + 1));
-  if (ry <= 0 || ship.y >= ry) { Snd.setReverb(0); return; }
-  // Deep toward the level floor drives the wet mix toward full.
-  Snd.setReverb((ry - ship.y) / ry);
+  // Pure altitude toward the level floor: zero at the level's surface line
+  // (the landing pad height every level is generated around), rising toward
+  // full near y=0. Deliberately no roof/coverage input: whether rock or
+  // open sky is above the ship (its lit/shaded state) must not affect the
+  // mix. Only depth inside the terrain's vertical band matters.
+  var ref = terrain.padTopY;
+  if (!ref || ref <= 0) { Snd.setReverb(0); return; }
+  Snd.setReverb(clamp((ref - ship.y) / ref, 0, 1));
 }
 
 function updateParticles(dt) {
