@@ -30,6 +30,7 @@ input{background:#001018;border:1px solid #2bd;color:#8ff;font:inherit;padding:6
 .ctrl.active{background:rgba(80,220,255,.35);border-color:#fff}
 #msg{position:absolute;top:18%;left:50%;transform:translateX(-50%);z-index:18;background:rgba(0,0,0,.58);border:1px solid #3cf;color:#bff;padding:8px 14px;border-radius:6px;opacity:0;transition:opacity .25s;pointer-events:none;font-size:14px}
 .small{opacity:.72;font-size:12px}
+button:focus-visible,.btn:focus-visible{outline:2px solid #3cf;outline-offset:2px}
 </style>
 </head>
 <body>
@@ -136,6 +137,8 @@ var STEP = 1 / 60;
 var PI2 = Math.PI * 2;
 var FOV = 50 * Math.PI / 180;
 var SHIP_R = 12;
+var ASTRO_R = 18;
+var FUEL_CAN_R = 15;
 
 var SHIP_SCALE = 1.28;
 var ASTRO_SCALE = 1.22;
@@ -244,7 +247,6 @@ function fbm2(x,y,seed,oct) {
 
 var QUALITIES = {
   low: {
-    name:"low",
     renderScale:0.88,
     dprCap:1.0,
     maxPixels:1100000,
@@ -256,11 +258,11 @@ var QUALITIES = {
     texH:160,
     seg:8,
     depth:42,
+    shadows:0,
     exhaustRate:28,
     zoomHalfH:285
   },
   mid: {
-    name:"mid",
     renderScale:0.95,
     dprCap:1.5,
     maxPixels:2000000,
@@ -272,11 +274,11 @@ var QUALITIES = {
     texH:320,
     seg:12,
     depth:58,
+    shadows:1,
     exhaustRate:48,
     zoomHalfH:260
   },
   high: {
-    name:"high",
     renderScale:1,
     dprCap:2.0,
     maxPixels:3400000,
@@ -288,6 +290,7 @@ var QUALITIES = {
     texH:320,
     seg:16,
     depth:72,
+    shadows:1,
     exhaustRate:65,
     zoomHalfH:245
   }
@@ -308,7 +311,6 @@ function getPreset(mode) {
   var src = QUALITIES[mode] || QUALITIES.mid;
   var q = {};
   for (var k in src) if (src.hasOwnProperty(k)) q[k] = src[k];
-  q.baseRenderScale = q.renderScale;
   return q;
 }
 
@@ -336,14 +338,6 @@ function mat4Perspective(out, fovy, aspect, near, far) {
   return out;
 }
 
-function mat4Translate(out, x, y, z) {
-  out[0]=1; out[1]=0; out[2]=0; out[3]=0;
-  out[4]=0; out[5]=1; out[6]=0; out[7]=0;
-  out[8]=0; out[9]=0; out[10]=1; out[11]=0;
-  out[12]=x; out[13]=y; out[14]=z; out[15]=1;
-  return out;
-}
-
 /*
   Angle convention:
   angle = 0       -> model points up, thrust +Y
@@ -367,6 +361,20 @@ function setModelScaled(outM, outN, x, y, z, ang, scale) {
   outN[0]=c; outN[1]=-s; outN[2]=0;
   outN[3]=s; outN[4]=c;  outN[5]=0;
   outN[6]=0; outN[7]=0;  outN[8]=1;
+}
+
+/*
+ * Ground-plane placement: unit XZ quad laid flat at world y, non-uniform scale, no rotation.
+ */
+function setModelFlat(outM, outN, x, y, sx, sz) {
+  outM[0]=sx; outM[1]=0;  outM[2]=0;  outM[3]=0;
+  outM[4]=0;  outM[5]=1;  outM[6]=0;  outM[7]=0;
+  outM[8]=0;  outM[9]=0;  outM[10]=sz;outM[11]=0;
+  outM[12]=x; outM[13]=y; outM[14]=0; outM[15]=1;
+
+  outN[0]=1; outN[1]=0; outN[2]=0;
+  outN[3]=0; outN[4]=1; outN[5]=0;
+  outN[6]=0; outN[7]=0; outN[8]=1;
 }
 
 var Snd = {
@@ -742,6 +750,12 @@ Renderer.prototype.drawMesh = function(mesh, model, normalMat, mat) {
   gl.uniform1f(p.uUseTex, mat.useTex === undefined ? 1 : mat.useTex);
   gl.uniform1f(p.uDepthTint, mat.depthTint || 0);
 
+  var blend = !!mat.blend;
+  if (blend) {
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  }
+
   gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vbo);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 32, 0);
   gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 32, 12);
@@ -753,6 +767,8 @@ Renderer.prototype.drawMesh = function(mesh, model, normalMat, mat) {
   } else {
     gl.drawArrays(gl.TRIANGLES, 0, mesh.count);
   }
+
+  if (blend) gl.disable(gl.BLEND);
 };
 
 Renderer.prototype.drawParticleBuffer = function(buffer, vertexCount, proj, view, right, up, depthTest) {
@@ -948,17 +964,6 @@ function addSphere(mb, cx,cy,cz, r, slices, rings) {
     }
   }
 }
-
-function normalize3(x,y,z) {
-  var l = Math.sqrt(x*x + y*y + z*z) || 1;
-  return [x/l, y/l, z/l];
-}
-
-function cross3(a,b) {
-  return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
-}
-
-function dot3(a,b) { return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]; }
 
 function mat4LookAt(out, ex,ey,ez, cx,cy,cz, ux,uy,uz) {
   var zx = ex - cx, zy = ey - cy, zz = ez - cz;
@@ -1393,6 +1398,14 @@ function makeTunnelPath(t, sc, sr, ec, er, rng, clampUnderground) {
   return pts;
 }
 
+function exitColOk(t, c, tr, entranceCol) {
+  if (c < 2 || c >= t.cols - 2) return false;
+  if (inPadZoneCol(t,c)) return false;
+  if (Math.abs(c - entranceCol) < 5) return false;
+  if (t.surfaceRef[c] <= tr + 3) return false;
+  return true;
+}
+
 function findAnyExit(t, tc, tr, entranceCol, rng) {
   var cand = [];
   var minOff = 6 + Math.floor(t.diff * 8);
@@ -1403,10 +1416,7 @@ function findAnyExit(t, tc, tr, entranceCol, rng) {
   for (off = minOff; off <= maxOff; off += 2) {
     for (di = 0; di < 2; di++) {
       c = tc + dirs[di] * off;
-      if (c < 2 || c >= t.cols - 2) continue;
-      if (inPadZoneCol(t,c)) continue;
-      if (Math.abs(c - entranceCol) < 5) continue;
-      if (t.surfaceRef[c] <= tr + 3) continue;
+      if (!exitColOk(t, c, tr, entranceCol)) continue;
       cand.push(c);
     }
     if (cand.length > 20) break;
@@ -1415,13 +1425,20 @@ function findAnyExit(t, tc, tr, entranceCol, rng) {
   if (cand.length) return cand[Math.floor(rng() * cand.length)];
 
   for (c = 2; c < t.cols - 2; c++) {
-    if (inPadZoneCol(t,c)) continue;
-    if (Math.abs(c - entranceCol) < 5) continue;
-    if (t.surfaceRef[c] <= tr + 3) continue;
+    if (!exitColOk(t, c, tr, entranceCol)) continue;
     return c;
   }
 
   return -1;
+}
+
+function makeAstronaut(id, x, y, deep, entranceCol, surfaceCol, surf, accessPath, gridPath, secondaryPath, chamberGrid) {
+  return {
+    x: x, y: y, taken: false, r: ASTRO_R, id: id,
+    deep: deep, entranceCol: entranceCol, surfaceCol: surfaceCol,
+    surfacePoint: surf, accessPath: accessPath, gridPath: gridPath,
+    secondaryPath: secondaryPath, chamberGrid: chamberGrid
+  };
 }
 
 function createDeepSite(t, rng, id) {
@@ -1494,16 +1511,7 @@ function createDeepSite(t, rng, id) {
     if (dist2(last.x,last.y,astroPt.x,astroPt.y) > (cell * 0.35) * (cell * 0.35)) pts.push(astroPt);
     else pts[pts.length - 1] = astroPt;
 
-    return {
-      x: astroPt.x, y: astroPt.y, taken: false, r: 18, id: id,
-      deep: true, entranceCol: entranceCol, surfaceCol: entranceCol,
-      surfacePoint: surf,
-      accessPath: pts,
-      gridPath: path,
-      secondaryPath: path2,
-      chamberGrid: { x: targetCol, y: targetRow },
-      pathLen: polylineLength(pts)
-    };
+    return makeAstronaut(id, astroPt.x, astroPt.y, true, entranceCol, entranceCol, surf, pts, path, path2, { x: targetCol, y: targetRow });
   }
 
   return null;
@@ -1592,16 +1600,7 @@ function createSurfaceSite(t, rng, id) {
 
     var surf = surfacePoint(t,c);
     var path = [surf, { x: x, y: y }];
-    return {
-      x: x, y: y, taken: false, r: 18, id: id,
-      deep: false, entranceCol: c, surfaceCol: c,
-      surfacePoint: surf,
-      accessPath: path,
-      gridPath: null,
-      secondaryPath: null,
-      chamberGrid: null,
-      pathLen: polylineLength(path)
-    };
+    return makeAstronaut(id, x, y, false, c, c, surf, path, null, null, null);
   }
 
   var chosen = -1;
@@ -1627,16 +1626,7 @@ function createSurfaceSite(t, rng, id) {
   var fy = (ftop + 1) * cell + 12;
   var fsurf = surfacePoint(t,chosen);
   var fpath = [fsurf, { x: fx, y: fy }];
-  return {
-    x: fx, y: fy, taken: false, r: 18, id: id,
-    deep: false, entranceCol: chosen, surfaceCol: chosen,
-    surfacePoint: fsurf,
-    accessPath: fpath,
-    gridPath: null,
-    secondaryPath: null,
-    chamberGrid: null,
-    pathLen: polylineLength(fpath)
-  };
+  return makeAstronaut(id, fx, fy, false, chosen, chosen, fsurf, fpath, null, null, null);
 }
 
 function buildBackdropMesh(t, quality) {
@@ -1730,15 +1720,39 @@ function buildTerrainChunks(t, quality) {
   return chunks;
 }
 
+function buildShadowSpanVerts(arr, n, x0, x1, cx, half, y) {
+  var quads = Math.min(8, Math.max(1, Math.ceil((x1 - x0) / 8)));
+  var step = (x1 - x0) / quads;
+  for (var s = 0; s < quads; s++) {
+    var xa = x0 + s * step, xb = xa + step;
+    var ha = half * Math.sqrt(Math.max(0, 1 - ((xa - cx) / half) * ((xa - cx) / half)));
+    var hb = half * Math.sqrt(Math.max(0, 1 - ((xb - cx) / half) * ((xb - cx) / half)));
+    n = pushShadowVert(arr, n, xa, y, ha);
+    n = pushShadowVert(arr, n, xb, y, hb);
+    n = pushShadowVert(arr, n, xb, y, -hb);
+    n = pushShadowVert(arr, n, xa, y, ha);
+    n = pushShadowVert(arr, n, xb, y, -hb);
+    n = pushShadowVert(arr, n, xa, y, -ha);
+  }
+  return n;
+}
+
+function pushShadowVert(arr, n, x, y, z) {
+  arr[n * 8] = x; arr[n * 8 + 1] = y; arr[n * 8 + 2] = z;
+  arr[n * 8 + 3] = 0; arr[n * 8 + 4] = 1; arr[n * 8 + 5] = 0;
+  arr[n * 8 + 6] = 0.5; arr[n * 8 + 7] = 0.5;
+  return n + 1;
+}
+
 function buildPadMeshes(t, quality) {
   var width = (t.padEnd - t.padStart) * t.cell;
   var HZ = quality.depth * 0.5;
   var mbD = new MeshBuilder();
   var mbL = new MeshBuilder();
 
-  addBox(mbD, 0, 0, 0, width * 0.5, 1.0, HZ + 3);
-  addBox(mbD, -width * 0.5 + 4, 3.2, 0, 1.25, 3.2, HZ + 1);
-  addBox(mbD,  width * 0.5 - 4, 3.2, 0, 1.25, 3.2, HZ + 1);
+  addBox(mbD, 0, 0, 0, width * 0.5, 1.0, HZ - 1);
+  addBox(mbD, -width * 0.5 + 4, 3.2, 0, 1.25, 3.2, HZ - 1);
+  addBox(mbD,  width * 0.5 - 4, 3.2, 0, 1.25, 3.2, HZ - 1);
 
   addBox(mbL, -width * 0.5 + 4, 8.0, 0, 1.55, 1.55, 1.55);
   addBox(mbL,  width * 0.5 - 4, 8.0, 0, 1.55, 1.55, 1.55);
@@ -1746,32 +1760,12 @@ function buildPadMeshes(t, quality) {
 
   return {
     deck: finishMesh(renderer, mbD),
-    lights: finishMesh(renderer, mbL),
-    width: width
+    lights: finishMesh(renderer, mbL)
   };
 }
 
 function circleHitsSolid(t,x,y,r) {
-  var minGx = Math.floor((x - r) / t.cell);
-  var maxGx = Math.floor((x + r) / t.cell);
-  var minGy = Math.floor((y - r) / t.cell);
-  var maxGy = Math.floor((y + r) / t.cell);
-  for (var gy = minGy; gy <= maxGy; gy++) {
-    if (gy < 0 || gy >= t.rows) continue;
-    for (var gx = minGx; gx <= maxGx; gx++) {
-      if (gx < 0 || gx >= t.cols) continue;
-      var idx = gy * t.cols + gx;
-      if (!t.solid[idx]) continue;
-      var cx0 = gx * t.cell;
-      var cy0 = gy * t.cell;
-      var closestX = clamp(x, cx0, cx0 + t.cell);
-      var closestY = clamp(y, cy0, cy0 + t.cell);
-      var dx = x - closestX;
-      var dy = y - closestY;
-      if (dx * dx + dy * dy <= r * r) return true;
-    }
-  }
-  return false;
+  return checkCollision(t,x,y,r).hit;
 }
 
 function checkCollision(t,x,y,r) {
@@ -1799,6 +1793,22 @@ function checkCollision(t,x,y,r) {
     }
   }
   return { hit: hit, pad: pad };
+}
+
+function groundTopY(t, x, aboveY) {
+  var gx = Math.floor(x / t.cell);
+  if (gx < 0 || gx >= t.cols) return -1;
+  var gy = Math.min(t.rows - 1, Math.floor(aboveY / t.cell));
+  var plane = -1;
+  for (; gy >= 0; gy--) {
+    if (t.solid[gy * t.cols + gx]) {
+      plane = (gy + 1) * t.cell;
+      break;
+    }
+  }
+  if (plane < 0) return -1;
+  if (gx >= t.padStart && gx < t.padEnd && plane >= t.padTopY) plane = t.padTopY + 1.0;
+  return plane;
 }
 
 function makeAirPoint(t,x,y,r) {
@@ -1975,14 +1985,14 @@ function addFuelPlanned(t,x,y,amount) {
       }
     }
     if (!dup) {
-      t.fuels.push({ x:x, y:y, taken:false, r:15, fuel:amount, id:t.fuels.length });
+      t.fuels.push({ x:x, y:y, taken:false, r:FUEL_CAN_R, fuel:amount, id:t.fuels.length });
       return true;
     }
   }
 
   var fp = makeAirPoint(t,x + 70,y + 50,16);
   if (fp) {
-    t.fuels.push({ x:fp.x, y:fp.y, taken:false, r:15, fuel:amount, id:t.fuels.length });
+    t.fuels.push({ x:fp.x, y:fp.y, taken:false, r:FUEL_CAN_R, fuel:amount, id:t.fuels.length });
     return true;
   }
   return false;
@@ -1994,7 +2004,7 @@ function totalAvailableFuel(t) {
   return sum;
 }
 
-function planFuel(t, route, quality, rng) {
+function planFuel(t, route, rng) {
   var routeLen = polylineLength(route);
   if (routeLen < 1) routeLen = 1;
 
@@ -2033,12 +2043,7 @@ function planFuel(t, route, quality, rng) {
 
   var guard = 0;
   while (totalAvailableFuel(t) < required && guard++ < 100) {
-    p = makeAirPoint(t, route[0].x, route[0].y + 55 + guard * 32, 16);
-    if (p) {
-      t.fuels.push({ x:p.x, y:p.y, taken:false, r:15, fuel:canAmount, id:t.fuels.length });
-    } else {
-      break;
-    }
+    if (!addFuelPlanned(t, route[0].x, route[0].y + 55 + guard * 55, canAmount)) break;
   }
 
   t.requiredFuel = required;
@@ -2103,7 +2108,7 @@ function generateLevelCore(lvl, sd, quality, simple) {
 
   var padWorld = Math.max(72, 155 - stage * 4);
   var padCells = Math.max(5, Math.round(padWorld / cell));
-  var padStart = Math.floor(cols * (0.12 + rng() * 0.16));
+  var padStart = 3 + Math.floor(rng() * Math.max(1, cols - padCells - 5));
   padStart = clamp(padStart, 2, cols - padCells - 3);
   var padEnd = padStart + padCells;
   var padCenter = Math.floor((padStart + padEnd) * 0.5);
@@ -2127,7 +2132,6 @@ function generateLevelCore(lvl, sd, quality, simple) {
   for (c = 0; c < cols; c++) surfaceRef[c] = heights[c];
 
   var t = {
-    level: lvl,
     stage: stage,
     diff: diff,
     cell: cell,
@@ -2159,7 +2163,6 @@ function generateLevelCore(lvl, sd, quality, simple) {
     startFuel: Math.round(180 - diff * 55),
     fuelCan: Math.round(85 - diff * 30),
     startPoint: null,
-    route: null,
     requiredFuel: 0,
     chunks: null,
     pad: null,
@@ -2206,8 +2209,7 @@ function generateLevelCore(lvl, sd, quality, simple) {
   };
 
   var route = buildRoute(t);
-  t.route = route;
-  planFuel(t, route, quality, rng);
+  planFuel(t, route, rng);
 
   return t;
 }
@@ -2218,7 +2220,6 @@ function generateLevel(lvl, sd, quality) {
     t = generateLevelCore(lvl, sd, quality, true);
     if (!validateLevel(t)) {
       t = generateLevelCore(1, sd, quality, true);
-      t.level = lvl;
     }
   }
 
@@ -2232,6 +2233,8 @@ var renderer = null;
 var shipMesh = null;
 var astroMesh = null;
 var fuelMesh = null;
+var shadowMesh = null;
+var shadowVerts = null;
 
 var q = getPreset("auto");
 var gfxMode = "auto";
@@ -2244,12 +2247,14 @@ var ship = null;
 var camera = { x: WORLD_W * 0.5, y: WORLD_H * 0.62, dist: 700 };
 var particles = [];
 var starBuffer = null;
-var entityZ = 50;
+var entityZ = 0;
 
 var saved = 0;
 var total = 0;
 var gameTime = 0;
 var crashTimer = 0;
+var loseReason = "crash";
+var loseCopy = null;
 var exhaustAcc = 0;
 var msgTimer = 0;
 var perfN = 0;
@@ -2296,6 +2301,10 @@ var padLightMat = {
   color: [0.16,0.16,0.16], color2: [0.16,0.16,0.16], emissive: [0.2,1.0,0.4],
   texScale: 1, alpha: 1, useTex: 0, spec: [0,0,0], specPower: 1, depthTint: 0
 };
+var shadowMat = {
+  color: [0.015, 0.017, 0.026], color2: [0.015, 0.017, 0.026], emissive: [0, 0, 0],
+  texScale: 1, alpha: 0.4, useTex: 0, spec: [0, 0, 0], specPower: 1, depthTint: 0, blend: 1
+};
 
 function disposeTerrain(t) {
   if (!t || !renderer) return;
@@ -2314,7 +2323,8 @@ function disposeEntityMeshes() {
   if (shipMesh) renderer.disposeMesh(shipMesh);
   if (astroMesh) renderer.disposeMesh(astroMesh);
   if (fuelMesh) renderer.disposeMesh(fuelMesh);
-  shipMesh = astroMesh = fuelMesh = null;
+  if (shadowMesh) renderer.disposeMesh(shadowMesh);
+  shipMesh = astroMesh = fuelMesh = shadowMesh = null;
 }
 
 function buildEntityMeshes() {
@@ -2367,7 +2377,7 @@ function prepareLevel() {
 
   disposeTerrain(terrain);
   terrain = generateLevel(level, seed, q);
-  entityZ = q.depth * 0.5 + 12;
+  entityZ = 0;
 
   ship = {
     x: terrain.padX,
@@ -2394,6 +2404,11 @@ function prepareLevel() {
   camera.dist = baseDistance();
   updateSeedInputs();
   updateHUD();
+}
+
+function loadLevel() {
+  prepareLevel();
+  setState("playing");
 
   var n = terrain.astronauts.length;
   showMsg(
@@ -2401,11 +2416,6 @@ function prepareLevel() {
     ", then land back on the pad",
     9000
   );
-}
-
-function loadLevel() {
-  prepareLevel();
-  setState("playing");
 }
 
 function resize() {
@@ -2510,6 +2520,7 @@ function spawnExplosion(x,y) {
 
 function crashShip() {
   if (!ship || !ship.alive) return;
+  loseReason = "crash";
   ship.alive = false;
   ship.thrusting = false;
   Snd.setThrust(false);
@@ -2522,6 +2533,7 @@ function crashShip() {
 function winLevel() {
   if (state === "win") return;
   ship.grounded = true;
+  ship.thrusting = false;
   ship.vx = 0;
   ship.vy = 0;
   ship.angle = 0;
@@ -2541,7 +2553,12 @@ function updateShip(dt) {
       ship.vx = 0;
       ship.vy = 0;
       ship.angle *= 0.88;
-      if (saved >= total) winLevel();
+      if (saved >= total) {
+        winLevel();
+      } else if (ship.fuel <= 0) {
+        loseReason = "fuel";
+        setState("lose");
+      }
       return;
     }
   }
@@ -2630,7 +2647,6 @@ function updatePickups() {
       saved++;
       Snd.collect();
       spawnSparkle(a.x, a.y, [0.45, 1.0, 0.75]);
-      if (ship.grounded && saved >= total) winLevel();
     }
   }
   for (i = 0; i < terrain.fuels.length; i++) {
@@ -2712,7 +2728,7 @@ function update(dt) {
     if (crashTimer <= 0) setState("lose");
   }
   updateParticles(dt);
-  if (state !== "paused") updateCamera(dt);
+  updateCamera(dt);
 }
 
 function buildParticleData() {
@@ -2762,7 +2778,7 @@ function render() {
     }
 
     if (terrain.pad && isVisible(terrain.padX, terrain.padTopY + 20)) {
-      setModelScaled(tmpModel, tmpNormal, terrain.padX, terrain.padTopY, q.depth * 0.5 + 2, 0, 1);
+      setModelScaled(tmpModel, tmpNormal, terrain.padX, terrain.padTopY, 0, 0, 1);
       renderer.drawMesh(terrain.pad.deck, tmpModel, tmpNormal, padMat);
 
       var pulse = 0.45 + 0.55 * Math.sin(gameTime * 4);
@@ -2775,8 +2791,68 @@ function render() {
         padLightMat.emissive[1] = 0.65 * pulse;
         padLightMat.emissive[2] = 0.10 * pulse;
       }
-      setModelScaled(tmpModel, tmpNormal, terrain.padX, terrain.padTopY, q.depth * 0.5 + 7, 0, 1);
+      setModelScaled(tmpModel, tmpNormal, terrain.padX, terrain.padTopY, 0, 0, 1);
       renderer.drawMesh(terrain.pad.lights, tmpModel, tmpNormal, padLightMat);
+    }
+
+    if (q.shadows && ship && ship.alive) {
+      var shGl = renderer.gl;
+      var shHalfMax = SHIP_R * SHIP_SCALE * 1.2;
+      var gx0 = Math.floor((ship.x - shHalfMax) / terrain.cell);
+      var gx1 = Math.floor((ship.x + shHalfMax) / terrain.cell);
+      var shRuns = [];
+      for (var gx = gx0; gx <= gx1; gx++) {
+        var shPlane = groundTopY(terrain, (gx + 0.5) * terrain.cell, ship.y);
+        if (shPlane < 0 || shPlane > ship.y - 1 || ship.y - shPlane >= 600) continue;
+        var shXa = gx * terrain.cell;
+        var shXb = shXa + terrain.cell;
+        if (shXa < ship.x - shHalfMax) shXa = ship.x - shHalfMax;
+        if (shXb > ship.x + shHalfMax) shXb = ship.x + shHalfMax;
+        if (shXb <= shXa) continue;
+        var shPrev = shRuns.length ? shRuns[shRuns.length - 1] : null;
+        if (shPrev && Math.abs(shPrev.plane - shPlane) < 0.6) { shPrev.xb = shXb; continue; }
+        shRuns.push({ plane: shPlane, xa: shXa, xb: shXb });
+      }
+      if (shRuns.length) {
+        if (!shadowMesh) {
+          shadowVerts = new Float32Array(1024 * 8);
+          shadowMesh = { vbo: shGl.createBuffer(), ibo: null, count: 0, type: 0 };
+          shGl.bindBuffer(shGl.ARRAY_BUFFER, shadowMesh.vbo);
+          shGl.bufferData(shGl.ARRAY_BUFFER, shadowVerts.byteLength, shGl.DYNAMIC_DRAW);
+        }
+        setModelFlat(tmpModel, tmpNormal, 0, 0, 1, 1);
+        for (var shS = 0; shS < shRuns.length; shS++) {
+          var shRun = shRuns[shS];
+          if (!isVisible(ship.x, shRun.plane)) continue;
+          var shK = 1 - (ship.y - shRun.plane) / 600;
+          var shA = Math.pow(Math.max(0, shK), 1.6);
+          var shHalf = SHIP_R * SHIP_SCALE * (0.35 + 0.85 * shK);
+          var shN = 0;
+          shadowMat.alpha = 0.14 * shA;
+          var shOH = shHalf * 1.25;
+          var shOa = shRun.xa > ship.x - shOH ? shRun.xa : ship.x - shOH;
+          var shOb = shRun.xb < ship.x + shOH ? shRun.xb : ship.x + shOH;
+          if (shOb > shOa) {
+            shN = buildShadowSpanVerts(shadowVerts, 0, shOa, shOb, ship.x, shOH, shRun.plane + 0.45);
+          }
+          if (shN > 0) {
+            shadowMesh.count = shN;
+            shGl.bindBuffer(shGl.ARRAY_BUFFER, shadowMesh.vbo);
+            shGl.bufferSubData(shGl.ARRAY_BUFFER, 0, shadowVerts.subarray(0, shN * 8));
+            renderer.drawMesh(shadowMesh, tmpModel, tmpNormal, shadowMat);
+          }
+          shadowMat.alpha = 0.42 * shA;
+          var shCa = shRun.xa > ship.x - shHalf ? shRun.xa : ship.x - shHalf;
+          var shCb = shRun.xb < ship.x + shHalf ? shRun.xb : ship.x + shHalf;
+          shN = shCb > shCa ? buildShadowSpanVerts(shadowVerts, 0, shCa, shCb, ship.x, shHalf, shRun.plane + 0.55) : 0;
+          if (shN > 0) {
+            shadowMesh.count = shN;
+            shGl.bindBuffer(shGl.ARRAY_BUFFER, shadowMesh.vbo);
+            shGl.bufferSubData(shGl.ARRAY_BUFFER, 0, shadowVerts.subarray(0, shN * 8));
+            renderer.drawMesh(shadowMesh, tmpModel, tmpNormal, shadowMat);
+          }
+        }
+      }
     }
 
     for (i = 0; i < terrain.astronauts.length; i++) {
@@ -2810,6 +2886,13 @@ function render() {
   renderer.drawDynamicParticles(pv, proj, view, camRight, camUp);
 }
 
+function gameKeyAction(code, kc) {
+  if (code === "ArrowLeft" || code === "KeyA" || kc === 37 || kc === 65) return "left";
+  if (code === "ArrowRight" || code === "KeyD" || kc === 39 || kc === 68) return "right";
+  if (code === "ArrowUp" || code === "KeyW" || code === "Space" || kc === 38 || kc === 87 || kc === 32) return "thrust";
+  return null;
+}
+
 function updateHUD() {
   if (!ship || !terrain) return;
   $("lvl").textContent = level;
@@ -2818,7 +2901,7 @@ function updateHUD() {
   $("fuelFill").style.width = (fp * 100) + "%";
   $("fuelFill").style.background = fp < 0.25 ? "#ff5252" : "#4fc3f7";
   $("velHud").textContent = len2(ship.vx, ship.vy).toFixed(0);
-  var shownSeed = (terrain.seedUsed === undefined ? seed : terrain.seedUsed) >>> 0;
+  var shownSeed = terrain.seedUsed >>> 0;
   $("seedHud").textContent = shownSeed.toString(16).toUpperCase();
 }
 
@@ -2841,12 +2924,36 @@ function hideMsg() {
   $("msg").style.opacity = 0;
 }
 
+function captureLoseCopy() {
+  var el = $("lose");
+  loseCopy = {
+    title: el.querySelector("h1").textContent,
+    body: el.querySelector("p").textContent
+  };
+}
+
+function applyLoseCopy() {
+  var el = $("lose");
+  if (loseReason === "fuel") {
+    el.querySelector("h1").textContent = "OUT OF FUEL";
+    el.querySelector("p").textContent = "The lander ran dry on the pad with astronauts still unrescued. Retry restarts this level with a full tank, or choose Title to stop.";
+  } else {
+    el.querySelector("h1").textContent = loseCopy.title;
+    el.querySelector("p").textContent = loseCopy.body;
+  }
+}
+
+var DEF_BUTTON = { title: "startBtn", paused: "resumeBtn", win: "nextBtn", lose: "retryBtn" };
+
 function setState(s) {
   state = s;
   setClass($("title"), "hidden", s !== "title");
   setClass($("pause"), "hidden", s !== "paused");
   setClass($("win"), "hidden", s !== "win");
   setClass($("lose"), "hidden", s !== "lose");
+  if (s === "lose") applyLoseCopy();
+  var defBtn = DEF_BUTTON[s];
+  if (defBtn) $(defBtn).focus();
   var inGame = (s === "playing" || s === "crashing");
   setClass($("hud"), "hidden", !inGame);
   setClass($("controls"), "hidden", s !== "playing");
@@ -2870,35 +2977,39 @@ function setGfx(mode) {
   buildEntityMeshes();
   resize();
   var prev = state;
+  rebuildLevel(prev === "title" ? "title" : "paused");
+}
+
+function rebuildLevel(targetState) {
   prepareLevel();
-  setState(prev === "title" ? "title" : "paused");
+  setState(targetState);
+}
+
+function returnToTitle() {
+  rebuildLevel("title");
 }
 
 function applySeedFromString(value, targetState) {
   seed = parseSeedValue(value);
   if (targetState === "title") level = 1;
-  prepareLevel();
-  setState(targetState);
+  rebuildLevel(targetState);
 }
 
 function newSeedTitle() {
   seed = randomSeed();
   level = 1;
-  prepareLevel();
-  setState("title");
+  rebuildLevel("title");
 }
 
 function newSeedPause() {
   seed = randomSeed();
-  prepareLevel();
-  setState("paused");
+  rebuildLevel("paused");
 }
 
 function newSeedLose() {
   seed = randomSeed();
   level = 1;
-  prepareLevel();
-  setState("playing");
+  loadLevel();
 }
 
 function resumeGame() {
@@ -2997,13 +3108,13 @@ function wireUI() {
   bindClick("pauseBtn", togglePause);
   bindClick("resumeBtn", resumeGame);
   bindClick("restartBtn", loadLevel);
-  bindClick("pauseTitleBtn", function() { prepareLevel(); setState("title"); });
+  bindClick("pauseTitleBtn", returnToTitle);
 
   bindClick("nextBtn", function() { level++; loadLevel(); });
-  bindClick("winTitleBtn", function() { prepareLevel(); setState("title"); });
+  bindClick("winTitleBtn", returnToTitle);
 
   bindClick("retryBtn", loadLevel);
-  bindClick("loseTitleBtn", function() { prepareLevel(); setState("title"); });
+  bindClick("loseTitleBtn", returnToTitle);
 
   bindHold("btnLeft", "left");
   bindHold("btnRight", "right");
@@ -3019,42 +3130,44 @@ function wireUI() {
       return;
     }
 
-    if ((code === "Space" || kc === 32 || code === "Enter" || kc === 13) && tag === "BUTTON") {
-      if (e.preventDefault) e.preventDefault();
-      return;
-    }
-
-    var left = code === "ArrowLeft" || code === "KeyA" || kc === 37 || kc === 65;
-    var right = code === "ArrowRight" || code === "KeyD" || kc === 39 || kc === 68;
-    var up = code === "ArrowUp" || code === "KeyW" || code === "Space" || kc === 38 || kc === 87 || kc === 32;
+    var act = gameKeyAction(code, kc);
     var esc = code === "Escape" || kc === 27;
     var enter = code === "Enter" || kc === 13;
 
-    if (left || right || up) {
+    if (act) {
       if (e.preventDefault) e.preventDefault();
       Snd.init();
       Snd.resume();
+      keys[act] = true;
     }
-
-    if (left) keys.left = true;
-    if (right) keys.right = true;
-    if (up) keys.thrust = true;
     if (esc) togglePause();
-    if (enter && state === "title") { level = 1; loadLevel(); }
+    if (enter && state === "title" && tag !== "BUTTON") { level = 1; loadLevel(); }
   });
 
   window.addEventListener("keyup", function(e) {
     var code = e.code || "";
     var kc = e.keyCode || 0;
-    if (code === "ArrowLeft" || code === "KeyA" || kc === 37 || kc === 65) keys.left = false;
-    if (code === "ArrowRight" || code === "KeyD" || kc === 39 || kc === 68) keys.right = false;
-    if (code === "ArrowUp" || code === "KeyW" || code === "Space" || kc === 38 || kc === 87 || kc === 32) keys.thrust = false;
+    var act = gameKeyAction(code, kc);
+    if (act) keys[act] = false;
   });
 
   window.addEventListener("resize", resize);
   window.addEventListener("orientationchange", function() { setTimeout(resize, 150); });
   document.addEventListener("visibilitychange", function() {
     if (document.hidden && state === "playing") setState("paused");
+  });
+
+  var canvasEl = $("cv");
+  canvasEl.addEventListener("webglcontextlost", function(e) {
+    if (e.preventDefault) e.preventDefault();
+    returnToTitle();
+  });
+  canvasEl.addEventListener("webglcontextrestored", function() {
+    renderer = new Renderer(canvasEl);
+    renderer.particleTex = makeParticleTexture(renderer);
+    buildEntityMeshes();
+    prepareLevel();
+    showMsg("Graphics restored", 2500);
   });
 }
 
@@ -3108,6 +3221,7 @@ function init() {
   resize();
   prepareLevel();
   wireUI();
+  captureLoseCopy();
   setState("title");
   requestAnimationFrame(loop);
 }
