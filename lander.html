@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Lunar Salvage 2.5D</title>
+<meta name="version" content="2026.11.04.1">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:ui-monospace,Menlo,Consolas,monospace;color:#e8f0ff;touch-action:none}
@@ -3437,6 +3438,32 @@ try {
     (isWebGL ? '<p>This game requires WebGL.</p>' : '<p>Please report this bug.</p>') +
     '</div>';
 }
+</script>
+<script>
+// self-update v2: one-time title-screen freshness check, two HEAD requests,
+// a page body is NEVER downloaded. The default-cache HEAD reuses the most
+// recent cached HEAD response for this URL (free within max-age) and yields
+// this copy's validator; the cache-bypassing HEAD reads the host's current
+// validator. They differ => a newer deploy exists and the title screen is
+// on => reload (nothing to lose). Offline/file:// hosts: no request at all,
+// never an error. Hosts without validators: silent. Never re-runs in-page.
+// Versioning: meta[name=version] = <last-edited-date>.<build>; bump the
+// build number whenever the file is edited. window.GAME_VERSION exposes it.
+(function () {
+  var vm = document.querySelector('meta[name="version"]');
+  window.GAME_VERSION = vm ? vm.content : "";
+  if (typeof fetch !== "function") return;
+  if (!/^https?:$/.test(location.protocol)) return;
+  if (navigator.onLine === false) return;
+  function val(r) { return r.headers.get("etag") || r.headers.get("last-modified") || ""; }
+  fetch(location.href, { method: "HEAD" }).then(function (r) {
+    var base = val(r);
+    return fetch(location.href, { method: "HEAD", cache: "no-store" }).then(function (r2) {
+      var cur = val(r2);
+      if (base && cur && base !== cur) location.reload();
+    });
+  }).catch(function () {});
+})();
 </script>
 </body>
 </html>
