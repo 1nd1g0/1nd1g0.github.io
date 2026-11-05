@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Arcade Bowling 3D</title>
-<meta name="version" content="2026.11.05.3">
+<meta name="version" content="2026.11.05.4">
 <meta name="description" content="3D bowling: draw-the-path controls, hook physics, ten-frame scoring, 10-pin and wide-lane 100-pin modes.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -293,7 +293,7 @@ let fr=blankFrames();
 function blankFrames(){const a=[];for(let i=0;i<10;i++)a.push({t:[]});return a}
 let pins=[],ball=null,parts=[];
 let phase='menu',aim=0,power=0,spin=0,startX=0,drag=null,settleT=0,msgTO=0,fullRack=true;
-function makePin(x,z){return {x,z,vx:0,vz:0,th:0,om:0,dir:0,down:false,dead:false,drop:0}}
+function makePin(x,z){return {x,z,x0:x,z0:z,vx:0,vz:0,th:0,om:0,dir:0,down:false,dead:false,drop:0,y:0}}
 function newRack(){
  pins=[];
  if(PC===10){
@@ -611,7 +611,15 @@ function stepWorld(dt){
 }
 function startThrow(keepPins){
  if(!keepPins)newRack();
- else standingBefore=pinsStanding();
+ else{
+  // real pinsetter behavior between throws: the sweeper removes every pin that
+  // went down on the previous ball, and the re-rack arms put the survivors back
+  // on their spots — the second ball never plays through deadwood, and a pin
+  // that only got nudged out of line is returned to its original position
+  pins=pins.filter(p=>!p.down&&!p.dead);
+  for(const p of pins){p.x=p.x0;p.z=p.z0;p.y=0;p.vx=p.vz=0;p.th=p.om=p.drop=0;p.dir=0}
+  standingBefore=pinsStanding();
+ }
  fullRack=!keepPins; // clearing THIS rack in one throw = strike, in any frame
  resetBall();
  phase='aim';aim=0;power=0;spin=0;drag=null;settleT=0;
