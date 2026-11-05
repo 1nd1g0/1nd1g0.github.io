@@ -4,36 +4,106 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Arcade Bowling 3D</title>
+<meta name="version" content="2026.11.05.3">
+<meta name="description" content="3D bowling: draw-the-path controls, hook physics, ten-frame scoring, 10-pin and wide-lane 100-pin modes.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#070912;font-family:Arial,Helvetica,sans-serif}
 canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
 #hud{position:fixed;top:0;left:0;right:0;pointer-events:none;color:#fff;text-align:center;z-index:5}
-#score{font-size:clamp(15px,2.2vw,26px);padding:8px;font-weight:bold;letter-spacing:1px;
- background:linear-gradient(180deg,rgba(0,0,0,.75),rgba(0,0,0,0));text-shadow:0 2px 4px #000}
-#info{font-size:clamp(11px,1.5vw,16px);opacity:.85;text-shadow:0 1px 3px #000}
-#msg{position:fixed;top:42%;left:50%;transform:translate(-50%,-50%) scale(.5);font-size:clamp(36px,8vw,90px);
- font-weight:900;color:#ffd94a;text-shadow:0 0 30px #f80,0 4px 8px #000;pointer-events:none;opacity:0;
- transition:all .25s cubic-bezier(.2,1.6,.4,1);z-index:6;letter-spacing:3px}
+#status{font-size:clamp(11px,1.9vw,16px);padding:5px;font-weight:bold;letter-spacing:1px;
+background:linear-gradient(180deg,rgba(0,0,0,.72),rgba(0,0,0,0));text-shadow:0 2px 4px #000}
+#info{font-size:clamp(9px,1.4vw,13px);opacity:.75;text-shadow:0 1px 3px #000;padding-top:2px}
+#sheet{display:flex;justify-content:center;gap:2px;padding:5px 2px;align-items:stretch}
+.fr{border:1px solid rgba(255,255,255,.25);border-radius:4px;background:rgba(0,0,0,.5);
+width:clamp(26px,3.6vw,38px)}
+.fr .th{display:flex;height:14px;border-bottom:1px solid rgba(255,255,255,.14)}
+.fr .th i{flex:1;display:flex;align-items:center;justify-content:center;font-size:clamp(8px,1.5vw,12px);
+font-style:normal;color:#fff;border-left:1px solid rgba(255,255,255,.1)}
+.fr .th i:first-child{border-left:none}
+.fr .tt{height:16px;display:flex;align-items:center;justify-content:center;
+font-size:clamp(9px,1.7vw,13px);font-weight:bold}
+#sheet i.x{color:#ffd94a;font-weight:900}
+.fr.cur{border-color:#4df;box-shadow:0 0 8px #4df8}
+#sheet .gt{border-color:#ffd94a55}
+#sheet .gt .tt{color:#ffd94a}
+#pw,#sw{position:fixed;bottom:7vh;width:15px;height:32vh;border:2px solid rgba(255,255,255,.45);
+border-radius:9px;z-index:4;display:none}
+#pw{left:10px}#sw{right:10px}
+#pwB{position:absolute;left:2px;right:2px;bottom:2px;height:0%;border-radius:6px;
+background:linear-gradient(180deg,#f44,#fc3,#3f7)}
+#sw .mid{position:absolute;left:1px;right:1px;top:50%;height:1px;background:rgba(255,255,255,.5)}
+#swB{position:absolute;left:2px;right:2px;top:50%;height:0%;background:#4df;border-radius:6px}
+#msg{position:fixed;top:34%;left:50%;transform:translate(-50%,-50%) scale(.5);
+font-size:clamp(32px,8vw,80px);font-weight:900;color:#ffd94a;text-shadow:0 0 30px #f80,0 4px 8px #000;
+pointer-events:none;opacity:0;transition:all .25s cubic-bezier(.2,1.6,.4,1);z-index:6;
+letter-spacing:3px;white-space:nowrap}
 #msg.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
-#btn{position:fixed;bottom:5%;left:50%;transform:translateX(-50%);padding:14px 44px;font-size:clamp(16px,2.4vw,26px);
- font-weight:bold;background:linear-gradient(180deg,#39c07a,#1d8a52);color:#fff;border:2px solid #bff;
- border-radius:40px;cursor:pointer;display:none;z-index:7;box-shadow:0 6px 24px rgba(0,0,0,.6)}
-#meters{position:fixed;right:12px;top:50%;transform:translateY(-50%);width:26px;height:38vh;min-height:140px;
- background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.7);border-radius:14px;overflow:hidden;z-index:5;pointer-events:none}
-#pw{position:absolute;bottom:0;left:0;right:0;height:0%;background:linear-gradient(0deg,#2f2,#ff0,#f30)}
-#cvM{position:fixed;left:12px;top:50%;transform:translateY(-50%);width:26px;height:38vh;min-height:140px;
- background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.7);border-radius:14px;z-index:5;pointer-events:none;overflow:hidden}
-#cvB{position:absolute;left:0;right:0;top:50%;height:0%;background:#4df}
+#btn{position:fixed;left:50%;bottom:7vh;transform:translateX(-50%);display:none;z-index:7;
+font:700 clamp(14px,2.4vw,20px)/1 Arial;padding:13px 24px;border-radius:99px;border:none;cursor:pointer;
+background:#19b45e;color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.6)}
+#end{position:fixed;inset:0;display:none;z-index:8;background:rgba(4,6,14,.88);color:#fff;
+text-align:center;align-items:center;justify-content:center;flex-direction:column}
+#end.on{display:flex}
+#end h1{font-size:clamp(26px,6vw,52px);color:#ffd94a;text-shadow:0 0 24px #f80;margin-bottom:6px}
+#end p{margin:8px 0 26px;font-size:clamp(13px,2.2vw,18px);opacity:.85}
+#again{font:700 clamp(14px,2.4vw,20px)/1 Arial;padding:13px 24px;border-radius:99px;border:none;
+cursor:pointer;background:#19b45e;color:#fff}
+#end .row{display:flex;gap:14px;align-items:center;justify-content:center}
+.home{font:700 clamp(14px,2.4vw,20px)/1 Arial;padding:13px 24px;border-radius:99px;text-decoration:none;
+border:1px solid #4df;color:#4df;background:rgba(0,12,24,.85);cursor:pointer}
+#scr{position:fixed;inset:0;z-index:9;display:none;flex-direction:column;gap:20px;align-items:center;
+justify-content:center;background:rgba(4,6,14,.88);color:#fff;text-align:center;padding:4vw}
+#scr.on{display:flex}
+#scr h1{font-size:clamp(34px,9vw,72px);letter-spacing:4px;color:#ffd94a;text-shadow:0 0 30px #f80,0 4px 10px #000}
+#scr p{font-size:clamp(11px,2vw,15px);opacity:.8;max-width:520px;line-height:1.5}
+#modes{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+#modes button{font:700 clamp(12px,2vw,16px)/1 Arial;padding:13px 17px;border-radius:10px;cursor:pointer;
+border:1px solid #468;background:#123;color:#cfe}
+#modes button.on{background:#19b45e;border-color:#19b45e;color:#fff}
+#play{font:700 clamp(18px,3.4vw,28px)/1 Arial;padding:16px 44px;border-radius:99px;border:none;cursor:pointer;
+background:#19b45e;color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.6)}
+#sbtn{font:700 clamp(11px,1.8vw,14px)/1 Arial;padding:10px 16px;border-radius:99px;border:1px solid #468;
+background:#123;color:#cfe;cursor:pointer}
+#scr .row{display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap}
+#dbgbtn{position:fixed;right:10px;bottom:7vh;display:none;z-index:7;
+font:700 clamp(10px,1.6vw,13px)/1 Arial;padding:10px 14px;border-radius:99px;
+border:1px solid #4df;color:#4df;background:rgba(0,10,20,.75);cursor:pointer}
+#dbar{position:fixed;left:50%;bottom:0;transform:translateX(-50%);display:none;z-index:9;
+align-items:center;gap:6px;padding:8px 10px;background:rgba(4,6,14,.85);
+border:1px solid rgba(77,221,255,.4);border-radius:10px 10px 0 0;color:#cfe}
+#dbar button{font:700 13px/1 Arial;padding:8px 11px;border-radius:8px;border:1px solid #468;
+background:#123;color:#cfe;cursor:pointer}
+#dbar button.on{background:#246;border-color:#4df}
+#dscrub{width:min(38vw,320px);accent-color:#4df}
+#dtxt{font:11px/1.5 monospace;white-space:pre;color:#9fe;min-width:230px}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="hud"><div id="score"></div><div id="info"></div></div>
+<div id="hud"><div id="status"></div><div id="sheet"></div><div id="info"></div></div>
+<div id="pw"><div id="pwB"></div></div>
+<div id="sw"><div class="mid"></div><div id="swB"></div></div>
 <div id="msg"></div>
-<div id="meters"><div id="pw"></div></div>
-<div id="cvM"><div id="cvB"></div></div>
-<button id="btn">NEXT</button>
+<button id="btn"></button>
+<div id="end"><h1 id="endT"></h1><p id="endP"></p><div class="row"><button id="again">PLAY AGAIN</button><a class="home" href="https://1nd1g0.github.io/">HOME</a></div></div>
+<div id="scr">
+<h1>BOWLING 32</h1>
+<p>DRAW THE BALL PATH &#8212; START = WHERE YOU STAND, DRAW SPEED = POWER, DRAW A CURVE = REVS</p>
+<div id="modes"><button id="m10">10 PINS</button><button id="m100">100 PINS &#8226; WIDE LANE</button></div>
+<button id="play">PLAY</button>
+<div class="row"><button id="sbtn">SOUND: ON</button><a class="home" href="https://1nd1g0.github.io/">HOME</a></div>
+</div>
+<button id="dbgbtn">STEP-BY-STEP PHYSICS</button>
+<div id="dbar">
+<button id="dbb" title="back one frame (, / Left)">◀ 1</button>
+<button id="dbp" title="play/pause (Space)">▶</button>
+<button id="dbf" title="forward one frame (. / Right)">1 ▶</button>
+<input id="dscrub" type="range" min="0" max="0" value="0">
+<span id="dtxt"></span>
+<button id="dbc" title="copy this throw's full initial state to clipboard">COPY THROW</button>
+<button id="dbo">EXIT (V)</button>
+</div>
 <script>
 "use strict";
 const C=document.getElementById('c');
@@ -45,594 +115,969 @@ function resize(){W=C.width=Math.max(2,innerWidth*DPR|0);H=C.height=Math.max(2,i
 addEventListener('resize',resize);resize();
 const $=id=>document.getElementById(id);
 const PI=Math.PI,sin=Math.sin,cos=Math.cos,sqrt=Math.sqrt,abs=Math.abs,
-      min=Math.min,max=Math.max,clamp=(v,a,b)=>v<a?a:v>b?b:v,rand=Math.random,floor=Math.floor;
-
-/* ---------- audio ---------- */
-let AC=null,noiseBuf=null,rumbleGain=null;
-function audioInit(){
-  if(AC)return;
-  try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
-  noiseBuf=AC.createBuffer(1,AC.sampleRate*0.5|0,AC.sampleRate);
-  const d=noiseBuf.getChannelData(0);
-  for(let i=0;i<d.length;i++)d[i]=rand()*2-1;
-  const src=AC.createBufferSource();src.buffer=noiseBuf;src.loop=true;
-  const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=140;
-  rumbleGain=AC.createGain();rumbleGain.gain.value=0;
-  src.connect(lp);lp.connect(rumbleGain);rumbleGain.connect(AC.destination);src.start();
-}
-function noiseHit(vol,dur,freq){
-  if(!AC)return;
-  const s=AC.createBufferSource();s.buffer=noiseBuf;s.playbackRate.value=.7+rand()*.6;
-  const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=freq;bp.Q.value=1.2;
-  const g=AC.createGain();g.gain.setValueAtTime(vol,AC.currentTime);
-  g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+dur);
-  s.connect(bp);bp.connect(g);g.connect(AC.destination);s.start();s.stop(AC.currentTime+dur);
-}
-function tone(f,dur,vol,delay,type){
-  if(!AC)return;
-  const t=AC.currentTime+(delay||0);
-  const o=AC.createOscillator(),g=AC.createGain();
-  o.type=type||'sine';o.frequency.value=f;
-  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
-  o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+dur);
-}
-const sClick=v=>{noiseHit(min(.5,v),.09,2200);tone(110,.08,min(.4,v*.5),0,'triangle');};
-const sGutter=()=>{tone(300,.4,.25,0,'sawtooth');tone(180,.5,.2,.1,'sawtooth');};
-const sStrike=()=>{[523,659,784,1046].forEach((f,i)=>tone(f,.35,.35,i*.09,'square'));noiseHit(.4,.5,900);};
-const sSpare =()=>{[440,660,880].forEach((f,i)=>tone(f,.3,.3,i*.1,'square'));};
-
-/* ---------- math ---------- */
+min=Math.min,max=Math.max,clamp=(v,a,b)=>v<a?a:v>b?b:v,rand=Math.random,
+tan=Math.tan,atan2=Math.atan2;
+/* ---------- matrices (column-major) ---------- */
 function m4(){return new Float32Array(16)}
-function m4id(){const m=m4();m[0]=m[5]=m[10]=m[15]=1;return m}
-function m4mul(a,b){const r=m4();for(let i=0;i<4;i++)for(let j=0;j<4;j++)
-  r[j*4+i]=a[i]*b[j*4]+a[4+i]*b[j*4+1]+a[8+i]*b[j*4+2]+a[12+i]*b[j*4+3];return r;}
-function m4persp(fov,a,n,f){const m=m4(),t=1/Math.tan(fov/2);m[0]=t/a;m[5]=t;m[10]=(f+n)/(n-f);m[11]=-1;m[14]=2*f*n/(n-f);return m}
-function m4look(e,c,up){
-  let z=[e[0]-c[0],e[1]-c[1],e[2]-c[2]];const zl=Math.hypot(z[0],z[1],z[2]);z=[z[0]/zl,z[1]/zl,z[2]/zl];
-  let x=[up[1]*z[2]-up[2]*z[1],up[2]*z[0]-up[0]*z[2],up[0]*z[1]-up[1]*z[0]];
-  const xl=Math.hypot(x[0],x[1],x[2])||1;x=[x[0]/xl,x[1]/xl,x[2]/xl];
-  const y=[z[1]*x[2]-z[2]*x[1],z[2]*x[0]-z[0]*x[2],z[0]*x[1]-z[1]*x[0]];
-  const m=m4();m[0]=x[0];m[1]=y[0];m[2]=z[0];m[4]=x[1];m[5]=y[1];m[6]=z[1];m[8]=x[2];m[9]=y[2];m[10]=z[2];
-  m[12]=-(x[0]*e[0]+x[1]*e[1]+x[2]*e[2]);m[13]=-(y[0]*e[0]+y[1]*e[1]+y[2]*e[2]);m[14]=-(z[0]*e[0]+z[1]*e[1]+z[2]*e[2]);m[15]=1;return m;
+function m4id(){const o=m4();o[0]=o[5]=o[10]=o[15]=1;return o}
+function m4mul(a,b){const o=m4();for(let i=0;i<4;i++)for(let j=0;j<4;j++)
+o[i*4+j]=a[j]*b[i*4]+a[4+j]*b[i*4+1]+a[8+j]*b[i*4+2]+a[12+j]*b[i*4+3];return o}
+function m4t(x,y,z){const o=m4id();o[12]=x;o[13]=y;o[14]=z;return o}
+function m4s(x,y,z){const o=m4();o[0]=x;o[5]=y;o[10]=z;o[15]=1;return o}
+function m4rx(a){const o=m4id(),c=cos(a),s=sin(a);o[5]=c;o[6]=s;o[9]=-s;o[10]=c;return o}
+function m4ry(a){const o=m4id(),c=cos(a),s=sin(a);o[0]=c;o[2]=-s;o[8]=s;o[10]=c;return o}
+function m4rz(a){const o=m4id(),c=cos(a),s=sin(a);o[0]=c;o[1]=s;o[4]=-s;o[5]=c;return o}
+function m4persp(fov,asp,n,f){const o=m4(),t=1/Math.tan(fov/2);
+o[0]=t/asp;o[5]=t;o[10]=(f+n)/(n-f);o[11]=-1;o[14]=2*f*n/(n-f);return o}
+function m4look(e,c,u){
+ let zx=e[0]-c[0],zy=e[1]-c[1],zz=e[2]-c[2];
+ let l=sqrt(zx*zx+zy*zy+zz*zz)||1;zx/=l;zy/=l;zz/=l;
+ let xx=u[1]*zz-u[2]*zy,xy=u[2]*zx-u[0]*zz,xz=u[0]*zy-u[1]*zx;
+ l=sqrt(xx*xx+xy*xy+xz*xz)||1;xx/=l;xy/=l;xz/=l;
+ const yx=zy*xz-zz*xy,yy=zz*xx-zx*xz,yz=zx*xy-zy*xx;
+ const o=m4id();
+ o[0]=xx;o[1]=yx;o[2]=zx;
+ o[4]=xy;o[5]=yy;o[6]=zy;
+ o[8]=xz;o[9]=yz;o[10]=zz;
+ o[12]=-(xx*e[0]+xy*e[1]+xz*e[2]);
+ o[13]=-(yx*e[0]+yy*e[1]+yz*e[2]);
+ o[14]=-(zx*e[0]+zy*e[1]+zz*e[2]);
+ return o;
 }
-function m4t(x,y,z){const m=m4id();m[12]=x;m[13]=y;m[14]=z;return m}
-function m4rx(a){const m=m4id(),c=cos(a),s=sin(a);m[5]=c;m[6]=s;m[9]=-s;m[10]=c;return m}
-function m4ry(a){const m=m4id(),c=cos(a),s=sin(a);m[0]=c;m[2]=-s;m[8]=s;m[10]=c;return m}
-function m4rz(a){const m=m4id(),c=cos(a),s=sin(a);m[0]=c;m[1]=s;m[4]=-s;m[5]=c;return m}
-function m4s(x,y,z){const m=m4id();m[0]=x;m[5]=y;m[10]=z;return m}
-
 /* ---------- shaders ---------- */
-const VS=`attribute vec3 P,N;uniform mat4 MVP,M;varying vec3 vN,vW;
-void main(){vW=(M*vec4(P,1.0)).xyz;vN=mat3(M)*N;gl_Position=MVP*vec4(P,1.0);}`;
-const FS=`precision mediump float;varying vec3 vN,vW;
-uniform vec3 Col;uniform float Shin;
+const VS=`
+attribute vec3 aPos,aNrm;
+uniform mat4 uM,uMVP;
+varying vec3 vN,vW;
+void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;
+vN=normalize(vec3(dot(uM[0].xyz,aNrm),dot(uM[1].xyz,aNrm),dot(uM[2].xyz,aNrm)));
+gl_Position=uMVP*vec4(aPos,1.0);}`;
+const FS=`
+precision mediump float;
+varying vec3 vN,vW;
+uniform vec3 uCol,uFog,uCam;
+uniform float uMode,uPhase,uSpec,uHi,uTime,uLWH,uLWF,uDECKZ;
+float dotS(vec2 p,vec2 c,float r){return smoothstep(r,r*0.55,length(p-c));}
 void main(){
-  vec3 n=normalize(vN);
-  vec3 L1=normalize(vec3(0.35,0.9,-0.25));
-  vec3 L2=normalize(vec3(-0.5,0.4,0.6));
-  float d=max(dot(n,L1),0.0)*0.75+max(dot(n,L2),0.0)*0.25;
-  vec3 V=normalize(-vW);vec3 Hh=normalize(L1+V);
-  float sp=pow(max(dot(n,Hh),0.0),Shin)*0.5;
-  vec3 c=Col*(0.34+d*0.80)+vec3(sp);
-  gl_FragColor=vec4(c,1.0);
+ vec3 c=uCol;
+ if(uMode>1.5&&uMode<2.5){
+  float g=1.0;
+  if(vW.z<0.0){
+   // board + arrow + spot pattern scales with lane half-width (1.06-wide reference)
+   g*=0.82+0.18*step(0.06,fract((vW.x+uLWH)/(0.10625*uLWF)));
+   g*=0.92+0.08*sin(vW.z*15.0+vW.x*4.0);
+   vec2 q=vec2(vW.x/uLWF,(vW.z+12.0)*1.35);
+   g-=0.5*(dotS(q,vec2(0.0),0.033)+dotS(q,vec2(0.1136),0.033)+dotS(q,vec2(-0.1136),0.033)
+        +dotS(q,vec2(0.2272),0.028)+dotS(q,vec2(-0.2272),0.028));
+   g-=0.4*(dotS(vec2(vW.x/uLWF,(vW.z+3.7)*0.6),vec2(0.0522,0.0),0.03)
+         +dotS(vec2(vW.x/uLWF,(vW.z+3.7)*0.6),vec2(-0.0522,0.0),0.03));
+   g-=0.6*smoothstep(0.014,0.0,abs(vW.z));
+  }else g*=0.70;
+  if(vW.z<uDECKZ)c=mix(c,vec3(0.74,0.60,0.40),0.55);
+  c*=max(g,0.0);
+ }
+ if(uMode>2.5&&uMode<3.5){
+  float s=0.5+0.5*sin(dot(vN,vec3(2.1,1.4,3.7))*3.0+uPhase);
+  c=mix(uCol,vec3(0.92,0.22,0.32),smoothstep(0.35,0.65,s));
+ }
+ vec3 N=normalize(vN),col;
+ if(uMode>4.5){
+  col=c*(0.92+0.08*sin(uTime*7.0+vW.x*3.0));
+ }else{
+  vec3 L=normalize(vec3(0.28,0.8,0.5));
+  float dif=max(dot(N,L),0.0),hemi=0.5+0.5*N.y;
+  col=c*(0.38*hemi+0.72*dif)+c*uHi;
+  vec3 V=normalize(uCam-vW),H=normalize(L+V);
+  col+=vec3(1.0,0.96,0.88)*pow(max(dot(N,H),0.0),48.0)*uSpec;
+ }
+ float d=length(uCam-vW);
+ col=mix(col,uFog,1.0-exp(-d*0.022));
+ gl_FragColor=vec4(col,1.0);
 }`;
-function sh(s,t){const o=G.createShader(t);G.shaderSource(o,s);G.compileShader(o);
-  if(!G.getShaderParameter(o,G.COMPILE_STATUS))throw G.getShaderInfoLog(o);return o;}
+function sh(t,src){const s=G.createShader(t);G.shaderSource(s,src);G.compileShader(s);
+if(!G.getShaderParameter(s,G.COMPILE_STATUS))throw new Error(G.getShaderInfoLog(s));return s}
 const PG=G.createProgram();
-G.attachShader(PG,sh(VS,G.VERTEX_SHADER));G.attachShader(PG,sh(FS,G.FRAGMENT_SHADER));
-G.linkProgram(PG);G.useProgram(PG);
-const aP=G.getAttribLocation(PG,'P'),aN=G.getAttribLocation(PG,'N');
-const uMVP=G.getUniformLocation(PG,'MVP'),uM=G.getUniformLocation(PG,'M'),
-      uCol=G.getUniformLocation(PG,'Col'),uShin=G.getUniformLocation(PG,'Shin');
-G.enable(G.DEPTH_TEST);G.enable(G.CULL_FACE);G.clearColor(0.05,0.06,0.12,1);
-
+G.attachShader(PG,sh(G.VERTEX_SHADER,VS));G.attachShader(PG,sh(G.FRAGMENT_SHADER,FS));
+G.linkProgram(PG);
+if(!G.getProgramParameter(PG,G.LINK_STATUS))throw new Error(G.getProgramInfoLog(PG));
+G.useProgram(PG);
+const aPos=G.getAttribLocation(PG,'aPos'),aNrm=G.getAttribLocation(PG,'aNrm');
+G.enableVertexAttribArray(aPos);G.enableVertexAttribArray(aNrm);
+const uM=G.getUniformLocation(PG,'uM'),uMVP=G.getUniformLocation(PG,'uMVP'),
+uCol=G.getUniformLocation(PG,'uCol'),uFog=G.getUniformLocation(PG,'uFog'),
+uCam=G.getUniformLocation(PG,'uCam'),uMode=G.getUniformLocation(PG,'uMode'),
+uPhase=G.getUniformLocation(PG,'uPhase'),uSpec=G.getUniformLocation(PG,'uSpec'),
+uHi=G.getUniformLocation(PG,'uHi'),uTime=G.getUniformLocation(PG,'uTime'),
+uLWH=G.getUniformLocation(PG,'uLWH'),uLWF=G.getUniformLocation(PG,'uLWF'),
+uDECKZ=G.getUniformLocation(PG,'uDECKZ');
+G.enable(G.DEPTH_TEST);
+G.clearColor(0.027,0.035,0.071,1);
+let PV=m4();
 /* ---------- meshes ---------- */
-function buf(a,t){const b=G.createBuffer();G.bindBuffer(t,b);
-  G.bufferData(t,new Float32Array(a),G.STATIC_DRAW);return b;}
-function ibuf(a){const b=G.createBuffer();G.bindBuffer(G.ELEMENT_ARRAY_BUFFER,b);
-  G.bufferData(G.ELEMENT_ARRAY_BUFFER,new Uint16Array(a),G.STATIC_DRAW);return b;}
-function mesh(v,n,i){return{vb:buf(v,G.ARRAY_BUFFER),nb:buf(n,G.ARRAY_BUFFER),ib:ibuf(i),cnt:i.length};}
-function mSphere(seg,rng){
-  const v=[],n=[],idx=[];
-  for(let y=0;y<=rng;y++){const ph=y/rng*PI;
-    for(let x=0;x<=seg;x++){const th=x/seg*PI*2;
-      const nx=sin(ph)*cos(th),ny=cos(ph),nz=sin(ph)*sin(th);
-      v.push(nx,ny,nz);n.push(nx,ny,nz);}}
-  for(let y=0;y<rng;y++)for(let x=0;x<seg;x++){
-    const a=y*(seg+1)+x,b=a+seg+1;idx.push(a,b,a+1,b,b+1,a+1);}
-  return mesh(v,n,idx);
+function mb(p,n,idx){
+ const vb=G.createBuffer();G.bindBuffer(G.ARRAY_BUFFER,vb);G.bufferData(G.ARRAY_BUFFER,new Float32Array(p),G.STATIC_DRAW);
+ const nb=G.createBuffer();G.bindBuffer(G.ARRAY_BUFFER,nb);G.bufferData(G.ARRAY_BUFFER,new Float32Array(n),G.STATIC_DRAW);
+ const ib=G.createBuffer();G.bindBuffer(G.ELEMENT_ARRAY_BUFFER,ib);G.bufferData(G.ELEMENT_ARRAY_BUFFER,new Uint16Array(idx),G.STATIC_DRAW);
+ return {vb,nb,ib,c:idx.length};
 }
-function mBox(){
-  const v=[],n=[],idx=[];
-  const F=[
-    [[0,0,1],[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]]],
-    [[0,0,-1],[[1,-1,-1],[-1,-1,-1],[-1,1,-1],[1,1,-1]]],
-    [[0,1,0],[[-1,1,1],[1,1,1],[1,1,-1],[-1,1,-1]]],
-    [[0,-1,0],[[-1,-1,-1],[1,-1,-1],[1,-1,1],[-1,-1,1]]],
-    [[1,0,0],[[1,-1,1],[1,-1,-1],[1,1,-1],[1,1,1]]],
-    [[-1,0,0],[[-1,-1,-1],[-1,-1,1],[-1,1,1],[-1,1,-1]]]];
-  for(let f=0;f<6;f++){
-    const nn=F[f][0],co=F[f][1],base=f*4;
-    for(let k=0;k<4;k++){v.push(co[k][0],co[k][1],co[k][2]);n.push(nn[0],nn[1],nn[2]);}
-    idx.push(base,base+1,base+2,base,base+2,base+3);
-  }
-  return mesh(v,n,idx);
+function mkBox(){const p=[],n=[],idx=[];
+ const F=(nx,ny,nz,v)=>{const b=p.length/3;for(let i=0;i<4;i++){p.push(v[i][0],v[i][1],v[i][2]);n.push(nx,ny,nz)}idx.push(b,b+1,b+2,b,b+2,b+3)};
+ F(0,0,1,[[-.5,-.5,.5],[.5,-.5,.5],[.5,.5,.5],[-.5,.5,.5]]);
+ F(0,0,-1,[[.5,-.5,-.5],[-.5,-.5,-.5],[-.5,.5,-.5],[.5,.5,-.5]]);
+ F(1,0,0,[[.5,-.5,.5],[.5,-.5,-.5],[.5,.5,-.5],[.5,.5,.5]]);
+ F(-1,0,0,[[-.5,-.5,-.5],[-.5,-.5,.5],[-.5,.5,.5],[-.5,.5,-.5]]);
+ F(0,1,0,[[-.5,.5,.5],[.5,.5,.5],[.5,.5,-.5],[-.5,.5,-.5]]);
+ F(0,-1,0,[[-.5,-.5,-.5],[.5,-.5,-.5],[.5,-.5,.5],[-.5,-.5,.5]]);
+ return mb(p,n,idx);}
+function mkSphere(la,lo){const p=[],n=[],idx=[];
+ for(let i=0;i<=la;i++){const t=PI*i/la,st=sin(t),ct=cos(t);
+  for(let j=0;j<=lo;j++){const u=2*PI*j/lo,x=st*cos(u),y=ct,z=st*sin(u);p.push(x,y,z);n.push(x,y,z)}}
+ const S=lo+1;
+ for(let i=0;i<la;i++)for(let j=0;j<lo;j++){const a=i*S+j,b=a+S;idx.push(a,b,a+1,b,b+1,a+1)}
+ return mb(p,n,idx);}
+function mkLathe(pts,seg){const p=[],n=[],idx=[],N=[];
+ for(let k=0;k<pts.length;k++){
+  const q=pts[max(0,k-1)],r=pts[min(pts.length-1,k+1)];
+  const dr=r[0]-q[0],dy=r[1]-q[1],L=sqrt(dr*dr+dy*dy)||1;
+  N.push([dy/L,-dr/L]);
+ }
+ for(let k=0;k<pts.length;k++)for(let j=0;j<=seg;j++){const u=2*PI*j/seg,cr=cos(u),sr=sin(u),r=pts[k][0];
+  p.push(r*cr,pts[k][1],r*sr);
+  if(r<1e-6)n.push(0,k===0?-1:1,0);else n.push(N[k][0]*cr,N[k][1],N[k][0]*sr);
+ }
+ const S=seg+1;
+ for(let k=0;k<pts.length-1;k++)for(let j=0;j<seg;j++){const a=k*S+j,b=a+S;
+  if(pts[k][0]<1e-6)idx.push(a,b,b+1);
+  else if(pts[k+1][0]<1e-6)idx.push(a,b,a+1);
+  else idx.push(a,b,a+1,b,b+1,a+1)}
+ return mb(p,n,idx);}
+const M_BOX=mkBox(),M_SPH=mkSphere(14,24);
+// USBC pin blueprint: 15.0in tall; belly dia 4.77in @4.5in; neck dia 1.78in @10.9in;
+// head dia 2.55in @12.6in; base dia 2.03in. [radius,height] in metres.
+const PIN_PROFILE=[[0,0],[0.024,0],[0.0254,0.008],[0.038,0.045],[0.0605,0.114],[0.046,0.178],
+[0.030,0.235],[0.0226,0.277],[0.0324,0.320],[0.030,0.355],[0.022,0.369],[0.012,0.377],[0,0.381]];
+const M_PIN=mkLathe(PIN_PROFILE,14);
+function draw(mk,mat,col,mode,spec,hi){
+ G.uniformMatrix4fv(uM,false,mat);
+ G.uniformMatrix4fv(uMVP,false,m4mul(PV,mat));
+ G.uniform3fv(uCol,col);
+ G.uniform1f(uMode,mode||0);G.uniform1f(uSpec,spec||0);G.uniform1f(uHi,hi||0);
+ G.bindBuffer(G.ARRAY_BUFFER,mk.vb);G.vertexAttribPointer(aPos,3,G.FLOAT,false,0,0);
+ G.bindBuffer(G.ARRAY_BUFFER,mk.nb);G.vertexAttribPointer(aNrm,3,G.FLOAT,false,0,0);
+ G.bindBuffer(G.ELEMENT_ARRAY_BUFFER,mk.ib);
+ G.drawElements(G.TRIANGLES,mk.c,G.UNSIGNED_SHORT,0);
 }
-function mPin(seg,rng){
-  const v=[],n=[],idx=[];
-  const prof=t=>{
-    if(t<0.06)return 0.16+t*1.2;
-    if(t<0.30)return 0.23-((t-0.06)/0.24)*0.02;
-    if(t<0.55)return 0.21-((t-0.30)/0.25)*0.11;
-    if(t<0.80)return 0.10-((t-0.55)/0.25)*0.02;
-    return 0.08+((t-0.80)/0.20)*0.02;
-  };
-  for(let y=0;y<=rng;y++){
-    const t=y/rng,r=prof(t);
-    const r2=prof(min(1,t+0.02)),slope=(r-r2)/0.02;
-    const nl=Math.hypot(1,slope);
-    for(let x=0;x<=seg;x++){
-      const th=x/seg*PI*2,c=cos(th),s=sin(th);
-      v.push(c*r,t,s*r);n.push(c/nl,slope/nl,s/nl);
-    }
-  }
-  for(let y=0;y<rng;y++)for(let x=0;x<seg;x++){
-    const a=y*(seg+1)+x,b=a+seg+1;idx.push(a,b,a+1,b,b+1,a+1);}
-  return mesh(v,n,idx);
-}
-function mTri(){
-  return mesh([0,0.0,-0.5, -0.22,0.0,0.25, 0.22,0.0,0.25],[0,1,0,0,1,0,0,1,0],[0,1,2]);
-}
-const M_SPH=mSphere(18,12), M_BOX=mBox(), M_PIN=mPin(14,18), M_TRI=mTri();
-
-let PROJVIEW=m4id();
-function draw(m,model,col,shin){
-  G.uniformMatrix4fv(uMVP,false,m4mul(PROJVIEW,model));
-  G.uniformMatrix4fv(uM,false,model);
-  G.uniform3f(uCol,col[0],col[1],col[2]);
-  G.uniform1f(uShin,shin||24);
-  G.bindBuffer(G.ARRAY_BUFFER,m.vb);G.enableVertexAttribArray(aP);G.vertexAttribPointer(aP,3,G.FLOAT,false,0,0);
-  G.bindBuffer(G.ARRAY_BUFFER,m.nb);G.enableVertexAttribArray(aN);G.vertexAttribPointer(aN,3,G.FLOAT,false,0,0);
-  G.bindBuffer(G.ELEMENT_ARRAY_BUFFER,m.ib);
-  G.drawElements(G.TRIANGLES,m.cnt,G.UNSIGNED_SHORT,0);
-}
-
 /* ---------- world ---------- */
-const LW=1.2, GUTX=LW+0.22, WALLX=LW+0.52;
-const BALL_R=0.16, PIN_H=0.55, PIN_R=0.115;
-const PIN_Z=-10.6, PIT_Z=-13.1, START_Z=2.2;
-/* hook phases (seconds): skid -> hook -> roll */
-const SKID=0.30, HOOK_END=1.10, HOOK_A=2.3;
-
-let level=1,score=0,frame=1,throwNum=1;
-let pins=[],bumpers=[],parts=[];
-let ball=null;
-let phase='aim';
-let aim=0,power=0,spin=0;
-let drag=null,spinVel=0,lastMoveT=0,lastMoveX=0;
-let settleT=0,standingBefore=10;
-let hookMul=1,fricDec=0.4,oilName='';
-let seed=1;
-const srnd=()=>((seed=(seed*16807)%2147483647)-1)/2147483646;
-
-function makePin(x,z){return{x,z,vx:0,vz:0,tx:0,tz:0,wx:0,wz:0,
-  down:false,spin:rand()*PI,rs:0,cr:0.12};}
-
-/* ALWAYS a proper 10-pin triangle; procedural part = oil, friction, bumpers */
-function genLevel(){
-  pins=[];bumpers=[];parts=[];
-  seed=level*104729+7;
-  const S=0.46,RZ=0.40;
-  for(let r=0;r<4;r++)
-    for(let c=0;c<=r;c++)
-      pins.push(makePin((c-r/2)*S, PIN_Z-r*RZ));
-  const oil=srnd();
-  if(oil<0.34){oilName='DRY OIL';hookMul=1.3;}
-  else if(oil<0.67){oilName='MED OIL';hookMul=1.0;}
-  else{oilName='HEAVY OIL';hookMul=0.7;}
-  fricDec=0.30+srnd()*0.30;
-  if(level>=3){
-    const nb=min(2+floor(level/2),5);
-    for(let i=0;i<nb;i++){
-      const bx=(srnd()*2-1)*LW*0.7,bz=-3-srnd()*5;
-      let ok=true;
-      for(const b of bumpers)if(abs(b.x-bx)<0.7&&abs(b.z-bz)<1.5)ok=false;
-      if(ok)bumpers.push({x:bx,z:bz,r:0.14+srnd()*0.1,h:0.35+srnd()*0.3});
-    }
-  }
+// lane/rack geometry is per-mode; every consumer reads these live (the FS lane
+// pattern is scaled by the uLW* uniforms set in setMode)
+let PC=10,RACKZ=-18.288,LW=1.06,LWH=LW/2,GUTW=0.241,WALLX=LWH+GUTW+0.04,
+AIMCAP=0.032,STARTXW=0.4;
+const PITZ=-19.35,PITEDGE=-19.0;
+function setMode(m100){
+ PC=m100?100:10;
+ LW=m100?4.3:1.06;LWH=LW/2;WALLX=LWH+GUTW+0.04;
+ // rack rows run AWAY from the camera, so RACKZ is the front row. The wide-lane
+ // rack is a 14-row-deep triangle (3.38m): place its front row so the base row
+ // (-19.08) still stops short of the pit-drop line PITZ+0.05 and the ball edge
+ // (-19.11 at the PITEDGE drop) can still reach it
+ RACKZ=m100?-15.7:-18.288;
+ // the 100-pin triangle spans 3.66m at its base: aim window and start range widen with it
+ AIMCAP=m100?0.15:0.032;STARTXW=m100?1.47:0.4;
+ G.uniform1f(uLWH,LWH);G.uniform1f(uLWF,LW/1.06);G.uniform1f(uDECKZ,RACKZ-0.162);
+}
+const BALL_R=0.109,MBALL=6.8;
+const PIN_H=0.381,PR=0.059,MPIN=1.56;
+const PIN_S=0.3048,PIN_RZ=0.2598;
+let frame=0,throwN=0,standingBefore=10;
+let fr=blankFrames();
+function blankFrames(){const a=[];for(let i=0;i<10;i++)a.push({t:[]});return a}
+let pins=[],ball=null,parts=[];
+let phase='menu',aim=0,power=0,spin=0,startX=0,drag=null,settleT=0,msgTO=0,fullRack=true;
+function makePin(x,z){return {x,z,vx:0,vz:0,th:0,om:0,dir:0,down:false,dead:false,drop:0}}
+function newRack(){
+ pins=[];
+ if(PC===10){
+  for(let r=0;r<4;r++)for(let c=0;c<=r;c++)
+   pins.push(makePin((c-r/2)*PIN_S+(rand()*2-1)*0.004,RACKZ-r*PIN_RZ+(rand()*2-1)*0.003));
+ }else{
+  // 100-pin triangle, apex-forward like the 10-pin rack: 13 rows of 1..13 (91
+  // pins) plus a centered 9-pin base row. 100 is not a triangular number
+  // (T13=91, T14=105), and a full 14th row would not fit the lane, so the
+  // base row is the short one; from the aim camera it reads as a triangle
+  for(let r=0;r<13;r++)for(let c=0;c<=r;c++)
+   pins.push(makePin((c-r/2)*PIN_S+(rand()*2-1)*0.004,RACKZ-r*PIN_RZ+(rand()*2-1)*0.003));
+  for(let c=0;c<9;c++)
+   pins.push(makePin((c-4)*PIN_S+(rand()*2-1)*0.004,RACKZ-13*PIN_RZ+(rand()*2-1)*0.003));
+ }
+ standingBefore=PC;
 }
 function resetBall(){
-  ball={x:0,y:BALL_R,z:START_Z,vx:0,vy:0,vz:0,rx:0,ry:0,rz:0,
-        spin:0,active:false,gutter:false,dead:false,t:0};
+ ball={x:startX,y:BALL_R,z:0.45,vx:0,vz:0,spin:0,roll:0,active:false,gutter:false,dead:false,v:0};
+}
+/* ---------- hud ---------- */
+const FRUI=[];
+(function buildSheet(){
+ const s=$('sheet');
+ for(let i=0;i<10;i++){
+  const d=document.createElement('div');d.className='fr';
+  const th=document.createElement('div');th.className='th';
+  const cells=[];
+  for(let k=0;k<(i===9?3:2);k++){const c=document.createElement('i');th.appendChild(c);cells.push(c)}
+  const tt=document.createElement('div');tt.className='tt';
+  d.appendChild(th);d.appendChild(tt);s.appendChild(d);
+  FRUI.push({d,cells,tt});
+ }
+ const g=document.createElement('div');g.className='fr gt';
+ const gt=document.createElement('div');gt.className='tt';
+ g.appendChild(gt);s.appendChild(g);
+ FRUI.push({d:g,cells:[],tt:gt});
+})();
+function scoreTotal(){
+ let total=0;const cellTot=Array(10).fill('');
+ const all=[];for(let i=0;i<10;i++)for(const v of fr[i].t)all.push(v);
+ let pos=0;
+ for(let i=0;i<9;i++){
+  const t=fr[i].t;
+  if(t.length){
+   let val=null;
+   if(t[0]===10){if(all.length>=pos+3)val=10+all[pos+1]+all[pos+2]}
+   else if(t.length>=2){
+    if(t[0]+t[1]===10){if(all.length>=pos+3)val=10+all[pos+2]}
+    else val=t[0]+t[1];
+   }
+   if(val!=null){total+=val;cellTot[i]=total}
+  }
+  pos+=t.length;
+ }
+ const t=fr[9].t;let done=false;
+ if(t.length===2&&t[0]+t[1]<10)done=true;
+ if(t.length===3)done=true;
+ if(done){const s=t.reduce((a,b)=>a+b,0);total+=s;cellTot[9]=total}
+ return {total,cellTot};
+}
+function updateSheet(){
+ const {total,cellTot}=scoreTotal();
+ const fmt=v=>v===0?'\u2013':String(v);
+ for(let i=0;i<10;i++){
+  const t=fr[i].t,u=FRUI[i];
+  u.d.classList.toggle('cur',i===frame&&phase!=='over');
+  u.cells.forEach(c=>{c.textContent='';c.classList.remove('x')});
+  const set=(k,v,xc)=>{u.cells[k].textContent=v;if(xc)u.cells[k].classList.add('x')};
+  if(i<9){
+   if(t.length>0){
+    if(t[0]===10)set(1,'X',true);
+    else{set(0,fmt(t[0]));
+     if(t.length>1){if(t[0]+t[1]===10)set(1,'/',true);else set(1,fmt(t[1]))}}
+   }
+  }else{
+   let fresh=true;
+   for(let k=0;k<t.length&&k<3;k++){
+    const v=t[k];
+    if(v===10&&fresh)set(k,'X',true);
+    else if(k>0&&!fresh&&t[k-1]!==10&&t[k-1]+v===10)set(k,'/',true);
+    else if(v===10)set(k,'X',true);
+    else set(k,fmt(v));
+    fresh=(v===10)||(k===1&&t[0]+t[1]===10);
+   }
+  }
+  u.tt.textContent=cellTot[i];
+ }
+ FRUI[10].tt.textContent=total>0?total:'';
+ statusHUD();
+}
+function statusHUD(){
+ // during aim throwN is the count of COMPLETED throws: label the ball being lined up
+ $('status').textContent=`FRAME ${min(frame+1,10)}/10 \u2022 THROW ${phase==='roll'?max(1,throwN):max(1,min(3,throwN+1))} \u2022 ${PC===10?'10 PIN':'100 PIN WIDE'}`;
+ $('info').textContent='DRAW THE BALL PATH: start = where you stand \u2022 draw speed = power \u2022 draw a curve = revs \u2022 straight draw = straight ball';
+}
+function msg(t,ms){
+ const e=$('msg');e.textContent=t;e.classList.add('on');
+ clearTimeout(msgTO);msgTO=setTimeout(()=>e.classList.remove('on'),ms||1400);
 }
 function meters(){
-  $('pw').style.height=(power*100)+'%';
-  const c=clamp(drag?spinVel:spin,-1,1);
-  const h=abs(c)*50;
-  $('cvB').style.height=h+'%';
-  $('cvB').style.top=c>=0?(50-h)+'%':'50%';
+ const show=(phase==='aim')?'block':'none';
+ $('pw').style.display=show;$('sw').style.display=show;
+ $('pwB').style.height=(power*100)+'%';
+ const h=abs(spin)*48,c=spin>=0;
+ $('swB').style.height=h+'%';
+ $('swB').style.top=c?(50-h)+'%':'50%';
 }
-function startFrame(clearAll){
-  if(clearAll)genLevel();
-  else pins=pins.filter(p=>!p.down);
-  resetBall();
-  phase='aim';aim=0;power=0;spin=0;spinVel=0;drag=null;
-  standingBefore=pins.length;
-  $('btn').style.display='none';
-  meters();hud();
-}
-function hud(){
-  $('score').textContent=`LVL ${level} \u2022 SCORE ${score} \u2022 FRAME ${frame}/10 \u2022 THROW ${throwNum} \u2022 ${oilName}`;
-  $('info').textContent='DRAG: up=power, side=aim, flick side at release=curve  |  PC: \u2190\u2192 aim, \u2191\u2193 curve, SPACE hold=power';
-}
-let msgTO=0;
-function msg(t,ms){
-  const e=$('msg');e.textContent=t;e.classList.add('on');
-  clearTimeout(msgTO);msgTO=setTimeout(()=>e.classList.remove('on'),ms||1400);
-}
-
 /* ---------- physics ---------- */
-const DT=1/120;
-const hookPhase=t=>(t<SKID||t>HOOK_END)?0:1;   /* skid, hook, then roll straight */
-function capV(p,mx){const s=Math.hypot(p.vx,p.vz);if(s>mx){p.vx*=mx/s;p.vz*=mx/s;}}
-function capW(p,mx){const s=Math.hypot(p.wx,p.wz);if(s>mx){p.wx*=mx/s;p.wz*=mx/s;}}
-
-function stepBall(dt){
-  const b=ball;
-  b.t+=dt;
-  if(b.gutter){
-    if(b.vz<0)b.vz+=fricDec*2.2*dt;
-    b.z+=b.vz*dt;
-    b.rx+=b.vz/BALL_R*dt;
-    if(b.z<PIT_Z+0.3){b.z=PIT_Z+0.3;b.vz=0;b.dead=true;}
-    return;
-  }
-  if(b.dead){b.vz*=0.8;b.z+=b.vz*dt;return;}
-  const spd=Math.hypot(b.vx,b.vz);
-  /* realistic 3-phase hook */
-  b.vx+=b.spin*HOOK_A*hookMul*hookPhase(b.t)*dt*min(1,spd/5);
-  if(spd>0.01){
-    const ns=max(0,spd-fricDec*dt);
-    b.vx*=ns/spd;b.vz*=ns/spd;
-  }
-  b.x+=b.vx*dt;b.z+=b.vz*dt;
-  b.rx+=b.vz/BALL_R*dt;
-  b.rz-=b.vx/BALL_R*dt;
-  b.ry+=b.spin*2*dt;
-  b.vy-=9.8*dt;b.y+=b.vy*dt;
-  if(b.y<BALL_R){b.y=BALL_R;if(b.vy<0)b.vy*=-0.25;if(abs(b.vy)<0.2)b.vy=0;}
-  if(abs(b.x)>LW+0.02){
-    b.gutter=true;b.x=b.x>0?GUTX:-GUTX;b.vx=0;b.spin=0;b.y=BALL_R-0.10;
-    sGutter();
-  }
-  if(b.z<PIT_Z){b.z=PIT_Z;b.vz*=0.2;b.dead=true;}
-  for(const o of bumpers){
-    const dx=b.x-o.x,dz=b.z-o.z,d=Math.hypot(dx,dz),md=BALL_R+o.r;
-    if(d<md&&d>1e-4){
-      const nx=dx/d,nz=dz/d;
-      b.x=o.x+nx*md;b.z=o.z+nz*md;
-      const vn=b.vx*nx+b.vz*nz;
-      if(vn<0){b.vx-=2*vn*nx*0.85;b.vz-=2*vn*nz*0.85;sClick(abs(vn)*0.06);}
-    }
-  }
-  for(const p of pins){
-    const py=p.down?0.10:0.28;
-    const dx=p.x-b.x,dz=p.z-b.z,dy=py-b.y;
-    const d=sqrt(dx*dx+dy*dy+dz*dz),md=BALL_R+p.cr;
-    if(d<md&&d>1e-4){
-      const nx=dx/d,ny=dy/d,nz=dz/d;
-      const ov=md-d;
-      p.x+=nx*ov*0.8;p.z+=nz*ov*0.8;
-      b.x-=nx*ov*0.2;b.z-=nz*ov*0.2;
-      const vn=(b.vx-p.vx)*nx+(b.vz-p.vz)*nz;
-      if(vn>0){
-        /* sane impulse: pin leaves at ~1.5x approach speed, capped */
-        const j=min(vn,12)*1.5;
-        p.vx+=nx*j;p.vz+=nz*j;
-        p.wx+=nz*min(vn,10)*1.1;p.wz-=nx*min(vn,10)*1.1;
-        capV(p,11);capW(p,8);
-        b.vx-=nx*vn*0.14;b.vz-=nz*vn*0.14;   /* ball plows through */
-        sClick(min(.6,vn*0.09));
-        burst(p.x,0.3,p.z,5);
-      }
-    }
-  }
+// pin topple model: balance angle past which gravity commits the fall (real pin ~atan(r_base/h_cg)≈0.37)
+const TIPC=0.35,GTOP=12,KREST=90,CDAMP=6;
+function grip(z){if(z>-12.6)return 0.06;return clamp((-z-12.6)/1.8,0,1)}
+function stepBall(b,dt){
+ if(!b.active||b.dead)return;
+ const g=grip(b.z);
+ const v=sqrt(b.vx*b.vx+b.vz*b.vz);
+ if(v>1e-4){b.vx-=b.vx/v*0.55*dt;b.vz-=b.vz/v*0.55*dt}
+ b.vx+=b.spin*2.1*g*dt;
+ b.x+=b.vx*dt;b.z+=b.vz*dt;
+ b.roll+=v*dt/BALL_R;b.v=sqrt(b.vx*b.vx+b.vz*b.vz);
+ // the gutter engages when the ball's contact POINT leaves the lane: a sphere
+ // touches the floor directly under its center, so the trigger is abs(x)>LWH with
+ // no radius margin (the old -BALL_R*0.3 fudge cut in at center 0.497 — a ball
+ // legitimately plowing the left corner pin teleported there, and the old snap
+ // then threw it 15cm sideways to the channel center: the f285-286 jump).
+ // No snap on entry: the ball keeps its x, lateral motion dies against the
+ // channel wall, and it rolls down the channel it fell into.
+ if(!b.gutter&&!b.drop&&abs(b.x)>LWH){b.gutter=true;sGutter();b.vx=0}
+ if(b.gutter)b.x=clamp(b.x,-LWH-GUTW/2,LWH+GUTW/2);
+ if(b.z<PITEDGE){if(!b.drop){b.drop=1;b.y=b.gutter?-0.06:BALL_R;b.vy=0}b.vy-=11*dt;b.y+=b.vy*dt;if(b.y<-0.55){b.dead=true;return}}
+ // a ball that comes back past the foul line (kickback off the pack or pit wall)
+ // can never touch pins again, and between there and the camera it would fill
+ // the screen as a giant sphere: end it just past the approach instead
+ if(b.z>1.0||b.v<0.25){b.dead=true;return}
+ for(const p of pins)if(!p.dead)collideBallPin(p,b);
+}
+// pin body is a capsule on the floor plane: base at (p.x,p.z) -> tip at base+dir*sin(th)*PIN_H,
+// matching the render transform (m4t base * m4ry(-dir) * m4rz(-th)). point-circles made fallen pins ghosts.
+function pinSeg(p){const s=sin(p.th)*PIN_H;return[p.x,p.z,p.x+cos(p.dir)*s,p.z+sin(p.dir)*s]}
+// horizontal velocity of the body point at axial fraction u (0=base,1=top): slide + topple sweep
+function pinVel(p,u){const k=cos(p.th)*p.om*PIN_H*u;return[p.vx+cos(p.dir)*k,p.vz+sin(p.dir)*k]}
+// closest approach of two segments; returns [d,nx,nz,s,t] with n pointing from seg1 to seg2
+function segSeg(a,b,c,e){
+ const ux=b[0]-a[0],uz=b[1]-a[1],vx=e[0]-c[0],vz=e[1]-c[1],wx=a[0]-c[0],wz=a[1]-c[1];
+ const A=ux*ux+uz*uz,B=ux*vx+uz*vz,C=vx*vx+vz*vz,D=ux*wx+uz*wz,E=vx*wx+vz*wz,den=A*C-B*B;
+ const ss=[0,1],ts=[0,1];
+ if(A>1e-9)ss.push(clamp(-D/A,0,1));
+ if(C>1e-9)ts.push(clamp(E/C,0,1));
+ if(den>1e-9){const s0=clamp((B*E-C*D)/den,0,1);ss.push(s0)}
+ for(const t of [0,1])if(A>1e-9)ss.push(clamp((B*t-D)/A,0,1));
+ for(const s of ss)if(C>1e-9)ts.push(clamp((B*s+E)/C,0,1));
+ let bd=1e9,bs=0,bt=0;
+ for(const s of ss)for(const t of ts){
+  const px=a[0]+ux*s-c[0]-vx*t,pz=a[1]+uz*s-c[1]-vz*t,d=sqrt(px*px+pz*pz);
+  if(d<bd){bd=d;bs=s;bt=t}
+ }
+ const qx=c[0]+vx*bt-a[0]-ux*bs,qz=c[1]+vz*bt-a[1]-uz*bs;
+ return[bd,bd<1e-6?1:qx/bd,bd<1e-6?0:qz/bd,bs,bt];
+}
+// HARD PHYSICAL INVARIANT: a pin is never faster than the ball. The ball is
+// the only energy source in the system, and even a perfectly elastic hit
+// bounds the pin at 2M/(M+m)=1.57x the ball's impact speed; real pile-up
+// speeds are a fraction of the ball speed. Without this cap the pin-pin
+// cascade self-amplifies (each pin-pin impulse adds topple spin, and the
+// next contact reads that spin back as sweep speed) and manufactures
+// 10-17m/s pins that kick the ball sideways AND speed it up - the
+// frame-424 replay had the ball gaining 18 J from an 11.9 m/s pin.
+// PK = the ball's peak speed this throw (the ball only ever slows down),
+// set at release, re-seeded on debug restore; frozen once the ball leaves
+// the lane so pit pins keep flying. Enforced wherever pin velocity is born:
+// the ball-pin and pin-pin impulses themselves.
+let PK=0;
+// topple-spin cap: a pin falling flat under gravity about its base peaks at
+// sqrt(3g/L)=8.8 rad/s; collision kick-starts add a little on top. Uncapped
+// om (the frame-424 cascade had 31.7) feeds the pin-pin solver via pinVel's
+// sweep term and inflates the pile-up beyond the energy the ball has.
+const OMCAP=12;
+function pinSpeedCap(p){
+ if(PK<=0)return;
+ const s=sqrt(p.vx*p.vx+p.vz*p.vz);
+ if(s>PK){const k=PK/s;p.vx*=k;p.vz*=k}
+}
+function collideBallPin(p,b){
+ const S=pinSeg(p);
+ const ux=S[2]-S[0],uz=S[3]-S[1],L=ux*ux+uz*uz;
+ const u=L>1e-9?clamp(((b.x-S[0])*ux+(b.z-S[1])*uz)/L,0,1):0;
+ const qx=S[0]+ux*u,qz=S[1]+uz*u;
+ const dx=qx-b.x,dz=qz-b.z,d=sqrt(dx*dx+dz*dz),md=BALL_R+PR;
+ if(d>=md||d<1e-5)return;
+ const nx=dx/d,nz=dz/d;
+ // never let a pin stay buried in the ball: separate along the contact normal,
+ // mass-weighted so the ball yields 19% and the pin 81% (there was no position
+ // correction here before, and pins jammed against the pack sat inside the ball)
+ const pen=min(md-d,0.06);
+ p.x+=nx*pen*MBALL/(MBALL+MPIN);p.z+=nz*pen*MBALL/(MBALL+MPIN);
+ b.x-=nx*pen*MPIN/(MBALL+MPIN);b.z-=nz*pen*MPIN/(MBALL+MPIN);
+ const rv=(b.vx-p.vx)*nx+(b.vz-p.vz)*nz;
+ if(rv<=0)return;
+ // zero restitution against the ball: a 1.56kg pin cannot bounce back a 6.8kg ball,
+ // it only gets equalized to the ball's speed and cleared out of the path.
+ // coupling was against the topple-sweep speed at contact height before, which
+ // flung the ball backwards out of the pack (energy borrowed from unmodeled spin).
+ const j=rv/(1/MBALL+1/MPIN);
+ // the ball never rebounds off a pin: if equalizing would send it back through the
+ // contact normal, it just stops at the contact face and the surplus impulse goes
+ // into the pin (a 6.8kg ball is not thrown backwards by a 1.56kg pin)
+ const vbn=b.vx*nx+b.vz*nz,vpn=p.vx*nx+p.vz*nz;
+ const jB=vbn*(MBALL*vbn+MPIN*vpn)<0?MBALL*vbn:j;
+ // reduced coupling against DOWNED pins (low contact, the pin rolls away), applied
+ // to BOTH bodies: the ball used to take the full impulse while the pin got only
+ // 60% — the missing 40% inflated the ball's deflection off pile debris
+ const jD=jB*(p.down?0.6:1);
+ b.vx-=jD*nx/MBALL;b.vz-=jD*nz/MBALL;
+ p.vx+=jD*nx/MPIN;p.vz+=jD*nz/MPIN;
+ pinSpeedCap(p);
+ if(!p.down&&p.om<rv*2.9){p.om=min(rv*2.9,OMCAP);p.dir=Math.atan2(nz,nx)}
+ hitSound(rv);sparks(qx,0.1,qz,min(6,rv*2|0));
+}
+function collidePinPin(a,b){
+ if(a.dead||b.dead)return;
+ const A=pinSeg(a),Bp=pinSeg(b);
+ const cc=segSeg([A[0],A[1]],[A[2],A[3]],[Bp[0],Bp[1]],[Bp[2],Bp[3]]),md=PR*2,d=cc[0];
+ if(d>=md)return;
+ let nx=cc[1],nz=cc[2];
+ if(d<1e-6){const dx=Bp[0]-A[0],dz=Bp[3]-A[1],dl=Math.hypot(dx,dz);nx=dl<1e-6?1:dx/dl;nz=dl<1e-6?0:dz/dl}
+ // position separation FIRST and unconditional (capped like the ball-pin one):
+ // an overlapping pair with rv<=0 (a capsule sweeping tangentially across another
+ // pin) used to return here without separating, and the two bodies stayed fused
+ // through each other — the reported head-through-head
+ const sep=min(md-d,0.06)*0.5;
+ a.x-=nx*sep;a.z-=nz*sep;b.x+=nx*sep;b.z+=nz*sep;
+ const va=pinVel(a,cc[3]),vb=pinVel(b,cc[4]);
+ const rv=(va[0]-vb[0])*nx+(va[1]-vb[1])*nz;
+ if(rv<=0)return;
+ // pin-pin restitution ~0.3: a bouncier cascade (it was 1.85) multiplies pin speeds
+ // through pile-ups past the ball's own speed, and those then fling the ball around
+ const j=1.3*rv*MPIN/2;
+ a.vx-=j*nx/MPIN;a.vz-=j*nz/MPIN;
+ b.vx+=j*nx/MPIN;b.vz+=j*nz/MPIN;
+ pinSpeedCap(a);pinSpeedCap(b);
+ // a hit can start a topple on either pin: fall away from the other
+ if(!b.down&&b.om<rv*3.2){b.om=min(rv*3.2,OMCAP);b.dir=Math.atan2(nz,nx)}
+ if(!a.down&&a.om<rv*3.2){a.om=min(rv*3.2,OMCAP);a.dir=Math.atan2(-nz,-nx)}
+ if(rv>0.4)hitSound(rv*0.6);
 }
 function stepPins(dt){
-  for(const p of pins){
-    if(!p.down){
-      const tl=Math.hypot(p.tx,p.tz);
-      if(tl>1e-4){
-        const ax=p.tx/tl,az=p.tz/tl;
-        /* wobble (restoring) below 0.12 rad, toppling above */
-        const tq=tl<0.12?-8*tl:7.5*tl;
-        p.wx+=ax*tq*dt;p.wz+=az*tq*dt;
-      }
-      p.wx*=(1-1.5*dt);p.wz*=(1-1.5*dt);
-      p.tx+=p.wx*dt;p.tz+=p.wz*dt;
-      p.vx*=(1-3.5*dt);p.vz*=(1-3.5*dt);
-      p.x+=p.vx*dt;p.z+=p.vz*dt;
-      p.rs+=dt*1.5;
-      if(Math.hypot(p.tx,p.tz)>0.5)p.down=true;
-    }else{
-      p.vx*=(1-2.0*dt);p.vz*=(1-2.0*dt);
-      p.x+=p.vx*dt;p.z+=p.vz*dt;
-      p.tx+=p.wx*dt;p.tz+=p.wz*dt;
-      const tl=Math.hypot(p.tx,p.tz);
-      if(tl>1.50){const k=1.50/tl;p.tx*=k;p.tz*=k;p.wx*=0.5;p.wz*=0.5;}
-      p.rs+=Math.hypot(p.vx,p.vz)*dt*4;
-    }
-    capV(p,11);
-    if(p.z<PIT_Z+0.15){p.z=PIT_Z+0.15;p.vz*=-0.3;}
-    if(p.z>PIN_Z+3)p.z=PIN_Z+3;
-    if(abs(p.x)>WALLX-0.1){p.x=p.x>0?WALLX-0.1:-WALLX+0.1;p.vx*=-0.3;}
+ for(const p of pins){
+  if(p.dead)continue;
+  if(p.drop>0){p.y=(p.y||0)-dt*1.4;if((p.y||0)<-0.5){p.dead=true}continue}
+  const sp=sqrt(p.vx*p.vx+p.vz*p.vz);
+  // friction by support: upright on base pads, planted foot while toppling, belly slides far
+  const fr0=p.th>=PI/2-1e-3?1.6:(p.down?6.5:2.4);
+  if(sp>1e-4){const k=min(fr0*dt,sp);p.vx-=p.vx/sp*k;p.vz-=p.vz/sp*k}
+  else{p.vx=0;p.vz=0}
+  if(!p.down){
+   // below balance angle: spring-damper back to upright (wobble-and-recover)
+   p.om-=(KREST*p.th+CDAMP*p.om)*dt;p.th+=p.om*dt;
+   if(p.th<0){p.th=0;if(p.om<0)p.om=-p.om*0.35}
+   if(p.th>=TIPC){p.down=true} // past the balance point: committed, gravity takes over
+  }else{
+   p.om+=GTOP*dt;p.th+=p.om*dt; // gravity topples it flat, nothing stops it mid-angle
+   if(p.th>=PI/2){p.th=PI/2;p.om=0}
   }
-  /* pin-pin chain reactions */
-  for(let i=0;i<pins.length;i++)for(let j=i+1;j<pins.length;j++){
-    const a=pins[i],b=pins[j];
-    const dx=b.x-a.x,dz=b.z-a.z;
-    const d=Math.hypot(dx,dz),md=a.cr+b.cr;
-    if(d<md&&d>1e-4){
-      const nx=dx/d,nz=dz/d,ov=(md-d)*0.5;
-      a.x-=nx*ov;a.z-=nz*ov;b.x+=nx*ov;b.z+=nz*ov;
-      const vn=(a.vx-b.vx)*nx+(a.vz-b.vz)*nz;
-      if(vn>0){
-        const J=vn*0.9;
-        a.vx-=nx*J;a.vz-=nz*J;b.vx+=nx*J;b.vz+=nz*J;
-        const w=min(vn,8)*1.0;
-        b.wx+=nz*w;b.wz-=nx*w;
-        a.wx-=nz*w*0.6;a.wz+=nx*w*0.6;
-        capV(a,11);capV(b,11);capW(a,8);capW(b,8);
-        if(vn>0.8)sClick(min(.4,vn*0.05));
-      }
-    }
-  }
-  for(const p of pins)for(const o of bumpers){
-    const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz),md=p.cr+o.r;
-    if(d<md&&d>1e-4){
-      const nx=dx/d,nz=dz/d;
-      p.x=o.x+nx*md;p.z=o.z+nz*md;
-      const vn=p.vx*nx+p.vz*nz;
-      if(vn<0){p.vx-=2*vn*nx*0.6;p.vz-=2*vn*nz*0.6;}
-    }
-  }
+  p.x+=p.vx*dt;p.z+=p.vz*dt;
+  if(abs(p.x)>LWH+GUTW-0.05&&!p.down){p.down=true;p.dir=p.x>0?0:PI}
+  if(abs(p.x)>WALLX-PR){p.x=clamp(p.x,-WALLX+PR,WALLX-PR);p.vx*=-0.4}
+  if(p.z<PITZ+0.05){p.drop=1;p.down=true} // pins fall in only past the rack (ball edge is further back)
+  if(p.z>4.5){p.drop=1;p.down=true} // kicked clear back to the approach: drop it out (off-screen, ends any pile-up wait)
+ }
+ for(let i=0;i<pins.length;i++)for(let j=i+1;j<pins.length;j++){
+  const a=pins[i],b=pins[j];
+  if(a.dead||b.dead)continue;
+  // cheap reject first: two capsule bodies (length up to PIN_H) can only touch
+  // with base centers within 2*PIN_H+2*PR ≈ 0.88m; the wide 100-pin rack's
+  // far-apart clusters and dead pile skip the full segment solve
+  const ddx=a.x-b.x,ddz=a.z-b.z;
+  if(ddx*ddx+ddz*ddz>0.88*0.88)continue;
+  // skip only fully flat, motionless pins; a sliding belly or a toppling body must hit everything
+  const sa=a.vx*a.vx+a.vz*a.vz,sb=b.vx*b.vx+b.vz*b.vz;
+  if(a.th>=PI/2-0.01&&b.th>=PI/2-0.01&&sa<0.0016&&sb<0.0016)continue;
+  collidePinPin(a,b);
+ }
 }
-function settled(){
-  if(ball&&!ball.dead&&!ball.gutter&&ball.z>PIT_Z-0.5){
-    if(Math.hypot(ball.vx,ball.vz)>0.12)return false;
-  }
-  if(ball&&ball.gutter&&Math.abs(ball.vz)>0.12)return false;
-  for(const p of pins)
-    if(Math.hypot(p.vx,p.vz)>0.08||Math.hypot(p.wx,p.wz)>0.15)return false;
-  return true;
+function pinsStanding(){let n=0;for(const p of pins)if(!p.down&&!p.dead)n++;return n}
+function pinActivity(){
+ let m=0;
+ for(const p of pins)if(!p.dead){
+  if(p.drop>0)return 9; // a pin still sinking into the pit keeps the throw open (avoids frozen mid-pit pins)
+  m=max(m,sqrt(p.vx*p.vx+p.vz*p.vz)+abs(p.om));
+ }
+ return m;
 }
-function burst(x,y,z,n){
-  for(let i=0;i<n&&parts.length<80;i++)
-    parts.push({x,y,z,vx:(rand()-.5)*3,vy:rand()*3+1,vz:(rand()-.5)*3,l:0.5});
+function ballSettled(){return ball.dead||ball.z<RACKZ-1.1}
+function sparks(x,y,z,n){
+ for(let i=0;i<n;i++)parts.push({x,y:y+0.05,z,vx:(rand()*2-1)*1.4,vy:rand()*1.6+0.4,vz:(rand()*2-1)*1.4,life:0.5+rand()*0.3});
 }
 function stepParts(dt){
-  for(let i=parts.length-1;i>=0;i--){
-    const p=parts[i];
-    p.vy-=9*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.l-=dt;
-    if(p.l<=0||p.y<0)parts.splice(i,1);
-  }
+ for(const q of parts){q.life-=dt;q.vy-=6*dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.z+=q.vz*dt}
+ parts=parts.filter(q=>q.life>0);
 }
-
-/* ---------- camera ---------- */
-let camX=0,camY=1.75,camZ=START_Z+2.7,lookX=0,lookY=0.3,lookZ=START_Z-8;
-function camUpdate(dt){
-  const bz=ball?ball.z:START_Z,bx=ball?ball.x:0;
-  const dz=clamp(bz,-6.2,START_Z);
-  const ex=bx*0.30,ey=1.75,ez=dz+2.7;
-  let lx=bx*0.45,ly=0.30,lz=bz-8;
-  if(phase==='aim'){lx+=sin(aim)*1.2;lz=clamp(lz,-12,START_Z-6);}
-  lz=max(lz,-12.4);
-  const k=1-Math.exp(-7*dt);
-  camX+=(ex-camX)*k;camY+=(ey-camY)*k;camZ+=(ez-camZ)*k;
-  lookX+=(lx-lookX)*k;lookY+=(ly-lookY)*k;lookZ+=(lz-lookZ)*k;
-  PROJVIEW=m4mul(m4persp(58*PI/180,ASP,0.05,60),m4look([camX,camY,camZ],[lookX,lookY,lookZ],[0,1,0]));
-}
-
-/* ---------- render ---------- */
-const COL_LANE=[0.82,0.66,0.42],COL_BOARD=[0.70,0.55,0.34],COL_DECK=[0.75,0.62,0.45],
-      COL_GUT=[0.22,0.22,0.27],COL_WALL=[0.38,0.30,0.24],COL_PIN=[0.96,0.95,0.90],
-      COL_STR=[0.80,0.10,0.12],COL_BALL=[0.16,0.18,0.75],COL_BACK=[0.12,0.12,0.20],
-      COL_ARR=[0.55,0.30,0.15],COL_LIT=[1.0,0.95,0.8],COL_FLOOR=[0.07,0.08,0.13],
-      COL_NEO=[0.30,0.80,1.0];
-function render(){
-  G.clear(G.COLOR_BUFFER_BIT|G.DEPTH_BUFFER_BIT);
-  draw(M_BOX,m4mul(m4t(0,-0.45,-6),m4s(16,0.15,16)),COL_FLOOR,4);
-  draw(M_BOX,m4mul(m4t(0,2.2,PIT_Z-1.2),m4s(9,2.4,0.1)),COL_BACK,4);
-  draw(M_BOX,m4mul(m4t(0,3.4,PIT_Z-1.1),m4s(9,0.06,0.06)),COL_NEO,2);
-  draw(M_BOX,m4mul(m4t(0,-0.05,-3.2),m4s(LW,0.05,10.2)),COL_LANE,40);
-  draw(M_BOX,m4mul(m4t(0,-0.055,-11.9),m4s(LW,0.055,1.6)),COL_DECK,30);
-  for(let i=-4;i<=4;i++)
-    draw(M_BOX,m4mul(m4t(i*0.26,0.004,-3.2),m4s(0.008,0.002,10.2)),COL_BOARD,8);
-  draw(M_BOX,m4mul(m4t(-GUTX,-0.13,-3.2),m4s(0.20,0.04,10.2)),COL_GUT,10);
-  draw(M_BOX,m4mul(m4t( GUTX,-0.13,-3.2),m4s(0.20,0.04,10.2)),COL_GUT,10);
-  draw(M_BOX,m4mul(m4t(-WALLX,0.12,-3.2),m4s(0.06,0.22,10.2)),COL_WALL,8);
-  draw(M_BOX,m4mul(m4t( WALLX,0.12,-3.2),m4s(0.06,0.22,10.2)),COL_WALL,8);
-  draw(M_BOX,m4mul(m4t(-WALLX,0.35,-3.2),m4s(0.02,0.02,10.2)),COL_NEO,2);
-  draw(M_BOX,m4mul(m4t( WALLX,0.35,-3.2),m4s(0.02,0.02,10.2)),COL_NEO,2);
-  draw(M_BOX,m4mul(m4t(0,0.5,PIT_Z+0.15),m4s(2.4,0.6,0.08)),[0.15,0.15,0.22],6);
-  for(let i=0;i<3;i++)
-    draw(M_BOX,m4mul(m4t(0,2.1,-1-i*4.5),m4s(1.5,0.03,0.35)),COL_LIT,2);
-  for(let i=-3;i<=3;i++){
-    const sc=0.55-abs(i)*0.05;
-    draw(M_TRI,m4mul(m4t(i*0.30,0.012,-3.4+abs(i)*0.22),m4s(sc,1,sc)),COL_ARR,6);
-    draw(M_BOX,m4mul(m4t(i*0.30,0.008,0.6),m4s(0.035,0.004,0.035)),COL_ARR,6);
-  }
-  for(const o of bumpers)
-    draw(M_BOX,m4mul(m4t(o.x,o.h/2,o.z),m4s(o.r,o.h/2,o.r)),[0.75,0.25,0.2],30);
-  for(const p of pins){
-    const tl=Math.hypot(p.tx,p.tz);
-    const lift=p.down?0.09*min(1,tl/1.5):0;
-    const ang=tl>1e-4?Math.atan2(p.tz,tl):0;
-    let R=m4id();
-    if(tl>1e-4)R=m4mul(m4mul(m4ry(ang),m4rx(min(tl,1.52))),m4ry(-ang));
-    const MM=m4mul(m4t(p.x,lift,p.z),
-              m4mul(m4ry(p.spin+p.rs),m4mul(R,m4s(0.52,PIN_H,0.52))));
-    draw(M_PIN,MM,p.down?[0.80,0.76,0.68]:COL_PIN,60);
-    draw(M_BOX,m4mul(MM,m4mul(m4t(0,0.70,0),m4s(0.105,0.030,0.105))),p.down?[0.55,0.2,0.2]:COL_STR,40);
-  }
-  if(ball){
-    const M=m4mul(m4t(ball.x,ball.y,ball.z),
-            m4mul(m4rx(ball.rx),m4mul(m4ry(ball.ry),m4mul(m4rz(ball.rz),m4s(BALL_R,BALL_R,BALL_R)))));
-    draw(M_SPH,M,COL_BALL,90);
-    /* finger holes: SMALL, on the surface */
-    draw(M_SPH,m4mul(M,m4mul(m4t(0.25,0.80,0.50),m4s(0.13,0.13,0.13))),[0.06,0.07,0.30],40);
-    draw(M_SPH,m4mul(M,m4mul(m4t(-0.15,0.85,0.45),m4s(0.13,0.13,0.13))),[0.06,0.07,0.30],40);
-  }
-  for(const p of parts){
-    const s=0.06*p.l;
-    draw(M_SPH,m4mul(m4t(p.x,p.y,p.z),m4s(s,s,s)),[1,0.85,0.3],8);
-  }
-  if(phase==='aim'&&power>0.04){
-    const sim=preview();
-    for(let i=4;i<sim.length;i+=4){
-      const q=sim[i];
-      draw(M_BOX,m4mul(m4t(q.x,0.02,q.z),m4s(0.05,0.006,0.05)),[1,0.9,0.25],4);
-    }
-  }
-}
-function preview(){
-  const pts=[];
-  let x=ball.x,z=ball.z,vx=sin(aim)*(4+power*10)*0.35,vz=-cos(aim)*(4+power*10),t=0;
-  for(let i=0;i<70;i++){
-    t+=1/30;
-    vx+=spin*HOOK_A*hookMul*hookPhase(t)*(1/30)*min(1,Math.hypot(vx,vz)/5);
-    const s0=Math.hypot(vx,vz);
-    if(s0>0.01){const ns=max(0,s0-fricDec/30);vx*=ns/s0;vz*=ns/s0;}
-    x+=vx/30;z+=vz/30;
-    pts.push({x,z});
-    if(abs(x)>LW||z<PIN_Z-1)break;
-  }
-  return pts;
-}
-
-/* ---------- input ---------- */
-function pos(e){const t=e.touches?e.touches[0]||e.changedTouches[0]:e;return[t.clientX,t.clientY];}
-function down(e){
-  audioInit();if(AC&&AC.state==='suspended')AC.resume();
-  if(phase!=='aim')return;
-  const p=pos(e);
-  drag={x:p[0],y:p[1]};lastMoveX=p[0];lastMoveT=performance.now();spinVel=0;
-  aim=0;power=0;spin=0;meters();
-}
-function move(e){
-  if(!drag||phase!=='aim')return;
-  e.preventDefault();
-  const p=pos(e),now=performance.now();
-  const dx=p[0]-drag.x,dy=p[1]-drag.y;
-  aim=clamp(dx*0.006,-0.55,0.55);
-  power=clamp(-dy*0.006,0,1);
-  const dtm=max(8,now-lastMoveT)/1000;
-  spinVel=clamp(spinVel*0.6+((p[0]-lastMoveX)/dtm)*0.0048,-1.4,1.4);
-  lastMoveX=p[0];lastMoveT=now;
-  meters();
-}
-function up(){
-  if(!drag||phase!=='aim'){drag=null;return;}
-  drag=null;
-  spin=clamp(spinVel,-1,1);
-  if(power>0.06)throwBall();else{power=0;meters();}
-}
-addEventListener('mousedown',down);addEventListener('mousemove',move);addEventListener('mouseup',up);
-addEventListener('touchstart',down,{passive:false});addEventListener('touchmove',move,{passive:false});
-addEventListener('touchend',up,{passive:false});
-
-const keys={};
-addEventListener('keydown',e=>{
-  audioInit();if(AC&&AC.state==='suspended')AC.resume();
-  keys[e.code]=true;
-  if(e.code==='Space'){e.preventDefault();if(phase==='aim'&&!keys._chg){keys._chg=true;keys._t=0;}}
-  if(e.code==='Enter'&&phase==='done')nextAction();
-});
-addEventListener('keyup',e=>{
-  keys[e.code]=false;
-  if(e.code==='Space'&&keys._chg){keys._chg=false;if(phase==='aim'&&power>0.06)throwBall();else{power=0;}meters();}
-});
-function keyUpdate(dt){
-  if(phase!=='aim')return;
-  if(keys.ArrowLeft||keys.KeyA)aim=clamp(aim-1.2*dt,-0.55,0.55);
-  if(keys.ArrowRight||keys.KeyD)aim=clamp(aim+1.2*dt,-0.55,0.55);
-  if(keys.ArrowUp||keys.KeyW)spin=clamp(spin+1.5*dt,-1,1);
-  if(keys.ArrowDown||keys.KeyS)spin=clamp(spin-1.5*dt,-1,1);
-  if(keys._chg){keys._t+=dt*1.1;const ph=keys._t%2;power=ph<1?ph:2-ph;}
-  meters();
-}
-
 /* ---------- flow ---------- */
+// one world step, subdivided x4 while the ball is on the lane OR the pile is
+// still moving: at 9m/s a full 1/120 step travels 7.5cm, and two toppling heads
+// close at up to ~2x(PK+sweep) = ~27m/s = 23cm/step, well past the 11.8cm pin
+// diameter — the solver never sees the contact and a capsule passes straight
+// through another pin (the reported head-through-head). The old pin-side half of
+// the gate (ball.z<RACKZ+1.2) was dead code: balls that reach the pack are already
+// past RACKZ+1.2, so pack contacts ran 1x and the 4x only ever helped free flight.
+function stepWorld(dt){
+ const n=(!ball.dead&&ball.z>PITZ-0.5)||pinActivity()>2?4:1;
+ for(let s=0,h=dt/n;s<n;s++){
+  if(!ball.dead)stepBall(ball,h);
+  stepPins(h);
+ }
+}
+function startThrow(keepPins){
+ if(!keepPins)newRack();
+ else standingBefore=pinsStanding();
+ fullRack=!keepPins; // clearing THIS rack in one throw = strike, in any frame
+ resetBall();
+ phase='aim';aim=0;power=0;spin=0;drag=null;settleT=0;
+ rec=[];di=0;$('dbgbtn').style.display='none';
+ $('btn').style.display='none';
+ meters();statusHUD();
+}
+function newFrame(){startThrow(false)}
 function throwBall(){
-  phase='roll';
-  const v=4+power*10;
-  ball.vx=sin(aim)*v*0.35;
-  ball.vz=-cos(aim)*v;
-  ball.vy=0.4;
-  ball.spin=spin;
-  ball.active=true;ball.t=0;
-  throwNum++;
-  standingBefore=pins.filter(p=>!p.down).length;
-  power=0;meters();hud();
+ if(phase!=='aim')return;
+ audioInit();
+ const v=4.6+power*4.4;
+ ball.x=startX;ball.z=0.45;
+ ball.vx=sin(aim)*v;ball.vz=-cos(aim)*v;ball.spin=spin;ball.v=v;ball.active=true;PK=v;
+ standingBefore=pinsStanding();
+ phase='roll';throwN++;
+ throwSnap=JSON.stringify({t:Date.now(),frame,throwN,
+  v:+v.toFixed(3),aim:+aim.toFixed(4),power:+power.toFixed(4),spin:+spin.toFixed(4),startX:+startX.toFixed(4),
+  ball:{x:+ball.x.toFixed(4),z:+ball.z.toFixed(4),vx:+ball.vx.toFixed(3),vz:+ball.vz.toFixed(3)},
+  pins:pins.map(q=>({x:+q.x.toFixed(4),z:+q.z.toFixed(4),vx:+q.vx.toFixed(3),vz:+q.vz.toFixed(3),
+   th:+q.th.toFixed(3),dir:+q.dir.toFixed(3),om:+q.om.toFixed(3)})),
+  K:{PC,LW,PINZ:RACKZ,PITZ,PITEDGE,BALL_R,MBALL,PIN_H,PR,MPIN,PIN_S,PIN_RZ,DT,FR:0.55,HOOK:2.1,grip:grip.toString()}});
+ rec=[];di=0;recPush();
+ $('pw').style.display='none';$('sw').style.display='none';
+ rumbleOn();
 }
 function endThrow(){
-  const standing=pins.filter(p=>!p.down).length;
-  const knocked=standingBefore-standing;
-  score+=knocked;
-  if(throwNum===1&&standing===0){score+=10;msg('STRIKE!',1800);sStrike();burst(0,1,PIN_Z,26);}
-  else if(throwNum===2&&standing===0){score+=5;msg('SPARE!',1600);sSpare();burst(0,1,PIN_Z,18);}
-  else if(knocked===0)msg(ball.gutter?'GUTTER!':'MISS',1200);
-  else msg(knocked+' DOWN',1200);
-  phase='done';
-  const b=$('btn');
-  b.textContent=(throwNum===1&&standing>0)?'THROW 2':(frame>=10?'LEVEL '+(level+1):'NEXT FRAME');
-  b.style.display='block';
-  hud();
+ if(phase!=='settle'&&phase!=='roll')return;
+ rumbleOff();
+ const standing=pinsStanding(),knocked=max(0,standingBefore-standing);
+ // strike = the whole rack in one throw; spare = clearing the rest on throw 2+
+ const strike=fullRack&&knocked>=standingBefore;
+ const spare=!strike&&standing===0&&throwN>=2;
+ // the score sheet stays on the classic 10-pin scale (ranks included): 100-pin
+ // counts are mapped proportionally, and completing a rack is pinned to exact
+ // strike/spare values so the bonus math stays consistent
+ const f=fr[frame];
+ f.t.push(PC===10?knocked:strike?10:spare?10-f.t[f.t.length-1]:min(9,Math.floor(knocked*10/PC)));
+ if(strike)f.s=(f.s||0)+1; // count strikes thrown, incl. 10th-frame bonus balls
+ updateSheet();
+ if(strike){msg('STRIKE!',1900);sStrike();sparks(0,0.4,RACKZ,24)}
+ else if(knocked===0)msg(ball.gutter?'GUTTER BLANK':'NO HIT',1300);
+ else if(spare){msg('SPARE!',1600);sSpare();sparks(0,0.3,RACKZ,12)}
+ else msg(knocked+' DOWN',1300);
+ // decide continuation
+ let btn='NEXT FRAME',next='frame';
+ if(frame<9){
+  if(f.t[0]===10)next='frame';
+  else if(f.t.length===1){btn='THROW 2';next='throw2'}
+  else next='frame';
+ }else{
+  const t=f.t;
+  if(t.length===1&&t[0]===10){btn='THROW 2';next='throw2';f.reset=true}
+  else if(t.length===1){btn='THROW 2';next='throw2'} // 10th frame without a first-throw strike: normal 2nd throw
+  else if(t.length===2&&(t[0]===10||t[0]+t[1]===10)){
+   btn='THROW 3';next='throw3';
+   f.reset=(t[0]===10&&t[1]===10)||t[0]+t[1]===10&&t[0]!==10;
+  }
+  else next='over';
+ }
+ phase='done';
+ const b=$('btn');
+ if(next==='over'){
+  $('btn').style.display='none';
+  showEnd();
+ }else{
+  b.textContent=btn;b.style.display='block';
+  b.dataset.next=next;
+ }
+ statusHUD();
 }
 function nextAction(){
-  if(phase!=='done')return;
-  $('btn').style.display='none';
-  const standing=pins.filter(p=>!p.down).length;
-  if(throwNum===1&&standing>0){throwNum=2;startFrame(false);}
-  else if(frame>=10){level++;frame=1;throwNum=1;msg('LEVEL '+level,1600);startFrame(true);}
-  else{frame++;throwNum=1;startFrame(true);}
-  hud();
+ if(phase!=='done')return;
+ const nx=$('btn').dataset.next;
+ if(nx==='throw2'){
+  if(frame===9&&fr[9].t[0]===10)startThrow(false);else startThrow(true);
+ }else if(nx==='throw3'){
+  if(fr[9].reset)startThrow(false);else startThrow(true);
+ }else{frame++;throwN=0;newFrame();}
+ updateSheet();
 }
-$('btn').addEventListener('click',()=>{audioInit();nextAction();});
-
-/* ---------- loop ---------- */
+function showEnd(){
+ phase='over';
+ const {total}=scoreTotal();
+ const strikes=fr.reduce((a,f)=>a+(f.s||0),0);
+ let rank='ROOKIE';
+ if(total>=280)rank='PERFECT SEASON';else if(total>=250)rank='CYBORG';
+ else if(total>=220)rank='TOUR PRO';else if(total>=200)rank='PRO';
+ else if(total>=180)rank='SPECTATOR-SLAYER';else if(total>=150)rank='HUSTLER';
+ else if(total>=120)rank='REGULAR';
+ $('endT').textContent=total===300?'PERFECT GAME!':(total>=200?'BOWLING LEGEND':'GAME OVER');
+ $('endP').textContent=`FINAL SCORE ${total} \u2022 ${strikes} STRIKE${strikes===1?'':'S'} \u2022 RANK: ${rank}`;
+ $('end').classList.add('on');
+ updateSheet();
+}
+/* ---------- camera ---------- */
+let camX=0,camY=1.55,camZ=2.4,lkX=0,lkY=0.3,lkZ=-13,fov=30;
+function camUpdate(dt){
+ let ex,ey,ez,lx,ly,lz,ft=30;
+ if(phase==='aim'){
+  ex=startX*0.7;ey=1.16;ez=3.35;
+  lx=startX+sin(aim)*9;ly=0.52;lz=-3.2;ft=30;
+ }else if(phase==='menu'){
+  // slow establishing drift over the house lane for the title screen
+  ex=sin(uTimeVal*0.16)*1.1*(LW/1.06);ey=1.7;ez=1.4;
+  lx=0;ly=0.45;lz=RACKZ*0.6;ft=36;
+ }else if(phase==='roll'){
+  const zc=max(min(ball.z,0.5),-14.2);
+  ex=ball.x*0.3;ey=1.62;ez=zc+3.1;
+  const t=clamp((-ball.z-10)/7,0,1);
+  lx=ball.x*(1-t);ly=0.16*(1-t)+0.22*t;lz=(ball.z-6)*(1-t)+(-18.3)*t;
+  ft=30-12*t;
+ }else if(phase==='settle'||phase==='done'){
+  ex=-0.15;ey=1.35;ez=-14.4;lx=0;ly=0.18;lz=-18.45;ft=20;
+ }else{
+  ex=0;ey=1.4;ez=-13.5;lx=0;ly=0.25;lz=-18.3;ft=26;
+ }
+ const k=1-Math.exp(-4.5*dt);
+ camX+=(ex-camX)*k;camY+=(ey-camY)*k;camZ+=(ez-camZ)*k;
+ lkX+=(lx-lkX)*k;lkY+=(ly-lkY)*k;lkZ+=(lz-lkZ)*k;
+ fov+=(ft-fov)*k;
+ PV=m4mul(m4persp(fov*PI/180,ASP,0.05,60),m4look([camX,camY,camZ],[lkX,lkY,lkZ],[0,1,0]));
+}
+/* ---------- render ---------- */
+const COL={lane:[0.82,0.66,0.42],floor:[0.07,0.08,0.13],gutter:[0.20,0.20,0.25],wall:[0.34,0.28,0.24],
+back:[0.10,0.10,0.17],pin:[0.96,0.95,0.90],ball:[0.14,0.16,0.72],neo:[0.30,0.80,1.0],
+lit:[1.0,0.97,0.85],pit:[0.04,0.045,0.07]};
+let uTimeVal=0;
+function render(){
+ G.clear(G.COLOR_BUFFER_BIT|G.DEPTH_BUFFER_BIT);
+ G.uniform1f(uTime,uTimeVal);
+ G.uniform3fv(uFog,[0.027,0.035,0.071]);
+ G.uniform3fv(uCam,[camX,camY,camZ]);
+ const U=LW/1.06; // pit/kickback/room furniture scales with lane width
+ // floor split around pit opening: lane ends z=-18.975, kickback wall front face z=PITZ-1.0
+ draw(M_BOX,m4mul(m4t(0,-0.05,-6.62),m4s(40,0.1,24.75)),COL.floor,0,0,0);
+ draw(M_BOX,m4mul(m4t(0,-0.05,-23.15),m4s(40,0.1,5.7)),COL.floor,0,0,0);
+ draw(M_BOX,m4mul(m4t(0,-0.15,-19.6),m4s(3.2*U,0.1,1.4)),COL.pit,0,0,0);
+ draw(M_BOX,m4mul(m4t(0,-0.057,-7.4),m4s(LW,0.12,23.15)),COL.lane,2,0.30,0);
+ for(const s of[-1,1]){
+  draw(M_BOX,m4mul(m4t(s*(LWH+GUTW/2),-0.019,-7.4),m4s(GUTW,0.03,23.15)),COL.gutter,0,0,0);
+  draw(M_BOX,m4mul(m4t(s*(WALLX+0.03),0.14,-7.4),m4s(0.06,0.42,23.15)),COL.wall,0,0,0);
+  draw(M_BOX,m4mul(m4t(s*WALLX,0.365,-7.4),m4s(0.03,0.03,23.15)),COL.neo,5,0,0);
+  draw(M_BOX,m4mul(m4t(s*(WALLX+0.99),1.5,-7.4),m4s(1.4,3.0,25)),COL.wall,0,0,0);
+ }
+ draw(M_BOX,m4mul(m4t(0,1.5,PITZ-1.1),m4s(6.4*U,3.0,0.2)),COL.back,0,0,0);
+ draw(M_BOX,m4mul(m4t(0,-0.37,PITZ+0.55),m4s(3.0*U,0.6,1.3)),COL.pit,0,0,0);
+ draw(M_BOX,m4mul(m4t(0,2.6,PITZ-0.95),m4s(4.0*U,0.06,0.06)),COL.neo,5,0,0);
+ for(let z=-1;z>=-17;z-=4)draw(M_BOX,m4mul(m4t(0,3.0,z),m4s(3.0,0.06,0.4)),COL.lit,5,0,0);
+ for(const p of pins){
+  if(p.dead)continue;
+  // lathe pivots at base; when flat the belly (r=0.0605) is the low point — lift by r*sin(th)
+  const lift=p.th>0.02?0.0605*sin(min(p.th,PI/2)):0;
+  const m=m4mul(m4mul(m4t(p.x,(p.y||0)+lift,p.z),m4ry(-p.dir)),m4rz(-p.th));
+  draw(M_PIN,m,COL.pin,0,0.5,0.03);
+ }
+ if(ball&&!ball.dead){
+  const by=ball.drop?ball.y:(ball.gutter?-0.06:BALL_R);
+  draw(M_SPH,m4mul(m4mul(m4t(ball.x,by,ball.z),m4rx(-ball.roll)),m4s(BALL_R,BALL_R,BALL_R)),COL.ball,3,0.8,0);
+ }
+ if(dbgOn)drawDebug();
+ for(const q of parts){const s=0.02+0.02*min(1,q.life*2);draw(M_BOX,m4mul(m4t(q.x,q.y,q.z),m4s(s,s,s)),[1.0,0.8,0.3],0,0,0.9);}
+}
+/* ---------- audio ---------- */
+let AC=null,noiseBuf=null,rumble=null,hitGate=0;
+function audioInit(){
+ if(AC||muted)return;
+ try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return}
+ noiseBuf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);
+ const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=rand()*2-1;
+}
+function tone(f,t0,dur,type,vol){
+ if(!AC)return;
+ const o=AC.createOscillator(),g=AC.createGain();
+ o.type=type;o.frequency.setValueAtTime(f,t0);
+ g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(0.001,t0+dur);
+ o.connect(g);g.connect(AC.destination);o.start(t0);o.stop(t0+dur+0.02);
+}
+function hitSound(rv){
+ if(!AC)return;
+ const t=AC.currentTime;if(t<hitGate)return;hitGate=t+0.03;
+ const v=min(0.5,rv*0.09);
+ const n=AC.createBufferSource();n.buffer=noiseBuf;n.playbackRate.value=0.8+rand()*0.5;
+ const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=1300+rand()*1400;f.Q.value=0.7;
+ const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.18);
+ n.connect(f);f.connect(g);g.connect(AC.destination);n.start(t);n.stop(t+0.2);
+ tone(92,t,0.12,'sine',v*0.8);
+}
+function rumbleOn(){
+ if(!AC||rumble)return;
+ const src=AC.createBufferSource();src.buffer=noiseBuf;src.loop=true;
+ const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=260;
+ const g=AC.createGain();g.gain.value=0;
+ src.connect(f);f.connect(g);g.connect(AC.destination);src.start();
+ rumble={src,g};
+}
+function rumbleOff(){if(rumble){rumble.src.stop();rumble=null}}
+function sGutter(){if(!AC)return;const t=AC.currentTime;const o=AC.createOscillator(),g=AC.createGain();
+ o.type='sawtooth';o.frequency.setValueAtTime(300,t);o.frequency.exponentialRampToValueAtTime(110,t+0.5);
+ g.gain.setValueAtTime(0.12,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.5);
+ o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+0.55)}
+function sStrike(){if(!AC)return;const t=AC.currentTime;
+ [330,415,494,660].forEach((f,i)=>tone(f,t+i*0.09,0.22,'square',0.10));}
+function sSpare(){if(!AC)return;const t=AC.currentTime;tone(392,t,0.2,'square',0.1);tone(523,t+0.12,0.25,'square',0.1)}
+/* ---------- input: one single gesture - draw the approximate trajectory.
+   Stroke START = where you stand (projected onto the foul line),
+   chord direction = aim, arc height = revs (a straightish draw gives NO
+   rotation - the deadzone absorbs freehand wobble), stroke SPEED = power. ---------- */
+const FLICK={MINP:60,SLOW:700,FAST:2600,DEADC:0.05,FULLC:0.22};
+// screen px -> world x at the foul line (ray through the current aim camera)
+function laneXAt(px,py){
+ const th=tan(fov*PI/360),tx=th*ASP;
+ let fx=lkX-camX,fy=lkY-camY,fz=lkZ-camZ;
+ const fl=sqrt(fx*fx+fy*fy+fz*fz);fx/=fl;fy/=fl;fz/=fl;
+ const sl=sqrt(fx*fx+fz*fz)||1;const sx=-fz/sl,sy=0,sz=fx/sl;
+ const ux=-fx*fy/sl,uy=(fx*fx+fz*fz)/sl,uz=-fz*fy/sl;
+ const dx=(px/innerWidth*2-1)*tx,dy=(1-py/innerHeight*2)*th;
+ const wx=sx*dx+ux*dy+fx,wy=sy*dx+uy*dy+fy,wz=sz*dx+uz*dy+fz;
+ if(wz>-0.05)return startX;
+ return clamp(camX+wx*(0.45-camZ)/wz,-STARTXW,STARTXW);
+}
+// analyze a stroke: sets live aim/power/spin from chord, speed, arc height
+function analyzeFlick(P){
+ const a=P[0],b=P[P.length-1];
+ const cx=b[0]-a[0],cy=b[1]-a[1],L=Math.hypot(cx,cy);
+ let S=0;for(let i=1;i<P.length;i++)S+=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);
+ const T=max(16,b[2]-a[2]);
+ if(L<FLICK.MINP||cy>-L*0.35){power=0;return} // must be an upward draw of real length
+ aim=clamp(atan2(cx,-cy),-AIMCAP,AIMCAP);
+ power=clamp((S/T*1000-FLICK.SLOW)/(FLICK.FAST-FLICK.SLOW),0,1);
+ // arc height = max perpendicular deviation from the chord, as fraction of chord
+ const ux=cx/L,uy=cy/L;let emax=0;
+ for(let i=1;i<P.length-1;i++){const e=ux*(P[i][1]-a[1])-uy*(P[i][0]-a[0]);if(abs(e)>abs(emax))emax=e;}
+ const curv=emax/L;
+ let k=clamp((abs(curv)-FLICK.DEADC)/(FLICK.FULLC-FLICK.DEADC),0,1);k=k*k*(3-2*k);
+ spin=(emax>=0?1:-1)*k; // bulge right => hooks right, the ball follows the drawn path
+}
+addEventListener('pointerdown',e=>{
+ if(phase!=='aim'||e.target!==C)return;
+ audioInit();
+ drag={pts:[[e.clientX,e.clientY,e.timeStamp]]};
+ startX=laneXAt(e.clientX,e.clientY); // the draw START is where the ball starts
+ meters();
+ e.preventDefault();
+});
+addEventListener('pointermove',e=>{
+ if(!drag||phase!=='aim')return;
+ drag.pts.push([e.clientX,e.clientY,e.timeStamp]);
+ if(drag.pts.length>2)analyzeFlick(drag.pts);
+ meters();
+});
+addEventListener('pointerup',e=>{
+ if(!drag||phase!=='aim'){drag=null;return}
+ const P=drag.pts;
+ drag=null;
+ analyzeFlick(P);
+ if(power>0.08)throwBall();else{power=0;aim=0;spin=0;meters()}
+});
+addEventListener('pointercancel',()=>{drag=null});
+/* ---------- physics debug: frame-by-frame recording, scrub, free camera ---------- */
+let rec=[],di=0,dbgOn=false,dbPlay=false,dbAcc=0,throwSnap='';
+function recPush(){
+ if(rec.length>=2400)return;
+ const a=new Float32Array(10+11*pins.length);
+ a[0]=ball.x;a[1]=ball.y;a[2]=ball.z;a[3]=ball.roll;a[4]=ball.gutter?1:0;a[5]=ball.drop||0;
+ a[6]=ball.dead?1:0;a[7]=ball.v||0;a[8]=ball.vx;a[9]=ball.vz;
+ for(let k=0;k<pins.length;k++){const p=pins[k],o=10+k*11;
+  a[o]=p.x;a[o+1]=p.y||0;a[o+2]=p.z;a[o+3]=p.th;a[o+4]=p.dir;a[o+5]=p.down?1:0;
+  a[o+6]=p.drop;a[o+7]=p.dead?1:0;a[o+8]=p.vx;a[o+9]=p.vz;a[o+10]=p.om}
+ rec.push(a);
+ $('dscrub').max=rec.length-1;
+ if(!dbgOn)$('dbgbtn').style.display='block';
+}
+function recApply(i){
+ di=clamp(i|0,0,rec.length-1);const a=rec[di];
+ ball.x=a[0];ball.y=a[1];ball.z=a[2];ball.roll=a[3];ball.gutter=!!a[4];ball.drop=a[5];
+ ball.dead=!!a[6];ball.v=a[7];ball.vx=a[8];ball.vz=a[9];ball.active=!a[6];
+ // a restored ball replays at friction-decayed speeds; PK must be re-seeded
+ // from the recorded release speed (rec[0] is the throw frame, ball.v is
+ // set once at release and never decays)
+ for(const rc of rec)if(rc.length>7)PK=max(PK,rc[7]);
+ for(let k=0;k<pins.length;k++){const p=pins[k],o=10+k*11;
+  p.x=a[o];p.y=a[o+1];p.z=a[o+2];p.th=a[o+3];p.dir=a[o+4];p.down=!!a[o+5];
+  p.drop=a[o+6];p.dead=!!a[o+7];p.vx=a[o+8];p.vz=a[o+9];p.om=a[o+10]}
+ parts=[];
+ $('dscrub').value=di;
+ $('dtxt').textContent='f '+di+'/'+(rec.length-1)+'  t='+(di/120).toFixed(3)+'s\nball '+(a[7]).toFixed(2)+' m/s   down '+(PC-pinsStanding());
+}
+/* free camera: drag=orbit, wheel=zoom, WASD=pan, Q/E=up-down */
+const dbCam={yaw:0,pitch:0.3,dist:2.5,tx:0,ty:0.3,tz:-18.3};
+let dbk={},dbDrag=null;
+function dbEnter(){
+ if(!rec.length)return;
+ dbgOn=true;dbPlay=false;dbAcc=0;
+ const dx=camX-lkX,dy=camY-lkY,dz=camZ-lkZ;
+ dbCam.dist=max(0.6,sqrt(dx*dx+dy*dy+dz*dz));
+ dbCam.yaw=Math.atan2(dx,dz);
+ dbCam.pitch=Math.asin(clamp(dy/dbCam.dist,-0.99,0.99));
+ dbCam.tx=lkX;dbCam.ty=lkY;dbCam.tz=lkZ;
+ $('dbgbtn').style.display='none';$('dbar').style.display='flex';
+ recApply(di);
+ copyThrow();
+}
+function dbExit(){
+ dbgOn=false;dbPlay=false;$('dbar').style.display='none';
+ recApply(di); // resume live physics from the frame being viewed
+ if(rec.length)$('dbgbtn').style.display='block';
+}
+function dbgStep(n){dbPlay=false;$('dbp').classList.remove('on');recApply(di+n)}
+/* copy the throw's full initial state (params, ball, every pin, physics constants)
+ so a throw can be re-simulated 1:1 from the pasted JSON */
+async function copyThrow(){
+ if(!throwSnap){msg('NO THROW RECORDED',900);return false}
+ let ok=false;
+ try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(throwSnap);ok=true}}catch(e){}
+ if(!ok){
+  const ta=document.createElement('textarea');ta.value=throwSnap;ta.style.cssText='position:fixed;left:-2000px;top:0';
+  document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy')}catch(e){}ta.remove();
+ }
+ msg(ok?'THROW COPIED':'COPY BLOCKED: window.DBG.throw()',1100);
+ return ok;
+}
+function dbCamMove(dt){
+ const f=dt*(dbCam.dist*1.5+0.6);
+ const sy=sin(dbCam.yaw),cy=cos(dbCam.yaw);
+ if(dbk.KeyW||dbk.ArrowUp){dbCam.tx+=sy*f;dbCam.tz+=cy*f}
+ if(dbk.KeyS||dbk.ArrowDown){dbCam.tx-=sy*f;dbCam.tz-=cy*f}
+ if(dbk.KeyD){dbCam.tx+=cy*f;dbCam.tz-=sy*f}
+ if(dbk.KeyA){dbCam.tx-=cy*f;dbCam.tz+=sy*f}
+ if(dbk.KeyE)dbCam.ty+=f;
+ if(dbk.KeyQ)dbCam.ty-=f;
+}
+function dbCamUpdate(){
+ const cp=cos(dbCam.pitch);
+ PV=m4mul(m4persp(55*PI/180,ASP,0.05,300),m4look(
+  [dbCam.tx+dbCam.dist*sin(dbCam.yaw)*cp,dbCam.ty+dbCam.dist*sin(dbCam.pitch),dbCam.tz+dbCam.dist*cos(dbCam.yaw)*cp],
+  [dbCam.tx,dbCam.ty,dbCam.tz],[0,1,0]));
+}
+addEventListener('pointerdown',e=>{if(!dbgOn||e.target!==C)return;dbDrag={x:e.clientX,y:e.clientY};e.preventDefault()});
+addEventListener('pointermove',e=>{if(!dbDrag)return;dbCam.yaw+=(e.clientX-dbDrag.x)*0.006;
+ dbCam.pitch=clamp(dbCam.pitch+(e.clientY-dbDrag.y)*0.006,-1.5,1.5);dbDrag={x:e.clientX,y:e.clientY}});
+addEventListener('pointerup',()=>{dbDrag=null});
+addEventListener('wheel',e=>{if(!dbgOn)return;e.preventDefault();
+ dbCam.dist=clamp(dbCam.dist*Math.exp(e.deltaY*0.0012),0.15,40)},{passive:false});
+addEventListener('keydown',e=>{
+ if(!dbgOn)return;
+ if(e.code==='KeyV'||e.code==='Escape'){dbExit();return}
+ if(e.code==='ArrowRight'||e.code==='Period'){e.preventDefault();dbgStep(e.shiftKey?10:1)}
+ else if(e.code==='ArrowLeft'||e.code==='Comma'){e.preventDefault();dbgStep(e.shiftKey?-10:-1)}
+ else if(e.code==='Home')dbgStep(-di);
+ else if(e.code==='End')dbgStep(rec.length-1-di);
+ else if(e.code==='Space'){dbPlay=!dbPlay;$('dbp').classList.toggle('on',dbPlay);e.preventDefault()}
+ if('WASDQE'.includes(e.key.toUpperCase())||['ArrowUp','ArrowDown'].includes(e.code))dbk[e.code]=true;
+});
+addEventListener('keyup',e=>{dbk[e.code]=false});
+$('dbb').addEventListener('click',()=>dbgStep(-1));
+$('dbf').addEventListener('click',()=>dbgStep(1));
+$('dbp').addEventListener('click',()=>{dbPlay=!dbPlay;$('dbp').classList.toggle('on',dbPlay)});
+$('dbo').addEventListener('click',dbExit);
+$('dbc').addEventListener('click',copyThrow);
+$('dscrub').addEventListener('input',e=>{dbPlay=false;$('dbp').classList.remove('on');recApply(+e.target.value)});
+$('dbgbtn').addEventListener('click',dbEnter);
+function drawDebug(){
+ // velocity vectors: red = pin slide, cyan = ball motion, amber = tip-over direction
+ for(const p of pins){
+  if(p.dead)continue;
+  const s=sqrt(p.vx*p.vx+p.vz*p.vz);
+  if(s>0.12){const ang=Math.atan2(p.vz,p.vx),len=min(0.9,s*0.12),
+   lf=p.th>0.02?0.0605*sin(min(p.th,PI/2)):0;
+   draw(M_BOX,m4mul(m4mul(m4t(p.x,(p.y||0)+lf+0.03,p.z),m4ry(-ang)),m4s(len,0.008,0.008)),[1,0.25,0.25],6,0,0)}
+  if(p.om>0.05&&p.th>0.02&&p.th<PI/2-0.02){const len=min(0.9,p.om*0.12);
+   draw(M_BOX,m4mul(m4mul(m4t(p.x,0.04,p.z),m4ry(-p.dir)),m4s(len,0.008,0.008)),[1,0.6,0.1],6,0,0)}
+ }
+ if(ball&&!ball.dead){const s=sqrt(ball.vx*ball.vx+ball.vz*ball.vz);
+  if(s>0.15){const ang=Math.atan2(ball.vz,ball.vx);
+   draw(M_BOX,m4mul(m4mul(m4t(ball.x,BALL_R+0.03,ball.z),m4ry(-ang)),m4s(min(0.9,s*0.12),0.01,0.01)),[0.3,0.9,1],6,0,0)}}
+}
+window.DBG={on:dbEnter,off:dbExit,step:dbgStep,seek:recApply,n:()=>rec.length,
+ play:v=>{dbPlay=!!v},pause:()=>{dbPlay=false},cam:dbCam,get frames(){return rec},active:()=>dbgOn,
+ throw:()=>throwSnap,copy:copyThrow};
+/* ---------- main loop ---------- */
+const DT=1/120;
 let last=performance.now(),acc=0;
 function loop(now){
-  requestAnimationFrame(loop);
-  let dt=(now-last)/1000;last=now;
-  if(dt>0.1)dt=0.1;
-  if(drag&&phase==='aim'){
-    if((now-lastMoveT)/1000>0.12){spinVel*=Math.exp(-6*dt);meters();}
+ requestAnimationFrame(loop);
+ let dt=(now-last)/1000;last=now;if(dt>0.1)dt=0.1;
+ uTimeVal=now/1000;
+ acc+=dt;
+ if(!dbgOn){while(acc>=DT){
+  acc-=DT;
+  if(phase==='roll'){
+   stepWorld(DT);recPush();
+   if(rumble)rumble.g.gain.value=min(0.4,ball.v*0.045);
+   if(ballSettled()){phase='settle';settleT=0}
+  }else if(phase==='settle'){
+   stepWorld(DT);recPush();settleT+=DT;
+   if(settleT>3.0||settleT>1.2&&pinActivity()<0.05)endThrow();
+  }else if(phase==='done'){
+   if(ball.drop&&!ball.dead){stepBall(ball,DT);recPush()}
   }
-  keyUpdate(dt);
-  if(phase==='roll'||phase==='settle'){
-    acc+=dt;let n=0;
-    while(acc>=DT&&n<12){stepBall(DT);stepPins(DT);acc-=DT;n++;}
-    if(acc>DT*12)acc=0;
-    if(rumbleGain){
-      const on=phase==='roll'&&!ball.dead&&ball.y<=BALL_R+0.01;
-      const g=on?min(0.22,Math.hypot(ball.vx,ball.vz)*0.02):0;
-      rumbleGain.gain.value+=(g-rumbleGain.gain.value)*0.2;
-    }
-    if(phase==='roll'){
-      if(ball.dead||ball.z<PIN_Z-1.2||settled()){phase='settle';settleT=0;}
-    }else{
-      settleT+=dt;
-      if(settleT>3.5||settled())endThrow();
-    }
-  }else if(rumbleGain)rumbleGain.gain.value*=0.8;
-  stepParts(dt);
-  camUpdate(dt);
-  render();
+  stepParts(DT);
+ }}else if(dbPlay){
+  dbAcc+=dt*120;const n=dbAcc|0;
+  if(n){dbAcc-=n;recApply(di+n);
+   if(di>=rec.length-1){dbPlay=false;$('dbp').classList.remove('on')}}
+ }
+ if(dbgOn){dbCamMove(dt);dbCamUpdate()}else camUpdate(dt);
+ render();
 }
-genLevel();resetBall();standingBefore=pins.length;hud();meters();
-msg('LEVEL 1',1500);
+function resetGame(){
+ fr=blankFrames();frame=0;throwN=0;
+ $('end').classList.remove('on');
+ startThrow(false);updateSheet();
+ msg('LET\u2019S BOWL',1500);
+}
+$('btn').addEventListener('click',()=>{audioInit();nextAction()});
+$('again').addEventListener('click',()=>{audioInit();resetGame()});
+/* ---------- title screen: lane mode + sound, remembered across visits ---------- */
+let muted=false;
+function setMuted(v){
+ muted=v;
+ try{localStorage.setItem('bowl32snd',v?'off':'on')}catch(e){}
+ if(AC)(v?AC.suspend():AC.resume()).catch(()=>{});
+ $('sbtn').textContent='SOUND: '+(v?'OFF':'ON');
+}
+function modeUI(){
+ $('m10').classList.toggle('on',PC===10);
+ $('m100').classList.toggle('on',PC===100);
+ try{localStorage.setItem('bowl32mode',String(PC))}catch(e){}
+}
+$('m10').addEventListener('click',()=>{audioInit();setMode(false);newRack();modeUI()});
+$('m100').addEventListener('click',()=>{audioInit();setMode(true);newRack();modeUI()});
+$('sbtn').addEventListener('click',()=>{audioInit();setMuted(!muted)});
+$('play').addEventListener('click',()=>{audioInit();$('scr').classList.remove('on');resetGame()});
+try{muted=localStorage.getItem('bowl32snd')==='off';
+ if(localStorage.getItem('bowl32mode')==='100')setMode(true)}catch(e){}
+newRack();updateSheet();modeUI();
+$('sbtn').textContent='SOUND: '+(muted?'OFF':'ON');
+$('scr').classList.add('on');
 requestAnimationFrame(loop);
+</script>
+<script>
+// self-update v2: one-time title-screen freshness check, two HEAD requests,
+// a page body is NEVER downloaded. The default-cache HEAD reuses the most
+// recent cached HEAD response for this URL (free within max-age) and yields
+// this copy's validator; the cache-bypassing HEAD reads the host's current
+// validator. They differ => a newer deploy exists and the title screen is
+// on => reload (nothing to lose). Offline/file:// hosts: no request at all,
+// never an error. Hosts without validators: silent. Never re-runs in-page.
+// Versioning: meta[name=version] = <last-edited-date>.<build>; bump the
+// build number whenever the file is edited. window.GAME_VERSION exposes it.
+(function () {
+var vm = document.querySelector('meta[name="version"]');
+window.GAME_VERSION = vm ? vm.content : "";
+if (typeof fetch !== "function") return;
+if (!/^https?:$/.test(location.protocol)) return;
+if (navigator.onLine === false) return;
+function val(r) { return r.headers.get("etag") || r.headers.get("last-modified") || ""; }
+fetch(location.href, { method: "HEAD" }).then(function (r) {
+var base = val(r);
+return fetch(location.href, { method: "HEAD", cache: "no-store" }).then(function (r2) {
+var cur = val(r2);
+if (base && cur && base !== cur) location.reload();
+});
+}).catch(function () {});
+})();
 </script>
 </body>
 </html>
