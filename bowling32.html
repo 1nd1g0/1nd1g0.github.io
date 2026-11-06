@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Arcade Bowling 3D</title>
-<meta name="version" content="2026.11.07.31">
+<meta name="version" content="2026.11.07.32">
 <meta name="description" content="3D bowling: step-by-step controls (place, aim, flick) with live lane projection, hook physics, ten-frame scoring, 10-pin and wide-lane 100-pin modes.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -84,6 +84,19 @@ background:#123;color:#cfe;cursor:pointer}
 #dbar button.on{background:#246;border-color:#4df}
 #dscrub{width:min(38vw,320px);accent-color:#4df}
 #dtxt{font:11px/1.5 monospace;white-space:pre;color:#9fe;min-width:230px}
+/* phones (portrait and landscape) cannot fit the bar as one row: the 230px
+ readout and the fixed 38vw scrub overflowed both edges and the bar grew
+ taller than the view. Below 760px the readout becomes a full-width header
+ line above the controls, the scrub flexes instead of forcing width, and the
+ buttons shrink - the bar wraps inside left/right 4px on any phone. */
+@media(max-width:760px),(max-height:420px){
+#dbar{left:4px;right:4px;transform:none;flex-wrap:wrap;justify-content:center;
+gap:4px;padding:5px 6px;max-width:calc(100vw - 8px)}
+#dscrub{flex:1 1 140px;width:auto;min-width:0}
+#dtxt{order:-1;flex:1 0 100%;width:auto;min-width:0;text-align:center;
+font-size:10px;line-height:1.35}
+#dbar button{font-size:11px;padding:7px 9px}
+}
 </style>
 </head>
 <body>
@@ -761,7 +774,7 @@ function collidePinPin(a,b){
   tiltTorque(b,m>0?nx:-nx,m>0?nz:-nz,m)}
  if(!a.down){const m=-j*dA/I_CM;
   tiltTorque(a,m>0?nx:-nx,m>0?nz:-nz,m)}
- if(rv>0.4)hitSound(rv*0.6);
+ if(rv>0.4)hitSound(rv*0.6,1);
 }
 function stepPins(dt){
  for(const p of pins){
@@ -1223,15 +1236,22 @@ function tone(f,t0,dur,type,vol){
  g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(0.001,t0+dur);
  o.connect(g);g.connect(AC.destination);o.start(t0);o.stop(t0+dur+0.02);
 }
-function hitSound(rv){
+function hitSound(rv,dark){
  if(!AC)return;
  const t=AC.currentTime;if(t<hitGate)return;hitGate=t+0.03;
- const v=min(0.5,rv*0.09);
- const n=AC.createBufferSource();n.buffer=noiseBuf;n.playbackRate.value=0.8+rand()*0.5;
- const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=1300+rand()*1400;f.Q.value=0.7;
- const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.18);
+ // dark = pin on pin. The bandpass that gives a BALL hit its crack sits at
+ // 1.3-2.7kHz; plastic body-on-body contact lands far lower and duller, and
+ // with that filter in the pack every clack cut through the mix as a shrill
+ // click storm (reported: pin hits sound too high). Pin-pin gets a ~450-900Hz
+ // knock, shorter, quieter, plus a softer body thump.
+ const v=min(0.5,rv*0.09)*(dark?0.45:1);
+ const n=AC.createBufferSource();n.buffer=noiseBuf;
+ n.playbackRate.value=dark?0.55+rand()*0.3:0.8+rand()*0.5;
+ const f=AC.createBiquadFilter();f.type='bandpass';
+ f.frequency.value=(dark?420:1300)+rand()*(dark?480:1400);f.Q.value=dark?1.2:0.7;
+ const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.001,t+(dark?0.12:0.18));
  n.connect(f);f.connect(g);g.connect(AC.destination);n.start(t);n.stop(t+0.2);
- tone(92,t,0.12,'sine',v*0.8);
+ tone(dark?66:92,t,0.12,'sine',v*0.8);
 }
 function rumbleOn(){
  if(!AC||rumble)return;
