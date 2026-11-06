@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Arcade Bowling 3D</title>
-<meta name="version" content="2026.11.06.20">
+<meta name="version" content="2026.11.06.21">
 <meta name="description" content="3D bowling: step-by-step controls (place, aim, flick) with live lane projection, hook physics, ten-frame scoring, 10-pin and wide-lane 100-pin modes.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -67,13 +67,15 @@ border:none;background:#19b45e;color:#fff;cursor:pointer}
 #help{position:fixed;inset:0;z-index:10;display:none;place-items:center;
 background:rgba(4,6,14,.86);color:#cfe}
 #help.on{display:grid}
-#help .card{max-width:640px;max-height:82vh;overflow:auto;padding:26px 30px;margin:0 12px;
+#help .card{max-width:640px;max-height:82vh;overflow:auto;touch-action:pan-y;overscroll-behavior:contain;
+padding:26px 30px;margin:0 12px;
 background:#0a0f1e;border:1px solid #468;border-radius:14px;font:14px/1.6 Arial}
 #help h2{color:#4df;font-size:18px;margin:0 0 10px}
 #help h3{color:#ffd94a;font-size:14px;margin:16px 0 6px}
 #help p{margin:0 0 8px}
 #help .close{margin-top:14px;font:700 13px/1 Arial;padding:10px 18px;border-radius:99px;
-border:none;background:#19b45e;color:#fff;cursor:pointer}
+border:none;background:#19b45e;color:#fff;cursor:pointer;
+position:sticky;bottom:0}
 #dbar{position:fixed;left:50%;bottom:0;transform:translateX(-50%);display:none;z-index:9;
 align-items:center;gap:6px;padding:8px 10px;background:rgba(4,6,14,.85);
 border:1px solid rgba(77,221,255,.4);border-radius:10px 10px 0 0;color:#cfe}
@@ -930,7 +932,24 @@ function camUpdate(dt){
   }
   if(camStop){ex=camX;ey=camY;ez=camZ;lx=lkX;ly=lkY;lz=lkZ;ft=fov;}
  }else if(phase==='settle'||phase==='done'){
-  ex=-0.15;ey=1.35;ez=-14.4;lx=0;ly=0.18;lz=-18.45;ft=20;
+  if(PC===10){ex=-0.15;ey=1.35;ez=-14.4;lx=0;ly=0.18;lz=-18.45;ft=20;}
+  else{
+   // wide-mode aftermath: the fixed 10-pin framing buries the camera in a
+   // 3.7m-deep, 4.3m-wide rack. Fit the live pile + standing pins instead:
+   // same bounding-box math as the replay top-down, held high behind the
+   // pit with a slight tilt toward the player.
+   let mnx=1e9,mxx=-1e9,mnz=1e9,mxz=-1e9,n2=0;
+   for(const p of pins){if(p.dead)continue;n2++;
+    if(p.x-0.12<mnx)mnx=p.x-0.12;if(p.x+0.12>mxx)mxx=p.x+0.12;
+    if(p.z-0.5<mnz)mnz=p.z-0.5;if(p.z+0.5>mxz)mxz=p.z+0.5;}
+   if(!n2){mnx=-LWH;mxx=LWH;mnz=RACKZ-3.9;mxz=RACKZ+0.3;}
+   const cx=(mnx+mxx)/2,cz=(mnz+mxz)/2;
+   const hw=(mxx-mnx)/2,hd=(mxz-mnz)/2,fv=40;
+   const tv=tan(fv*PI/360),th=tv*max(ASP,0.4);
+   const fit=max(hw/th,hd/tv)*1.12;
+   ex=cx;ey=min(max(3.6,fit),16);ez=cz+min(fit*0.42,6.4);
+   lx=cx;ly=0.2;lz=cz;ft=fv;
+  }
  }else{
   ex=0;ey=1.4;ez=-13.5;lx=0;ly=0.25;lz=-18.3;ft=26;
  }
@@ -973,6 +992,9 @@ function render(){
   for(let d=0.5;d<=7.5;d+=0.5)
    draw(M_BOX,m4mul(m4t(ball.x+gx*d,0.003,ball.z+gz*d),m4s(0.05,0.006,0.05)),COL.lit,0,0,0.45);
  }
+ // any camera above the fixtures (replay top-down over a wide rack, the
+ // wide-mode aftermath fit) would see their bodies as slabs over the pile
+ if(camY<3.1)
  for(const q of LIGHTS)draw(M_BOX,m4mul(m4t(q[0],q[1],q[2]),m4s(3.0,0.06,0.4)),COL.lit,5,0,0);
  // Cast shadows: each fixture projects the object's REAL mesh (the pin lathe,
  // the ball sphere) onto the deck through a planar projection matrix; the GPU's
@@ -994,11 +1016,11 @@ function render(){
   const off=sin(p.th)*PIN_CG,lift=p.th>0.02?0.0605*sin(min(p.th,PI/2)):0;
   const m=m4mul(m4mul(m4t(p.x-cos(p.dir)*off,(p.y||0)+lift,p.z-sin(p.dir)*off),
    m4ry(-p.dir)),m4rz(-p.th));
-  for(const q of LIGHTS)draw(M_PIN,m4mul(shadowM(q,0.004),m),SHCOL,6,0,0,SHW);
+  if(camY<3.1)for(const q of LIGHTS)draw(M_PIN,m4mul(shadowM(q,0.004),m),SHCOL,6,0,0,SHW);
  }
  if(ball&&!ball.dead&&ball.y>-0.05){
   const bm=m4mul(m4t(ball.x,max(ball.y,BALL_R),ball.z),m4s(BALL_R,BALL_R,BALL_R));
-  for(const q of LIGHTS)draw(M_SPH,m4mul(shadowM(q,0.006),bm),SHCOL,6,0,0,SHW);
+  if(camY<3.1)for(const q of LIGHTS)draw(M_SPH,m4mul(shadowM(q,0.006),bm),SHCOL,6,0,0,SHW);
  }
  G.depthMask(true);G.disable(G.BLEND);
  for(const p of pins){
@@ -1503,6 +1525,7 @@ $('sbtn').addEventListener('click',()=>{audioInit();setMuted(!muted)});
 $('play').addEventListener('click',()=>{audioInit();$('scr').classList.remove('on');resetGame()});
 $('helpbtn').addEventListener('click',()=>{audioInit();$('help').classList.add('on');focusEl($('helpx'))});
 $('helpx').addEventListener('click',()=>{$('help').classList.remove('on');focusEl($('play'))});
+$('help').addEventListener('click',e=>{if(e.target.id==='help')$('helpx').click()});
 addEventListener('keydown',e=>{
  if($('help').classList.contains('on')&&(e.code==='Escape'))$('helpx').click();
 });
