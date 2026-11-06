@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Arcade Bowling 3D</title>
-<meta name="version" content="2026.11.06.14">
+<meta name="version" content="2026.11.06.20">
 <meta name="description" content="3D bowling: step-by-step controls (place, aim, flick) with live lane projection, hook physics, ten-frame scoring, 10-pin and wide-lane 100-pin modes.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -27,11 +27,10 @@ font-size:clamp(9px,1.7vw,13px);font-weight:bold}
 .fr.cur{border-color:#4df;box-shadow:0 0 8px #4df8}
 #sheet .gt{border-color:#ffd94a55}
 #sheet .gt .tt{color:#ffd94a}
-#msg{position:fixed;top:34%;left:50%;transform:translate(-50%,-50%) scale(.5);
-font-size:clamp(32px,8vw,80px);font-weight:900;color:#ffd94a;text-shadow:0 0 30px #f80,0 4px 8px #000;
-pointer-events:none;opacity:0;transition:all .25s cubic-bezier(.2,1.6,.4,1);z-index:6;
-letter-spacing:3px;white-space:nowrap}
-#msg.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#msg{position:fixed;top:30%;left:50%;transform:translate(-50%,-50%);
+font-size:clamp(22px,5.5vw,64px);font-weight:900;color:#ffd94a;text-shadow:0 0 30px #f80,0 4px 8px #000;
+pointer-events:none;opacity:0;z-index:6;letter-spacing:1px;
+max-width:94vw;text-align:center;line-height:1.15}
 #btn{position:fixed;left:50%;bottom:7vh;transform:translateX(-50%);display:none;z-index:7;
 font:700 clamp(14px,2.4vw,20px)/1 Arial;padding:13px 24px;border-radius:99px;border:none;cursor:pointer;
 background:#19b45e;color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.6)}
@@ -56,12 +55,25 @@ border:1px solid #468;background:#123;color:#cfe}
 #modes button.on{background:#19b45e;border-color:#19b45e;color:#fff}
 #play{font:700 clamp(18px,3.4vw,28px)/1 Arial;padding:16px 44px;border-radius:99px;border:none;cursor:pointer;
 background:#19b45e;color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.6)}
-#sbtn{font:700 clamp(11px,1.8vw,14px)/1 Arial;padding:10px 16px;border-radius:99px;border:1px solid #468;
+#sbtn,#helpbtn{font:700 clamp(11px,1.8vw,14px)/1 Arial;padding:10px 16px;border-radius:99px;border:1px solid #468;
 background:#123;color:#cfe;cursor:pointer}
 #scr .row{display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap}
-#dbgbtn{position:fixed;right:10px;bottom:7vh;display:none;z-index:7;
+#dbgbtn{position:fixed;left:8px;bottom:8px;display:none;z-index:7;
 font:700 clamp(10px,1.6vw,13px)/1 Arial;padding:10px 14px;border-radius:99px;
 border:1px solid #4df;color:#4df;background:rgba(0,10,20,.75);cursor:pointer}
+#skipbtn{position:fixed;right:8px;bottom:8px;display:none;z-index:8;
+font:700 clamp(12px,2vw,16px)/1 Arial;padding:12px 20px;border-radius:99px;
+border:none;background:#19b45e;color:#fff;cursor:pointer}
+#help{position:fixed;inset:0;z-index:10;display:none;place-items:center;
+background:rgba(4,6,14,.86);color:#cfe}
+#help.on{display:grid}
+#help .card{max-width:640px;max-height:82vh;overflow:auto;padding:26px 30px;margin:0 12px;
+background:#0a0f1e;border:1px solid #468;border-radius:14px;font:14px/1.6 Arial}
+#help h2{color:#4df;font-size:18px;margin:0 0 10px}
+#help h3{color:#ffd94a;font-size:14px;margin:16px 0 6px}
+#help p{margin:0 0 8px}
+#help .close{margin-top:14px;font:700 13px/1 Arial;padding:10px 18px;border-radius:99px;
+border:none;background:#19b45e;color:#fff;cursor:pointer}
 #dbar{position:fixed;left:50%;bottom:0;transform:translateX(-50%);display:none;z-index:9;
 align-items:center;gap:6px;padding:8px 10px;background:rgba(4,6,14,.85);
 border:1px solid rgba(77,221,255,.4);border-radius:10px 10px 0 0;color:#cfe}
@@ -80,12 +92,33 @@ background:#123;color:#cfe;cursor:pointer}
 <div id="end"><h1 id="endT"></h1><p id="endP"></p><div class="row"><button id="again">PLAY AGAIN</button><a class="home" href="https://1nd1g0.github.io/">HOME</a></div></div>
 <div id="scr">
 <h1>BOWLING 32</h1>
-<p>CATCH THE BALL ON A CORD &#8212; DRAG IT UP: DISTANCE + SPEED = POWER, A SWING TO THE SIDE = HOOK, THE DOTS SHOW THE PATH</p>
+<p>THREE-STEP THROW: DRAG TO PLACE THE BALL &#8226; DRAG TO AIM &#8226; FLICK UP TO THROW: TRAVEL + SPEED = POWER, LEAN = HOOK</p>
 <div id="modes"><button id="m10">10 PINS</button><button id="m100">100 PINS &#8226; WIDE LANE</button></div>
 <button id="play">PLAY</button>
-<div class="row"><button id="sbtn">SOUND: ON</button><a class="home" href="https://1nd1g0.github.io/">HOME</a></div>
+<div class="row"><button id="sbtn">SOUND: ON</button><button id="helpbtn">HOW TO PLAY</button><a class="home" href="https://1nd1g0.github.io/">HOME</a></div>
 </div>
-<button id="dbgbtn">STEP-BY-STEP PHYSICS</button>
+<div id="help"><div class="card">
+<h2>HOW TO PLAY</h2>
+<h3>CONTROLS &#8212; TOUCH / MOUSE</h3>
+<p><b>1. PLACE:</b> drag left / right to set where the ball starts, then tap to lock.
+<b>2. AIM:</b> drag to set the shot angle, tap to lock.
+<b>3. THROW:</b> flick UP toward the pins &#8212; the flick's travel and speed set the power,
+and leaning left / right as you release puts hook on the ball.</p>
+<h3>CONTROLS &#8212; KEYBOARD</h3>
+<p>&#8592;&#8594; (or A / D) steps the ball through PLACE &#8594; AIM &#8594; THROW, ENTER or SPACE locks a step.
+On the throw step, <b>hold SPACE</b> to charge power (a longer hold is a harder hit) and release to throw;
+&#8592;&#8594; while holding adds spin. Tab reaches the on-screen buttons, Space or Enter presses them.</p>
+<h3>THE RULES &#8212; CLASSIC 10-PIN</h3>
+<p>Ten frames; each frame gets up to two balls, three in the 10th if your first two go well.
+Clear all ten with the first ball = <b>STRIKE</b>: it scores 10 plus a bonus of whatever your next two balls knock down.
+Clear the rest with the second ball = <b>SPARE</b>: 10 plus the next ball as bonus.
+Pins left standing after two balls count as themselves. A gutter ball scores nothing and the pins are swept clear between balls.
+Highest total after ten frames wins; 300 is the perfect game.</p>
+<p>100-pin mode spreads a full ten-row rack across a wide lane for chaos; the score sheet stays on the classic 10-pin scale.</p>
+<button id="helpx" class="close">GOT IT</button>
+</div></div>
+<button id="dbgbtn" title="step through the last throw one physics frame at a time">REPLAY</button>
+<button id="skipbtn">SKIP</button>
 <div id="dbar">
 <button id="dbb" title="back one frame (, / Left)">◀ 1</button>
 <button id="dbp" title="play/pause (Space)">▶</button>
@@ -338,7 +371,7 @@ let frame=0,throwN=0,standingBefore=10;
 let fr=blankFrames();
 function blankFrames(){const a=[];for(let i=0;i<10;i++)a.push({t:[]});return a}
 let pins=[],ball=null,parts=[];
-let phase='menu',aim=0,power=0,spin=0,startX=0,astep=0,gest=null,chg=null,settleT=0,msgTO=0,fullRack=true,pred=[];
+let phase='menu',aim=0,power=0,spin=0,startX=0,astep=0,gest=null,chg=null,settleT=0,msgTO=0,msgA=null,fullRack=true,pred=[];
 function makePin(x,z){return {x,z,x0:x,z0:z,vx:0,vz:0,th:0,om:0,dir:0,down:false,dead:false,drop:0,y:0}}
 function newRack(){
  pins=[];
@@ -437,9 +470,23 @@ function statusHUD(){
  $('info').textContent=stepHint();
 }
 function msg(t,ms){
- const e=$('msg');e.textContent=t;e.classList.add('on');
- clearTimeout(msgTO);msgTO=setTimeout(()=>e.classList.remove('on'),ms||1400);
+ // driven by explicit WAAPI animations instead of a CSS class+transition:
+ // a transition restart is unreliable while the rAF loop hogs the main thread,
+ // and a second identical banner would then never visually re-appear
+ const e=$('msg');
+ if(msgA)msgA.cancel();
+ e.textContent=t;
+ msgA=e.animate([{transform:'translate(-50%,-50%) scale(.5)',opacity:0},
+  {transform:'translate(-50%,-50%) scale(1.08)',opacity:1,offset:.6},
+  {transform:'translate(-50%,-50%) scale(1)',opacity:1}],
+  {duration:250,easing:'cubic-bezier(.2,1.4,.4,1)',fill:'forwards'});
+ clearTimeout(msgTO);
+ msgTO=setTimeout(()=>{msgA=e.animate([{opacity:1},{opacity:0}],{duration:300,fill:'forwards'})},ms||1400);
 }
+// default-focus plumbing: keyboard and gamepad users must be able to hit the
+// primary button of whatever screen they are on without tab-hunting first
+function focusEl(el){try{el.focus({preventScroll:true})}catch(e){}}
+function unfocus(){const a=document.activeElement;if(a&&a.blur)a.blur()}
 /* ---------- physics ---------- */
 // pin dynamics at REAL pin constants. USBC puts a pin's CG 5.31-5.94in above the base
 // (about a third up the pin); the lathe profile below integrated as a solid is 6.15in
@@ -720,8 +767,11 @@ function startThrow(keepPins){
  fullRack=!keepPins; // clearing THIS rack in one throw = strike, in any frame
  resetBall();
  phase='aim';aim=0;power=0;spin=0;astep=0;gest=null;chg=null;pred.length=0;startX=0;settleT=0;
- rec=[];di=0;$('dbgbtn').style.display='none';
+ rec=[];di=0;pend=null;
+ if(RP){RP=null;$('skipbtn').style.display='none'}
+ $('dbgbtn').style.display='none';
  $('btn').style.display='none';
+ unfocus(); // in the aim phase SPACE throws the ball - it must not also press a button
  statusHUD();
 }
 function newFrame(){startThrow(false)}
@@ -741,7 +791,7 @@ function throwBall(){
   pins:pins.map(q=>({x:+q.x.toFixed(4),z:+q.z.toFixed(4),vx:+q.vx.toFixed(3),vz:+q.vz.toFixed(3),
    th:+q.th.toFixed(3),dir:+q.dir.toFixed(3),om:+q.om.toFixed(3)})),
   K:{PC,PIN_CG,I_CM,TIPC,LW,PINZ:RACKZ,PITZ,PITEDGE,BALL_R,MBALL,PIN_H,PR,MPIN,PIN_S,PIN_RZ,DT,FR:0.55,HOOK:2.1,grip:grip.toString()}});
- rec=[];di=0;recPush();
+ rec=[];di=0;camStop=false;recPush();
  rumbleOn();
 }
 function endThrow(){
@@ -778,15 +828,26 @@ function endThrow(){
   }
   else next='over';
  }
+ // the main camera has done its job; the pile is shown again in slow motion
+ // from cameras above the rack before the next-ball button appears. Every
+ // throw is recorded (rec), so every throw gets a replay.
+ pend={btn,next};
+ if(rec.length>60)startReplay(strike||spare||knocked>=4);
+ else finishThrow();
+}
+let pend=null;
+function finishThrow(){
  phase='done';
- const b=$('btn');
- if(next==='over'){
+ if(pend.next==='over'){
   $('btn').style.display='none';
   showEnd();
  }else{
-  b.textContent=btn;b.style.display='block';
-  b.dataset.next=next;
+  const b=$('btn');
+  b.textContent=pend.btn;b.style.display='block';
+  b.dataset.next=pend.next;
+  focusEl(b);
  }
+ if(rec.length)$('dbgbtn').style.display='block';
  statusHUD();
 }
 function nextAction(){
@@ -811,25 +872,63 @@ function showEnd(){
  $('endT').textContent=total===300?'PERFECT GAME!':(total>=200?'BOWLING LEGEND':'GAME OVER');
  $('endP').textContent=`FINAL SCORE ${total} \u2022 ${strikes} STRIKE${strikes===1?'':'S'} \u2022 RANK: ${rank}`;
  $('end').classList.add('on');
+ focusEl($('again'));
  updateSheet();
 }
 /* ---------- camera ---------- */
-let camX=0,camY=1.55,camZ=2.4,lkX=0,lkY=0.3,lkZ=-13,fov=30;
+let camX=0,camY=1.55,camZ=2.4,lkX=0,lkY=0.3,lkZ=-13,fov=30,camStop=false;
+// Side-edge projection test for the follow camera: project the current live
+// rack's left- and right-most pin edges through the candidate view. If any
+// edge crosses the frame border (or a pin would end up behind the camera, or
+// the camera is about to be inside the rack), that camera position is out —
+// the follow camera holds at the last position where the whole rack still fits.
+function rackClipped(cx,cy,cz,tx,ty,tz,fv){
+ const M=m4mul(m4persp(fv*PI/180,ASP,0.05,60),m4look([cx,cy,cz],[tx,ty,tz],[0,1,0]));
+ let mind=1e9;
+ for(const p of pins){
+  if(p.dead)continue;
+  const dx=p.x-cx,dz=p.z-cz;
+  mind=min(mind,sqrt(dx*dx+dz*dz));
+  for(const e of[p.x-0.09,p.x+0.09]){
+   const w=M[3]*e+M[7]*0.45+M[11]*p.z+M[15];
+   if(w<0.1)return true;
+   const nx=(M[0]*e+M[4]*0.45+M[8]*p.z+M[12])/w;
+   if(nx<-0.94||nx>0.94)return true;
+  }
+ }
+ return mind<1.6;
+}
 function camUpdate(dt){
  let ex,ey,ez,lx,ly,lz,ft=30;
  if(phase==='aim'){
-  ex=startX*0.7;ey=1.16;ez=3.35;
-  lx=startX+sin(aim)*9;ly=0.52;lz=-3.2;ft=30;
+  // sit directly behind the ball along the aiming ray: the ball holds the
+  // horizontal center of the frame at every placement, and the view axis IS
+  // the dotted aiming line, so the camera always looks where the ball will
+  // roll; while the trajectory preview is live, aim down its curve instead
+  const bx=ball?ball.x:startX,bz=ball?ball.z:0.45,gx=sin(aim),gz=-cos(aim);
+  let lxp=bx+gx*9,lzp=bz+gz*9;
+  if(astep>=2&&pred.length>4){const q=pred[(pred.length*0.6)|0];lxp=bx*0.3+q[0]*0.7;lzp=bz*0.15+q[1]*0.85;}
+  ex=bx-gx*3.3;ey=1.16;ez=bz-gz*3.3;
+  lx=lxp;ly=0.52;lz=lzp;ft=30;
  }else if(phase==='menu'){
   // slow establishing drift over the house lane for the title screen
   ex=sin(uTimeVal*0.16)*1.1*(LW/1.06);ey=1.7;ez=1.4;
   lx=0;ly=0.45;lz=RACKZ*0.6;ft=36;
  }else if(phase==='roll'){
-  const zc=max(min(ball.z,0.5),-14.2);
-  ex=ball.x*0.3;ey=1.62;ez=zc+3.1;
+  // follow with a visible lag so the ball's own motion reads as a move of its
+  // own; the freeze below stops it at exactly the point where the outer pins
+  // are still fully on screen, so the whole rack fills the view on impact
+  ex=ball.x*0.3;ey=1.62;ez=max(min(ball.z,0.5),-15.4)+3.1;
   const t=clamp((-ball.z-10)/7,0,1);
   lx=ball.x*(1-t);ly=0.16*(1-t)+0.22*t;lz=(ball.z-6)*(1-t)+(-18.3)*t;
   ft=30-12*t;
+  if(!camStop){
+   const k2=1-Math.exp(-2.6*dt);
+   const cx=camX+(ex-camX)*k2,cy=camY+(ey-camY)*k2,cz=camZ+(ez-camZ)*k2,
+    tx=lkX+(lx-lkX)*k2,ty=lkY+(ly-lkY)*k2,tz=lkZ+(lz-lkZ)*k2,fv=fov+(ft-fov)*k2;
+   if(rackClipped(cx,cy,cz,tx,ty,tz,fv))camStop=true; // hold at this frame
+  }
+  if(camStop){ex=camX;ey=camY;ez=camZ;lx=lkX;ly=lkY;lz=lkZ;ft=fov;}
  }else if(phase==='settle'||phase==='done'){
   ex=-0.15;ey=1.35;ez=-14.4;lx=0;ly=0.18;lz=-18.45;ft=20;
  }else{
@@ -1098,13 +1197,17 @@ addEventListener('keydown',e=>{
   statusHUD();
  }
 });
-addEventListener('keyup',e=>{
- if(dbgOn||phase!=='aim'||!chg)return;
- if(e.code!=='Space')return;
+function releaseHold(){
+ if(!chg)return;
  const hold=performance.now()-chg.t0;chg=null;
  power=clamp((hold-FLIK.CHRG0)/(FLIK.CHRG1-FLIK.CHRG0),0,1);
  if(power<FLIK.MINP){power=0;pred.length=0;msg('HOLD SPACE LONGER = MORE POWER',1000);return}
  throwBall();
+}
+addEventListener('keyup',e=>{
+ if(dbgOn||phase!=='aim'||!chg)return;
+ if(e.code!=='Space')return;
+ releaseHold();
 });
 /* ---------- physics debug: frame-by-frame recording, scrub, free camera ---------- */
 let rec=[],di=0,dbgOn=false,dbPlay=false,dbAcc=0,throwSnap='';
@@ -1118,7 +1221,6 @@ function recPush(){
   a[o+6]=p.drop;a[o+7]=p.dead?1:0;a[o+8]=p.vx;a[o+9]=p.vz;a[o+10]=p.om}
  rec.push(a);
  $('dscrub').max=rec.length-1;
- if(!dbgOn)$('dbgbtn').style.display='block';
 }
 function recApply(i){
  di=clamp(i|0,0,rec.length-1);const a=rec[di];
@@ -1140,6 +1242,7 @@ const dbCam={yaw:0,pitch:0.3,dist:2.5,tx:0,ty:0.3,tz:-18.3};
 let dbk={},dbDrag=null;
 function dbEnter(){
  if(!rec.length)return;
+ if(phase==='replay'){RP=null;$('skipbtn').style.display='none'}
  dbgOn=true;dbPlay=false;dbAcc=0;
  const dx=camX-lkX,dy=camY-lkY,dz=camZ-lkZ;
  dbCam.dist=max(0.6,sqrt(dx*dx+dy*dy+dz*dz));
@@ -1153,6 +1256,7 @@ function dbEnter(){
 function dbExit(){
  dbgOn=false;dbPlay=false;$('dbar').style.display='none';
  recApply(di); // resume live physics from the frame being viewed
+ if(phase==='replay'&&!RP)finishThrow(); // the slow-motion sequence was taken over
  if(rec.length)$('dbgbtn').style.display='block';
 }
 function dbgStep(n){dbPlay=false;$('dbp').classList.remove('on');recApply(di+n)}
@@ -1209,6 +1313,93 @@ $('dbo').addEventListener('click',dbExit);
 $('dbc').addEventListener('click',copyThrow);
 $('dscrub').addEventListener('input',e=>{dbPlay=false;$('dbp').classList.remove('on');recApply(+e.target.value)});
 $('dbgbtn').addEventListener('click',dbEnter);
+/* ---------- cinematic replay: slow motion from cameras above the rack ---------- */
+// Reuses the physics frame recorder: once the main follow camera has done its
+// job (endThrow), the pile falls again in slow motion. A camera straight above
+// the live rack always runs; good shots get two diagonal corner angles too.
+// SKIP cuts the sequence at any point.
+let RP=null;
+const REP_SPD=0.35; // fraction of real time
+function startReplay(good){
+ // window: the frame where the ball first touches a pin (tiny lead-in so the
+ // contact itself is on screen) until the pile settles. A throw that never
+ // touched anything gets NO replay: there is no pile to relive, and replaying
+ // the approach in slow motion is just dead time.
+ let c0=-1;
+ const rr=(BALL_R+PR+0.02)*(BALL_R+PR+0.02);
+ outer:for(let i=0;i<rec.length;i++){const a=rec[i];
+  if(a[6])continue; // ball dead/dropped: not a contact frame
+  const bx=a[0],bz=a[2];
+  for(let k=0;k<pins.length;k++){const o=10+k*11;
+   const dx=bx-a[o],dz=bz-a[o+2];
+   if(dx*dx+dz*dz<rr){c0=i;break outer}}}
+ if(c0<0)return finishThrow();
+ const s0=max(0,c0-12);
+ let e0=rec.length-1;
+ {let calm=0;
+  for(let i=s0;i<rec.length;i++){const a=rec[i];let act=0;
+   for(let k=0;k<pins.length;k++){const o=10+k*11;act+=abs(a[o+8])+abs(a[o+9])+a[o+3]*4}
+   if(act>=0.3){calm=0;continue}
+   if(++calm>=36){e0=i;break}
+   if(i-s0>=240){e0=i;break}}}
+ // frame every pin still in play as it comes to rest: the live pins' bounding
+ // box at the final recorded frame sets the camera height for each angle
+ const fin=rec[rec.length-1];
+ let minx=1e9,maxx=-1e9,minz=1e9,maxz=-1e9,n=0;
+ for(let k=0;k<pins.length;k++){const o=10+k*11;
+  if(fin[o+7])continue;
+  const x=fin[o],z=fin[o+2];
+  if(x<minx)minx=x;if(x>maxx)maxx=x;if(z<minz)minz=z;if(z>maxz)maxz=z;n++}
+ if(!n)return finishThrow();
+ const cx=(minx+maxx)/2,cz=(minz+maxz)/2;
+ const hw=(maxx-minx)/2+0.5,hd=(maxz-minz)/2+0.5,fv=52;
+ const tv=tan(fv*PI/360),th=tv*max(ASP,0.35);
+ const d1=max(hw/th,hd/tv)*1.15;
+ const cams=[{px:cx,py:d1,pz:cz,tx:cx,ty:0,tz:cz,up:[0,0,-1],fv}];
+ if(good){
+  // broadcast-style 3/4 angle: camera inside the corridor between the tall
+  // side walls (inner faces at |x|=WALLX+0.29) — outside them the wall body
+  // occludes, above them the wall top fills the frame. Look down from
+  // mid-pit; framing widens with the pile so wide-mode racks stay framed.
+  const tzd=Math.min(cz+0.7,RACKZ-0.2);
+  const spread=max(0,max(hw,hd)-0.9);
+  for(const s of[-1,1])cams.push({px:cx+s*min(1.05+spread*0.55,WALLX+0.19),
+   py:1.9+spread*0.35,pz:tzd+3.6+spread*1.1,tx:cx,ty:0.35,tz:tzd,up:[0,1,0],fv:46});
+ }
+ recApply(s0);
+ phase='replay';
+ RP={cams,ci:0,i0:s0,end:e0,cur:s0,acc:0,wait:0};
+ $('skipbtn').style.display='block';
+ $('info').textContent='SLOW-MOTION REPLAY \u2022 SKIP TO PLAY THE NEXT BALL';
+ focusEl($('skipbtn'));
+}
+function repNext(){
+ if(!RP)return;
+ RP.ci++;
+ if(RP.ci>=RP.cams.length){
+  RP=null;$('skipbtn').style.display='none';finishThrow();return}
+ RP.cur=RP.i0;RP.acc=0;RP.wait=0;recApply(RP.i0);
+}
+function replayStep(dt){
+ RP.acc+=dt*120*REP_SPD;
+ const st=RP.acc|0;
+ if(st){RP.acc-=st;RP.cur=min(RP.cur+st,RP.end);recApply(RP.cur)}
+ if(RP.cur>=RP.end){RP.wait+=dt;if(RP.wait>0.6)repNext()}
+}
+function repCam(){
+ const c=RP.cams[RP.ci];
+ camX=c.px;camY=c.py;camZ=c.pz;
+ lkX=c.tx;lkY=c.ty;lkZ=c.tz;fov=c.fv;
+ PV=m4mul(m4persp(c.fv*PI/180,ASP,0.05,60),m4look([c.px,c.py,c.pz],[c.tx,c.ty,c.tz],c.up));
+}
+$('skipbtn').addEventListener('click',()=>{audioInit();repNext()});
+addEventListener('keydown',e=>{
+ if(dbgOn||phase!=='replay')return;
+ const a=document.activeElement;
+ if(a&&a.id==='skipbtn'&&(e.code==='Space'||e.code==='Enter'))return; // native press
+ if(e.code==='Space'||e.code==='Enter'||e.code==='Escape'||e.code==='KeyB'||e.code==='Backspace'){
+  e.preventDefault();repNext()}
+});
 function drawDebug(){
  // velocity vectors: red = pin slide, cyan = ball motion, amber = tip-over direction
  for(const p of pins){
@@ -1230,6 +1421,27 @@ window.DBG={on:dbEnter,off:dbExit,step:dbgStep,seek:recApply,n:()=>rec.length,
 /* ---------- main loop ---------- */
 const DT=1/120;
 let last=performance.now(),acc=0;
+// gamepad: A on a focused button presses it (menu buttons are auto-focused);
+// in the aim phase A mirrors the SPACE path - lock steps, hold to charge
+let gpPrev=false;
+function gamepadKeys(){
+ const gps=navigator.getGamepads?navigator.getGamepads():[];
+ let hit=false;
+ for(let i=0;i<gps.length;i++){const g=gps[i];
+  if(g&&g.buttons&&g.buttons[0]&&g.buttons[0].pressed)hit=true}
+ if(hit!==gpPrev){
+  if(hit){
+   if(phase==='aim'&&!dbgOn){audioInit();
+    if(astep<2)advanceStep();
+    else if(!chg)chg={t0:performance.now()}}
+  }else{
+   if(phase==='aim'&&chg)releaseHold();
+   else{const a=document.activeElement;
+    if(a&&a.tagName==='BUTTON'&&a.click)a.click()}
+  }
+ }
+ gpPrev=hit;
+}
 function loop(now){
  requestAnimationFrame(loop);
  let dt=(now-last)/1000;last=now;if(dt>0.1)dt=0.1;
@@ -1254,8 +1466,14 @@ function loop(now){
   if(n){dbAcc-=n;recApply(di+n);
    if(di>=rec.length-1){dbPlay=false;$('dbp').classList.remove('on')}}
  }
- if(!dbgOn&&phase==='aim'&&chg)predict(); // dots follow the hold-ramp live
- if(dbgOn){dbCamMove(dt);dbCamUpdate()}else camUpdate(dt);
+ if(!dbgOn){
+  if(phase==='replay')replayStep(dt);
+  if(phase==='aim'&&chg)predict(); // dots follow the hold-ramp live
+ }
+ gamepadKeys();
+ if(dbgOn){dbCamMove(dt);dbCamUpdate()}
+ else if(phase==='replay')repCam();
+ else camUpdate(dt);
  render();
 }
 function resetGame(){
@@ -1283,11 +1501,17 @@ $('m10').addEventListener('click',()=>{audioInit();setMode(false);newRack();mode
 $('m100').addEventListener('click',()=>{audioInit();setMode(true);newRack();modeUI()});
 $('sbtn').addEventListener('click',()=>{audioInit();setMuted(!muted)});
 $('play').addEventListener('click',()=>{audioInit();$('scr').classList.remove('on');resetGame()});
+$('helpbtn').addEventListener('click',()=>{audioInit();$('help').classList.add('on');focusEl($('helpx'))});
+$('helpx').addEventListener('click',()=>{$('help').classList.remove('on');focusEl($('play'))});
+addEventListener('keydown',e=>{
+ if($('help').classList.contains('on')&&(e.code==='Escape'))$('helpx').click();
+});
 try{muted=localStorage.getItem('bowl32snd')==='off';
  if(localStorage.getItem('bowl32mode')==='100')setMode(true)}catch(e){}
 newRack();updateSheet();modeUI();
 $('sbtn').textContent='SOUND: '+(muted?'OFF':'ON');
 $('scr').classList.add('on');
+focusEl($('play'));
 requestAnimationFrame(loop);
 </script>
 <script>
