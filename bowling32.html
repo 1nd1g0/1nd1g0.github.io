@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Arcade Bowling 3D</title>
-<meta name="version" content="2026.11.05.4">
-<meta name="description" content="3D bowling: draw-the-path controls, hook physics, ten-frame scoring, 10-pin and wide-lane 100-pin modes.">
+<meta name="version" content="2026.11.06.14">
+<meta name="description" content="3D bowling: step-by-step controls (place, aim, flick) with live lane projection, hook physics, ten-frame scoring, 10-pin and wide-lane 100-pin modes.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#070912;font-family:Arial,Helvetica,sans-serif}
@@ -27,13 +27,6 @@ font-size:clamp(9px,1.7vw,13px);font-weight:bold}
 .fr.cur{border-color:#4df;box-shadow:0 0 8px #4df8}
 #sheet .gt{border-color:#ffd94a55}
 #sheet .gt .tt{color:#ffd94a}
-#pw,#sw{position:fixed;bottom:7vh;width:15px;height:32vh;border:2px solid rgba(255,255,255,.45);
-border-radius:9px;z-index:4;display:none}
-#pw{left:10px}#sw{right:10px}
-#pwB{position:absolute;left:2px;right:2px;bottom:2px;height:0%;border-radius:6px;
-background:linear-gradient(180deg,#f44,#fc3,#3f7)}
-#sw .mid{position:absolute;left:1px;right:1px;top:50%;height:1px;background:rgba(255,255,255,.5)}
-#swB{position:absolute;left:2px;right:2px;top:50%;height:0%;background:#4df;border-radius:6px}
 #msg{position:fixed;top:34%;left:50%;transform:translate(-50%,-50%) scale(.5);
 font-size:clamp(32px,8vw,80px);font-weight:900;color:#ffd94a;text-shadow:0 0 30px #f80,0 4px 8px #000;
 pointer-events:none;opacity:0;transition:all .25s cubic-bezier(.2,1.6,.4,1);z-index:6;
@@ -82,14 +75,12 @@ background:#123;color:#cfe;cursor:pointer}
 <body>
 <canvas id="c"></canvas>
 <div id="hud"><div id="status"></div><div id="sheet"></div><div id="info"></div></div>
-<div id="pw"><div id="pwB"></div></div>
-<div id="sw"><div class="mid"></div><div id="swB"></div></div>
 <div id="msg"></div>
 <button id="btn"></button>
 <div id="end"><h1 id="endT"></h1><p id="endP"></p><div class="row"><button id="again">PLAY AGAIN</button><a class="home" href="https://1nd1g0.github.io/">HOME</a></div></div>
 <div id="scr">
 <h1>BOWLING 32</h1>
-<p>DRAW THE BALL PATH &#8212; START = WHERE YOU STAND, DRAW SPEED = POWER, DRAW A CURVE = REVS</p>
+<p>CATCH THE BALL ON A CORD &#8212; DRAG IT UP: DISTANCE + SPEED = POWER, A SWING TO THE SIDE = HOOK, THE DOTS SHOW THE PATH</p>
 <div id="modes"><button id="m10">10 PINS</button><button id="m100">100 PINS &#8226; WIDE LANE</button></div>
 <button id="play">PLAY</button>
 <div class="row"><button id="sbtn">SOUND: ON</button><a class="home" href="https://1nd1g0.github.io/">HOME</a></div>
@@ -150,14 +141,32 @@ attribute vec3 aPos,aNrm;
 uniform mat4 uM,uMVP;
 varying vec3 vN,vW;
 void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;
-vN=normalize(vec3(dot(uM[0].xyz,aNrm),dot(uM[1].xyz,aNrm),dot(uM[2].xyz,aNrm)));
+// normals transform by M itself: for an orthonormal matrix the normal matrix IS
+// M. The old dot(uM[i].xyz,aNrm) computed M-transposed-n = the INVERSE
+// rotation: every mesh position rotated right, every normal rotated the WRONG
+// way - pins knocked flat had their normals rotated against the tip, so the
+// up-facing belly shaded like an underside: black tops, bright undersides.
+// Standing pins (M=I) were immune, which is why the defect appeared only after
+// a hit, and only for pins tipped along certain directions.
+vN=normalize((uM*vec4(aNrm,0.0)).xyz);
 gl_Position=uMVP*vec4(aPos,1.0);}`;
 const FS=`
 precision mediump float;
 varying vec3 vN,vW;
 uniform vec3 uCol,uFog,uCam;
 uniform float uMode,uPhase,uSpec,uHi,uTime,uLWH,uLWF,uDECKZ;
+uniform vec4 uLights[6];
+uniform float uAlpha;
 float dotS(vec2 p,vec2 c,float r){return smoothstep(r,r*0.55,length(p-c));}
+float lamb(vec3 lp,vec3 N,vec3 vW,float k){
+ vec3 Li=lp-vW;
+ float d2=dot(Li,Li);
+ // wrapped diffuse: the hard 90-degree cutoff painted flat-black wedges on
+ // faces turned slightly away from a lamp; wrapping softens the terminator
+ // without lifting the underside (the gradient stays top-bright, bottom-dark).
+ float nd=max((dot(N,Li/sqrt(d2))+0.28)/1.28,0.0);
+ return nd*min(k*exp(2.0-0.22*d2),4.0*k);
+}
 void main(){
  vec3 c=uCol;
  if(uMode>1.5&&uMode<2.5){
@@ -181,18 +190,41 @@ void main(){
   c=mix(uCol,vec3(0.92,0.22,0.32),smoothstep(0.35,0.65,s));
  }
  vec3 N=normalize(vN),col;
- if(uMode>4.5){
+ if(uMode>5.5){
+  col=c; // shadow quad: flat tint, alpha-blended by uAlpha
+ }else if(uMode>4.5){
   col=c*(0.92+0.08*sin(uTime*7.0+vW.x*3.0));
  }else{
-  vec3 L=normalize(vec3(0.28,0.8,0.5));
-  float dif=max(dot(N,L),0.0),hemi=0.5+0.5*N.y;
-  col=c*(0.38*hemi+0.72*dif)+c*uHi;
-  vec3 V=normalize(uCam-vW),H=normalize(L+V);
-  col+=vec3(1.0,0.96,0.88)*pow(max(dot(N,H),0.0),48.0)*uSpec;
+  // scene lights from the uLights table (drawn lamp strips + pit fixture, kept
+  // in sync in JS): five ceiling fixtures along the lane, one above the pit.
+  // The old fixed directional + hemisphere pair painted the identical
+  // light/shadow pattern on every ball and pin at every depth - that read as a
+  // baked-in static shadow, and left whole falling pins black-sided.
+  // stronger top/bottom gradient: fixtures are above, so upward faces must
+  // read brighter and downward faces darker even before any lamp term.
+  vec3 acc=c*(0.26+0.24*N.y)+c*uHi;
+  float wx=uLWH+0.28;
+  for(int i=0;i<6;i++)acc+=c*lamb(uLights[i].xyz,N,vW,uLights[i].w);
+  acc+=c*(lamb(vec3( wx,0.35,-4.0),N,vW,0.09)+lamb(vec3(-wx,0.35,-4.0),N,vW,0.09)
+        +lamb(vec3( wx,0.35,-12.0),N,vW,0.09)+lamb(vec3(-wx,0.35,-12.0),N,vW,0.09)
+        // back-wall wash beside the rack: the old wall pair dies out (exp
+        // falloff) before z=-16, so a face turned away from every ceiling
+        // fixture (a ball's side toward the camera) fell to black. This pair
+        // keeps such faces mid-tone; the above/below gradient still holds.
+        +lamb(vec3( wx,0.35,-16.0),N,vW,0.10)+lamb(vec3(-wx,0.35,-16.0),N,vW,0.10));
+  vec3 V=normalize(uCam-vW),Bd=vec3(0.0,1.0,0.0);
+  float Bv=-1.0;
+  for(int i=0;i<6;i++){
+   vec3 Li=uLights[i].xyz-vW;
+   float d2=dot(Li,Li),a=uLights[i].w*exp(2.0-0.22*d2);
+   if(a>Bv){Bv=a;Bd=Li/sqrt(d2);}
+  }
+  vec3 H=normalize(Bd+V);
+  col=acc+vec3(1.0,0.96,0.88)*pow(max(dot(N,H),0.0),48.0)*uSpec*min(Bv*1.4,1.0);
  }
  float d=length(uCam-vW);
  col=mix(col,uFog,1.0-exp(-d*0.022));
- gl_FragColor=vec4(col,1.0);
+ gl_FragColor=vec4(col,uAlpha);
 }`;
 function sh(t,src){const s=G.createShader(t);G.shaderSource(s,src);G.compileShader(s);
 if(!G.getShaderParameter(s,G.COMPILE_STATUS))throw new Error(G.getShaderInfoLog(s));return s}
@@ -210,6 +242,19 @@ uPhase=G.getUniformLocation(PG,'uPhase'),uSpec=G.getUniformLocation(PG,'uSpec'),
 uHi=G.getUniformLocation(PG,'uHi'),uTime=G.getUniformLocation(PG,'uTime'),
 uLWH=G.getUniformLocation(PG,'uLWH'),uLWF=G.getUniformLocation(PG,'uLWF'),
 uDECKZ=G.getUniformLocation(PG,'uDECKZ');
+const uLights=G.getUniformLocation(PG,'uLights[0]'),uAlpha=G.getUniformLocation(PG,'uAlpha');
+/* scene light table: ceiling lamps over the lane + one above the pit.
+   The same array draws the visible lamp strips (render) AND lights the scene
+   (uLights uniform) - shadows and shading therefore move with the fixtures.
+   Real lanes light the rack from a fixture directly behind/above the pins;
+   a lamp mid-lane (z=-13) left the pin bodies lit only from the camera side,
+   so the last fixture sits over the deck at the rack instead. */
+const LIGHTS=[[0,3.0,-1,0.68],[0,3.0,-5,0.68],[0,3.0,-9,0.68],[0,3.25,-16.35,1.25],
+ [0,3.0,-17,0.68],[0,2.9,-19.6,0.55]];
+const ltA=new Float32Array(24);
+for(let i=0;i<6;i++)ltA.set(LIGHTS[i],i*4);
+G.uniform4fv(uLights,ltA);
+G.uniform1f(uAlpha,1);
 G.enable(G.DEPTH_TEST);
 G.clearColor(0.027,0.035,0.071,1);
 let PV=m4();
@@ -256,12 +301,13 @@ const M_BOX=mkBox(),M_SPH=mkSphere(14,24);
 // head dia 2.55in @12.6in; base dia 2.03in. [radius,height] in metres.
 const PIN_PROFILE=[[0,0],[0.024,0],[0.0254,0.008],[0.038,0.045],[0.0605,0.114],[0.046,0.178],
 [0.030,0.235],[0.0226,0.277],[0.0324,0.320],[0.030,0.355],[0.022,0.369],[0.012,0.377],[0,0.381]];
-const M_PIN=mkLathe(PIN_PROFILE,14);
-function draw(mk,mat,col,mode,spec,hi){
+const M_PIN=mkLathe(PIN_PROFILE,28);
+function draw(mk,mat,col,mode,spec,hi,alpha){
  G.uniformMatrix4fv(uM,false,mat);
  G.uniformMatrix4fv(uMVP,false,m4mul(PV,mat));
  G.uniform3fv(uCol,col);
  G.uniform1f(uMode,mode||0);G.uniform1f(uSpec,spec||0);G.uniform1f(uHi,hi||0);
+ G.uniform1f(uAlpha,alpha===undefined?1:alpha);
  G.bindBuffer(G.ARRAY_BUFFER,mk.vb);G.vertexAttribPointer(aPos,3,G.FLOAT,false,0,0);
  G.bindBuffer(G.ARRAY_BUFFER,mk.nb);G.vertexAttribPointer(aNrm,3,G.FLOAT,false,0,0);
  G.bindBuffer(G.ELEMENT_ARRAY_BUFFER,mk.ib);
@@ -292,7 +338,7 @@ let frame=0,throwN=0,standingBefore=10;
 let fr=blankFrames();
 function blankFrames(){const a=[];for(let i=0;i<10;i++)a.push({t:[]});return a}
 let pins=[],ball=null,parts=[];
-let phase='menu',aim=0,power=0,spin=0,startX=0,drag=null,settleT=0,msgTO=0,fullRack=true;
+let phase='menu',aim=0,power=0,spin=0,startX=0,astep=0,gest=null,chg=null,settleT=0,msgTO=0,fullRack=true,pred=[];
 function makePin(x,z){return {x,z,x0:x,z0:z,vx:0,vz:0,th:0,om:0,dir:0,down:false,dead:false,drop:0,y:0}}
 function newRack(){
  pins=[];
@@ -388,23 +434,23 @@ function updateSheet(){
 function statusHUD(){
  // during aim throwN is the count of COMPLETED throws: label the ball being lined up
  $('status').textContent=`FRAME ${min(frame+1,10)}/10 \u2022 THROW ${phase==='roll'?max(1,throwN):max(1,min(3,throwN+1))} \u2022 ${PC===10?'10 PIN':'100 PIN WIDE'}`;
- $('info').textContent='DRAW THE BALL PATH: start = where you stand \u2022 draw speed = power \u2022 draw a curve = revs \u2022 straight draw = straight ball';
+ $('info').textContent=stepHint();
 }
 function msg(t,ms){
  const e=$('msg');e.textContent=t;e.classList.add('on');
  clearTimeout(msgTO);msgTO=setTimeout(()=>e.classList.remove('on'),ms||1400);
 }
-function meters(){
- const show=(phase==='aim')?'block':'none';
- $('pw').style.display=show;$('sw').style.display=show;
- $('pwB').style.height=(power*100)+'%';
- const h=abs(spin)*48,c=spin>=0;
- $('swB').style.height=h+'%';
- $('swB').style.top=c?(50-h)+'%':'50%';
-}
 /* ---------- physics ---------- */
-// pin topple model: balance angle past which gravity commits the fall (real pin ~atan(r_base/h_cg)≈0.37)
-const TIPC=0.35,GTOP=12,KREST=90,CDAMP=6;
+// pin dynamics at REAL pin constants. USBC puts a pin's CG 5.31-5.94in above the base
+// (about a third up the pin); the lathe profile below integrated as a solid is 6.15in
+// up, so pins carry a spec CG below what the uniform solid would be: PIN_CG=0.142m.
+// I_CM integrates to 0.0130 kg*m^2 over that profile (radius of gyration 91mm, in the
+// real range). Balance angle atan(r_base/PIN_CG)=0.177rad - a 10-degree lean commits a
+// real pin, not the 20 the old base-pivot guess implied. KREST/CDAMP are that pin's
+// actual edge-pivot rocking: sqrt(Mg*PIN_CG/I_EDGE)=5.2rad/s, zeta~0.3, ~1s wobble -
+// the old 9.5rad/s spring was twice as fast as any real pin. GTOP=12 gives a 0.48s
+// fall tip-to-belly, matching real topple time (energy peaks om at ~7.5 from I_EDGE).
+const PIN_CG=0.142,I_CM=0.0130,TIPC=Math.atan(0.0254/PIN_CG),GTOP=12,KREST=27,CDAMP=3.3;
 function grip(z){if(z>-12.6)return 0.06;return clamp((-z-12.6)/1.8,0,1)}
 function stepBall(b,dt){
  if(!b.active||b.dead)return;
@@ -427,14 +473,30 @@ function stepBall(b,dt){
  // a ball that comes back past the foul line (kickback off the pack or pit wall)
  // can never touch pins again, and between there and the camera it would fill
  // the screen as a giant sphere: end it just past the approach instead
- if(b.z>1.0||b.v<0.25){b.dead=true;return}
+ if(b.z>1.0){b.dead=true;return}
+ // a ball ground to a halt inside the pack STAYS on the deck: hold it still but
+ // keep resolving pin contacts against it (sliding pins must not tunnel through
+ // it, and a hit can walk it). It is only invisible once dead - the old v<0.25
+ // cull erased the ball mid-pack (the frame-425 disappearance: a ball plowing
+ // the left edge cluster, 24 pins down, still 6 rows short of the base row).
+ // The throw is ended by ballSettled()'s speed gate, not by hiding the ball.
+ if(b.v<0.25){
+  b.vx=0;b.vz=0;b.spin=0;b.v=0;
+  for(const p of pins)if(!p.dead)collideBallPin(p,b);
+  return;
+ }
  for(const p of pins)if(!p.dead)collideBallPin(p,b);
 }
-// pin body is a capsule on the floor plane: base at (p.x,p.z) -> tip at base+dir*sin(th)*PIN_H,
-// matching the render transform (m4t base * m4ry(-dir) * m4rz(-th)). point-circles made fallen pins ghosts.
-function pinSeg(p){const s=sin(p.th)*PIN_H;return[p.x,p.z,p.x+cos(p.dir)*s,p.z+sin(p.dir)*s]}
-// horizontal velocity of the body point at axial fraction u (0=base,1=top): slide + topple sweep
-function pinVel(p,u){const k=cos(p.th)*p.om*PIN_H*u;return[p.vx+cos(p.dir)*k,p.vz+sin(p.dir)*k]}
+// A pin is tracked at the ground projection of its CENTER OF MASS: base sits at
+// COM - lean_dir*sin(th)*PIN_CG, head at COM + lean_dir*sin(th)*(PIN_H-PIN_CG), which is
+// exactly what the render transform draws (base anchor derived from the same terms).
+// point-circles made fallen pins ghosts.
+function pinSeg(p){const s=sin(p.th);return[p.x-cos(p.dir)*s*PIN_CG,p.z-sin(p.dir)*s*PIN_CG,
+ p.x+cos(p.dir)*s*(PIN_H-PIN_CG),p.z+sin(p.dir)*s*(PIN_H-PIN_CG)]}
+// horizontal velocity of the body point at axial fraction u (0=base,1=top): slide +
+// rotation about the COM - points above the CG sweep with the topple, points below sweep
+// the other way, which is what makes a below-CG hit trip a pin instead of domino-ing it.
+function pinVel(p,u){const k=cos(p.th)*p.om*(u*PIN_H-PIN_CG);return[p.vx+cos(p.dir)*k,p.vz+sin(p.dir)*k]}
 // closest approach of two segments; returns [d,nx,nz,s,t] with n pointing from seg1 to seg2
 function segSeg(a,b,c,e){
  const ux=b[0]-a[0],uz=b[1]-a[1],vx=e[0]-c[0],vz=e[1]-c[1],wx=a[0]-c[0],wz=a[1]-c[1];
@@ -466,8 +528,9 @@ function segSeg(a,b,c,e){
 // the lane so pit pins keep flying. Enforced wherever pin velocity is born:
 // the ball-pin and pin-pin impulses themselves.
 let PK=0;
-// topple-spin cap: a pin falling flat under gravity about its base peaks at
-// sqrt(3g/L)=8.8 rad/s; collision kick-starts add a little on top. Uncapped
+// topple-spin cap: a pin dropped past its balance angle rotates about the base edge and
+// peaks at sqrt(2Mg(h_cg*cos(t_tip)-r_belly)/I_EDGE)=~7.5 rad/s with the real pin's
+// inertia; collision kick-starts add on top. Uncapped
 // om (the frame-424 cascade had 31.7) feeds the pin-pin solver via pinVel's
 // sweep term and inflates the pile-up beyond the energy the ball has.
 const OMCAP=12;
@@ -490,13 +553,25 @@ function collideBallPin(p,b){
  const pen=min(md-d,0.06);
  p.x+=nx*pen*MBALL/(MBALL+MPIN);p.z+=nz*pen*MBALL/(MBALL+MPIN);
  b.x-=nx*pen*MPIN/(MBALL+MPIN);b.z-=nz*pen*MPIN/(MBALL+MPIN);
- const rv=(b.vx-p.vx)*nx+(b.vz-p.vz)*nz;
+ // closing speed AT THE CONTACT POINT (pin sweep included). Contact axial height is
+ // the point on the pin's 3D axis nearest the ball center (y=BALL_R): min of
+ // |base_g + dir*s*sin(th) - ball_xz|^2 + (s*cos(th)-BALL_R)^2 over s =>
+ // s* = BALL_R*cos(th) - sin(th)*dir.(base_g-ball). For an upright pin s*=BALL_R:
+ // the ball drives the pin at ball-center height, just BELOW the 0.142m CG - the
+ // geometry that makes real head pins mushroom. The ground-projected segment's own
+ // parameter would say s*=0 (a push at the floor) - wrong by a full CG height.
+ const sstar=clamp(BALL_R*cos(p.th)-sin(p.th)*(cos(p.dir)*(S[0]-b.x)+sin(p.dir)*(S[1]-b.z)),0,PIN_H);
+ const vp=pinVel(p,sstar/PIN_H);
+ const rv=(b.vx-vp[0])*nx+(b.vz-vp[1])*nz;
  if(rv<=0)return;
  // zero restitution against the ball: a 1.56kg pin cannot bounce back a 6.8kg ball,
  // it only gets equalized to the ball's speed and cleared out of the path.
- // coupling was against the topple-sweep speed at contact height before, which
- // flung the ball backwards out of the pack (energy borrowed from unmodeled spin).
- const j=rv/(1/MBALL+1/MPIN);
+ // The impulse uses the effective mass 1/MPIN+dArm^2/I_CM AT THE CONTACT HEIGHT,
+ // not the whole-pin mass: a belly hit (below the CG) moves the pin more easily and
+ // spends part of the impulse on spin. (Sweep in rv is deliberate now - the frame-424
+ // blow-up it once caused came from uncapped spin, and OMCAP/pinSpeedCap kill that.)
+ const dArm=p.down?0:sstar*cos(p.th)-PIN_CG;
+ const j=rv/(1/MBALL+(p.down?1/MPIN:1/MPIN+dArm*dArm/I_CM));
  // the ball never rebounds off a pin: if equalizing would send it back through the
  // contact normal, it just stops at the contact face and the surplus impulse goes
  // into the pin (a 6.8kg ball is not thrown backwards by a 1.56kg pin)
@@ -509,7 +584,12 @@ function collideBallPin(p,b){
  b.vx-=jD*nx/MBALL;b.vz-=jD*nz/MBALL;
  p.vx+=jD*nx/MPIN;p.vz+=jD*nz/MPIN;
  pinSpeedCap(p);
- if(!p.down&&p.om<rv*2.9){p.om=min(rv*2.9,OMCAP);p.dir=Math.atan2(nz,nx)}
+ // a hit topples the pin ONLY through the CG-offset arm: above the CG it tips AWAY
+ // from the ball, below the CG it TRIPS toward it - real head pins mushroom on the
+ // ball side exactly because the ball drives below their CG. A near-CG hit slides
+ // the pin cleanly and leaves it standing (pin fires through the rack).
+ if(!p.down){const dOM=Math.abs(jD*dArm)/I_CM;
+  if(dOM>0.02&&p.om<dOM){p.dir=Math.atan2(dArm>0?nz:-nz,dArm>0?nx:-nx);p.om=min(dOM,OMCAP)}}
  hitSound(rv);sparks(qx,0.1,qz,min(6,rv*2|0));
 }
 function collidePinPin(a,b){
@@ -525,18 +605,35 @@ function collidePinPin(a,b){
  // through each other — the reported head-through-head
  const sep=min(md-d,0.06)*0.5;
  a.x-=nx*sep;a.z-=nz*sep;b.x+=nx*sep;b.z+=nz*sep;
- const va=pinVel(a,cc[3]),vb=pinVel(b,cc[4]);
+ // the 2D closest-approach locates contact ALONG the ground-projected axes only;
+ // contact HEIGHT comes from surface geometry, not the projection (an upright axis
+ // projects to a point and would put every hit at the floor). Surface at contact:
+ // a fallen pin shows its axis (belly on the floor, y=PR); a standing pin shows its
+ // widest belly (profile max radius, y=0.114); a pin-pin contact sits at the low
+ // mating surface: 2*PR where one is down, 0.114 belly-to-belly where both stand.
+ // That puts pin-pin hits just below the 0.142m CG - mostly translation with a mild
+ // trip, which is how chain-reaction pins actually behave. Effective mass is taken
+ // at that height. pin-pin restitution ~0.3: a bouncier cascade (it was 1.85)
+ // multiplies pin speeds past the ball's own speed, and those then fling the ball.
+ const ucA=a.down?cc[3]:0.114/PIN_H,ucB=b.down?cc[4]:0.114/PIN_H;
+ const va=pinVel(a,ucA),vb=pinVel(b,ucB);
  const rv=(va[0]-vb[0])*nx+(va[1]-vb[1])*nz;
  if(rv<=0)return;
- // pin-pin restitution ~0.3: a bouncier cascade (it was 1.85) multiplies pin speeds
- // through pile-ups past the ball's own speed, and those then fling the ball around
- const j=1.3*rv*MPIN/2;
+ const zcC=(a.down||b.down)?2*PR:0.114;
+ const dA=a.down?0:zcC-PIN_CG,dB=b.down?0:zcC-PIN_CG;
+ const iA=a.down?1/MPIN:1/MPIN+dA*dA/I_CM,iB=b.down?1/MPIN:1/MPIN+dB*dB/I_CM;
+ const j=1.3*rv/(iA+iB);
  a.vx-=j*nx/MPIN;a.vz-=j*nz/MPIN;
  b.vx+=j*nx/MPIN;b.vz+=j*nz/MPIN;
  pinSpeedCap(a);pinSpeedCap(b);
- // a hit can start a topple on either pin: fall away from the other
- if(!b.down&&b.om<rv*3.2){b.om=min(rv*3.2,OMCAP);b.dir=Math.atan2(nz,nx)}
- if(!a.down&&a.om<rv*3.2){a.om=min(rv*3.2,OMCAP);a.dir=Math.atan2(-nz,-nx)}
+ // tip vs trip by contact height: hit above the CG and the pin tips AWAY from the
+ // hitter; hit below it and the foot is punched out - the pin TRIPS toward the
+ // hitter. A flat pin sliding into a standing pin's belly drives it out while
+ // tripping it: exactly the action a fallen pin ploughing the rack has in reality.
+ if(!b.down){const m=j*dB/I_CM;
+  if(Math.abs(m)>0.02&&b.om<Math.abs(m)){b.dir=Math.atan2(m>0?nz:-nz,m>0?nx:-nx);b.om=min(Math.abs(m),OMCAP)}}
+ if(!a.down){const m=-j*dA/I_CM;
+  if(Math.abs(m)>0.02&&a.om<Math.abs(m)){a.dir=Math.atan2(m>0?nz:-nz,m>0?nx:-nx);a.om=min(Math.abs(m),OMCAP)}}
  if(rv>0.4)hitSound(rv*0.6);
 }
 function stepPins(dt){
@@ -586,7 +683,7 @@ function pinActivity(){
  }
  return m;
 }
-function ballSettled(){return ball.dead||ball.z<RACKZ-1.1}
+function ballSettled(){return ball.dead||ball.v<0.25||ball.z<RACKZ-1.1}
 function sparks(x,y,z,n){
  for(let i=0;i<n;i++)parts.push({x,y:y+0.05,z,vx:(rand()*2-1)*1.4,vy:rand()*1.6+0.4,vz:(rand()*2-1)*1.4,life:0.5+rand()*0.3});
 }
@@ -622,18 +719,20 @@ function startThrow(keepPins){
  }
  fullRack=!keepPins; // clearing THIS rack in one throw = strike, in any frame
  resetBall();
- phase='aim';aim=0;power=0;spin=0;drag=null;settleT=0;
+ phase='aim';aim=0;power=0;spin=0;astep=0;gest=null;chg=null;pred.length=0;startX=0;settleT=0;
  rec=[];di=0;$('dbgbtn').style.display='none';
  $('btn').style.display='none';
- meters();statusHUD();
+ statusHUD();
 }
 function newFrame(){startThrow(false)}
 function throwBall(){
  if(phase!=='aim')return;
  audioInit();
- const v=4.6+power*4.4;
- ball.x=startX;ball.z=0.45;
- ball.vx=sin(aim)*v;ball.vz=-cos(aim)*v;ball.spin=spin;ball.v=v;ball.active=true;PK=v;
+ const r=shotVel(),v=r[2];
+ // launched from the placed spot along the locked angle at the flick's speed -
+ // no swing to blend, shotVel is the whole story (predict replayed it exactly)
+ ball.vx=r[0];ball.vz=r[1];ball.spin=spin;ball.v=v;ball.active=true;PK=v;
+ gest=null;chg=null;pred.length=0;
  standingBefore=pinsStanding();
  phase='roll';throwN++;
  throwSnap=JSON.stringify({t:Date.now(),frame,throwN,
@@ -641,9 +740,8 @@ function throwBall(){
   ball:{x:+ball.x.toFixed(4),z:+ball.z.toFixed(4),vx:+ball.vx.toFixed(3),vz:+ball.vz.toFixed(3)},
   pins:pins.map(q=>({x:+q.x.toFixed(4),z:+q.z.toFixed(4),vx:+q.vx.toFixed(3),vz:+q.vz.toFixed(3),
    th:+q.th.toFixed(3),dir:+q.dir.toFixed(3),om:+q.om.toFixed(3)})),
-  K:{PC,LW,PINZ:RACKZ,PITZ,PITEDGE,BALL_R,MBALL,PIN_H,PR,MPIN,PIN_S,PIN_RZ,DT,FR:0.55,HOOK:2.1,grip:grip.toString()}});
+  K:{PC,PIN_CG,I_CM,TIPC,LW,PINZ:RACKZ,PITZ,PITEDGE,BALL_R,MBALL,PIN_H,PR,MPIN,PIN_S,PIN_RZ,DT,FR:0.55,HOOK:2.1,grip:grip.toString()}});
  rec=[];di=0;recPush();
- $('pw').style.display='none';$('sw').style.display='none';
  rumbleOn();
 }
 function endThrow(){
@@ -768,13 +866,51 @@ function render(){
  draw(M_BOX,m4mul(m4t(0,1.5,PITZ-1.1),m4s(6.4*U,3.0,0.2)),COL.back,0,0,0);
  draw(M_BOX,m4mul(m4t(0,-0.37,PITZ+0.55),m4s(3.0*U,0.6,1.3)),COL.pit,0,0,0);
  draw(M_BOX,m4mul(m4t(0,2.6,PITZ-0.95),m4s(4.0*U,0.06,0.06)),COL.neo,5,0,0);
- for(let z=-1;z>=-17;z-=4)draw(M_BOX,m4mul(m4t(0,3.0,z),m4s(3.0,0.06,0.4)),COL.lit,5,0,0);
+ // live dotted trajectory while flicking, and the angle ruler while aiming
+ if(pred.length)for(const q of pred)
+  draw(M_BOX,m4mul(m4t(q[0],0.003,q[1]),m4s(0.055,0.006,0.055)),COL.lit,0,0,0.6);
+ if(phase==='aim'&&astep===1&&ball){
+  const gx=sin(aim),gz=-cos(aim);
+  for(let d=0.5;d<=7.5;d+=0.5)
+   draw(M_BOX,m4mul(m4t(ball.x+gx*d,0.003,ball.z+gz*d),m4s(0.05,0.006,0.05)),COL.lit,0,0,0.45);
+ }
+ for(const q of LIGHTS)draw(M_BOX,m4mul(m4t(q[0],q[1],q[2]),m4s(3.0,0.06,0.4)),COL.lit,5,0,0);
+ // Cast shadows: each fixture projects the object's REAL mesh (the pin lathe,
+ // the ball sphere) onto the deck through a planar projection matrix; the GPU's
+ // perspective divide performs the projection, so shadows carry the object's
+ // true silhouette - pin profile, not an approximation - and every lamp's
+ // share pools directly underfoot with its own tail, because the fixtures are
+ // above the lane. Each layer stays faint (0.05): even where all six lamps
+ // agree the pool darkens only ~26%, soft gray, so a blob can never read as
+ // black paint laid on the object itself. No depth writes.
+ G.enable(G.BLEND);G.blendFunc(G.SRC_ALPHA,G.ONE_MINUS_SRC_ALPHA);G.depthMask(false);
+ const SHCOL=[0.010,0.010,0.020],SHW=0.05;
+ // maps any point onto the plane y=e through light (lx,ly,lz):
+ // x'=((ly-e)px-lx*py+e*lx)/(ly-py); y'==e; z' symmetric. (row-major:
+ // [ly-e,-lx,0,e*lx; 0,-e,0,e*ly; 0,-lz,ly-e,e*lz; 0,-1,0,ly])
+ function shadowM(L,e){const lx=L[0],ly=L[1],lz=L[2];
+  return[ly-e,0,0,0, -lx,-e,-lz,-1, 0,0,ly-e,0, e*lx,e*ly,e*lz,ly];}
+ for(const p of pins){
+  if(p.dead||p.drop||p.z<PITEDGE)continue;
+  const off=sin(p.th)*PIN_CG,lift=p.th>0.02?0.0605*sin(min(p.th,PI/2)):0;
+  const m=m4mul(m4mul(m4t(p.x-cos(p.dir)*off,(p.y||0)+lift,p.z-sin(p.dir)*off),
+   m4ry(-p.dir)),m4rz(-p.th));
+  for(const q of LIGHTS)draw(M_PIN,m4mul(shadowM(q,0.004),m),SHCOL,6,0,0,SHW);
+ }
+ if(ball&&!ball.dead&&ball.y>-0.05){
+  const bm=m4mul(m4t(ball.x,max(ball.y,BALL_R),ball.z),m4s(BALL_R,BALL_R,BALL_R));
+  for(const q of LIGHTS)draw(M_SPH,m4mul(shadowM(q,0.006),bm),SHCOL,6,0,0,SHW);
+ }
+ G.depthMask(true);G.disable(G.BLEND);
  for(const p of pins){
   if(p.dead)continue;
-  // lathe pivots at base; when flat the belly (r=0.0605) is the low point — lift by r*sin(th)
+  // pins are tracked at the COM ground projection now: derive the lathe's base anchor
+  // (base = COM - lean_dir*sin(th)*PIN_CG), the exact inverse of what pinSeg assumes.
+  // When flat the belly (r=0.0605) is the low point — lift by r*sin(th)
+  const off=sin(p.th)*PIN_CG;
   const lift=p.th>0.02?0.0605*sin(min(p.th,PI/2)):0;
-  const m=m4mul(m4mul(m4t(p.x,(p.y||0)+lift,p.z),m4ry(-p.dir)),m4rz(-p.th));
-  draw(M_PIN,m,COL.pin,0,0.5,0.03);
+  const m=m4mul(m4mul(m4t(p.x-cos(p.dir)*off,(p.y||0)+lift,p.z-sin(p.dir)*off),m4ry(-p.dir)),m4rz(-p.th));
+  draw(M_PIN,m,COL.pin,0,0.25,0.02);
  }
  if(ball&&!ball.dead){
   const by=ball.drop?ball.y:(ball.gutter?-0.06:BALL_R);
@@ -824,61 +960,152 @@ function sGutter(){if(!AC)return;const t=AC.currentTime;const o=AC.createOscilla
 function sStrike(){if(!AC)return;const t=AC.currentTime;
  [330,415,494,660].forEach((f,i)=>tone(f,t+i*0.09,0.22,'square',0.10));}
 function sSpare(){if(!AC)return;const t=AC.currentTime;tone(392,t,0.2,'square',0.1);tone(523,t+0.12,0.25,'square',0.1)}
-/* ---------- input: one single gesture - draw the approximate trajectory.
-   Stroke START = where you stand (projected onto the foul line),
-   chord direction = aim, arc height = revs (a straightish draw gives NO
-   rotation - the deadzone absorbs freehand wobble), stroke SPEED = power. ---------- */
-const FLICK={MINP:60,SLOW:700,FAST:2600,DEADC:0.05,FULLC:0.22};
-// screen px -> world x at the foul line (ray through the current aim camera)
-function laneXAt(px,py){
- const th=tan(fov*PI/360),tx=th*ASP;
- let fx=lkX-camX,fy=lkY-camY,fz=lkZ-camZ;
- const fl=sqrt(fx*fx+fy*fy+fz*fz);fx/=fl;fy/=fl;fz/=fl;
- const sl=sqrt(fx*fx+fz*fz)||1;const sx=-fz/sl,sy=0,sz=fx/sl;
- const ux=-fx*fy/sl,uy=(fx*fx+fz*fz)/sl,uz=-fz*fy/sl;
- const dx=(px/innerWidth*2-1)*tx,dy=(1-py/innerHeight*2)*th;
- const wx=sx*dx+ux*dy+fx,wy=sy*dx+uy*dy+fy,wz=sz*dx+uz*dy+fz;
- if(wz>-0.05)return startX;
- return clamp(camX+wx*(0.45-camZ)/wz,-STARTXW,STARTXW);
+/* ---------- input: three steps, one control at a time ----------
+ STEP 1: the first control moves the ball's HORIZONTAL position along the
+ foul line. STEP 2: the next control sets the shot ANGLE. STEP 3: the FLICK
+ throws - vertical travel + speed = power, horizontal travel + speed = side
+ spin that curves the ball the way the flick leans. A tap (press + release
+ without travel) or ENTER/SPACE locks in steps 1-2; on the keyboard ←/→
+ drive the current step, and on STEP 3 SPACE is the flick (hold time =
+ power). The lane dots replay the EXACT shot physics - what you see lands. ---------- */
+const FLIK={TRAV0:60,TRAV1:240,SPD0:350,SPD1:1800, // vertical px + px/s -> power
+ HTRAV0:15,HTRAV1:180,HSPD0:250,HSPD1:1450, // horizontal px + px/s -> spin
+ TAP:300,TAPMOVE:14,DEADBAND:6,MINP:0.06,
+ MPPX:2.8, // full-width drag spans 2.8x the start range
+ APX:2.2, // full-width drag spans 2.2x the aim window
+ KEYX:0.035,KEYA:0.004,KEYS:0.08,CHRG0:150,CHRG1:1100};
+// the exact launch velocity for the current aim+power: throwBall() fires this
+// and predict() replays it, so the dotted line cannot lie.
+function shotVel(){const v=4.6+power*4.4;return[sin(aim)*v,-cos(aim)*v,v]}
+function stepHint(){
+ return ['STEP 1/3 \u2022 DRAG SIDEWAYS: place the ball \u2022 TAP or ENTER to lock',
+  'STEP 2/3 \u2022 DRAG SIDEWAYS: aim the shot \u2022 TAP or ENTER to lock',
+  'STEP 3/3 \u2022 FLICK UP: travel + speed = power \u2022 lean left / right = spin \u2022 PC: \u2190\u2192 spin, hold SPACE for power'][astep];
 }
-// analyze a stroke: sets live aim/power/spin from chord, speed, arc height
+function advanceStep(){
+ if(astep>=2)return;
+ astep++;pred.length=0;power=0;spin=0;
+ msg(astep===1?'STEP 2: AIM THE SHOT':'STEP 3: FLICK TO THROW',900);
+ statusHUD();
+}
+// flick analysis (STEP 3), measured from the press point: vertical travel +
+// vertical speed = power; horizontal travel + horizontal speed = spin
+// strength; the sign of the lean decides which way the path curves.
 function analyzeFlick(P){
  const a=P[0],b=P[P.length-1];
- const cx=b[0]-a[0],cy=b[1]-a[1],L=Math.hypot(cx,cy);
- let S=0;for(let i=1;i<P.length;i++)S+=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);
+ const dx=b[0]-a[0],dy=a[1]-b[1]; // flicking UP is positive travel
  const T=max(16,b[2]-a[2]);
- if(L<FLICK.MINP||cy>-L*0.35){power=0;return} // must be an upward draw of real length
- aim=clamp(atan2(cx,-cy),-AIMCAP,AIMCAP);
- power=clamp((S/T*1000-FLICK.SLOW)/(FLICK.FAST-FLICK.SLOW),0,1);
- // arc height = max perpendicular deviation from the chord, as fraction of chord
- const ux=cx/L,uy=cy/L;let emax=0;
- for(let i=1;i<P.length-1;i++){const e=ux*(P[i][1]-a[1])-uy*(P[i][0]-a[0]);if(abs(e)>abs(emax))emax=e;}
- const curv=emax/L;
- let k=clamp((abs(curv)-FLICK.DEADC)/(FLICK.FULLC-FLICK.DEADC),0,1);k=k*k*(3-2*k);
- spin=(emax>=0?1:-1)*k; // bulge right => hooks right, the ball follows the drawn path
+ const tn=clamp((dy-FLIK.TRAV0)/(FLIK.TRAV1-FLIK.TRAV0),0,1);
+ const sn=clamp((dy/T*1000-FLIK.SPD0)/(FLIK.SPD1-FLIK.SPD0),0,1);
+ power=clamp(0.5*tn+0.5*sn,0,1);
+ const kx=clamp((abs(dx)-FLIK.HTRAV0)/(FLIK.HTRAV1-FLIK.HTRAV0),0,1);
+ const ks=clamp((abs(dx)/T*1000-FLIK.HSPD0)/(FLIK.HSPD1-FLIK.HSPD0),0,1);
+ let k=clamp(0.5*kx+0.5*ks,0,1);k=k*k*(3-2*k);
+ spin=(abs(dx)>FLIK.DEADBAND?(dx>=0?1:-1):0)*k; // deadband keeps straight flicks straight
+ predict();
 }
+// the dotted floor projection: integrate the EXACT stepBall constants from
+// the placed position with this instant's shotVel - stop at the pit
+// edge, v<0.25 (same death threshold), or the first standing pin.
+function predict(){
+ pred.length=0;
+ if(power<=0.02||!ball||phase!=='aim')return;
+ const r=shotVel();
+ let x=ball.x,z=ball.z,vx=r[0],vz=r[1],gut=false;
+ const dt=1/120;
+ for(let i=0;i<600;i++){
+  const sp=sqrt(vx*vx+vz*vz);
+  if(sp>1e-4){vx-=vx/sp*0.55*dt;vz-=vz/sp*0.55*dt}
+  vx+=spin*2.1*grip(z)*dt;
+  x+=vx*dt;z+=vz*dt;
+  if(!gut&&abs(x)>LWH){gut=true;vx=0}
+  if(gut)x=clamp(x,-LWH-GUTW/2,LWH+GUTW/2);
+  if(z<PITEDGE||sqrt(vx*vx+vz*vz)<0.25)break;
+  let hit=false;
+  for(const p of pins){
+   if(p.down||p.dead||p.z>z+0.4||p.z<z-0.4)continue;
+   const qx=x-p.x,qz=z-p.z;
+   if(qx*qx+qz*qz<(BALL_R+PR)*(BALL_R+PR)){hit=true;break}
+  }
+  if(hit)break;
+  if(i%5===0)pred.push([x,z]);
+ }
+}
+// STEPS 1-2: a horizontal drag sets that step's value; a tap (press +
+// release, short, barely any travel) locks it in. STEP 3: the press-to-
+// release gesture IS the flick - throwBall runs the numbers analyzeFlick set.
 addEventListener('pointerdown',e=>{
- if(phase!=='aim'||e.target!==C)return;
- audioInit();
- drag={pts:[[e.clientX,e.clientY,e.timeStamp]]};
- startX=laneXAt(e.clientX,e.clientY); // the draw START is where the ball starts
- meters();
- e.preventDefault();
+ if(phase!=='aim'||dbgOn||e.target!==C)return;
+ e.preventDefault();audioInit();
+ if(astep<2)gest={mode:'adj',x:e.clientX,x0:e.clientX,pos0:startX,ang0:aim,S:0,t0:performance.now()};
+ else{gest={mode:'flick',pts:[[e.clientX,e.clientY,performance.now()]]};power=0;spin=0;pred.length=0}
 });
 addEventListener('pointermove',e=>{
- if(!drag||phase!=='aim')return;
- drag.pts.push([e.clientX,e.clientY,e.timeStamp]);
- if(drag.pts.length>2)analyzeFlick(drag.pts);
- meters();
+ if(!gest||phase!=='aim')return;
+ if(gest.mode==='adj'){
+  gest.S+=abs(e.clientX-gest.x);gest.x=e.clientX;
+  const d=e.clientX-gest.x0;
+  if(astep===0){startX=clamp(gest.pos0+d*FLIK.MPPX*2*STARTXW/innerWidth,-STARTXW,STARTXW);resetBall()}
+  else aim=clamp(gest.ang0+d*FLIK.APX*AIMCAP/innerWidth,-AIMCAP,AIMCAP);
+ }else{
+  const P=gest.pts;P.push([e.clientX,e.clientY,performance.now()]);
+  if(P.length>200)P.shift();
+  analyzeFlick(P);
+ }
 });
 addEventListener('pointerup',e=>{
- if(!drag||phase!=='aim'){drag=null;return}
- const P=drag.pts;
- drag=null;
- analyzeFlick(P);
- if(power>0.08)throwBall();else{power=0;aim=0;spin=0;meters()}
+ if(!gest||phase!=='aim')return;
+ const g=gest;gest=null;
+ if(g.mode==='adj'){
+  if(performance.now()-g.t0<FLIK.TAP&&g.S<FLIK.TAPMOVE)advanceStep();
+  // long drag: the value is set and stays - the next tap confirms it
+ }else{
+  analyzeFlick(g.pts);
+  if(power<FLIK.MINP){power=0;spin=0;pred.length=0;msg('FLICK UP: TRAVEL + SPEED',1000);return}
+  throwBall();
+ }
 });
-addEventListener('pointercancel',()=>{drag=null});
+addEventListener('pointercancel',()=>{
+ if(!gest)return;
+ if(gest.mode==='flick'){power=0;spin=0;pred.length=0}
+ gest=null;
+});
+// keyboard, same three steps: ←/→ (or A/D) drive the current step; ENTER/
+// SPACE confirms steps 1-2. On step 3 the keys replace the finger flick:
+// ←/→ set the spin, holding SPACE ramps the power exactly like travel +
+// speed do. ESC drops back to step 1 with everything cleared.
+addEventListener('keydown',e=>{
+ if(dbgOn||phase!=='aim')return;
+ const L=e.code==='ArrowLeft'||e.code==='KeyA',R=e.code==='ArrowRight'||e.code==='KeyD',
+  ENT=e.code==='Enter',SPC=e.code==='Space';
+ if(L||R){
+  e.preventDefault();audioInit();
+  const s=R?1:-1;
+  if(astep===0){startX=clamp(startX+s*FLIK.KEYX,-STARTXW,STARTXW);resetBall()}
+  else if(astep===1)aim=clamp(aim+s*FLIK.KEYA,-AIMCAP,AIMCAP);
+  else{spin=clamp(spin+s*FLIK.KEYS,-1,1);predict()} // live even mid-charge: the flick leans like a finger flick
+  return;
+ }
+ if(SPC||ENT){
+  e.preventDefault();
+  if(e.repeat)return;
+  audioInit();
+  if(astep<2)advanceStep();
+  else if(SPC&&!chg)chg={t0:performance.now()}; // the keyboard flick starts here (SPACE only)
+ }else if(e.code==='Escape'){
+  chg=null;astep=0;aim=0;power=0;spin=0;startX=0;pred.length=0; // abort everything, back to step 1
+  if(ball)resetBall();
+  statusHUD();
+ }
+});
+addEventListener('keyup',e=>{
+ if(dbgOn||phase!=='aim'||!chg)return;
+ if(e.code!=='Space')return;
+ const hold=performance.now()-chg.t0;chg=null;
+ power=clamp((hold-FLIK.CHRG0)/(FLIK.CHRG1-FLIK.CHRG0),0,1);
+ if(power<FLIK.MINP){power=0;pred.length=0;msg('HOLD SPACE LONGER = MORE POWER',1000);return}
+ throwBall();
+});
 /* ---------- physics debug: frame-by-frame recording, scrub, free camera ---------- */
 let rec=[],di=0,dbgOn=false,dbPlay=false,dbAcc=0,throwSnap='';
 function recPush(){
@@ -1010,7 +1237,8 @@ function loop(now){
  acc+=dt;
  if(!dbgOn){while(acc>=DT){
   acc-=DT;
-  if(phase==='roll'){
+  if(phase==='aim'&&chg)power=clamp((performance.now()-chg.t0-FLIK.CHRG0)/(FLIK.CHRG1-FLIK.CHRG0),0,1);
+  else if(phase==='roll'){
    stepWorld(DT);recPush();
    if(rumble)rumble.g.gain.value=min(0.4,ball.v*0.045);
    if(ballSettled()){phase='settle';settleT=0}
@@ -1026,6 +1254,7 @@ function loop(now){
   if(n){dbAcc-=n;recApply(di+n);
    if(di>=rec.length-1){dbPlay=false;$('dbp').classList.remove('on')}}
  }
+ if(!dbgOn&&phase==='aim'&&chg)predict(); // dots follow the hold-ramp live
  if(dbgOn){dbCamMove(dt);dbCamUpdate()}else camUpdate(dt);
  render();
 }
