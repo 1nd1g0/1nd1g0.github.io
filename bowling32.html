@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Arcade Bowling 3D</title>
-<meta name="version" content="2026.11.06.21">
+<meta name="version" content="2026.11.07.31">
 <meta name="description" content="3D bowling: step-by-step controls (place, aim, flick) with live lane projection, hook physics, ten-frame scoring, 10-pin and wide-lane 100-pin modes.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -153,6 +153,20 @@ function m4s(x,y,z){const o=m4();o[0]=x;o[5]=y;o[10]=z;o[15]=1;return o}
 function m4rx(a){const o=m4id(),c=cos(a),s=sin(a);o[5]=c;o[6]=s;o[9]=-s;o[10]=c;return o}
 function m4ry(a){const o=m4id(),c=cos(a),s=sin(a);o[0]=c;o[2]=-s;o[8]=s;o[10]=c;return o}
 function m4rz(a){const o=m4id(),c=cos(a),s=sin(a);o[0]=c;o[1]=s;o[4]=-s;o[5]=c;return o}
+// left-multiply a WORLD-frame axis-angle (unit axis, angle) onto the 3x3 part
+// of a rotation-only column-major mat4; used to integrate the ball's spin
+function rotAxis(R,x,y,z,a){
+ const c=Math.cos(a),s=Math.sin(a),t=1-c;
+ const K=[t*x*x+c,t*x*y-s*z,t*x*z+s*y,
+         t*x*y+s*z,t*y*y+c,t*y*z-s*x,
+         t*x*z-s*y,t*y*z+s*x,t*z*z+c];
+ for(let j=0;j<3;j++){
+  const c0=R[j*4],c1=R[j*4+1],c2=R[j*4+2];
+  R[j*4]=K[0]*c0+K[1]*c1+K[2]*c2;
+  R[j*4+1]=K[3]*c0+K[4]*c1+K[5]*c2;
+  R[j*4+2]=K[6]*c0+K[7]*c1+K[8]*c2;
+ }
+}
 function m4persp(fov,asp,n,f){const o=m4(),t=1/Math.tan(fov/2);
 o[0]=t/asp;o[5]=t;o[10]=(f+n)/(n-f);o[11]=-1;o[14]=2*f*n/(n-f);return o}
 function m4look(e,c,u){
@@ -174,8 +188,8 @@ function m4look(e,c,u){
 const VS=`
 attribute vec3 aPos,aNrm;
 uniform mat4 uM,uMVP;
-varying vec3 vN,vW;
-void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;
+varying vec3 vN,vW,vO;
+void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vO=aPos;
 // normals transform by M itself: for an orthonormal matrix the normal matrix IS
 // M. The old dot(uM[i].xyz,aNrm) computed M-transposed-n = the INVERSE
 // rotation: every mesh position rotated right, every normal rotated the WRONG
@@ -187,7 +201,7 @@ vN=normalize((uM*vec4(aNrm,0.0)).xyz);
 gl_Position=uMVP*vec4(aPos,1.0);}`;
 const FS=`
 precision mediump float;
-varying vec3 vN,vW;
+varying vec3 vN,vW,vO;
 uniform vec3 uCol,uFog,uCam;
 uniform float uMode,uPhase,uSpec,uHi,uTime,uLWH,uLWF,uDECKZ;
 uniform vec4 uLights[6];
@@ -221,7 +235,14 @@ void main(){
   c*=max(g,0.0);
  }
  if(uMode>2.5&&uMode<3.5){
-  float s=0.5+0.5*sin(dot(vN,vec3(2.1,1.4,3.7))*3.0+uPhase);
+  // marble stripes are BODY-LOCKED: vO is the object-space position (unit-sphere
+  // coordinate), so the pattern turns with the orientation matrix. Sampling this
+  // from vN (the transformed world normal) locked the pattern to the WORLD:
+  // every vertex carries the color its world direction dictates, so rolling the
+  // sphere changed nothing on screen - the marble read as paint on a non-spinning
+  // ball and the dark side read as a baked shadow. Lighting below stays
+  // world-space: that is the correct, rotation-independent shading.
+  float s=0.5+0.5*sin(dot(vO,vec3(2.1,1.4,3.7))*3.0+uPhase);
   c=mix(uCol,vec3(0.92,0.22,0.32),smoothstep(0.35,0.65,s));
  }
  vec3 N=normalize(vN),col;
@@ -354,6 +375,17 @@ function draw(mk,mat,col,mode,spec,hi,alpha){
 let PC=10,RACKZ=-18.288,LW=1.06,LWH=LW/2,GUTW=0.241,WALLX=LWH+GUTW+0.04,
 AIMCAP=0.032,STARTXW=0.4;
 const PITZ=-19.35,PITEDGE=-19.0;
+// A regulation 1.56 kg pin against a 100-pin triangle is a wall: no single
+// ball realistically sweeps it, so strikes never happen in wide mode. The
+// 100-pin rack is arcade spectacle - its pins are scaled down (mass AND
+// inertia together, so toppling and flight stay self-consistent). Measured
+// on the centre line: 3x (PMW 1/3) already saturates the sweep (knockdown
+// jumps 53 -> ~76, stable run to run; 5x-10x buys +0-4 pins, no more).
+// A FULL sweep is unreachable at any factor <=10x: the ball ploughs the
+// centre corridor and chain-collisions never reach the far back-row wings
+// (~20 survivors, always |x|>0.9 or z<-17.4) - that limit is geometry,
+// not pin mass. 10-pin stays regulation.
+let PMW=1/3,MPIN=1.56;
 function setMode(m100){
  PC=m100?100:10;
  LW=m100?4.3:1.06;LWH=LW/2;WALLX=LWH+GUTW+0.04;
@@ -364,17 +396,18 @@ function setMode(m100){
  RACKZ=m100?-15.7:-18.288;
  // the 100-pin triangle spans 3.66m at its base: aim window and start range widen with it
  AIMCAP=m100?0.15:0.032;STARTXW=m100?1.47:0.4;
+ MPIN=1.56*(m100?PMW:1);I_CM=0.0130*(m100?PMW:1);
  G.uniform1f(uLWH,LWH);G.uniform1f(uLWF,LW/1.06);G.uniform1f(uDECKZ,RACKZ-0.162);
 }
 const BALL_R=0.109,MBALL=6.8;
-const PIN_H=0.381,PR=0.059,MPIN=1.56;
+const PIN_H=0.381,PR=0.059;
 const PIN_S=0.3048,PIN_RZ=0.2598;
 let frame=0,throwN=0,standingBefore=10;
 let fr=blankFrames();
 function blankFrames(){const a=[];for(let i=0;i<10;i++)a.push({t:[]});return a}
 let pins=[],ball=null,parts=[];
 let phase='menu',aim=0,power=0,spin=0,startX=0,astep=0,gest=null,chg=null,settleT=0,msgTO=0,msgA=null,fullRack=true,pred=[];
-function makePin(x,z){return {x,z,x0:x,z0:z,vx:0,vz:0,th:0,om:0,dir:0,down:false,dead:false,drop:0,y:0}}
+function makePin(x,z){return {x,z,x0:x,z0:z,vx:0,vy:0,vz:0,th:0,om:0,dir:0,down:false,dead:false,drop:0,y:0,yf:0,ah:0}}
 function newRack(){
  pins=[];
  if(PC===10){
@@ -393,7 +426,7 @@ function newRack(){
  standingBefore=PC;
 }
 function resetBall(){
- ball={x:startX,y:BALL_R,z:0.45,vx:0,vz:0,spin:0,roll:0,active:false,gutter:false,dead:false,v:0};
+ ball={x:startX,y:BALL_R,z:0.45,vx:0,vz:0,spin:0,rot:m4id(),active:false,gutter:false,dead:false,v:0};
 }
 /* ---------- hud ---------- */
 const FRUI=[];
@@ -499,7 +532,8 @@ function unfocus(){const a=document.activeElement;if(a&&a.blur)a.blur()}
 // actual edge-pivot rocking: sqrt(Mg*PIN_CG/I_EDGE)=5.2rad/s, zeta~0.3, ~1s wobble -
 // the old 9.5rad/s spring was twice as fast as any real pin. GTOP=12 gives a 0.48s
 // fall tip-to-belly, matching real topple time (energy peaks om at ~7.5 from I_EDGE).
-const PIN_CG=0.142,I_CM=0.0130,TIPC=Math.atan(0.0254/PIN_CG),GTOP=12,KREST=27,CDAMP=3.3;
+const PIN_CG=0.142,TIPC=Math.atan(0.0254/PIN_CG),GTOP=12,KREST=27,CDAMP=3.3;
+let I_CM=0.0130;
 function grip(z){if(z>-12.6)return 0.06;return clamp((-z-12.6)/1.8,0,1)}
 function stepBall(b,dt){
  if(!b.active||b.dead)return;
@@ -508,7 +542,17 @@ function stepBall(b,dt){
  if(v>1e-4){b.vx-=b.vx/v*0.55*dt;b.vz-=b.vz/v*0.55*dt}
  b.vx+=b.spin*2.1*g*dt;
  b.x+=b.vx*dt;b.z+=b.vz*dt;
- b.roll+=v*dt/BALL_R;b.v=sqrt(b.vx*b.vx+b.vz*b.vz);
+ // orientation, integrated per substep from the motion itself: no-slip rolling
+ // gives ω=(up×v̂)·|v|/R - the track axis is PERPENDICULAR to the velocity, so a
+ // hooked or angled shot rolls about a turning axis (the old single scalar
+ // m4rx(-roll) could only roll correctly a ball travelling straight -Z), plus
+ // the yaw of the sidespin that produces the hook: a real hooking ball's axis
+ // is tilted ~20° off horizontal, so its spin-about-vertical is ~a third of its
+ // total rev rate, sign matching the +vx push b.spin applies above.
+ if(v>1e-3)rotAxis(b.rot,b.vz/v,0,-b.vx/v,v*dt/BALL_R);
+ const yaw=-b.spin*(v/BALL_R)/3;
+ if(abs(yaw)>1e-3)rotAxis(b.rot,0,1,0,yaw*dt);
+ b.v=sqrt(b.vx*b.vx+b.vz*b.vz);
  // the gutter engages when the ball's contact POINT leaves the lane: a sphere
  // touches the floor directly under its center, so the trigger is abs(x)>LWH with
  // no radius margin (the old -BALL_R*0.3 fudge cut in at center 0.497 — a ball
@@ -583,6 +627,22 @@ let PK=0;
 // om (the frame-424 cascade had 31.7) feeds the pin-pin solver via pinVel's
 // sweep term and inflates the pile-up beyond the energy the ball has.
 const OMCAP=12;
+// tilt state is (dir, om): om is SIGNED about a fixed azimuth dir (the
+// recovery spring drives it negative as a wobble rolls back). Rewriting dir
+// to the latest contact normal teleported the visible lean ~180 deg per
+// frame under sustained ball/pile contact (alternating normals + a negative
+// om always passed the old signed-vs-magnitude gate). Once a pin is visibly
+// leaning its axis is locked: impulses become signed torques about it - the
+// lean slows, stops, or rolls back through vertical - and dir is untouched.
+function tiltTorque(p,dx,dz,dm){
+ const c=min(abs(dm),OMCAP);
+ if(c<0.02)return;
+ if(p.th<0.1&&abs(p.om)<0.3){p.dir=Math.atan2(dz,dx);p.om=c;return;} // fresh hit off upright: azimuth free
+ const s=dx*cos(p.dir)+dz*sin(p.dir);
+ let w=clamp(p.om+s*c,-OMCAP,OMCAP);           // signed net spin about the pin's own axis
+ if(w<0&&p.th<0.1){p.dir=Math.atan2(-dz,-dx);w=-w;} // momentum genuinely rolled past vertical: flip axis WITH it
+ p.om=w;
+}
 function pinSpeedCap(p){
  if(PK<=0)return;
  const s=sqrt(p.vx*p.vx+p.vz*p.vz);
@@ -638,7 +698,15 @@ function collideBallPin(p,b){
  // ball side exactly because the ball drives below their CG. A near-CG hit slides
  // the pin cleanly and leaves it standing (pin fires through the rack).
  if(!p.down){const dOM=Math.abs(jD*dArm)/I_CM;
-  if(dOM>0.02&&p.om<dOM){p.dir=Math.atan2(dArm>0?nz:-nz,dArm>0?nx:-nx);p.om=min(dOM,OMCAP)}}
+  tiltTorque(p,dArm>0?nx:-nx,dArm>0?nz:-nz,dOM)}
+ // the same impulse has a vertical component: the ball drives BELOW a standing
+ // pin's CG and punches the base out from under it - the pin rides up over the
+ // ball (real ball-hit pops launch 1-3 m/s). A hit above the CG mostly shoves
+ // and tips, so it gets a third of the pop; a downed belly pin only chatters.
+ // No free energy: vy is derived from jD, and the deck bounce recovers <42%.
+ // The 2.2 m/s cap tops out at ~0.25m of hop - pin-action heights.
+ const vyK=(p.down?0.15:(dArm<0?0.45:0.18))*abs(jD)/MPIN;
+ if(vyK>0.15)p.vy=min(2.2,(p.vy||0)+vyK);
  hitSound(rv);sparks(qx,0.1,qz,min(6,rv*2|0));
 }
 function collidePinPin(a,b){
@@ -675,39 +743,138 @@ function collidePinPin(a,b){
  a.vx-=j*nx/MPIN;a.vz-=j*nz/MPIN;
  b.vx+=j*nx/MPIN;b.vz+=j*nz/MPIN;
  pinSpeedCap(a);pinSpeedCap(b);
+ // a real pin-to-pin blow at belly height (zcC sits right at the CG) pops BOTH
+ // bodies off the deck: chain reactions are partly airborne, pins fly over and
+ // into each other rather than shuffling. Downed pins only chatter (0.4x).
+ // Same energy budget rule as the ball: the hop is bought from the very j the
+ // horizontal solver spends, capped at 1.7 m/s, and <42% comes back off the deck.
+ const vyK=0.40*abs(j)/MPIN;
+ if(vyK>0.15){
+  a.vy=min(1.7,(a.vy||0)+vyK*(a.down?0.4:1));
+  b.vy=min(1.7,(b.vy||0)+vyK*(b.down?0.4:1));
+ }
  // tip vs trip by contact height: hit above the CG and the pin tips AWAY from the
  // hitter; hit below it and the foot is punched out - the pin TRIPS toward the
  // hitter. A flat pin sliding into a standing pin's belly drives it out while
  // tripping it: exactly the action a fallen pin ploughing the rack has in reality.
  if(!b.down){const m=j*dB/I_CM;
-  if(Math.abs(m)>0.02&&b.om<Math.abs(m)){b.dir=Math.atan2(m>0?nz:-nz,m>0?nx:-nx);b.om=min(Math.abs(m),OMCAP)}}
+  tiltTorque(b,m>0?nx:-nx,m>0?nz:-nz,m)}
  if(!a.down){const m=-j*dA/I_CM;
-  if(Math.abs(m)>0.02&&a.om<Math.abs(m)){a.dir=Math.atan2(m>0?nz:-nz,m>0?nx:-nx);a.om=min(Math.abs(m),OMCAP)}}
+  tiltTorque(a,m>0?nx:-nx,m>0?nz:-nz,m)}
  if(rv>0.4)hitSound(rv*0.6);
 }
 function stepPins(dt){
  for(const p of pins){
   if(p.dead)continue;
-  if(p.drop>0){p.y=(p.y||0)-dt*1.4;if((p.y||0)<-0.5){p.dead=true}continue}
+  // pit: past the lip the pin keeps its ballistic arc, but p.yf is the floor
+  // it was dropped onto (pit plate top = -0.10, approach = 0): a dropped pin
+  // clatters ONCE on that plate (22% rebound), then the sweeper clears it
+  // (dead). Without the clamp the mesh tunnels visibly below the pit floor.
+  if(p.drop>0){
+   p.vy=(p.vy||0)-9.8*dt;p.y=(p.y||0)+p.vy*dt;
+   if((p.y||0)<(p.yf||0)){p.y=p.yf;
+    if(p.vy<-0.5){p.vy*=-0.22;p.vx*=0.5;p.vz*=0.5}
+    else{p.dead=true}
+   }
+   continue}
+  // VERTICAL DOF. p.y is the pin's extra COM height above its floor-rest pose
+  // (0 = supported by the deck). Hits give vy; deck gravity takes it back; the
+  // floor returns 42% of the drop speed - real pins clatter: 1-3 shrinking
+  // bounces after a hard contact, and a flyer that landed off its head or neck
+  // rocks right back up. Landing also scrubs tangential speed and rotation
+  // (belly slap). Below ~0.6 m/s impact the pin just settles.
+  if(p.vy||p.y>0){
+   const wa=!!(p.vy||p.y>2e-3);
+   if(p.y>(p.ah||0))p.ah=p.y;
+   p.vy-=9.8*dt;p.y+=p.vy*dt;
+   if(p.y<=0){
+    p.y=0;
+    // FLIGHT -> DECK for an upright pin. A real pin launched off the deck
+    // (ball pop, pin-pin hop: apex 5cm+) comes down base-first, its base
+    // bites, and the body cartwheels into the pile - flying pins do not
+    // land standing. A pin that only hopped a couple of centimetres (base
+    // chatter from a falling neighbour) genuinely may dance back up, so a
+    // small hop only gets the scrub kick: tangential braking acts at the
+    // base BELOW the CG, the base stops, the body keeps going - omega =
+    // dv/PIN_CG with dv = the 10% speed the deck scrubs.
+    if(wa&&!p.down){
+     const sp0=sqrt(p.vx*p.vx+p.vz*p.vz);
+     if((p.ah||0)>0.05){p.down=true;
+      if(p.th<0.04){p.dir=sp0>0.05?atan2(p.vz,p.vx):p.dir;p.th=0.04;p.om=3.5;}
+      p.ah=0;
+     }else if(sp0>0.05){
+      if(p.th<0.05&&abs(p.om)<0.3)p.dir=atan2(p.vz,p.vx);
+      p.om=min(OMCAP,p.om+0.7*sp0);
+     }
+    }
+    if(p.vy<-0.6){p.vy*=-0.42;p.vx*=0.9;p.vz*=0.9;p.om*=0.6}
+    else p.vy=0;
+   }
+  }
+  const air=!!(p.vy||p.y>2e-3);
   const sp=sqrt(p.vx*p.vx+p.vz*p.vz);
-  // friction by support: upright on base pads, planted foot while toppling, belly slides far
-  const fr0=p.th>=PI/2-1e-3?1.6:(p.down?6.5:2.4);
+  // friction by support: upright on base pads, planted foot while toppling, belly slides far;
+  // in flight nothing presses against the deck, so only air drag
+  const fr0=air?0.15:(p.th>=PI/2-1e-3?1.6:(p.down?6.5:2.4));
   if(sp>1e-4){const k=min(fr0*dt,sp);p.vx-=p.vx/sp*k;p.vz-=p.vz/sp*k}
   else{p.vx=0;p.vz=0}
-  if(!p.down){
+  // A flat pin dragged across the deck cannot just skate: the body is a CONE
+  // (belly r 0.0605 tapering toward the head r 0.012), and a cone in rolling
+  // contact pivots about its apex - it yaws while it moves, exactly the arcing
+  // roll of real pins thrown flat. The apex is the extrapolated cone point,
+  // ~0.65m off the belly toward the head side; the orbit radius of the body
+  // centre is ~0.45m, so om=v_perp/0.45. Only the velocity component
+  // PERPENDICULAR to the axis feeds the roll (a cone never rolls lengthwise -
+  // an axial push stays skating), and axis azimuth and velocity swing together
+  // so the contact geometry stays consistent. Capped at 4 rad/s.
+  if(!p.drop&&!air&&p.th>=PI/2-0.05){
+   const ax=cos(p.dir),az=sin(p.dir); // toward the HEAD end (axis runs base-dir to head+dir)
+   const sgn=p.vx*az-p.vz*ax; // sign of (v x head_dir): which way the cone pivots
+   const va=p.vx*ax+p.vz*az,vpx=p.vx-va*ax,vpz=p.vz-va*az;
+   const vp=sqrt(vpx*vpx+vpz*vpz);
+   if(vp>0.35){
+    const w=(sgn>0?1:-1)*min(vp/0.45,4)*dt;
+    const c=cos(w),s=sin(w);
+    const nx2=p.vx*c-p.vz*s,nz2=p.vx*s+p.vz*c;
+    p.vx=nx2;p.vz=nz2;p.dir+=w;
+   }
+  }
+  if(air){
+   // free body: rotation coasts, the deck supplies no torque (no spring, no
+   // GTOP); a tripped pin keeps rotating over its balance point IN THE AIR -
+   // but the mesh has a floor: rotated past flat the head/foot sinks
+   // d*sin(|th|-PI/2) through the deck (lift only covers the base disc),
+   // and landing yanked it out - the buried-pin snap-back. Allow extra
+   // rotation only while hop height covers the dig (d ~0.38m of axis from
+   // the base pivot), so a tumbling pin reaches flat exactly as it lands.
+   // Past the balance angle IN FLIGHT the pin is committed: a body already
+   // rotating over at the moment it left the deck cannot be re-erected by
+   // the upright spring after it lands (that is what made flyers land
+   // standing - the spring wound the landed attitude back to zero).
+   p.th+=p.om*dt;
+   if(!p.down&&abs(p.th)>=TIPC)p.down=true;
+   const lim=PI/2+Math.asin(min(1,max(0,p.y||0)/0.38));
+   if(p.th>lim){p.th=lim;p.om*=0.4}
+   else if(p.th<-lim){p.th=-lim;p.om*=0.4}
+  }else if(!p.down){
    // below balance angle: spring-damper back to upright (wobble-and-recover)
    p.om-=(KREST*p.th+CDAMP*p.om)*dt;p.th+=p.om*dt;
    if(p.th<0){p.th=0;if(p.om<0)p.om=-p.om*0.35}
    if(p.th>=TIPC){p.down=true} // past the balance point: committed, gravity takes over
   }else{
    p.om+=GTOP*dt;p.th+=p.om*dt; // gravity topples it flat, nothing stops it mid-angle
-   if(p.th>=PI/2){p.th=PI/2;p.om=0}
+   if(p.th>=PI/2){p.th=PI/2;
+    // head-slap of the topple: a slice of the rotational energy hops the body.
+    // A bare topple really only rises ~1cm (0.8J rotational, ~15% converted) -
+    // the big flights come from ball/pin impulses, not from toppling itself
+    if(p.om>2.5){p.vy=min(0.55,p.om*0.09);p.y=1e-4}
+    p.om=0}
   }
   p.x+=p.vx*dt;p.z+=p.vz*dt;
   if(abs(p.x)>LWH+GUTW-0.05&&!p.down){p.down=true;p.dir=p.x>0?0:PI}
   if(abs(p.x)>WALLX-PR){p.x=clamp(p.x,-WALLX+PR,WALLX-PR);p.vx*=-0.4}
-  if(p.z<PITZ+0.05){p.drop=1;p.down=true} // pins fall in only past the rack (ball edge is further back)
-  if(p.z>4.5){p.drop=1;p.down=true} // kicked clear back to the approach: drop it out (off-screen, ends any pile-up wait)
+  if(p.z<PITZ+0.05){p.drop=1;p.down=true;p.yf=-0.10} // pit plate top; pins fall in only past the rack (ball edge is further back)
+  if(p.z>4.5){p.drop=1;p.down=true;p.yf=0} // kicked clear back to the approach: drop it out (off-screen, ends any pile-up wait)
  }
  for(let i=0;i<pins.length;i++)for(let j=i+1;j<pins.length;j++){
   const a=pins[i],b=pins[j];
@@ -728,7 +895,8 @@ function pinActivity(){
  let m=0;
  for(const p of pins)if(!p.dead){
   if(p.drop>0)return 9; // a pin still sinking into the pit keeps the throw open (avoids frozen mid-pit pins)
-  m=max(m,sqrt(p.vx*p.vx+p.vz*p.vz)+abs(p.om));
+  if(p.y>0.03)return 9; // airborne pile is not settled: hold open until it lands and stops bouncing
+  m=max(m,sqrt(p.vx*p.vx+p.vz*p.vz)+abs(p.om)+abs(p.vy||0));
  }
  return m;
 }
@@ -763,7 +931,7 @@ function startThrow(keepPins){
   // on their spots — the second ball never plays through deadwood, and a pin
   // that only got nudged out of line is returned to its original position
   pins=pins.filter(p=>!p.down&&!p.dead);
-  for(const p of pins){p.x=p.x0;p.z=p.z0;p.y=0;p.vx=p.vz=0;p.th=p.om=p.drop=0;p.dir=0}
+  for(const p of pins){p.x=p.x0;p.z=p.z0;p.y=0;p.vx=p.vy=p.vz=0;p.th=p.om=p.drop=0;p.dir=0;p.ah=0}
   standingBefore=pinsStanding();
  }
  fullRack=!keepPins; // clearing THIS rack in one throw = strike, in any frame
@@ -1035,7 +1203,7 @@ function render(){
  }
  if(ball&&!ball.dead){
   const by=ball.drop?ball.y:(ball.gutter?-0.06:BALL_R);
-  draw(M_SPH,m4mul(m4mul(m4t(ball.x,by,ball.z),m4rx(-ball.roll)),m4s(BALL_R,BALL_R,BALL_R)),COL.ball,3,0.8,0);
+  draw(M_SPH,m4mul(m4t(ball.x,by,ball.z),m4mul(ball.rot,m4s(BALL_R,BALL_R,BALL_R))),COL.ball,3,0.8,0);
  }
  if(dbgOn)drawDebug();
  for(const q of parts){const s=0.02+0.02*min(1,q.life*2);draw(M_BOX,m4mul(m4t(q.x,q.y,q.z),m4s(s,s,s)),[1.0,0.8,0.3],0,0,0.9);}
@@ -1232,32 +1400,39 @@ addEventListener('keyup',e=>{
  releaseHold();
 });
 /* ---------- physics debug: frame-by-frame recording, scrub, free camera ---------- */
+// frame layout: ball state x,y,z,gutter,drop,dead,v,vx,vz (indices 0-8, the old
+// roll scalar is gone - orientation is the matrix), the rotation-only m4 at
+// 9-24, then 12 floats per pin from PBOFF on
+const PBOFF=25;
 let rec=[],di=0,dbgOn=false,dbPlay=false,dbAcc=0,throwSnap='';
 function recPush(){
  if(rec.length>=2400)return;
- const a=new Float32Array(10+11*pins.length);
- a[0]=ball.x;a[1]=ball.y;a[2]=ball.z;a[3]=ball.roll;a[4]=ball.gutter?1:0;a[5]=ball.drop||0;
- a[6]=ball.dead?1:0;a[7]=ball.v||0;a[8]=ball.vx;a[9]=ball.vz;
- for(let k=0;k<pins.length;k++){const p=pins[k],o=10+k*11;
+ const a=new Float32Array(PBOFF+12*pins.length);
+ a[0]=ball.x;a[1]=ball.y;a[2]=ball.z;a[3]=ball.gutter?1:0;a[4]=ball.drop||0;
+ a[5]=ball.dead?1:0;a[6]=ball.v||0;a[7]=ball.vx;a[8]=ball.vz;
+ for(let q=0;q<16;q++)a[9+q]=ball.rot[q];
+ for(let k=0;k<pins.length;k++){const p=pins[k],o=PBOFF+k*12;
   a[o]=p.x;a[o+1]=p.y||0;a[o+2]=p.z;a[o+3]=p.th;a[o+4]=p.dir;a[o+5]=p.down?1:0;
-  a[o+6]=p.drop;a[o+7]=p.dead?1:0;a[o+8]=p.vx;a[o+9]=p.vz;a[o+10]=p.om}
+  a[o+6]=p.drop;a[o+7]=p.dead?1:0;a[o+8]=p.vx;a[o+9]=p.vz;a[o+10]=p.om;a[o+11]=p.vy||0}
  rec.push(a);
  $('dscrub').max=rec.length-1;
 }
 function recApply(i){
  di=clamp(i|0,0,rec.length-1);const a=rec[di];
- ball.x=a[0];ball.y=a[1];ball.z=a[2];ball.roll=a[3];ball.gutter=!!a[4];ball.drop=a[5];
- ball.dead=!!a[6];ball.v=a[7];ball.vx=a[8];ball.vz=a[9];ball.active=!a[6];
+ ball.x=a[0];ball.y=a[1];ball.z=a[2];ball.gutter=!!a[3];ball.drop=a[4];
+ ball.dead=!!a[5];ball.v=a[6];ball.vx=a[7];ball.vz=a[8];ball.active=!a[5];
+ for(let q=0;q<16;q++)ball.rot[q]=a[9+q];
  // a restored ball replays at friction-decayed speeds; PK must be re-seeded
  // from the recorded release speed (rec[0] is the throw frame, ball.v is
  // set once at release and never decays)
- for(const rc of rec)if(rc.length>7)PK=max(PK,rc[7]);
- for(let k=0;k<pins.length;k++){const p=pins[k],o=10+k*11;
+ for(const rc of rec)if(rc.length>6)PK=max(PK,rc[6]);
+ for(let k=0;k<pins.length;k++){const p=pins[k],o=PBOFF+k*12;
   p.x=a[o];p.y=a[o+1];p.z=a[o+2];p.th=a[o+3];p.dir=a[o+4];p.down=!!a[o+5];
-  p.drop=a[o+6];p.dead=!!a[o+7];p.vx=a[o+8];p.vz=a[o+9];p.om=a[o+10]}
+  p.drop=a[o+6];p.dead=!!a[o+7];p.vx=a[o+8];p.vz=a[o+9];p.om=a[o+10];p.vy=a[o+11]||0;
+  p.yf=p.drop>0?(p.z>4.5?0:-0.10):0;p.ah=0}
  parts=[];
  $('dscrub').value=di;
- $('dtxt').textContent='f '+di+'/'+(rec.length-1)+'  t='+(di/120).toFixed(3)+'s\nball '+(a[7]).toFixed(2)+' m/s   down '+(PC-pinsStanding());
+ $('dtxt').textContent='f '+di+'/'+(rec.length-1)+'  t='+(di/120).toFixed(3)+'s\nball '+(a[6]).toFixed(2)+' m/s   down '+(PC-pinsStanding());
 }
 /* free camera: drag=orbit, wheel=zoom, WASD=pan, Q/E=up-down */
 const dbCam={yaw:0,pitch:0.3,dist:2.5,tx:0,ty:0.3,tz:-18.3};
@@ -1350,9 +1525,9 @@ function startReplay(good){
  let c0=-1;
  const rr=(BALL_R+PR+0.02)*(BALL_R+PR+0.02);
  outer:for(let i=0;i<rec.length;i++){const a=rec[i];
-  if(a[6])continue; // ball dead/dropped: not a contact frame
+  if(a[5])continue; // ball dead/dropped: not a contact frame
   const bx=a[0],bz=a[2];
-  for(let k=0;k<pins.length;k++){const o=10+k*11;
+  for(let k=0;k<pins.length;k++){const o=PBOFF+k*12;
    const dx=bx-a[o],dz=bz-a[o+2];
    if(dx*dx+dz*dz<rr){c0=i;break outer}}}
  if(c0<0)return finishThrow();
@@ -1360,7 +1535,7 @@ function startReplay(good){
  let e0=rec.length-1;
  {let calm=0;
   for(let i=s0;i<rec.length;i++){const a=rec[i];let act=0;
-   for(let k=0;k<pins.length;k++){const o=10+k*11;act+=abs(a[o+8])+abs(a[o+9])+a[o+3]*4}
+   for(let k=0;k<pins.length;k++){const o=PBOFF+k*12;act+=abs(a[o+8])+abs(a[o+9])+abs(a[o+11])+a[o+3]*4}
    if(act>=0.3){calm=0;continue}
    if(++calm>=36){e0=i;break}
    if(i-s0>=240){e0=i;break}}}
@@ -1368,7 +1543,7 @@ function startReplay(good){
  // box at the final recorded frame sets the camera height for each angle
  const fin=rec[rec.length-1];
  let minx=1e9,maxx=-1e9,minz=1e9,maxz=-1e9,n=0;
- for(let k=0;k<pins.length;k++){const o=10+k*11;
+ for(let k=0;k<pins.length;k++){const o=PBOFF+k*12;
   if(fin[o+7])continue;
   const x=fin[o],z=fin[o+2];
   if(x<minx)minx=x;if(x>maxx)maxx=x;if(z<minz)minz=z;if(z>maxz)maxz=z;n++}
