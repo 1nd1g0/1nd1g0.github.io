@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0b0b19">
 <title>Scooter Stunt Pro</title>
+<meta name="version" content="2026.11.07.1">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:"Courier New",Courier,monospace;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
@@ -3147,6 +3148,43 @@ document.addEventListener('contextmenu', function (e) { e.preventDefault(); }, f
 
 lastT = window.performance && window.performance.now ? window.performance.now() : Date.now();
 window.requestAnimationFrame(frame);
+</script>
+<script>
+// self-update v3: one-time title-screen freshness check, two HEAD requests,
+// a page body is NEVER downloaded. The baseline is NOT the HTTP cache: Firefox
+// serves a HEAD cached before a deploy forever within max-age, and a reload
+// never evicts it => endless reload loop after an update. Instead the baseline
+// is the last validator THIS browser session saw, kept in sessionStorage; the
+// cached HEAD only stands in for it on the first visit of a session. The
+// no-store HEAD is always the source of truth; on mismatch a newer deploy
+// exists => reload exactly once per session per version (the new validator is
+// stored BEFORE reloading, so the reloaded page compares equal and never
+// loops). Offline/file:// hosts: no request at all, never an error. Hosts
+// without validators: silent. Never re-runs in-page.
+// Versioning: meta[name=version] = <last-edited-date>.<build>; bump the
+// build number whenever the file is edited. window.GAME_VERSION exposes it.
+(function () {
+var vm = document.querySelector('meta[name="version"]');
+window.GAME_VERSION = vm ? vm.content : "";
+if (typeof fetch !== "function") return;
+if (!/^https?:$/.test(location.protocol)) return;
+if (navigator.onLine === false) return;
+function val(r) { return r.headers.get("etag") || r.headers.get("last-modified") || ""; }
+function seen(v) { try { sessionStorage.setItem("$ver:" + location.href, v); } catch (e) {} }
+function last() { try { return sessionStorage.getItem("$ver:" + location.href) || ""; } catch (e) { return ""; } }
+var base = last();
+fetch(location.href, { method: "HEAD" }).then(function (r) {
+var cached = val(r);
+if (!base && !cached) return; // nothing to compare against
+return fetch(location.href, { method: "HEAD", cache: "no-store" }).then(function (r2) {
+var cur = val(r2);
+if (!cur) return;
+var old = base || cached;
+if (cur !== old) { seen(cur); location.reload(); }
+else seen(cur);
+});
+}).catch(function () {});
+})();
 </script>
 </body>
 </html>

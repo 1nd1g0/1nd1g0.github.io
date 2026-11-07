@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <title>STUNT CAR RACER — procedural tribute</title>
+<meta name="version" content="2026.11.07.1">
 <style>
   :root{--amber:#ffb64d;--red:#ff5040;--chip:rgba(9,12,22,.72);--line:rgba(255,182,77,.28)}
   *{box-sizing:border-box;margin:0;padding:0}
@@ -1092,6 +1093,43 @@ try{
   toMenu();
   requestAnimationFrame(frame);
 }catch(e){fatal(e);}
+</script>
+<script>
+// self-update v3: one-time title-screen freshness check, two HEAD requests,
+// a page body is NEVER downloaded. The baseline is NOT the HTTP cache: Firefox
+// serves a HEAD cached before a deploy forever within max-age, and a reload
+// never evicts it => endless reload loop after an update. Instead the baseline
+// is the last validator THIS browser session saw, kept in sessionStorage; the
+// cached HEAD only stands in for it on the first visit of a session. The
+// no-store HEAD is always the source of truth; on mismatch a newer deploy
+// exists => reload exactly once per session per version (the new validator is
+// stored BEFORE reloading, so the reloaded page compares equal and never
+// loops). Offline/file:// hosts: no request at all, never an error. Hosts
+// without validators: silent. Never re-runs in-page.
+// Versioning: meta[name=version] = <last-edited-date>.<build>; bump the
+// build number whenever the file is edited. window.GAME_VERSION exposes it.
+(function () {
+var vm = document.querySelector('meta[name="version"]');
+window.GAME_VERSION = vm ? vm.content : "";
+if (typeof fetch !== "function") return;
+if (!/^https?:$/.test(location.protocol)) return;
+if (navigator.onLine === false) return;
+function val(r) { return r.headers.get("etag") || r.headers.get("last-modified") || ""; }
+function seen(v) { try { sessionStorage.setItem("$ver:" + location.href, v); } catch (e) {} }
+function last() { try { return sessionStorage.getItem("$ver:" + location.href) || ""; } catch (e) { return ""; } }
+var base = last();
+fetch(location.href, { method: "HEAD" }).then(function (r) {
+var cached = val(r);
+if (!base && !cached) return; // nothing to compare against
+return fetch(location.href, { method: "HEAD", cache: "no-store" }).then(function (r2) {
+var cur = val(r2);
+if (!cur) return;
+var old = base || cached;
+if (cur !== old) { seen(cur); location.reload(); }
+else seen(cur);
+});
+}).catch(function () {});
+})();
 </script>
 </body>
 </html>

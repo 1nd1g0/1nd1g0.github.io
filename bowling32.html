@@ -278,6 +278,22 @@ void main(){
   // stronger top/bottom gradient: fixtures are above, so upward faces must
   // read brighter and downward faces darker even before any lamp term.
   vec3 acc=c*(0.26+0.24*N.y)+c*uHi;
+  // lane bounce: the lit deck is a big upward-facing area light. Its
+  // irradiance is evaluated at the deck point directly under the fragment,
+  // through the very same attenuation curve that lights the floor - so the
+  // bounce is strongest exactly where the lane is brightest (under the
+  // fixtures) and dies away from it. Tinted by the maple albedo, carried
+  // upward with height falloff, and weighted onto downward+low side-facing
+  // surfaces: this is the second, dim light source from the lit lane that
+  // reads as warm under-lighting on a pin belly and the bottom of a ball.
+  // Upward faces get none. ir is kept for the gloss term below.
+  float ir=0.0;
+  {
+   for(int i=0;i<6;i++){vec3 dL=uLights[i].xyz-vec3(vW.x,0.0,vW.z);
+    ir+=min(uLights[i].w*exp(2.0-0.22*dot(dL,dL)),4.0*uLights[i].w);}
+   float hf=exp(-abs(vW.y)*1.6);
+   acc+=c*vec3(0.82,0.66,0.42)*ir*(0.5-0.5*N.y)*hf;
+  }
   float wx=uLWH+0.28;
   for(int i=0;i<6;i++)acc+=c*lamb(uLights[i].xyz,N,vW,uLights[i].w);
   acc+=c*(lamb(vec3( wx,0.35,-4.0),N,vW,0.09)+lamb(vec3(-wx,0.35,-4.0),N,vW,0.09)
@@ -294,9 +310,21 @@ void main(){
    float d2=dot(Li,Li),a=uLights[i].w*exp(2.0-0.22*d2);
    if(a>Bv){Bv=a;Bd=Li/sqrt(d2);}
   }
-  vec3 H=normalize(Bd+V);
-  col=acc+vec3(1.0,0.96,0.88)*pow(max(dot(N,H),0.0),48.0)*uSpec*min(Bv*1.4,1.0);
- }
+   vec3 H=normalize(Bd+V);
+   col=acc+vec3(1.0,0.96,0.88)*pow(max(dot(N,H),0.0),48.0)*uSpec*min(Bv*1.4,1.0);
+   // lane gloss: the deck is semi-glossy, and a dark navy ball (low diffuse
+   // albedo) can only read its lower half by REFLECTING the lit lane - a
+   // broad, soft lobe about the floor-reflected direction, deliberately wide
+   // and dim next to the sharp lamp streak above.
+   vec3 Bg=normalize(vec3(0.0,1.0,0.0)+V);
+   col+=vec3(0.82,0.66,0.42)*ir*exp(-abs(vW.y)*1.6)*uSpec*pow(max(dot(N,Bg),0.0),14.0)*0.6;
+   // filmic soft knee: directly under the fixtures the lit faces ran to
+   // 2-3x white, so pin heads and ball tops clipped to flat featureless
+   // blobs - every gradient near the top of the shape was lost. This
+   // compresses the highlights smoothly (2.3 -> ~0.97, 1.0 -> ~0.7) while
+   // leaving mid-tones almost untouched, so the shading keeps its range.
+   col=col/(1.0+col*0.42);
+   }
  float d=length(uCam-vW);
  col=mix(col,uFog,1.0-exp(-d*0.022));
  gl_FragColor=vec4(col,uAlpha);
@@ -1025,7 +1053,7 @@ function startThrow(keepPins){
  }
  fullRack=!keepPins; // clearing THIS rack in one throw = strike, in any frame
  resetBall();
- phase='aim';aim=0;power=0;spin=0;astep=0;gest=null;chg=null;pred.length=0;startX=0;settleT=0;touched=false;
+ phase='aim';aim=0;power=0;spin=0;astep=0;gest=null;chg=null;pred.length=0;settleT=0;touched=false;
  rec=[];di=0;pend=null;
  recStop();
  if(RP){repAudStop();RP=null;$('skipbtn').style.display='none'}
@@ -1136,6 +1164,49 @@ function showEnd(){
  updateSheet();
 }
 /* ---------- camera ---------- */
+// view occlusion: the room's fixed slabs — the exact geometry the renderer
+// draws below — may never stand between the camera and what it films. The
+// static boxes are rebuilt when the lane width changes (mode switch) and the
+// view segment (look-target -> camera) is tested against them every frame;
+// a wall that blocks the line of sight pulls the camera to just in front of
+// its near face, so pins and ball are always in the clear.
+let occLW=-9,occB=[];
+function occluders(){
+ if(occLW===LW)return;
+ occLW=LW;
+ const LEN=4.175-LANEZ,ZC=(4.175+LANEZ)/2,U=LW/1.06;
+ occB=[];
+ for(const s of[-1,1]){
+  // kick walls: s*(WALLX+0.03) ±0.03, y -0.07..0.35, full lane length
+  occB.push([s*(WALLX+0.03)-0.03,-0.07,ZC-LEN/2,s*(WALLX+0.03)+0.03,0.35,ZC+LEN/2]);
+  // full-height side walls: s*(WALLX+0.99) ±0.7, y 0..3, z -19.9..5.1
+  occB.push([s*(WALLX+0.99)-0.7,0,-19.9,s*(WALLX+0.99)+0.7,3,5.1]);
+ }
+ // pit back wall and the pit box under the deck edge
+ occB.push([-3.2*U,0,PITZ-1.2,3.2*U,3,PITZ-1]);
+ occB.push([-1.5*U,-0.67,PITZ-0.1,1.5*U,-0.07,PITZ+1.2]);
+}
+function deoccludeCam(){
+ occluders();
+ const dx=camX-lkX,dy=camY-lkY,dz=camZ-lkZ,L=sqrt(dx*dx+dy*dy+dz*dz);
+ if(L<0.6)return;
+ const ux=dx/L,uy=dy/L,uz=dz/L;
+ let best=L;
+ for(const b of occB){
+  let t0=0,t1=L,outside=0,miss=0,tN,tF,s2;
+  if(ux===0){if(b[0]-lkX>0||b[3]-lkX<0)miss=1}else{tN=(b[0]-lkX)/ux;tF=(b[3]-lkX)/ux;if(tN>tF){s2=tN;tN=tF;tF=s2}if(tN>0)outside=1;if(tN>t0)t0=tN;if(tF<t1)t1=tF}
+  if(!miss){
+   if(uy===0){if(b[1]-lkY>0||b[4]-lkY<0)miss=1}else{tN=(b[1]-lkY)/uy;tF=(b[4]-lkY)/uy;if(tN>tF){s2=tN;tN=tF;tF=s2}if(tN>0)outside=1;if(tN>t0)t0=tN;if(tF<t1)t1=tF}
+  }
+  if(!miss){
+   if(uz===0){if(b[2]-lkZ>0||b[5]-lkZ<0)miss=1}else{tN=(b[2]-lkZ)/uz;tF=(b[5]-lkZ)/uz;if(tN>tF){s2=tN;tN=tF;tF=s2}if(tN>0)outside=1;if(tN>t0)t0=tN;if(tF<t1)t1=tF}
+  }
+  // miss: ray misses the box; !outside: target itself sits inside the slab
+  // (no camera pull can fix that); t0>t1: intervals disjoint along [0,L]
+  if(!miss&&outside&&t0<t1&&t0>1e-3&&t0<best)best=t0;
+ }
+ if(best<L-1e-3){const nd=max(best-0.35,0.6);camX=lkX+ux*nd;camY=lkY+uy*nd;camZ=lkZ+uz*nd;}
+}
 let camX=0,camY=1.55,camZ=2.4,lkX=0,lkY=0.3,lkZ=-13,fov=30,camStop=false;
 // Side-edge projection test for the follow camera: project the current live
 // rack's left- and right-most pin edges through the candidate view. If any
@@ -1218,6 +1289,7 @@ function camUpdate(dt){
  camX+=(ex-camX)*k;camY+=(ey-camY)*k;camZ+=(ez-camZ)*k;
  lkX+=(lx-lkX)*k;lkY+=(ly-lkY)*k;lkZ+=(lz-lkZ)*k;
  fov+=(ft-fov)*k;
+ deoccludeCam(); // never let a wall or fixture slab sit in the shot
  PV=m4mul(m4persp(fov*PI/180,ASP,0.05,60),m4look([camX,camY,camZ],[lkX,lkY,lkZ],[0,1,0]));
 }
 /* ---------- render ---------- */
@@ -1352,10 +1424,10 @@ function render(){
    }
   }
  }
- // any camera above the fixtures (replay top-down over a wide rack, the
- // wide-mode aftermath fit) would see their bodies as slabs over the pile
- if(camY<3.1)
- for(const q of LIGHTS)draw(M_BOX,m4mul(m4t(q[0],q[1],q[2]),m4s(3.0,0.06,0.4)),COL.lit,5,0,0);
+ // lamp strips only draw while they sit ABOVE the camera: any camera above
+ // a fixture (replay top-down over a wide rack, the wide-mode aftermath
+ // fit) would otherwise see the lamp body as a slab across the pile.
+ for(const q of LIGHTS)if(q[1]-0.03>camY)draw(M_BOX,m4mul(m4t(q[0],q[1],q[2]),m4s(3.0,0.06,0.4)),COL.lit,5,0,0);
  // Cast shadows: each fixture projects the object's REAL mesh (the pin lathe,
  // the ball sphere) onto the deck through a planar projection matrix; the GPU's
  // perspective divide performs the projection, so shadows carry the object's

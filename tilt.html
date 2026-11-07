@@ -7,6 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#141210">
 <title>Crystal Ball in a Tilted Maze</title>
+<meta name="version" content="2026.11.07.1">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;background:#0d0b08;color:#e8e0d0;
@@ -363,7 +364,12 @@ function texCaustic(){var c=cnv(48,48),g=c.getContext('2d'),
  q.addColorStop(0,'rgba(150,255,238,.85)');q.addColorStop(.45,'rgba(60,215,235,.4)');
  q.addColorStop(1,'rgba(30,160,190,0)');g.fillStyle=q;g.fillRect(0,0,48,48);return c}
 function texGlass(){var c=cnv(64,64),g=c.getContext('2d'),
- q=g.createRadialGradient(32,32,4,32,32,32);
+ // IMPORTANT: the ball code draws this square LARGER than the ball (it is
+ // also nudged toward the light) so the tint can never fall short of the
+ // circle and leave raw untinted bands at the right/bottom rim. The
+ // gradient radius (28px = 1.05 half-canvas) carries the old look: the
+ // draw call maps 2.4 ball radii onto the canvas, so 28px maps to 1.05*r.
+ q=g.createRadialGradient(32,32,3.5,32,32,28);
  q.addColorStop(0,'rgba(150,245,235,.24)');q.addColorStop(.55,'rgba(30,120,150,.22)');
  q.addColorStop(1,'rgba(8,42,78,.62)');g.fillStyle=q;g.fillRect(0,0,64,64);return c}
 var GLF={caustic:texCaustic(),glass:texGlass(),spec:texSpec()};
@@ -725,10 +731,23 @@ function genLevel(seedStr,idx){
     dist[ny*cw+nx]=dist[c]+1;if(parent)parent[ny*cw+nx]=c;q.push(ny*cw+nx)}}
   return dist}
 
- // pick start corner, goal = farthest cell
+ // pick start corner, goal = farthest cell -- and PREFER a dead end
+ // (degree 1). The goal disc spans a 1-cell corridor: the marble can never
+ // cross a goal cell without finishing the level, so a goal standing mid-
+ // passage becomes a one-way wall -- every star/checkpoint behind it can
+ // then never be collected (seed ZKFD-704 L1: two pits cut the only other
+ // crossing and 5/6 stars plus both checkpoints ended up locked past the
+ // goal). A goal in a dead end can never gate anything.
  var cs=[[0,0],[cw-1,0],[0,ch-1],[cw-1,ch-1]],sc=pick(rng,cs);
  var dist=bfs(sc[0],sc[1]),best=-1,goal=0,i;
  for(i=0;i<cw*ch;i++)if(dist[i]>best){best=dist[i];goal=i}
+ var bl=-1,bg=-1; // best leaf (degree-1 cell) at far distance
+ for(i=0;i<cw*ch;i++){
+  if(dist[i]<best*0.75)continue;
+  var deg=0,ex=i%cw,ey=(i/cw)|0,k2;
+  for(k2=0;k2<4;k2++)if(open(ex,ey,k2))deg++;
+  if(deg===1&&dist[i]>bl){bl=dist[i];bg=i}}
+if(bg>=0)goal=bg;
  L.start={x:sc[0]*CELL+CELL/2,y:sc[1]*CELL+CELL/2};
  L.goal={x:(goal%cw)*CELL+CELL/2,y:((goal/cw)|0)*CELL+CELL/2,open:false};
  // solution path (backtrace from goal)
@@ -869,14 +888,49 @@ function decorateLevel(L){
  var starPts=[],pathN=Math.min(4+((lvl/3)|0),8),pl=path.length;
  for(k=0;k<pathN;k++){var cpos=Math.floor(pl*(k+0.7)/(pathN+0.6));
   if(cpos>0&&cpos<pl-1)starPts.push(path[cpos])}
+ // (a star on the goal cell is pointless: reaching the goal ends the level;
+ // and a star past a goal standing mid-corridor could never be collected,
+ // because the goal disc spans the passage -- crossing it wins first)
+ var goalC=((L.goal.y/CELL)|0)*cw+((L.goal.x/CELL)|0);
  var ends=[];
  for(i=0;i<cw*ch;i++){var ex=i%cw,ey=(i/cw)|0,nd2=0;
   for(k=0;k<4;k++)if(L.open(ex,ey,k))nd2++;
-  if(nd2===1&&!holeSet[i]&&!bumpC[i]&&L.dist[i]>6)ends.push(i)}
+  if(nd2===1&&i!==goalC&&!holeSet[i]&&!bumpC[i]&&L.dist[i]>6)ends.push(i)}
  shuffle(rng,ends);
  for(k=0;k<Math.min(ends.length,2+((lvl/4)|0));k++)starPts.push(ends[k]);
  for(k=0;k<starPts.length;k++){var s2=starPts[k];
-  if(!holeSet[s2]&&!bumpC[s2])L.stars.push({x:(s2%cw)*CELL+CELL/2,y:((s2/cw)|0)*CELL+CELL/2,got:false})}
+  if(!holeSet[s2]&&!bumpC[s2]&&s2!==goalC)L.stars.push({x:(s2%cw)*CELL+CELL/2,y:((s2/cw)|0)*CELL+CELL/2,got:false})}
+
+ // ---- final safety: no collectible may sit behind a goal in a passage ----
+ // Crossing a goal cell always ends the level (the disc spans the corridor),
+ // so content reachable only THROUGH the goal could never be collected.
+ // Normally impossible (the goal is picked at a dead end), but the far-leaf
+ // fallback can land it mid-passage, and pits can then cut the alternate
+ // route. Stranded stars/checkpoints get relocated to reachable cells --
+ // better a shifted prop than a level where 100% is impossible.
+ var blkC={},k3;
+ for(k3=0;k3<L.holes.length;k3++)
+  blkC[((L.holes[k3].y/CELL)|0)*cw+((L.holes[k3].x/CELL)|0)]=1;
+ blkC[goalC]=1;
+ var rd=L.bfs((L.start.x/CELL)|0,(L.start.y/CELL)|0,blkC);
+ function cellOf(o){return ((o.y/CELL)|0)*cw+((o.x/CELL)|0)}
+ var freeC=[];
+ for(i=0;i<cw*ch;i++)if(rd[i]>=0&&i!==goalC&&!holeSet[i]&&i!==cellOf(L.start))freeC.push(i);
+ shuffle(rng,freeC);
+ var fi2=0;
+ function occupied(c2){var k5;
+  for(k5=0;k5<L.stars.length;k5++)if(cellOf(L.stars[k5])===c2)return 1;
+  for(k5=0;k5<L.checks.length;k5++)if(cellOf(L.checks[k5])===c2)return 1;
+  return 0}
+ function relocate(o,noBump){
+  if(rd[cellOf(o)]>=0)return;
+  while(fi2<freeC.length){
+   var nc=freeC[fi2++];
+   if(occupied(nc))continue;
+   if(noBump&&bumpC[nc])continue;
+   o.x=(nc%cw)*CELL+CELL/2;o.y=((nc/cw)|0)*CELL+CELL/2;return}}
+ for(k=0;k<L.stars.length;k++)relocate(L.stars[k],1);
+ for(k=0;k<L.checks.length;k++)relocate(L.checks[k],0);
 
  // ---- merged wall rectangles (collision primitives). Corner nodes are
  // overlapped: each run extends WALLT/2 into the perpendicular run it meets,
@@ -1782,8 +1836,11 @@ function drawFrame(t,dt){
   // only worth drawing when the ball is big enough on screen to show it
   ctx.globalAlpha=.5;ctx.drawImage(REF.cv,-bs,-bs,bs*2,bs*2);ctx.globalAlpha=1}
  // baked glass tint: the navy blue-green gathers toward the rim; drawn
- // nudged toward the light, exactly where the thin glass passes more through
- ctx.drawImage(GLF.glass,-bs*1.05+LVX*bs*0.18,-bs*1.05+LVY*bs*0.18,bs*2.1,bs*2.1);
+ // nudged toward the light, exactly where the thin glass passes more through.
+ // The square is 2.4r wide: half (1.2r) >= r + the max 0.18r light nudge,
+ // so the tint ALWAYS covers the clipped circle - an undersized square left raw
+ // untinted bands on the shadow-side rim (the "wrong circular crop" bug).
+ ctx.drawImage(GLF.glass,-bs*1.2+LVX*bs*0.18,-bs*1.2+LVY*bs*0.18,bs*2.4,bs*2.4);
  ctx.restore();
  // no bright outline circle - the glass edge reads from the tint sprite and
  // the refracted spot itself; only a faint dark ring keeps it visible on
@@ -1968,7 +2025,7 @@ function mbDraw(){
   g.save();g.beginPath();g.arc(mx,my,R,0,TAU);g.clip();
   g.globalAlpha=0.5;g.drawImage(REF.cv,mx-R,my-R,R*2,R*2);g.restore()}
  g.save();g.beginPath();g.arc(mx,my,R,0,TAU);g.clip();
- g.drawImage(GLF.glass,mx-R*1.05+LVX*R*0.18,my-R*1.05+LVY*R*0.18,R*2.1,R*2.1);
+ g.drawImage(GLF.glass,mx-R*1.2+LVX*R*0.18,my-R*1.2+LVY*R*0.18,R*2.4,R*2.4);
  if(FX('spec')){
  var gx2=mx+LVX*R*0.5,gy2=my+LVY*R*0.5,gs=R*1.2;
  g.globalCompositeOperation='lighter';
@@ -2459,6 +2516,43 @@ function calDraw(g,step,ing){
  g.beginPath();g.arc(mx,my,7,0,TAU);g.stroke();
  g.beginPath();g.moveTo(mx-12,my);g.lineTo(mx+12,my);
  g.moveTo(mx,my-12);g.lineTo(mx,my+12);g.stroke()}
+</script>
+<script>
+// self-update v3: one-time title-screen freshness check, two HEAD requests,
+// a page body is NEVER downloaded. The baseline is NOT the HTTP cache: Firefox
+// serves a HEAD cached before a deploy forever within max-age, and a reload
+// never evicts it => endless reload loop after an update. Instead the baseline
+// is the last validator THIS browser session saw, kept in sessionStorage; the
+// cached HEAD only stands in for it on the first visit of a session. The
+// no-store HEAD is always the source of truth; on mismatch a newer deploy
+// exists => reload exactly once per session per version (the new validator is
+// stored BEFORE reloading, so the reloaded page compares equal and never
+// loops). Offline/file:// hosts: no request at all, never an error. Hosts
+// without validators: silent. Never re-runs in-page.
+// Versioning: meta[name=version] = <last-edited-date>.<build>; bump the
+// build number whenever the file is edited. window.GAME_VERSION exposes it.
+(function () {
+var vm = document.querySelector('meta[name="version"]');
+window.GAME_VERSION = vm ? vm.content : "";
+if (typeof fetch !== "function") return;
+if (!/^https?:$/.test(location.protocol)) return;
+if (navigator.onLine === false) return;
+function val(r) { return r.headers.get("etag") || r.headers.get("last-modified") || ""; }
+function seen(v) { try { sessionStorage.setItem("$ver:" + location.href, v); } catch (e) {} }
+function last() { try { return sessionStorage.getItem("$ver:" + location.href) || ""; } catch (e) { return ""; } }
+var base = last();
+fetch(location.href, { method: "HEAD" }).then(function (r) {
+var cached = val(r);
+if (!base && !cached) return; // nothing to compare against
+return fetch(location.href, { method: "HEAD", cache: "no-store" }).then(function (r2) {
+var cur = val(r2);
+if (!cur) return;
+var old = base || cached;
+if (cur !== old) { seen(cur); location.reload(); }
+else seen(cur);
+});
+}).catch(function () {});
+})();
 </script>
 </body>
 </html>
