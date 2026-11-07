@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Arcade Bowling 3D</title>
-<meta name="version" content="2026.11.07.32">
+<meta name="version" content="2026.11.07.33">
 <meta name="description" content="3D bowling: step-by-step controls (place, aim, flick) with live lane projection, hook physics, ten-frame scoring, 10-pin and wide-lane 100-pin modes.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -951,7 +951,8 @@ function startThrow(keepPins){
  resetBall();
  phase='aim';aim=0;power=0;spin=0;astep=0;gest=null;chg=null;pred.length=0;startX=0;settleT=0;
  rec=[];di=0;pend=null;
- if(RP){RP=null;$('skipbtn').style.display='none'}
+ recStop();
+ if(RP){repAudStop();RP=null;$('skipbtn').style.display='none'}
  $('dbgbtn').style.display='none';
  $('btn').style.display='none';
  unfocus(); // in the aim phase SPACE throws the ball - it must not also press a button
@@ -975,11 +976,11 @@ function throwBall(){
    th:+q.th.toFixed(3),dir:+q.dir.toFixed(3),om:+q.om.toFixed(3)})),
   K:{PC,PIN_CG,I_CM,TIPC,LW,PINZ:RACKZ,PITZ,PITEDGE,BALL_R,MBALL,PIN_H,PR,MPIN,PIN_S,PIN_RZ,DT,FR:0.55,HOOK:2.1,grip:grip.toString()}});
  rec=[];di=0;camStop=false;recPush();
- rumbleOn();
+ rumbleOn();recStart();
 }
 function endThrow(){
  if(phase!=='settle'&&phase!=='roll')return;
- rumbleOff();
+ rumbleOff();recStop();
  const standing=pinsStanding(),knocked=max(0,standingBefore-standing);
  // strike = the whole rack in one throw; spare = clearing the rest on throw 2+
  const strike=fullRack&&knocked>=standingBefore;
@@ -1223,18 +1224,26 @@ function render(){
 }
 /* ---------- audio ---------- */
 let AC=null,noiseBuf=null,rumble=null,hitGate=0;
+// every sfx runs through one master bus: it feeds the speakers and, during a
+// throw, a MediaStream tap that records the live mix - the replay replays the
+// REAL sound (see the replay audio block), so the approach segment sounds
+// exactly like the throw did and the slow segment is that same audio
+// time-stretched rather than re-synthesized.
+let master=null,recDest=null,mrec=null,THROW_AUD=null,IRBUF=null;
 function audioInit(){
  if(AC||muted)return;
  try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return}
  noiseBuf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);
  const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=rand()*2-1;
+ master=AC.createGain();master.connect(AC.destination);
+ try{recDest=AC.createMediaStreamDestination();master.connect(recDest)}catch(e){recDest=null}
 }
 function tone(f,t0,dur,type,vol){
  if(!AC)return;
  const o=AC.createOscillator(),g=AC.createGain();
  o.type=type;o.frequency.setValueAtTime(f,t0);
  g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(0.001,t0+dur);
- o.connect(g);g.connect(AC.destination);o.start(t0);o.stop(t0+dur+0.02);
+ o.connect(g);g.connect(master);o.start(t0);o.stop(t0+dur+0.02);
 }
 function hitSound(rv,dark){
  if(!AC)return;
@@ -1250,7 +1259,7 @@ function hitSound(rv,dark){
  const f=AC.createBiquadFilter();f.type='bandpass';
  f.frequency.value=(dark?420:1300)+rand()*(dark?480:1400);f.Q.value=dark?1.2:0.7;
  const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.001,t+(dark?0.12:0.18));
- n.connect(f);f.connect(g);g.connect(AC.destination);n.start(t);n.stop(t+0.2);
+ n.connect(f);f.connect(g);g.connect(master);n.start(t);n.stop(t+0.2);
  tone(dark?66:92,t,0.12,'sine',v*0.8);
 }
 function rumbleOn(){
@@ -1258,14 +1267,29 @@ function rumbleOn(){
  const src=AC.createBufferSource();src.buffer=noiseBuf;src.loop=true;
  const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=260;
  const g=AC.createGain();g.gain.value=0;
- src.connect(f);f.connect(g);g.connect(AC.destination);src.start();
+ src.connect(f);f.connect(g);g.connect(master);src.start();
  rumble={src,g};
 }
 function rumbleOff(){if(rumble){rumble.src.stop();rumble=null}}
+/* record the live throw mix (rec[] starts at the same instant, so recorded
+ buffer time f*DT lines up with rec frame f); decoded on stop for the replay */
+function recStart(){
+ if(muted||!AC||!recDest||typeof MediaRecorder==='undefined')return;
+ THROW_AUD=null;
+ try{mrec=new MediaRecorder(recDest.stream)}catch(e){mrec=null;return}
+ const ck=[];
+ mrec.ondataavailable=e=>{if(e.data.size)ck.push(e.data)};
+ mrec.onstop=()=>{mrec=null;
+  const bl=new Blob(ck,{type:'audio/webm'});ck.length=0;if(!bl.size)return;
+  bl.arrayBuffer().then(ab=>AC.decodeAudioData(ab))
+   .then(bf=>{THROW_AUD=bf}).catch(()=>{})};
+ mrec.start();
+}
+function recStop(){if(mrec){try{mrec.stop()}catch(e){mrec=null}}}
 function sGutter(){if(!AC)return;const t=AC.currentTime;const o=AC.createOscillator(),g=AC.createGain();
  o.type='sawtooth';o.frequency.setValueAtTime(300,t);o.frequency.exponentialRampToValueAtTime(110,t+0.5);
  g.gain.setValueAtTime(0.12,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.5);
- o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+0.55)}
+ o.connect(g);g.connect(master);o.start(t);o.stop(t+0.55)}
 function sStrike(){if(!AC)return;const t=AC.currentTime;
  [330,415,494,660].forEach((f,i)=>tone(f,t+i*0.09,0.22,'square',0.10));}
 function sSpare(){if(!AC)return;const t=AC.currentTime;tone(392,t,0.2,'square',0.1);tone(523,t+0.12,0.25,'square',0.1)}
@@ -1459,7 +1483,7 @@ const dbCam={yaw:0,pitch:0.3,dist:2.5,tx:0,ty:0.3,tz:-18.3};
 let dbk={},dbDrag=null;
 function dbEnter(){
  if(!rec.length)return;
- if(phase==='replay'){RP=null;$('skipbtn').style.display='none'}
+ if(phase==='replay'){repAudStop();RP=null;$('skipbtn').style.display='none'}
  dbgOn=true;dbPlay=false;dbAcc=0;
  const dx=camX-lkX,dy=camY-lkY,dz=camZ-lkZ;
  dbCam.dist=max(0.6,sqrt(dx*dx+dy*dy+dz*dz));
@@ -1530,18 +1554,69 @@ $('dbo').addEventListener('click',dbExit);
 $('dbc').addEventListener('click',copyThrow);
 $('dscrub').addEventListener('input',e=>{dbPlay=false;$('dbp').classList.remove('on');recApply(+e.target.value)});
 $('dbgbtn').addEventListener('click',dbEnter);
-/* ---------- cinematic replay: slow motion from cameras above the rack ---------- */
+/* ---------- cinematic replay: real-speed approach, slow motion on contact ---------- */
 // Reuses the physics frame recorder: once the main follow camera has done its
-// job (endThrow), the pile falls again in slow motion. A camera straight above
-// the live rack always runs; good shots get two diagonal corner angles too.
-// SKIP cuts the sequence at any point.
+// job (endThrow), the throw runs again from cameras above the rack WITH SOUND:
+// the ball approaching plays at real speed with the recorded live audio, and
+// from the first pin contact the visuals drop to slow motion while the audio
+// stretches down by the same factor and opens into a reverb (see repAudStart).
+// A camera straight above the live rack always runs; good shots get two
+// diagonal corner angles too. SKIP cuts the sequence at any point.
 let RP=null;
 const REP_SPD=0.35; // fraction of real time
+/* Replay audio = the throw's own recorded mix (recStart at the throw frame,
+ the same instant rec[0] is pushed, so buffer time f*DT maps to rec frame f).
+ While the visuals run the approach at 1x the playback rate is 1x; at the
+ contact frame it ramps to REP_SPD, the same factor the frame stepper uses -
+ pitch therefore drops exactly in step with the picture (the resampler
+ duplicates/interpolates samples; it is the real sound slowed down, not a
+ re-synth). From that same instant the stretched signal also feeds a
+ convolver: reverb processing and the wet tail run at the context sample
+ rate like normal - only the SFX entering the reverb are time-stretched. */
+function getIR(){
+ if(IRBUF)return IRBUF;
+ const sr=AC.sampleRate,len=sr*1.2|0,b=AC.createBuffer(2,len,sr);
+ for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);
+  for(let i=0;i<len;i++){const t=i/sr;d[i]=(rand()*2-1)*Math.exp(-6*t)}
+  // discrete reflections of the lane corridor: side wall / back wall slap
+  for(const q of[[0.011,.5],[0.021,.33],[0.034,.2],[0.053,.12],[0.081,.07],[0.13,.04]]){
+   const k=(q[0]*sr+(ch?13:0))|0;if(k<len)d[k]+=q[1]}}
+ IRBUF=b;return b}
+function repAudStart(frm,n){
+ if(!RP||RP.aud)return;
+ // startReplay fires while the decoded buffer may still be in flight
+ // (recStop -> blob -> decode); retry a moment until it lands.
+ if(!THROW_AUD){if((n|0)<10)setTimeout(()=>repAudStart(RP?RP.cur:frm,(n|0)+1),150);return}
+ if(!AC||AC.state!=='running'||muted)return;
+ const off=max(0,frm*DT);if(off>=THROW_AUD.duration)return;
+ try{
+  const s=AC.createBufferSource();s.buffer=THROW_AUD;
+  const dry=AC.createGain(),wet=AC.createGain(),cv=AC.createConvolver();
+  cv.buffer=getIR();dry.gain.value=0.85;
+  s.connect(dry);dry.connect(AC.destination);
+  s.connect(wet);wet.connect(cv);cv.connect(AC.destination);
+  const t0=AC.currentTime+0.03;
+  if(frm<RP.c0){
+   // the rate switch is scheduled from the frame clock (t0+(c0-frm)*DT),
+   // identical to the visual switch at frame c0 - both follow the same
+   // frame time, so they stay locked unless the sim itself lost time
+   const tSw=t0+(RP.c0-frm)*DT;
+   wet.gain.value=0;
+   s.playbackRate.setValueAtTime(1,t0);
+   s.playbackRate.setTargetAtTime(REP_SPD,tSw,0.02);
+   wet.gain.setTargetAtTime(0.32,tSw,0.05);
+  }else{s.playbackRate.value=REP_SPD;wet.gain.value=0.32}
+  s.start(t0,off);
+  RP.aud={s:s,wet:wet,dry:dry,cv:cv};
+ }catch(e){RP.aud=null}
+}
+function repAudStop(){if(RP&&RP.aud){try{RP.aud.s.stop()}catch(e){}RP.aud=null}}
 function startReplay(good){
- // window: the frame where the ball first touches a pin (tiny lead-in so the
- // contact itself is on screen) until the pile settles. A throw that never
- // touched anything gets NO replay: there is no pile to relive, and replaying
- // the approach in slow motion is just dead time.
+ // window: ~0.75s before the ball first touches a pin until the pile settles.
+ // The approach segment runs at REAL speed with real sound; slow motion (and
+ // the stretched audio + reverb) starts exactly at the contact frame c0. A
+ // throw that never touched anything gets NO replay: there is no pile to
+ // relive, and replaying a silent approach is just dead time.
  let c0=-1;
  const rr=(BALL_R+PR+0.02)*(BALL_R+PR+0.02);
  outer:for(let i=0;i<rec.length;i++){const a=rec[i];
@@ -1551,14 +1626,17 @@ function startReplay(good){
    const dx=bx-a[o],dz=bz-a[o+2];
    if(dx*dx+dz*dz<rr){c0=i;break outer}}}
  if(c0<0)return finishThrow();
- const s0=max(0,c0-12);
+ const s0=max(0,c0-90);
  let e0=rec.length-1;
  {let calm=0;
-  for(let i=s0;i<rec.length;i++){const a=rec[i];let act=0;
+  // the stillness scan must start at the CONTACT: through the real-speed
+  // lead-in the pins are untouched and quiet, and scanning from s0 would
+  // declare the pile settled before the contact ever played
+  for(let i=c0;i<rec.length;i++){const a=rec[i];let act=0;
    for(let k=0;k<pins.length;k++){const o=PBOFF+k*12;act+=abs(a[o+8])+abs(a[o+9])+abs(a[o+11])+a[o+3]*4}
    if(act>=0.3){calm=0;continue}
    if(++calm>=36){e0=i;break}
-   if(i-s0>=240){e0=i;break}}}
+   if(i-c0>=240){e0=i;break}}}
  // frame every pin still in play as it comes to rest: the live pins' bounding
  // box at the final recorded frame sets the camera height for each angle
  const fin=rec[rec.length-1];
@@ -1585,20 +1663,23 @@ function startReplay(good){
  }
  recApply(s0);
  phase='replay';
- RP={cams,ci:0,i0:s0,end:e0,cur:s0,acc:0,wait:0};
+ RP={cams,ci:0,i0:s0,end:e0,cur:s0,c0:c0,acc:0,wait:0,aud:null};
  $('skipbtn').style.display='block';
- $('info').textContent='SLOW-MOTION REPLAY \u2022 SKIP TO PLAY THE NEXT BALL';
+ $('info').textContent='REPLAY \u2022 SKIP TO PLAY THE NEXT BALL';
  focusEl($('skipbtn'));
+ repAudStart(s0);
 }
 function repNext(){
  if(!RP)return;
+ repAudStop();
  RP.ci++;
  if(RP.ci>=RP.cams.length){
   RP=null;$('skipbtn').style.display='none';finishThrow();return}
- RP.cur=RP.i0;RP.acc=0;RP.wait=0;recApply(RP.i0);
+ RP.cur=RP.i0;RP.acc=0;RP.wait=0;recApply(RP.i0);repAudStart(RP.i0);
 }
 function replayStep(dt){
- RP.acc+=dt*120*REP_SPD;
+ // real time until the contact frame, slow motion from it onward
+ RP.acc+=dt*120*(RP.cur<RP.c0?1:REP_SPD);
  const st=RP.acc|0;
  if(st){RP.acc-=st;RP.cur=min(RP.cur+st,RP.end);recApply(RP.cur)}
  if(RP.cur>=RP.end){RP.wait+=dt;if(RP.wait>0.6)repNext()}
