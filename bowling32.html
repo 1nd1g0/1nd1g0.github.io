@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Arcade Bowling 3D</title>
-<meta name="version" content="2026.11.07.33">
+<meta name="version" content="2026.11.07.34">
 <meta name="description" content="3D bowling: step-by-step controls (place, aim, flick) with live lane projection, hook physics, ten-frame scoring, 10-pin and wide-lane 100-pin modes.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -371,6 +371,8 @@ const M_BOX=mkBox(),M_SPH=mkSphere(14,24);
 const PIN_PROFILE=[[0,0],[0.024,0],[0.0254,0.008],[0.038,0.045],[0.0605,0.114],[0.046,0.178],
 [0.030,0.235],[0.0226,0.277],[0.0324,0.320],[0.030,0.355],[0.022,0.369],[0.012,0.377],[0,0.381]];
 const M_PIN=mkLathe(PIN_PROFILE,28);
+// solid arrowhead for the aim-helper arrows: base r .055 in y=0, apex at +Y .15
+const M_CONE=mkLathe([[0,0],[0.055,0],[0,0.15]],14);
 function draw(mk,mat,col,mode,spec,hi,alpha){
  G.uniformMatrix4fv(uM,false,mat);
  G.uniformMatrix4fv(uMVP,false,m4mul(PV,mat));
@@ -386,7 +388,7 @@ function draw(mk,mat,col,mode,spec,hi,alpha){
 // lane/rack geometry is per-mode; every consumer reads these live (the FS lane
 // pattern is scaled by the uLW* uniforms set in setMode)
 let PC=10,RACKZ=-18.288,LW=1.06,LWH=LW/2,GUTW=0.241,WALLX=LWH+GUTW+0.04,
-AIMCAP=0.032,STARTXW=0.4;
+AIMCAP=0.032,STARTXW=0.4,LANEZ=-18.975;
 const PITZ=-19.35,PITEDGE=-19.0;
 // A regulation 1.56 kg pin against a 100-pin triangle is a wall: no single
 // ball realistically sweeps it, so strikes never happen in wide mode. The
@@ -407,10 +409,20 @@ function setMode(m100){
  // (-19.08) still stops short of the pit-drop line PITZ+0.05 and the ball edge
  // (-19.11 at the PITEDGE drop) can still reach it
  RACKZ=m100?-15.7:-18.288;
- // the 100-pin triangle spans 3.66m at its base: aim window and start range widen with it
- AIMCAP=m100?0.15:0.032;STARTXW=m100?1.47:0.4;
+ // the 100-pin triangle spans 3.66m at its base: aim window and start range widen with it.
+ // AIMCAP must let the player hit ANY pin WITH a curve: from the far start corner the
+ // straight chord to the opposite base corner is atan(3.30/19.5)=9.6 deg, and the
+ // strongest hook the physics produces deflects ~11 deg, so curved lines to the worst
+ // pin need aim up to ~21 deg (0.37 rad) - 0.15 rad (8.6 deg) left the outer rows
+ // unshootable on the 4.3m lane. 0.032 rad stays tuned for the regulation lane.
+ AIMCAP=m100?0.4:0.032;STARTXW=m100?1.47:0.4;
+ // the deck's far end + the shader's wood cutoff follow the rack: the 100-pin base
+ // row stands at z=RACKZ-13*PIN_RZ=-19.08, so on the wide lane the deck runs to
+ // -19.32 with wood texture (no dark cutoff) under every pin. 10-pin values unchanged.
+ LANEZ=m100?-19.32:-18.975;
  MPIN=1.56*(m100?PMW:1);I_CM=0.0130*(m100?PMW:1);
- G.uniform1f(uLWH,LWH);G.uniform1f(uLWF,LW/1.06);G.uniform1f(uDECKZ,RACKZ-0.162);
+ G.uniform1f(uLWH,LWH);G.uniform1f(uLWF,LW/1.06);
+ G.uniform1f(uDECKZ,m100?LANEZ:RACKZ-0.162);
 }
 const BALL_R=0.109,MBALL=6.8;
 const PIN_H=0.381,PR=0.059;
@@ -1146,21 +1158,48 @@ const COL={lane:[0.82,0.66,0.42],floor:[0.07,0.08,0.13],gutter:[0.20,0.20,0.25],
 back:[0.10,0.10,0.17],pin:[0.96,0.95,0.90],ball:[0.14,0.16,0.72],neo:[0.30,0.80,1.0],
 lit:[1.0,0.97,0.85],pit:[0.04,0.045,0.07]};
 let uTimeVal=0;
+/* world-space arrow helpers for the aim guides. arrow(): flat arrow, tail at
+ (x,z), pointing along unit dir (dx,dz), length len (head = last 0.15*sc).
+ arcArrow(): arc around (x,z) from angle a0 to a1 (xz polar, r*sc) with a head
+ at a1 pointing along the travel direction. AS = visual scale, lane-width
+ relative, so the guides read from the wide-mode aim camera too. */
+function arrow(x,z,dx,dz,len,y,col,sc){
+ const ang=Math.atan2(dz,dx),H=max(0.02,len-0.15*sc);
+ draw(M_BOX,m4mul(m4mul(m4t(x+dx*H/2,y,z+dz*H/2),m4ry(-ang)),
+  m4s(H,0.012*sc,0.05*sc)),col,5,0,0);
+ draw(M_CONE,m4mul(m4mul(m4t(x+dx*H,y,z+dz*H),m4ry(-ang)),m4mul(m4rz(-PI/2),m4s(sc,sc,sc))),col,5,0,0);
+}
+function arcArrow(x,z,r,a0,a1,y,col,sc){
+ const d=a1>a0?1:-1,n=10;
+ for(let i=0;i<n;i++){
+  const t0=a0+(a1-a0)*i/n,t1=a0+(a1-a0)*(i+1)/n,tm=(t0+t1)/2;
+  const tx=-sin(tm)*d,tz=cos(tm)*d;
+  draw(M_BOX,m4mul(m4mul(m4t(x+r*cos(tm)*sc,y,z+r*sin(tm)*sc),m4ry(-Math.atan2(tz,tx))),
+   m4s(r*abs(a1-a0)/n*sc,0.012*sc,0.035*sc)),col,5,0,0);
+ }
+ const hx=x+r*cos(a1)*sc,hz=z+r*sin(a1)*sc,
+  tx=-sin(a1)*d,tz=cos(a1)*d;
+ draw(M_CONE,m4mul(m4mul(m4t(hx,y,hz),m4ry(-Math.atan2(tz,tx))),m4mul(m4rz(-PI/2),m4s(sc,sc,sc))),col,5,0,0);
+}
 function render(){
  G.clear(G.COLOR_BUFFER_BIT|G.DEPTH_BUFFER_BIT);
  G.uniform1f(uTime,uTimeVal);
  G.uniform3fv(uFog,[0.027,0.035,0.071]);
  G.uniform3fv(uCam,[camX,camY,camZ]);
  const U=LW/1.06; // pit/kickback/room furniture scales with lane width
- // floor split around pit opening: lane ends z=-18.975, kickback wall front face z=PITZ-1.0
+ // floor split around pit opening: lane ends z=LANEZ (mode-scaled so the whole
+ // rack stands on it; -18.975 in 10-pin), kickback wall front face z=PITZ-1.0.
+ // The lane/railing run + the dark pit mouth are parameterized from LANEZ - the
+ // 10-pin arithmetic below reproduces the old constants exactly (-7.4 / 23.15).
+ const LEN=4.175-LANEZ,ZC=(4.175+LANEZ)/2,PL=LANEZ+20.375;
  draw(M_BOX,m4mul(m4t(0,-0.05,-6.62),m4s(40,0.1,24.75)),COL.floor,0,0,0);
  draw(M_BOX,m4mul(m4t(0,-0.05,-23.15),m4s(40,0.1,5.7)),COL.floor,0,0,0);
- draw(M_BOX,m4mul(m4t(0,-0.15,-19.6),m4s(3.2*U,0.1,1.4)),COL.pit,0,0,0);
- draw(M_BOX,m4mul(m4t(0,-0.057,-7.4),m4s(LW,0.12,23.15)),COL.lane,2,0.30,0);
+ draw(M_BOX,m4mul(m4t(0,-0.15,(LANEZ-20.225)/2),m4s(3.2*U,0.1,PL)),COL.pit,0,0,0);
+ draw(M_BOX,m4mul(m4t(0,-0.057,ZC),m4s(LW,0.12,LEN)),COL.lane,2,0.30,0);
  for(const s of[-1,1]){
-  draw(M_BOX,m4mul(m4t(s*(LWH+GUTW/2),-0.019,-7.4),m4s(GUTW,0.03,23.15)),COL.gutter,0,0,0);
-  draw(M_BOX,m4mul(m4t(s*(WALLX+0.03),0.14,-7.4),m4s(0.06,0.42,23.15)),COL.wall,0,0,0);
-  draw(M_BOX,m4mul(m4t(s*WALLX,0.365,-7.4),m4s(0.03,0.03,23.15)),COL.neo,5,0,0);
+  draw(M_BOX,m4mul(m4t(s*(LWH+GUTW/2),-0.019,ZC),m4s(GUTW,0.03,LEN)),COL.gutter,0,0,0);
+  draw(M_BOX,m4mul(m4t(s*(WALLX+0.03),0.14,ZC),m4s(0.06,0.42,LEN)),COL.wall,0,0,0);
+  draw(M_BOX,m4mul(m4t(s*WALLX,0.365,ZC),m4s(0.03,0.03,LEN)),COL.neo,5,0,0);
   draw(M_BOX,m4mul(m4t(s*(WALLX+0.99),1.5,-7.4),m4s(1.4,3.0,25)),COL.wall,0,0,0);
  }
  draw(M_BOX,m4mul(m4t(0,1.5,PITZ-1.1),m4s(6.4*U,3.0,0.2)),COL.back,0,0,0);
@@ -1173,6 +1212,38 @@ function render(){
   const gx=sin(aim),gz=-cos(aim);
   for(let d=0.5;d<=7.5;d+=0.5)
    draw(M_BOX,m4mul(m4t(ball.x+gx*d,0.003,ball.z+gz*d),m4s(0.05,0.006,0.05)),COL.lit,0,0,0.45);
+ }
+ /* AIM GUIDES: the next control, animated in world. STEP 1: left/right
+  arrows beside the ball - gone the moment the ball is placed. STEP 2: arc
+  arrows sweeping around the ball = twist the aim left or right. STEP 3: a
+  9s demo cycle - straight UP-flick with the straight dotted line, then a
+  diagonal LEFT flick with the curve-left dotted line, then mirrored right.
+  The demo dotted lines run the SAME integrator as the real throw (only the
+  demo's spin/power differ), so what is shown is what that flick does. All
+  guides hide as soon as real input exists (power, spin, keyboard charge,
+  live gesture). */
+ if(phase==='aim'&&!dbgOn&&ball){
+  const AS=max(1,U*0.5),NEO=[0.25,0.75,1.0],uT=uTimeVal;
+  if(astep===0&&startX===0){
+   const off=BALL_R+(0.18+0.05*sin(uT*3))*AS,L=(0.42+0.06*sin(uT*3))*AS;
+   arrow(ball.x-off,ball.z,-1,0,L,0.15,NEO,AS);
+   arrow(ball.x+off,ball.z,1,0,L,0.15,NEO,AS);
+  }else if(astep===1){
+   const sw=0.55+0.15*sin(uT*2.6);
+   arcArrow(ball.x,ball.z,0.52,-PI/2-sw,-PI/2+sw,0.03,NEO,AS);
+   arcArrow(ball.x,ball.z,0.52,-PI/2+sw,-PI/2-sw,0.03,NEO,AS);
+  }else if(astep===2&&power<=0.02&&spin===0&&!chg&&!gest){
+   const c=uT%9,k=c<3?0:c<6?1:2,tt=c-3*k,fd=min(1,min(tt,3-tt)/0.4);
+   if(fd>=0.06){
+    const spn=[0,-1,1][k],dv=[[0,-1],[-0.55,-0.83],[0.55,-0.83]][k],
+     v=(4.6+0.55*4.4)*fd;
+    for(const q of shotPath(ball.x,ball.z,sin(aim)*v,-cos(aim)*v,spn,10))
+     draw(M_BOX,m4mul(m4t(q[0],0.004,q[1]),m4s(0.05*AS*(0.4+0.6*fd),0.006,0.05*AS)),NEO,0,0,0.6);
+    const sl=(0.05+0.09*(0.5+0.5*sin(uT*3.2)))*AS;
+    arrow(ball.x+(0.36+dv[0]*sl)*AS,ball.z+(0.12+dv[1]*sl)*AS,
+     dv[0],dv[1],0.44*AS*fd,0.24,NEO,AS);
+   }
+  }
  }
  // any camera above the fixtures (replay top-down over a wide rack, the
  // wide-mode aftermath fit) would see their bodies as slabs over the pile
@@ -1254,13 +1325,17 @@ function hitSound(rv,dark){
  // click storm (reported: pin hits sound too high). Pin-pin gets a ~450-900Hz
  // knock, shorter, quieter, plus a softer body thump.
  const v=min(0.5,rv*0.09)*(dark?0.45:1);
+ // ALL contact pitches x0.35 (the user's reference: the pitch slo-mo used to
+ // have is now the normal pitch). The bandpass center and the body thump are
+ // what the ear reads as pitch, so both move together; a recorded replay
+ // stretches this mix by another 0.35, so slow motion lands a fifth lower yet.
  const n=AC.createBufferSource();n.buffer=noiseBuf;
  n.playbackRate.value=dark?0.55+rand()*0.3:0.8+rand()*0.5;
  const f=AC.createBiquadFilter();f.type='bandpass';
- f.frequency.value=(dark?420:1300)+rand()*(dark?480:1400);f.Q.value=dark?1.2:0.7;
+ f.frequency.value=(dark?147:455)+rand()*(dark?168:490);f.Q.value=dark?1.2:0.7;
  const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.001,t+(dark?0.12:0.18));
  n.connect(f);f.connect(g);g.connect(master);n.start(t);n.stop(t+0.2);
- tone(dark?66:92,t,0.12,'sine',v*0.8);
+ tone(dark?23:32,t,0.12,'sine',v*0.8);
 }
 function rumbleOn(){
  if(!AC||rumble)return;
@@ -1340,16 +1415,16 @@ function analyzeFlick(P){
 // the dotted floor projection: integrate the EXACT stepBall constants from
 // the placed position with this instant's shotVel - stop at the pit
 // edge, v<0.25 (same death threshold), or the first standing pin.
-function predict(){
- pred.length=0;
- if(power<=0.02||!ball||phase!=='aim')return;
- const r=shotVel();
- let x=ball.x,z=ball.z,vx=r[0],vz=r[1],gut=false;
+// shared exact integrator: returns the dotted-line samples for a ball launched
+// at (x,z) with velocity (vx,vz) and side spin spinv. predict() and the STEP 3
+// helper demos both run THIS, so a demo curve cannot disagree with physics.
+function shotPath(x,z,vx,vz,spinv,step){
+ const pts=[];let gut=false;
  const dt=1/120;
  for(let i=0;i<600;i++){
   const sp=sqrt(vx*vx+vz*vz);
   if(sp>1e-4){vx-=vx/sp*0.55*dt;vz-=vz/sp*0.55*dt}
-  vx+=spin*2.1*grip(z)*dt;
+  vx+=spinv*2.1*grip(z)*dt;
   x+=vx*dt;z+=vz*dt;
   if(!gut&&abs(x)>LWH){gut=true;vx=0}
   if(gut)x=clamp(x,-LWH-GUTW/2,LWH+GUTW/2);
@@ -1361,8 +1436,15 @@ function predict(){
    if(qx*qx+qz*qz<(BALL_R+PR)*(BALL_R+PR)){hit=true;break}
   }
   if(hit)break;
-  if(i%5===0)pred.push([x,z]);
+  if(i%step===0)pts.push([x,z]);
  }
+ return pts;
+}
+function predict(){
+ pred.length=0;
+ if(power<=0.02||!ball||phase!=='aim')return;
+ const r=shotVel();
+ pred=shotPath(ball.x,ball.z,r[0],r[1],spin,5);
 }
 // STEPS 1-2: a horizontal drag sets that step's value; a tap (press +
 // release, short, barely any travel) locks it in. STEP 3: the press-to-
@@ -1370,16 +1452,26 @@ function predict(){
 addEventListener('pointerdown',e=>{
  if(phase!=='aim'||dbgOn||e.target!==C)return;
  e.preventDefault();audioInit();
- if(astep<2)gest={mode:'adj',x:e.clientX,x0:e.clientX,pos0:startX,ang0:aim,S:0,t0:performance.now()};
+ if(astep<2){const now=performance.now();
+  gest={mode:'adj',x:e.clientX,x0:e.clientX,pos0:startX,ang0:aim,S:0,t0:now,
+   acc:0,lx:e.clientX,lt:now,ve:0};}
  else{gest={mode:'flick',pts:[[e.clientX,e.clientY,performance.now()]]};power=0;spin=0;pred.length=0}
 });
 addEventListener('pointermove',e=>{
  if(!gest||phase!=='aim')return;
  if(gest.mode==='adj'){
   gest.S+=abs(e.clientX-gest.x);gest.x=e.clientX;
-  const d=e.clientX-gest.x0;
-  if(astep===0){startX=clamp(gest.pos0+d*FLIK.MPPX*2*STARTXW/innerWidth,-STARTXW,STARTXW);resetBall()}
-  else aim=clamp(gest.ang0+d*FLIK.APX*AIMCAP/innerWidth,-AIMCAP,AIMCAP);
+  if(astep===0){
+   // non-linear placement: the gain follows FINGER SPEED (px/ms, smoothed).
+   // A slow careful drag crawls at ~1/4 the old sensitivity (fine control
+   // near the pins); a fast sweep reacts coarse + fast, up to 2.5x, so a
+   // full lane traverse still takes less than a flick across the screen.
+   const now=performance.now(),dtm=max(8,now-gest.lt),vx=abs(e.clientX-gest.lx)/dtm;
+   gest.ve=gest.ve?gest.ve*0.6+vx*0.4:vx;gest.lt=now;
+   gest.acc+=(e.clientX-gest.lx)*clamp(gest.ve,0.15,1.5)/0.6;gest.lx=e.clientX;
+   startX=clamp(gest.pos0+gest.acc*FLIK.MPPX*2*STARTXW/innerWidth,-STARTXW,STARTXW);resetBall();
+  }else{const d=e.clientX-gest.x0;
+   aim=clamp(gest.ang0+d*FLIK.APX*AIMCAP/innerWidth,-AIMCAP,AIMCAP);}
  }else{
   const P=gest.pts;P.push([e.clientX,e.clientY,performance.now()]);
   if(P.length>200)P.shift();
@@ -1496,7 +1588,9 @@ function dbEnter(){
 }
 function dbExit(){
  dbgOn=false;dbPlay=false;$('dbar').style.display='none';
- recApply(di); // resume live physics from the frame being viewed
+ recApply(rec.length-1); // ALWAYS continue from the throw's FINAL frame: if the
+ // scrub sat mid-throw, that mid-flight ball/pin state must never become the
+ // live state - THROW 2 has to continue from where the throw actually ended
  if(phase==='replay'&&!RP)finishThrow(); // the slow-motion sequence was taken over
  if(rec.length)$('dbgbtn').style.display='block';
 }
@@ -1530,10 +1624,26 @@ function dbCamUpdate(){
   [dbCam.tx+dbCam.dist*sin(dbCam.yaw)*cp,dbCam.ty+dbCam.dist*sin(dbCam.pitch),dbCam.tz+dbCam.dist*cos(dbCam.yaw)*cp],
   [dbCam.tx,dbCam.ty,dbCam.tz],[0,1,0]));
 }
-addEventListener('pointerdown',e=>{if(!dbgOn||e.target!==C)return;dbDrag={x:e.clientX,y:e.clientY};e.preventDefault()});
-addEventListener('pointermove',e=>{if(!dbDrag)return;dbCam.yaw+=(e.clientX-dbDrag.x)*0.006;
+// free camera on touch too: one finger orbits, TWO fingers pinch to zoom (same
+// 0.15..40m travel as the wheel); while a pinch is live orbit pauses, so
+// zooming never spins the view. A lifted finger hands the remaining one back
+// to orbit without a jump.
+const dbPtr=new Map();let dbPinch=0;
+function dbPinchD(){const a=[...dbPtr.values()],
+ dx=a[0][0]-a[1][0],dy=a[0][1]-a[1][1];return sqrt(dx*dx+dy*dy)||1}
+addEventListener('pointerdown',e=>{if(!dbgOn||e.target!==C)return;e.preventDefault();
+ dbPtr.set(e.pointerId,[e.clientX,e.clientY]);
+ if(dbPtr.size===2){dbPinch=dbPinchD();dbDrag=null}
+ else dbDrag={x:e.clientX,y:e.clientY}});
+addEventListener('pointermove',e=>{if(!dbPtr.has(e.pointerId))return;
+ dbPtr.set(e.pointerId,[e.clientX,e.clientY]);
+ if(dbPtr.size>=2){const d=dbPinchD();
+  if(dbPinch)dbCam.dist=clamp(dbCam.dist*dbPinch/d,0.15,40);dbPinch=d;return}
+ if(!dbDrag)return;dbCam.yaw+=(e.clientX-dbDrag.x)*0.006;
  dbCam.pitch=clamp(dbCam.pitch+(e.clientY-dbDrag.y)*0.006,-1.5,1.5);dbDrag={x:e.clientX,y:e.clientY}});
-addEventListener('pointerup',()=>{dbDrag=null});
+function dbLift(e){dbPtr.delete(e.pointerId);dbPinch=0;
+ if(dbPtr.size){const p=[...dbPtr.values()][0];dbDrag={x:p[0],y:p[1]}}else dbDrag=null}
+addEventListener('pointerup',dbLift);addEventListener('pointercancel',dbLift);
 addEventListener('wheel',e=>{if(!dbgOn)return;e.preventDefault();
  dbCam.dist=clamp(dbCam.dist*Math.exp(e.deltaY*0.0012),0.15,40)},{passive:false});
 addEventListener('keydown',e=>{
