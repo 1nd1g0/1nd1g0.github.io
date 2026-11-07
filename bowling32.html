@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Arcade Bowling 3D</title>
-<meta name="version" content="2026.11.07.34">
+<meta name="version" content="2026.11.07.39">
 <meta name="description" content="3D bowling: step-by-step controls (place, aim, flick) with live lane projection, hook physics, ten-frame scoring, 10-pin and wide-lane 100-pin modes.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -148,9 +148,15 @@ Highest total after ten frames wins; 300 is the perfect game.</p>
 const C=document.getElementById('c');
 const G=C.getContext('webgl',{antialias:true,alpha:false})||C.getContext('experimental-webgl');
 if(!G){document.body.innerHTML='<h2 style="color:#fff;text-align:center;margin-top:40vh">WebGL not supported</h2>';throw 0;}
-const DPR=Math.min(window.devicePixelRatio||1,1.75);
-let W=1,H=1,ASP=1;
-function resize(){W=C.width=Math.max(2,innerWidth*DPR|0);H=C.height=Math.max(2,innerHeight*DPR|0);ASP=W/H;G.viewport(0,0,W,H);}
+// DPR is capped, and RS drops the render resolution further when the frame
+// budget cannot hold: a phone at devicePixelRatio 2 paints ~1.7M px before
+// any physics runs, and the loop watchdog below walks RS down (floor 0.5)
+// until the frame time is comfortable again, back up only on sustained headroom.
+const DPRMAX=1.75;
+let RS=1,LOWT=false,W=1,H=1,ASP=1;
+function resize(){const dpr=Math.min(window.devicePixelRatio||1,DPRMAX)*RS;
+ W=C.width=Math.max(2,innerWidth*dpr|0);H=C.height=Math.max(2,innerHeight*dpr|0);ASP=W/H;
+ LOWT=RS<0.9;G.viewport(0,0,W,H);}
 addEventListener('resize',resize);resize();
 const $=id=>document.getElementById(id);
 const PI=Math.PI,sin=Math.sin,cos=Math.cos,sqrt=Math.sqrt,abs=Math.abs,
@@ -318,8 +324,11 @@ const uLights=G.getUniformLocation(PG,'uLights[0]'),uAlpha=G.getUniformLocation(
    Real lanes light the rack from a fixture directly behind/above the pins;
    a lamp mid-lane (z=-13) left the pin bodies lit only from the camera side,
    so the last fixture sits over the deck at the rack instead. */
-const LIGHTS=[[0,3.0,-1,0.68],[0,3.0,-5,0.68],[0,3.0,-9,0.68],[0,3.25,-16.35,1.25],
+const LIGHTS=[[0,3.0,-1,0.68],[0,3.0,-5,0.68],[0,3.0,-9,0.68],[0.25,3.25,-16.35,1.25],
  [0,3.0,-17,0.68],[0,2.9,-19.6,0.55]];
+// shadow fallback under load: the first three fixtures cover lane and rack,
+// and a half-bright single-source shadow still reads as contact with the deck
+const LIGHTS3=LIGHTS.slice(0,3);
 const ltA=new Float32Array(24);
 for(let i=0;i<6;i++)ltA.set(LIGHTS[i],i*4);
 G.uniform4fv(uLights,ltA);
@@ -371,8 +380,6 @@ const M_BOX=mkBox(),M_SPH=mkSphere(14,24);
 const PIN_PROFILE=[[0,0],[0.024,0],[0.0254,0.008],[0.038,0.045],[0.0605,0.114],[0.046,0.178],
 [0.030,0.235],[0.0226,0.277],[0.0324,0.320],[0.030,0.355],[0.022,0.369],[0.012,0.377],[0,0.381]];
 const M_PIN=mkLathe(PIN_PROFILE,28);
-// solid arrowhead for the aim-helper arrows: base r .055 in y=0, apex at +Y .15
-const M_CONE=mkLathe([[0,0],[0.055,0],[0,0.15]],14);
 function draw(mk,mat,col,mode,spec,hi,alpha){
  G.uniformMatrix4fv(uM,false,mat);
  G.uniformMatrix4fv(uMVP,false,m4mul(PV,mat));
@@ -431,9 +438,18 @@ let frame=0,throwN=0,standingBefore=10;
 let fr=blankFrames();
 function blankFrames(){const a=[];for(let i=0;i<10;i++)a.push({t:[]});return a}
 let pins=[],ball=null,parts=[];
-let phase='menu',aim=0,power=0,spin=0,startX=0,astep=0,gest=null,chg=null,settleT=0,msgTO=0,msgA=null,fullRack=true,pred=[];
-function makePin(x,z){return {x,z,x0:x,z0:z,vx:0,vy:0,vz:0,th:0,om:0,dir:0,down:false,dead:false,drop:0,y:0,yf:0,ah:0}}
+let phase='menu',aim=0,power=0,spin=0,startX=0,astep=0,gest=null,chg=null,settleT=0,msgTO=0,msgA=null,fullRack=true,pred=[],touched=false;
+function makePin(x,z){return {x,z,x0:x,z0:z,vx:0,vy:0,vz:0,th:0,om:0,dir:0,down:false,dead:false,drop:0,y:0,yf:0,ah:0,mv:0,sF:0}}
+// pairs whose deep-penetration separation has not finished yet. The idle-pair
+// skip is exact for bodies that cannot have moved - but a pair resting at a
+// slight overlap holds a pending position fix with zero closing speed, and
+// skipping it would freeze the two pins visually fused. Any pair that still
+// penetrates stays in this set (both sides tested every substep regardless of
+// mv) until the 0.5-per-substep separation resolves the overlap and the next
+// test comes back clean.
+const sepPairs=new Set();
 function newRack(){
+ sepPairs.clear();
  pins=[];
  if(PC===10){
   for(let r=0;r<4;r++)for(let c=0;c<=r;c++)
@@ -619,6 +635,18 @@ function pinVel(p,u){const k=cos(p.th)*p.om*(u*PIN_H-PIN_CG);return[p.vx+cos(p.d
 function segSeg(a,b,c,e){
  const ux=b[0]-a[0],uz=b[1]-a[1],vx=e[0]-c[0],vz=e[1]-c[1],wx=a[0]-c[0],wz=a[1]-c[1];
  const A=ux*ux+uz*uz,B=ux*vx+uz*vz,C=vx*vx+vz*vz,D=ux*wx+uz*wz,E=vx*wx+vz*wz,den=A*C-B*B;
+ // when the unconstrained minimizer lies inside BOTH segments it is exactly the
+ // closest pair, so the endpoint-candidate sweep below would return the same
+ // values. Crossings at an angle (the common pile contact) skip that sweep -
+ // ~3x cheaper solve; parallel/end-on pairs fall through to the full search.
+ if(den>1e-9){
+  const s0=(B*E-C*D)/den,t0=(A*E-B*D)/den;
+  if(s0>=0&&s0<=1&&t0>=0&&t0<=1){
+   const px=wx+ux*s0-vx*t0,pz=wz+uz*s0-vz*t0,d=sqrt(px*px+pz*pz);
+   // n points from seg1 to seg2 (q = -(w+s*u-t*v), matching the sweep path)
+   return[d,d<1e-6?1:-px/d,d<1e-6?0:-pz/d,s0,t0];
+  }
+ }
  const ss=[0,1],ts=[0,1];
  if(A>1e-9)ss.push(clamp(-D/A,0,1));
  if(C>1e-9)ts.push(clamp(E/C,0,1));
@@ -687,6 +715,10 @@ function collideBallPin(p,b){
  const pen=min(md-d,0.06);
  p.x+=nx*pen*MBALL/(MBALL+MPIN);p.z+=nz*pen*MBALL/(MBALL+MPIN);
  b.x-=nx*pen*MPIN/(MBALL+MPIN);b.z-=nz*pen*MPIN/(MBALL+MPIN);
+ // the ball shoved this pin's body; it may now bury a neighbor with zero
+ // closing speed (the pin jammed into the pack). sF keeps its pin pairs live
+ // next substep so that new overlap is detected and separated, not frozen.
+ p.sF=1;
  // closing speed AT THE CONTACT POINT (pin sweep included). Contact axial height is
  // the point on the pin's 3D axis nearest the ball center (y=BALL_R): min of
  // |base_g + dir*s*sin(th) - ball_xz|^2 + (s*cos(th)-BALL_R)^2 over s =>
@@ -735,10 +767,10 @@ function collideBallPin(p,b){
  hitSound(rv);sparks(qx,0.1,qz,min(6,rv*2|0));
 }
 function collidePinPin(a,b){
- if(a.dead||b.dead)return;
+ if(a.dead||b.dead)return 0;
  const A=pinSeg(a),Bp=pinSeg(b);
  const cc=segSeg([A[0],A[1]],[A[2],A[3]],[Bp[0],Bp[1]],[Bp[2],Bp[3]]),md=PR*2,d=cc[0];
- if(d>=md)return;
+ if(d>=md)return 0;
  let nx=cc[1],nz=cc[2];
  if(d<1e-6){const dx=Bp[0]-A[0],dz=Bp[3]-A[1],dl=Math.hypot(dx,dz);nx=dl<1e-6?1:dx/dl;nz=dl<1e-6?0:dz/dl}
  // position separation FIRST and unconditional (capped like the ball-pin one):
@@ -747,6 +779,10 @@ function collidePinPin(a,b){
  // through each other — the reported head-through-head
  const sep=min(md-d,0.06)*0.5;
  a.x-=nx*sep;a.z-=nz*sep;b.x+=nx*sep;b.z+=nz*sep;
+ // a moved body can overlap a NEW neighbor that the pair loop already passed
+ // this substep; sF makes that neighbor's pair live next substep so chained
+ // overlaps get registered instead of freezing at zero velocity
+ a.sF=1;b.sF=1;
  // the 2D closest-approach locates contact ALONG the ground-projected axes only;
  // contact HEIGHT comes from surface geometry, not the projection (an upright axis
  // projects to a point and would put every hit at the floor). Surface at contact:
@@ -786,11 +822,21 @@ function collidePinPin(a,b){
   tiltTorque(b,m>0?nx:-nx,m>0?nz:-nz,m)}
  if(!a.down){const m=-j*dA/I_CM;
   tiltTorque(a,m>0?nx:-nx,m>0?nz:-nz,m)}
- if(rv>0.4)hitSound(rv*0.6,1);
+ // no contact-velocity gate here: quiet settlement chatter is cut by the
+ // voice's own audibility floor in hitSound, strong chain reactions must not lose pins
+ hitSound(rv*0.6,1);
+ // pair caller reads this as 'contact was live this substep' -> pair stays
+ // tested until the separation pass has cleared the overlap
+ return 1;
 }
 function stepPins(dt){
  for(const p of pins){
   if(p.dead)continue;
+  // two-phase "I was position-separated last pass" marker: sF is set by any
+  // penetration correction (ball or pair), sF2 carries it into this pass. A
+  // corrected body tests its neighbors next pass; if that corrects again the
+  // chain self-perpetuates until the overlap is gone.
+  p.sF2=p.sF;p.sF=0;
   // pit: past the lip the pin keeps its ballistic arc, but p.yf is the floor
   // it was dropped onto (pit plate top = -0.10, approach = 0): a dropped pin
   // clatters ONCE on that plate (22% rebound), then the sweeper clears it
@@ -801,6 +847,7 @@ function stepPins(dt){
     if(p.vy<-0.5){p.vy*=-0.22;p.vx*=0.5;p.vz*=0.5}
     else{p.dead=true}
    }
+   p.mv=1; // still falling: keep its pairs live until dead
    continue}
   // VERTICAL DOF. p.y is the pin's extra COM height above its floor-rest pose
   // (0 = supported by the deck). Hits give vy; deck gravity takes it back; the
@@ -900,19 +947,35 @@ function stepPins(dt){
   if(abs(p.x)>WALLX-PR){p.x=clamp(p.x,-WALLX+PR,WALLX-PR);p.vx*=-0.4}
   if(p.z<PITZ+0.05){p.drop=1;p.down=true;p.yf=-0.10} // pit plate top; pins fall in only past the rack (ball edge is further back)
   if(p.z>4.5){p.drop=1;p.down=true;p.yf=0} // kicked clear back to the approach: drop it out (off-screen, ends any pile-up wait)
+  // idle flag consumed by the pair loop below: set only if this body could not
+  // move during THIS substep's integration - no slide, no flight, no rotation.
+  // Upright wobble (0<th<balance) and toppling are always live; flat at-rest
+  // uses the old 0.04m/s slide floor; an upright pin with only sub-0.02rad/s
+  // residual spring wobble is visually inert (its capsule end sweeps <2mm/step)
+  const sp2=p.vx*p.vx+p.vz*p.vz;
+  p.mv=(p.y>0||p.vy||(p.th>1e-4&&p.th<PI/2-0.01)||(p.th>=PI/2-0.01?sp2>=0.0016:abs(p.om)>0.02||p.vx||p.vz))?1:0;
  }
  for(let i=0;i<pins.length;i++)for(let j=i+1;j<pins.length;j++){
   const a=pins[i],b=pins[j];
   if(a.dead||b.dead)continue;
-  // cheap reject first: two capsule bodies (length up to PIN_H) can only touch
+  // pair-level early-out: two bodies flagged idle by the loop above cannot
+  // have moved since their last test, so their contact state is unchanged -
+  // skipping is exact. A hit from the ball or another pin first sets the
+  // victim's velocity (stepBall runs before this loop in the same substep),
+  // so a woken body is tested the very substep it starts moving; pairs that
+  // still penetrate rest in sepPairs and keep being tested regardless of mv,
+  // so a leftover overlap always finishes separating. This replaces the old
+  // flat-motionless rule, which only covered fallen pins: a standing 100-pin
+  // rack was paying ~1.8k full capsule solves per substep for pins that
+  // cannot move - the measured 2.7ms/step physics floor on desktop that a
+  // phone cannot afford.
+  if(!a.mv&&!b.mv&&!a.sF2&&!b.sF2&&!sepPairs.has(i*128+j))continue;
+  // cheap reject second: two capsule bodies (length up to PIN_H) can only touch
   // with base centers within 2*PIN_H+2*PR ≈ 0.88m; the wide 100-pin rack's
   // far-apart clusters and dead pile skip the full segment solve
   const ddx=a.x-b.x,ddz=a.z-b.z;
   if(ddx*ddx+ddz*ddz>0.88*0.88)continue;
-  // skip only fully flat, motionless pins; a sliding belly or a toppling body must hit everything
-  const sa=a.vx*a.vx+a.vz*a.vz,sb=b.vx*b.vx+b.vz*b.vz;
-  if(a.th>=PI/2-0.01&&b.th>=PI/2-0.01&&sa<0.0016&&sb<0.0016)continue;
-  collidePinPin(a,b);
+  if(collidePinPin(a,b))sepPairs.add(i*128+j);else sepPairs.delete(i*128+j);
  }
 }
 function pinsStanding(){let n=0;for(const p of pins)if(!p.down&&!p.dead)n++;return n}
@@ -927,6 +990,7 @@ function pinActivity(){
 }
 function ballSettled(){return ball.dead||ball.v<0.25||ball.z<RACKZ-1.1}
 function sparks(x,y,z,n){
+ n=min(n,LOWT?8:24); // a slow device never sees the particle pool pay for itself
  for(let i=0;i<n;i++)parts.push({x,y:y+0.05,z,vx:(rand()*2-1)*1.4,vy:rand()*1.6+0.4,vz:(rand()*2-1)*1.4,life:0.5+rand()*0.3});
 }
 function stepParts(dt){
@@ -961,7 +1025,7 @@ function startThrow(keepPins){
  }
  fullRack=!keepPins; // clearing THIS rack in one throw = strike, in any frame
  resetBall();
- phase='aim';aim=0;power=0;spin=0;astep=0;gest=null;chg=null;pred.length=0;startX=0;settleT=0;
+ phase='aim';aim=0;power=0;spin=0;astep=0;gest=null;chg=null;pred.length=0;startX=0;settleT=0;touched=false;
  rec=[];di=0;pend=null;
  recStop();
  if(RP){repAudStop();RP=null;$('skipbtn').style.display='none'}
@@ -1102,7 +1166,10 @@ function camUpdate(dt){
   // the dotted aiming line, so the camera always looks where the ball will
   // roll; while the trajectory preview is live, aim down its curve instead
   const bx=ball?ball.x:startX,bz=ball?ball.z:0.45,gx=sin(aim),gz=-cos(aim);
-  let lxp=bx+gx*9,lzp=bz+gz*9;
+  // look 5.5 m ahead, not 9: with a 30° vertical FOV a 9 m axis puts the
+  // frustum's bottom edge on the floor right behind the ball, and the
+  // placement/heading demo arrows live in that clipped band
+  let lxp=bx+gx*5.5,lzp=bz+gz*5.5;
   if(astep>=2&&pred.length>4){const q=pred[(pred.length*0.6)|0];lxp=bx*0.3+q[0]*0.7;lzp=bz*0.15+q[1]*0.85;}
   ex=bx-gx*3.3;ey=1.16;ez=bz-gz*3.3;
   lx=lxp;ly=0.52;lz=lzp;ft=30;
@@ -1126,24 +1193,24 @@ function camUpdate(dt){
   }
   if(camStop){ex=camX;ey=camY;ez=camZ;lx=lkX;ly=lkY;lz=lkZ;ft=fov;}
  }else if(phase==='settle'||phase==='done'){
-  if(PC===10){ex=-0.15;ey=1.35;ez=-14.4;lx=0;ly=0.18;lz=-18.45;ft=20;}
-  else{
-   // wide-mode aftermath: the fixed 10-pin framing buries the camera in a
-   // 3.7m-deep, 4.3m-wide rack. Fit the live pile + standing pins instead:
-   // same bounding-box math as the replay top-down, held high behind the
-   // pit with a slight tilt toward the player.
-   let mnx=1e9,mxx=-1e9,mnz=1e9,mxz=-1e9,n2=0;
-   for(const p of pins){if(p.dead)continue;n2++;
-    if(p.x-0.12<mnx)mnx=p.x-0.12;if(p.x+0.12>mxx)mxx=p.x+0.12;
-    if(p.z-0.5<mnz)mnz=p.z-0.5;if(p.z+0.5>mxz)mxz=p.z+0.5;}
-   if(!n2){mnx=-LWH;mxx=LWH;mnz=RACKZ-3.9;mxz=RACKZ+0.3;}
-   const cx=(mnx+mxx)/2,cz=(mnz+mxz)/2;
-   const hw=(mxx-mnx)/2,hd=(mxz-mnz)/2,fv=40;
-   const tv=tan(fv*PI/360),th=tv*max(ASP,0.4);
-   const fit=max(hw/th,hd/tv)*1.12;
-   ex=cx;ey=min(max(3.6,fit),16);ez=cz+min(fit*0.42,6.4);
-   lx=cx;ly=0.2;lz=cz;ft=fv;
-  }
+  // aftermath shot = the live bounding box fit, any mode and any screen
+  // shape: the fixed 10-pin eye clipped a tall phone window (spread corner,
+  // a ball rolling in the gutter left the frame), so instead the camera
+  // rises and pulls back until pile, survivors AND the resting ball fit
+  // the current viewport - same box math as the replay top-down.
+  let mnx=1e9,mxx=-1e9,mnz=1e9,mxz=-1e9;
+  for(const p of pins){if(p.dead)continue;
+   if(p.x-0.12<mnx)mnx=p.x-0.12;if(p.x+0.12>mxx)mxx=p.x+0.12;
+   if(p.z-0.5<mnz)mnz=p.z-0.5;if(p.z+0.5>mxz)mxz=p.z+0.5;}
+  if(ball){if(ball.x-0.14<mnx)mnx=ball.x-0.14;if(ball.x+0.14>mxx)mxx=ball.x+0.14;
+   if(ball.z-0.14<mnz)mnz=ball.z-0.14;if(ball.z+0.14>mxz)mxz=ball.z+0.14;}
+  if(mnx>mxx){mnx=-LWH;mxx=LWH;mnz=RACKZ-3.9;mxz=RACKZ+0.3;}
+  const cx=(mnx+mxx)/2,cz=(mnz+mxz)/2;
+  const hw=(mxx-mnx)/2,hd=(mxz-mnz)/2,fv=40;
+  const tv=tan(fv*PI/360),th=tv*max(ASP,0.3);
+  const fit=max(hw/th,hd/tv)*1.12;
+  ex=cx;ey=min(max(3.2,fit),16);ez=cz+min(fit*0.25,3.4);
+  lx=cx;ly=0.2;lz=cz;ft=fv;
  }else{
   ex=0;ey=1.4;ez=-13.5;lx=0;ly=0.25;lz=-18.3;ft=26;
  }
@@ -1167,7 +1234,19 @@ function arrow(x,z,dx,dz,len,y,col,sc){
  const ang=Math.atan2(dz,dx),H=max(0.02,len-0.15*sc);
  draw(M_BOX,m4mul(m4mul(m4t(x+dx*H/2,y,z+dz*H/2),m4ry(-ang)),
   m4s(H,0.012*sc,0.05*sc)),col,5,0,0);
- draw(M_CONE,m4mul(m4mul(m4t(x+dx*H,y,z+dz*H),m4ry(-ang)),m4mul(m4rz(-PI/2),m4s(sc,sc,sc))),col,5,0,0);
+ chev(x+dx*len,z+dz*len,dx,dz,0.15*sc,y,col,sc);
+}
+// flat chevron head: two short bars meeting at a point on the tip, opening
+// backward. A cone lying flat can never read as pointing along the view axis;
+// a chevron keeps its apex angle under every camera and matches the flat-arrow
+// lane-marker style the guides use.
+function chev(px,pz,dx,dz,hl,y,col,sc){
+ const A=0.62,c=Math.cos(A),s=Math.sin(A); // half angle at the tip
+ for(const sgn of[-1,1]){
+  const ux=-dx*c-dz*s*sgn,uz=-dz*c+dx*s*sgn;
+  draw(M_BOX,m4mul(m4mul(m4t(px+ux*hl/2,y,pz+uz*hl/2),m4ry(-Math.atan2(uz,ux))),
+   m4s(hl,0.012*sc,0.035*sc)),col,5,0,0);
+ }
 }
 function arcArrow(x,z,r,a0,a1,y,col,sc){
  const d=a1>a0?1:-1,n=10;
@@ -1179,7 +1258,7 @@ function arcArrow(x,z,r,a0,a1,y,col,sc){
  }
  const hx=x+r*cos(a1)*sc,hz=z+r*sin(a1)*sc,
   tx=-sin(a1)*d,tz=cos(a1)*d;
- draw(M_CONE,m4mul(m4mul(m4t(hx,y,hz),m4ry(-Math.atan2(tz,tx))),m4mul(m4rz(-PI/2),m4s(sc,sc,sc))),col,5,0,0);
+ chev(hx,hz,tx,tz,0.15*sc,y,col,sc);
 }
 function render(){
  G.clear(G.COLOR_BUFFER_BIT|G.DEPTH_BUFFER_BIT);
@@ -1213,28 +1292,56 @@ function render(){
   for(let d=0.5;d<=7.5;d+=0.5)
    draw(M_BOX,m4mul(m4t(ball.x+gx*d,0.003,ball.z+gz*d),m4s(0.05,0.006,0.05)),COL.lit,0,0,0.45);
  }
- /* AIM GUIDES: the next control, animated in world. STEP 1: left/right
-  arrows beside the ball - gone the moment the ball is placed. STEP 2: arc
-  arrows sweeping around the ball = twist the aim left or right. STEP 3: a
-  9s demo cycle - straight UP-flick with the straight dotted line, then a
+ /* AIM GUIDES: the next control, animated in world. All flat on the lane,
+  all dismissed the moment the player takes real control (touched), all
+  FITTED to the viewport: the guide scale comes from the camera frustum at
+  the ball's distance, so even a tall phone window sees the whole guide
+  (any camera retune flows through this fit automatically). STEP 1:
+  left/right arrows beside the ball. STEP 2: the aim demo — the arrow
+  points straight forward, swings to LEFT and holds, then sweeps across to
+  RIGHT and holds: exactly the L/R motion the player copies. STEP 3: a 9s
+  demo cycle - straight UP-flick with the straight dotted line, then a
   diagonal LEFT flick with the curve-left dotted line, then mirrored right.
   The demo dotted lines run the SAME integrator as the real throw (only the
-  demo's spin/power differ), so what is shown is what that flick does. All
-  guides hide as soon as real input exists (power, spin, keyboard charge,
-  live gesture). */
- if(phase==='aim'&&!dbgOn&&ball){
-  const AS=max(1,U*0.5),NEO=[0.25,0.75,1.0],uT=uTimeVal;
-  if(astep===0&&startX===0){
+  demo's spin/power differ), so what is shown is what that flick does. */
+ if(phase==='aim'&&!dbgOn&&ball&&!touched){
+  const NEO=[0.25,0.75,1.0],uT=uTimeVal;
+  // screen fit: half-frame extent (metres) at the ball's distance along each
+  // screen axis. Each guide gets its own scale from its own worst-case shape
+  // (a side-by-side pair is wide, a swinging heading is narrow but deep), so
+  // the narrow-phone cap stays as generous as the actual guide geometry
+  // allows; on desktop the lane-relative scale is smaller and wins.
+  const dc=max(1.5,sqrt((ball.x-camX)*(ball.x-camX)+(ball.z-camZ)*(ball.z-camZ)));
+  const tf=tan(fov*PI/360)*dc,halfW=tf*min(ASP,1);
+  const CAP=(a,b)=>min(max(1,U*0.5),(halfW*0.92-a)/b,tf*0.92/(b*1.0));
+  if(astep===0){
+   const AS=CAP(BALL_R,0.72);
    const off=BALL_R+(0.18+0.05*sin(uT*3))*AS,L=(0.42+0.06*sin(uT*3))*AS;
    arrow(ball.x-off,ball.z,-1,0,L,0.15,NEO,AS);
    arrow(ball.x+off,ball.z,1,0,L,0.15,NEO,AS);
   }else if(astep===1){
-   const sw=0.55+0.15*sin(uT*2.6);
-   arcArrow(ball.x,ball.z,0.52,-PI/2-sw,-PI/2+sw,0.03,NEO,AS);
-   arcArrow(ball.x,ball.z,0.52,-PI/2+sw,-PI/2-sw,0.03,NEO,AS);
-  }else if(astep===2&&power<=0.02&&spin===0&&!chg&&!gest){
+   const AS=CAP(0,0.72);
+   // heading demo, 6s: 0-2s straight forward (fade in, pulse), 2-4s a
+   // 0.75s swing to a LEFT heading then hold, 4-6s a sweep across to a
+   // RIGHT heading, hold, fade at the loop seam. h = heading off straight.
+   // The compass floats at y=0.5, ABOVE the ball silhouette: on the deck the
+   // band around the ball is hidden by the ball itself from the low aim
+   // camera, and on portrait phones the frame bottom cuts the same band.
+   const c=uT%6,k=c<2?0:c<4?1:2,tt=c-2*k,sw=0.55;
+   const e2=min(1,max(0,tt-0.25)/0.75);
+   const h=k===0?0:k===1?-sw*e2:-sw+2*sw*e2;
+   const fd=k===0?min(1,tt/0.3):k===2?min(1,(2-tt)/0.3):1;
+   if(fd>=0.05){
+    const hx=sin(h),hz=-cos(h);
+    arrow(ball.x+hx*0.55*AS,ball.z+hz*0.55*AS,hx,hz,(0.5+0.08*sin(uT*3))*AS*fd,0.5,NEO,AS);
+    // the faint arc shows WHERE the heading rotates from - its head points
+    // along the sweep, the bright arrow shows where the aim is going
+    if(abs(h)>0.06)arcArrow(ball.x,ball.z,0.55*AS,-PI/2,h-PI/2,0.5,[0.10,0.32,0.45],AS);
+   }
+  }else if(astep===2){
+   const AS=CAP(0,0.72);
    const c=uT%9,k=c<3?0:c<6?1:2,tt=c-3*k,fd=min(1,min(tt,3-tt)/0.4);
-   if(fd>=0.06){
+   if(fd>=0.06&&power<=0.02&&spin===0&&!chg){
     const spn=[0,-1,1][k],dv=[[0,-1],[-0.55,-0.83],[0.55,-0.83]][k],
      v=(4.6+0.55*4.4)*fd;
     for(const q of shotPath(ball.x,ball.z,sin(aim)*v,-cos(aim)*v,spn,10))
@@ -1269,11 +1376,11 @@ function render(){
   const off=sin(p.th)*PIN_CG,lift=p.th>0.02?0.0605*sin(min(p.th,PI/2)):0;
   const m=m4mul(m4mul(m4t(p.x-cos(p.dir)*off,(p.y||0)+lift,p.z-sin(p.dir)*off),
    m4ry(-p.dir)),m4rz(-p.th));
-  if(camY<3.1)for(const q of LIGHTS)draw(M_PIN,m4mul(shadowM(q,0.004),m),SHCOL,6,0,0,SHW);
+  if(camY<3.1)for(const q of(LOWT?LIGHTS3:LIGHTS))draw(M_PIN,m4mul(shadowM(q,0.004),m),SHCOL,6,0,0,SHW);
  }
  if(ball&&!ball.dead&&ball.y>-0.05){
   const bm=m4mul(m4t(ball.x,max(ball.y,BALL_R),ball.z),m4s(BALL_R,BALL_R,BALL_R));
-  if(camY<3.1)for(const q of LIGHTS)draw(M_SPH,m4mul(shadowM(q,0.006),bm),SHCOL,6,0,0,SHW);
+  if(camY<3.1)for(const q of(LOWT?LIGHTS3:LIGHTS))draw(M_SPH,m4mul(shadowM(q,0.006),bm),SHCOL,6,0,0,SHW);
  }
  G.depthMask(true);G.disable(G.BLEND);
  for(const p of pins){
@@ -1294,7 +1401,7 @@ function render(){
  for(const q of parts){const s=0.02+0.02*min(1,q.life*2);draw(M_BOX,m4mul(m4t(q.x,q.y,q.z),m4s(s,s,s)),[1.0,0.8,0.3],0,0,0.9);}
 }
 /* ---------- audio ---------- */
-let AC=null,noiseBuf=null,rumble=null,hitGate=0;
+let AC=null,noiseBuf=null,rumble=null,actHits=0;const MAXHITS=16;
 // every sfx runs through one master bus: it feeds the speakers and, during a
 // throw, a MediaStream tap that records the live mix - the replay replays the
 // REAL sound (see the replay audio block), so the approach segment sounds
@@ -1318,24 +1425,37 @@ function tone(f,t0,dur,type,vol){
 }
 function hitSound(rv,dark){
  if(!AC)return;
- const t=AC.currentTime;if(t<hitGate)return;hitGate=t+0.03;
+ const t=AC.currentTime;
  // dark = pin on pin. The bandpass that gives a BALL hit its crack sits at
  // 1.3-2.7kHz; plastic body-on-body contact lands far lower and duller, and
  // with that filter in the pack every clack cut through the mix as a shrill
  // click storm (reported: pin hits sound too high). Pin-pin gets a ~450-900Hz
  // knock, shorter, quieter, plus a softer body thump.
  const v=min(0.5,rv*0.09)*(dark?0.45:1);
+ if(v<0.015||actHits>=MAXHITS)return;
+ // one global gate used to drop most contacts of a strike (20+ hits inside
+ // half a second): instead every contact above the audibility floor gets its
+ // own voice, and a hard cap keeps a full pile from stacking into a click
+ // wall — the excess contacts fold into the voices already sounding. A strike
+ // lands ~25-30 contacts over ~0.6s; ~16 concurrent short voices stay far
+ // under WebAudio's per-context cost ceiling on phones.
  // ALL contact pitches x0.35 (the user's reference: the pitch slo-mo used to
  // have is now the normal pitch). The bandpass center and the body thump are
  // what the ear reads as pitch, so both move together; a recorded replay
  // stretches this mix by another 0.35, so slow motion lands a fifth lower yet.
+ // Variation per hit (rate, filter center+Q, envelope length, noise read position,
+ // thump pitch) so a layered pile reads as a scatter of knocks, not one sample.
  const n=AC.createBufferSource();n.buffer=noiseBuf;
- n.playbackRate.value=dark?0.55+rand()*0.3:0.8+rand()*0.5;
+ n.playbackRate.value=(dark?0.55+rand()*0.3:0.8+rand()*0.5)*(0.85+rand()*0.3);
  const f=AC.createBiquadFilter();f.type='bandpass';
- f.frequency.value=(dark?147:455)+rand()*(dark?168:490);f.Q.value=dark?1.2:0.7;
- const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.001,t+(dark?0.12:0.18));
- n.connect(f);f.connect(g);g.connect(master);n.start(t);n.stop(t+0.2);
- tone(dark?23:32,t,0.12,'sine',v*0.8);
+ f.frequency.value=((dark?147:455)+rand()*(dark?168:490))*(0.9+rand()*0.22);
+ f.Q.value=(dark?1.2:0.7)*(0.8+rand()*0.5);
+ const dur=(dark?0.12:0.18)*(0.75+rand()*0.5);
+ const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+ n.connect(f);f.connect(g);g.connect(master);
+ actHits++;n.onended=()=>{actHits--};
+ n.start(t,rand()*0.7,dur+0.03);
+ tone((dark?23:32)*(0.85+rand()*0.3),t,dur*0.7,'sine',v*0.8);
 }
 function rumbleOn(){
  if(!AC||rumble)return;
@@ -1390,7 +1510,7 @@ function stepHint(){
   'STEP 2/3 \u2022 DRAG SIDEWAYS: aim the shot \u2022 TAP or ENTER to lock',
   'STEP 3/3 \u2022 FLICK UP: travel + speed = power \u2022 lean left / right = spin \u2022 PC: \u2190\u2192 spin, hold SPACE for power'][astep];
 }
-function advanceStep(){
+function advanceStep(){touched=false;
  if(astep>=2)return;
  astep++;pred.length=0;power=0;spin=0;
  msg(astep===1?'STEP 2: AIM THE SHOT':'STEP 3: FLICK TO THROW',900);
@@ -1455,7 +1575,7 @@ addEventListener('pointerdown',e=>{
  if(astep<2){const now=performance.now();
   gest={mode:'adj',x:e.clientX,x0:e.clientX,pos0:startX,ang0:aim,S:0,t0:now,
    acc:0,lx:e.clientX,lt:now,ve:0};}
- else{gest={mode:'flick',pts:[[e.clientX,e.clientY,performance.now()]]};power=0;spin=0;pred.length=0}
+ else{gest={mode:'flick',pts:[[e.clientX,e.clientY,performance.now()]]};power=0;spin=0;pred.length=0;touched=true}
 });
 addEventListener('pointermove',e=>{
  if(!gest||phase!=='aim')return;
@@ -1469,9 +1589,9 @@ addEventListener('pointermove',e=>{
    const now=performance.now(),dtm=max(8,now-gest.lt),vx=abs(e.clientX-gest.lx)/dtm;
    gest.ve=gest.ve?gest.ve*0.6+vx*0.4:vx;gest.lt=now;
    gest.acc+=(e.clientX-gest.lx)*clamp(gest.ve,0.15,1.5)/0.6;gest.lx=e.clientX;
-   startX=clamp(gest.pos0+gest.acc*FLIK.MPPX*2*STARTXW/innerWidth,-STARTXW,STARTXW);resetBall();
+   startX=clamp(gest.pos0+gest.acc*FLIK.MPPX*2*STARTXW/innerWidth,-STARTXW,STARTXW);resetBall();touched=true;
   }else{const d=e.clientX-gest.x0;
-   aim=clamp(gest.ang0+d*FLIK.APX*AIMCAP/innerWidth,-AIMCAP,AIMCAP);}
+   aim=clamp(gest.ang0+d*FLIK.APX*AIMCAP/innerWidth,-AIMCAP,AIMCAP);touched=true;}
  }else{
   const P=gest.pts;P.push([e.clientX,e.clientY,performance.now()]);
   if(P.length>200)P.shift();
@@ -1504,7 +1624,7 @@ addEventListener('keydown',e=>{
  const L=e.code==='ArrowLeft'||e.code==='KeyA',R=e.code==='ArrowRight'||e.code==='KeyD',
   ENT=e.code==='Enter',SPC=e.code==='Space';
  if(L||R){
-  e.preventDefault();audioInit();
+  e.preventDefault();audioInit();touched=true; // any real control dismisses every guide
   const s=R?1:-1;
   if(astep===0){startX=clamp(startX+s*FLIK.KEYX,-STARTXW,STARTXW);resetBall()}
   else if(astep===1)aim=clamp(aim+s*FLIK.KEYA,-AIMCAP,AIMCAP);
@@ -1516,9 +1636,9 @@ addEventListener('keydown',e=>{
   if(e.repeat)return;
   audioInit();
   if(astep<2)advanceStep();
-  else if(SPC&&!chg)chg={t0:performance.now()}; // the keyboard flick starts here (SPACE only)
+  else if(SPC&&!chg){touched=true;chg={t0:performance.now()}} // the keyboard flick starts here (SPACE only)
  }else if(e.code==='Escape'){
-  chg=null;astep=0;aim=0;power=0;spin=0;startX=0;pred.length=0; // abort everything, back to step 1
+  chg=null;astep=0;aim=0;power=0;spin=0;startX=0;pred.length=0;touched=false; // abort everything, back to step 1
   if(ball)resetBall();
   statusHUD();
  }
@@ -1765,11 +1885,24 @@ function startReplay(good){
   // broadcast-style 3/4 angle: camera inside the corridor between the tall
   // side walls (inner faces at |x|=WALLX+0.29) — outside them the wall body
   // occludes, above them the wall top fills the frame. Look down from
-  // mid-pit; framing widens with the pile so wide-mode racks stay framed.
+  // mid-pit; framing widens with the pile so wide-mode racks stay framed,
+  // and on tall (portrait) windows the geometry scales along the look axis
+  // until the whole pile fits: at the nominal ~4m distance a portrait frame
+  // clips the pile on the horizontal short axis. Scaling px past the wall
+  // line would put the wall body in the shot, so on extreme fits height and
+  // depth grow while px holds at the corridor line.
   const tzd=Math.min(cz+0.7,RACKZ-0.2);
   const spread=max(0,max(hw,hd)-0.9);
-  for(const s of[-1,1])cams.push({px:cx+s*min(1.05+spread*0.55,WALLX+0.19),
-   py:1.9+spread*0.35,pz:tzd+3.6+spread*1.1,tx:cx,ty:0.35,tz:tzd,up:[0,1,0],fv:46});
+  const tv2=tan(46*PI/360);
+  for(const s of[-1,1]){
+   let px=s*min(1.05+spread*0.55,WALLX+0.19),py=1.9+spread*0.35,pz=tzd+3.6+spread*1.1;
+   const need=max(hw/(tv2*max(ASP,0.3)),hd/tv2)*1.12;
+   const d=sqrt(px*px+py*py+(pz-tzd)*(pz-tzd));
+   const k2=min(need/d,2.2);
+   if(k2>1){py*=k2;pz=tzd+(pz-tzd)*k2;
+    px=clamp(px*k2,-(WALLX+0.19),WALLX+0.19);}
+   cams.push({px:cx+px,py,pz,tx:cx,ty:0.35,tz:tzd,up:[0,1,0],fv:46});
+  }
  }
  recApply(s0);
  phase='replay';
@@ -1828,7 +1961,7 @@ window.DBG={on:dbEnter,off:dbExit,step:dbgStep,seek:recApply,n:()=>rec.length,
  throw:()=>throwSnap,copy:copyThrow};
 /* ---------- main loop ---------- */
 const DT=1/120;
-let last=performance.now(),acc=0;
+let last=performance.now(),acc=0,ftEma=-1,qualWin=0,qualGood=0;
 // gamepad: A on a focused button presses it (menu buttons are auto-focused);
 // in the aim phase A mirrors the SPACE path - lock steps, hold to charge
 let gpPrev=false;
@@ -1854,8 +1987,22 @@ function loop(now){
  requestAnimationFrame(loop);
  let dt=(now-last)/1000;last=now;if(dt>0.1)dt=0.1;
  uTimeVal=now/1000;
+ // frame-budget watchdog: an EMA of real frame time decides headroom. Drop the
+ // render scale one notch per 2s while sustained below ~40fps; climb back only
+ // after ~6s of comfortable frames, so the two directions cannot fight.
+ ftEma=ftEma<0?dt:ftEma*0.92+min(dt,0.05)*0.08;
+ qualWin+=dt;
+ if(qualWin>2){qualWin=0;
+  if(ftEma>0.025&&RS>0.5){RS=max(0.5,RS-0.25);qualGood=0;resize()}
+  else{if(ftEma<0.0165)qualGood++;else qualGood=0;
+   if(RS<1&&qualGood>=3){RS=min(1,RS+0.25);qualGood=0;resize()}}}
  acc+=dt;
- if(!dbgOn){while(acc>=DT){
+ // bound catch-up to 6 substeps (0.05s of sim) per frame: after a GC pause or
+ // a tab-return the dt clamp still queued up to 12 physics steps + record
+ // pushes inside one already-late frame, compounding the hitch. At a steady
+ // 120Hz the cap never engages; when it does, sim time simply dilates a little
+ // instead of the game stuttering harder.
+ if(!dbgOn){let _cu=0;while(acc>=DT&&_cu++<6){
   acc-=DT;
   if(phase==='aim'&&chg)power=clamp((performance.now()-chg.t0-FLIK.CHRG0)/(FLIK.CHRG1-FLIK.CHRG0),0,1);
   else if(phase==='roll'){
@@ -1924,13 +2071,17 @@ focusEl($('play'));
 requestAnimationFrame(loop);
 </script>
 <script>
-// self-update v2: one-time title-screen freshness check, two HEAD requests,
-// a page body is NEVER downloaded. The default-cache HEAD reuses the most
-// recent cached HEAD response for this URL (free within max-age) and yields
-// this copy's validator; the cache-bypassing HEAD reads the host's current
-// validator. They differ => a newer deploy exists and the title screen is
-// on => reload (nothing to lose). Offline/file:// hosts: no request at all,
-// never an error. Hosts without validators: silent. Never re-runs in-page.
+// self-update v3: one-time title-screen freshness check, two HEAD requests,
+// a page body is NEVER downloaded. The baseline is NOT the HTTP cache: Firefox
+// serves a HEAD cached before a deploy forever within max-age, and a reload
+// never evicts it => endless reload loop after an update. Instead the baseline
+// is the last validator THIS browser session saw, kept in sessionStorage; the
+// cached HEAD only stands in for it on the first visit of a session. The
+// no-store HEAD is always the source of truth; on mismatch a newer deploy
+// exists => reload exactly once per session per version (the new validator is
+// stored BEFORE reloading, so the reloaded page compares equal and never
+// loops). Offline/file:// hosts: no request at all, never an error. Hosts
+// without validators: silent. Never re-runs in-page.
 // Versioning: meta[name=version] = <last-edited-date>.<build>; bump the
 // build number whenever the file is edited. window.GAME_VERSION exposes it.
 (function () {
@@ -1940,11 +2091,18 @@ if (typeof fetch !== "function") return;
 if (!/^https?:$/.test(location.protocol)) return;
 if (navigator.onLine === false) return;
 function val(r) { return r.headers.get("etag") || r.headers.get("last-modified") || ""; }
+function seen(v) { try { sessionStorage.setItem("$ver:" + location.href, v); } catch (e) {} }
+function last() { try { return sessionStorage.getItem("$ver:" + location.href) || ""; } catch (e) { return ""; } }
+var base = last();
 fetch(location.href, { method: "HEAD" }).then(function (r) {
-var base = val(r);
+var cached = val(r);
+if (!base && !cached) return; // nothing to compare against
 return fetch(location.href, { method: "HEAD", cache: "no-store" }).then(function (r2) {
 var cur = val(r2);
-if (base && cur && base !== cur) location.reload();
+if (!cur) return;
+var old = base || cached;
+if (cur !== old) { seen(cur); location.reload(); }
+else seen(cur);
 });
 }).catch(function () {});
 })();
