@@ -900,11 +900,16 @@ function stepBall(b,dt){
  // no radius margin (the old -BALL_R*0.3 fudge cut in at center 0.497 — a ball
  // legitimately plowing the left corner pin teleported there, and the old snap
  // then threw it 15cm sideways to the channel center: the f285-286 jump).
- // No snap on entry: the ball keeps its x, lateral motion dies against the
- // channel wall, and it rolls down the channel it fell into.
- if(!b.gutter&&!b.drop&&abs(b.x)>LWH){b.gutter=true;sGutter();b.vx=0}
- if(b.gutter)b.x=clamp(b.x,-LWH-GUTW/2,LWH+GUTW/2);
- if(b.z<PITEDGE){if(!b.drop){b.drop=1;b.y=b.gutter?-0.06:BALL_R;b.vy=0}b.vy-=11*dt;b.y+=b.vy*dt;if(b.y<-0.55){b.dead=true;return}}
+ // Entering the gutter LOSES the ball immediately. A channel ball used to keep
+ // rolling, and the x clamp only capped the OUTER channel edge: the hook term
+ // (b.spin*2.1) then dragged it back from the channel center across the lane,
+ // rendered half-buried at y=-0.06 while collideBallPin kept firing every
+ // substep - a gutter ball mowing pins through the deck plane. On entry every
+ // motion dies (no hook to grab, no advance), the ball sinks into the channel
+ // and is dead below the deck. It never touches a pin.
+ if(b.gutter){b.vy-=11*dt;b.y+=b.vy*dt;if(b.y<-0.55)b.dead=true;return}
+ if(!b.drop&&abs(b.x)>LWH){b.gutter=true;sGutter();b.vx=b.vz=b.spin=0;b.v=0;b.drop=1;b.y=-0.06;b.vy=-0.8;return}
+ if(b.z<PITEDGE){if(!b.drop){b.drop=1;b.y=BALL_R;b.vy=0}b.vy-=11*dt;b.y+=b.vy*dt;if(b.y<-0.55){b.dead=true;return}}
  // a ball that comes back past the foul line (kickback off the pack or pit wall)
  // can never touch pins again, and between there and the camera it would fill
  // the screen as a giant sphere: end it just past the approach instead
@@ -1818,7 +1823,7 @@ function render(){
   draw(M_PIN,m,COL.pin,0,0.25,0.02);
  }
  if(ball&&!ball.dead){
-  const by=ball.drop?ball.y:(ball.gutter?-0.06:BALL_R);
+  const by=ball.drop?ball.y:BALL_R;
   draw(M_SPH,m4mul(m4t(ball.x,by,ball.z),m4mul(ball.rot,m4s(BALL_R,BALL_R,BALL_R))),COL.ball,3,0.8,0);
  }
  if(dbgOn)drawDebug();
@@ -2055,15 +2060,14 @@ function analyzeFlick(P){
 // at (x,z) with velocity (vx,vz) and side spin spinv. predict() and the STEP 3
 // helper demos both run THIS, so a demo curve cannot disagree with physics.
 function shotPath(x,z,vx,vz,spinv,step){
- const pts=[];let gut=false;
+ const pts=[];
  const dt=1/120;
  for(let i=0;i<600;i++){
   const sp=sqrt(vx*vx+vz*vz);
   if(sp>1e-4){vx-=vx/sp*0.55*dt;vz-=vz/sp*0.55*dt}
   vx+=spinv*2.1*grip(z)*dt;
   x+=vx*dt;z+=vz*dt;
-  if(!gut&&abs(x)>LWH){gut=true;vx=0}
-  if(gut)x=clamp(x,-LWH-GUTW/2,LWH+GUTW/2);
+  if(abs(x)>LWH){pts.push([x,z]);break} // gutter: the ball is LOST at the channel, the dotted line stops
   if(z<PITEDGE||sqrt(vx*vx+vz*vz)<0.25)break;
   let hit=false;
   for(const p of pins){
@@ -2205,21 +2209,35 @@ function recApply(i){
  parts=[];
  $('dscrub').value=di;
  $('dtxt').textContent='f '+di+'/'+(rec.length-1)+'  t='+(di/120).toFixed(3)+'s\nball '+(a[6]).toFixed(2)+' m/s   down '+(PC-pinsStanding());
+ if(dbgOn)dbFollow();
 }
-/* free camera: drag=orbit, wheel=zoom, WASD=pan, Q/E=up-down */
+/* free camera: drag=orbit, wheel=zoom, WASD=pan, Q/E=up-down.
+   in step mode the pivot TRACKS the ball (see dbFollow): tx/ty/tz are the
+   pivot, dbOff is the user's pan offset from the followed ball. */
 const dbCam={yaw:0,pitch:0.3,dist:2.5,tx:0,ty:0.3,tz:-18.3};
-let dbk={},dbDrag=null;
+let dbOff={x:0,y:0,z:0},dbk={},dbDrag=null;
+// keep the stepped ball at the orbit pivot: dragging orbits AROUND the ball.
+// Once the ball drops off the deck (pit mouth, gutter sink) or dies it leaves
+// the frame on its own: the camera then HOLDS its last pivot instead of diving
+// after the ball into the pit.
+function dbFollow(){const b=ball;if(!dbgOn||b.drop||b.dead)return;
+ dbCam.tx=b.x+dbOff.x;dbCam.ty=0.2+dbOff.y;dbCam.tz=b.z+dbOff.z;}
 function dbEnter(){
  if(!rec.length)return;
  if(phase==='replay'){repAudStop();RP=null;$('skipbtn').style.display='none'}
- dbgOn=true;dbPlay=false;dbAcc=0;
+ dbgOn=true;dbPlay=false;dbAcc=0;dbOff={x:0,y:0,z:0};
  const dx=camX-lkX,dy=camY-lkY,dz=camZ-lkZ;
  dbCam.dist=max(0.6,sqrt(dx*dx+dy*dy+dz*dz));
  dbCam.yaw=Math.atan2(dx,dz);
  dbCam.pitch=Math.asin(clamp(dy/dbCam.dist,-0.99,0.99));
- dbCam.tx=lkX;dbCam.ty=lkY;dbCam.tz=lkZ;
  $('dbgbtn').style.display='none';$('dbar').style.display='flex';
- recApply(di);
+ // manual step mode ALWAYS starts at frame 0 (the release): the cinematic
+ // replay, the scrubber and a previous dbExit all park di at the throw's END,
+ // so resuming at di showed a settled pile with no throw left to step.
+ // recApply then puts the orbit pivot ON the ball (dbFollow) and every
+ // further step, scrub and play-frame keeps it there until the ball leaves
+ // the deck.
+ recApply(0);
  copyThrow();
 }
 function dbExit(){
@@ -2247,12 +2265,15 @@ async function copyThrow(){
 function dbCamMove(dt){
  const f=dt*(dbCam.dist*1.5+0.6);
  const sy=sin(dbCam.yaw),cy=cos(dbCam.yaw);
- if(dbk.KeyW||dbk.ArrowUp){dbCam.tx+=sy*f;dbCam.tz+=cy*f}
- if(dbk.KeyS||dbk.ArrowDown){dbCam.tx-=sy*f;dbCam.tz-=cy*f}
- if(dbk.KeyD){dbCam.tx+=cy*f;dbCam.tz-=sy*f}
- if(dbk.KeyA){dbCam.tx-=cy*f;dbCam.tz+=sy*f}
- if(dbk.KeyE)dbCam.ty+=f;
- if(dbk.KeyQ)dbCam.ty-=f;
+ // pans move the OFFSET from the followed ball: dbFollow re-derives tx/ty/tz
+ // from ball+dbOff every step, so writing the pivot directly would be erased
+ // on the next frame.
+ if(dbk.KeyW||dbk.ArrowUp){dbOff.x+=sy*f;dbOff.z+=cy*f}
+ if(dbk.KeyS||dbk.ArrowDown){dbOff.x-=sy*f;dbOff.z-=cy*f}
+ if(dbk.KeyD){dbOff.x+=cy*f;dbOff.z-=sy*f}
+ if(dbk.KeyA){dbOff.x-=cy*f;dbOff.z+=sy*f}
+ if(dbk.KeyE)dbOff.y+=f;
+ if(dbk.KeyQ)dbOff.y-=f;
 }
 function dbCamUpdate(){
  const cp=cos(dbCam.pitch);
