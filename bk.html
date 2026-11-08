@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BENCHKIT v1.9.4 — Universal Browser Benchmark & Diagnostics</title>
-<meta name="version" content="2026.11.07.1">
+<title>BENCHKIT v1.10.0 — Universal Browser Benchmark & Diagnostics</title>
+<meta name="version" content="2026.11.08.1">
 <style>
 :root{
 --bg:#0c1218; --bg2:#0f1720; --panel:#131d27; --panel2:#0e1620;
@@ -247,7 +247,7 @@ max-height:none;overflow:visible;color:#000}
 </svg>
 <div><b>BENCH<em>KIT</em></b><small data-i18n="app_subtitle">Universal browser benchmark & diagnostics</small></div>
 </div>
-<span class="ver" id="buildTag">v1.9.4</span>
+<span class="ver" id="buildTag">v1.10.0</span>
 
 <a href="https://1nd1g0.github.io/" target="_blank" class="btn primary" style="padding:6px 12px;font-size:10px;text-decoration:none;" data-i18n="home">Home</a>
 
@@ -299,7 +299,7 @@ max-height:none;overflow:visible;color:#000}
 </select>
 <button class="btn primary" id="btnRunAll" style="padding:12px 22px;font-size:12px" data-i18n="run_bench">▶ Run bench</button>
 <button class="btn bad" id="btnStopAll" disabled data-i18n="stop">■ Stop</button>
-<span style="font:600 11px var(--mono);color:var(--mut);flex:1" id="runStep" data-i18n="idle_tests">idle — 15 tests · multi-pass scores min / avg / max</span>
+<span style="font:600 11px var(--mono);color:var(--mut);flex:1" id="runStep">idle — preparing test list…</span>
 <div class="meter" style="flex:1;min-width:140px"><i id="runMeter" style="background:var(--amber)"></i></div>
 </div>
 <p class="hint" style="margin-top:9px;margin-bottom:0" data-i18n="multi_pass_hint">Multi-pass mode catches leaks & thermal creep: every pass is scored, trends below −15% are flagged, Stop halts between tests without touching recorded results.</p>
@@ -602,8 +602,19 @@ max-height:none;overflow:visible;color:#000}
 <div class="mod" data-t="sensors" style="--ac:var(--blue)">
 <header><span class="code">M-25</span><h3 data-i18n="motion_sensors">Motion sensors</h3><span class="led"></span></header>
 <div class="val"><span data-val>—</span><small>accel</small></div>
+<p class="hint" data-detail data-i18n="motion_hint">Test opens a 3 s window: accelerometer (tilt), gyroscope (rotation), compass (heading). Desktop expects NONE.</p>
 <div class="actions">
 <button class="btn tiny" data-run data-i18n="test">Test</button>
+<button class="btn tiny ok" data-mark="pass" data-i18n="pass">✓</button>
+<button class="btn tiny bad" data-mark="fail" data-i18n="fail">✗</button>
+</div>
+</div>
+<div class="mod" data-t="vibrate" style="--ac:var(--blue)">
+<header><span class="code">M-26</span><h3 data-i18n="vibrate">Haptics · Vibration motor</h3><span class="led"></span></header>
+<div class="val"><span data-val>—</span><small>motor</small></div>
+<p class="hint" data-detail data-i18n="vibrate_hint">1-2-3 buzz pattern via navigator.vibrate. No buzz = no haptics (typical on desktops).</p>
+<div class="actions">
+<button class="btn tiny" data-run data-i18n="buzz">Buzz</button>
 <button class="btn tiny ok" data-mark="pass" data-i18n="pass">✓</button>
 <button class="btn tiny bad" data-mark="fail" data-i18n="fail">✗</button>
 </div>
@@ -614,6 +625,7 @@ max-height:none;overflow:visible;color:#000}
 <div class="mod w7" data-t="tech" style="--ac:var(--blue)">
 <header><span class="code">M-27</span><h3 data-i18n="tech_matrix">Technology matrix (HW/SW aware)</h3><span class="led"></span></header>
 <div id="techGrid" class="actions" style="gap:6px"></div>
+<p class="hint" data-detail data-i18n="tech_hint">Capability matrix: browser features ≠ hardware. HW columns are only as good as the UA string allows.</p>
 <div class="actions" style="margin-top:11px"><button class="btn tiny" id="btnTechRe" data-i18n="re_detect">Re-detect</button></div>
 </div>
 <div class="mod w5" data-t="ports" style="--ac:var(--blue)">
@@ -624,6 +636,7 @@ max-height:none;overflow:visible;color:#000}
 <button class="btn tiny" id="pStorage" data-i18n="storage_quota">Storage quota</button>
 <button class="btn tiny" id="pUsb">USB</button>
 <button class="btn tiny" id="pSerial" data-i18n="serial">Serial</button>
+<button class="btn tiny" id="pSerialLoop" data-i18n="serial_loop">Serial loopback</button>
 <button class="btn tiny" id="pHid">HID</button>
 <button class="btn tiny" id="pBt" data-i18n="bluetooth">Bluetooth</button>
 <button class="btn tiny" id="pMidi">MIDI</button>
@@ -633,14 +646,33 @@ max-height:none;overflow:visible;color:#000}
 </div>
 <div id="probeList" data-i18n="probe_list_hint">USB / Serial / HID list only previously-authorized devices (sandbox). Physical checks need a plug-in test.</div>
 </div>
+<div class="mod" data-t="clipboard" style="--ac:var(--blue)">
+<header><span class="code">M-34</span><h3 data-i18n="clipboard">Clipboard · write → read</h3><span class="led"></span></header>
+<div class="val"><span data-val>—</span><small>round-trip</small></div>
+<p class="hint" data-detail data-i18n="clipboard_hint">Random token written, read back, verified. Needs user gesture / clipboard permission.</p>
+<div class="actions"><button class="btn tiny" data-run data-i18n="run">Run</button></div>
 </div>
-<section class="sec print-hide"><span class="no">10</span><h2 data-i18n="sec_10">Network</h2><div class="rule"></div><span class="tag" data-i18n="state_local">STATE · LOCAL INTERFACES</span></section>
+</div>
+<section class="sec print-hide"><span class="no">10</span><h2 data-i18n="sec_10">Network</h2><div class="rule"></div><span class="tag" data-i18n="state_local">STATE · THROUGHPUT · ICE/NAT</span></section>
 <div class="grid">
 <div class="mod w6" data-t="net" style="--ac:var(--cyan)">
 <header><span class="code">M-31</span><h3 data-i18n="net_status">Network status & interfaces</h3><span class="led"></span></header>
 <div class="val"><span data-val>—</span><small id="netUnit"></small></div>
 <div class="actions"><button class="btn tiny" data-run data-i18n="read">Read</button><button class="btn tiny" id="btnIfProbe" data-i18n="probe_local">Probe local interfaces</button></div>
+<p class="hint" data-detail data-i18n="net_hint">Link type via Network Information API — Chromium only. Throughput and NAT mapping live in M-32 / M-33.</p>
 <div id="netIf" style="font:600 10px var(--mono);color:var(--mut);margin-top:8px;word-break:break-all" data-i18n="local_interfaces_hint">local interfaces: not probed yet</div>
+</div>
+<div class="mod w6" data-t="netSpeed" style="--ac:var(--cyan)">
+<header><span class="code">M-32</span><h3 data-i18n="net_speed">Network · Throughput & RTT</h3><span class="led"></span></header>
+<div class="val"><span data-val>—</span><small>Mbit/s ↓</small></div>
+<p class="hint" data-detail data-i18n="net_speed_hint">25 MB download + 4 RTT probes via Cloudflare edge. Reports h2/h3 — edge path is a lower bound.</p>
+<div class="actions"><button class="btn tiny" data-run data-i18n="run">Run</button></div>
+</div>
+<div class="mod w6" data-t="ice" style="--ac:var(--cyan)">
+<header><span class="code">M-33</span><h3 data-i18n="ice_probe">Network · ICE / NAT mapping</h3><span class="led"></span></header>
+<div class="val"><span data-val>—</span><small>NAT</small></div>
+<p class="hint" data-detail data-i18n="ice_hint">STUN gather across 3 servers: one mapped endpoint ≈ cone NAT, several = symmetric, none = UDP blocked.</p>
+<div class="actions"><button class="btn tiny" data-run data-i18n="run">Run</button></div>
 </div>
 </div>
 <section class="sec" id="sec-report"><span class="no">11</span><h2 data-i18n="sec_11">Bench Report</h2><div class="rule"></div><span class="tag" data-i18n="export_print">EXPORT · PRINT · LOG</span></section>
@@ -714,7 +746,7 @@ max-height:none;overflow:visible;color:#000}
 /* ---------- i18n ---------- */
 const I18N = {
   en: {
-    app_title: "BENCHKIT v1.9.4 — Universal Browser Benchmark & Diagnostics",
+    app_title: "BENCHKIT v1.10.0 — Universal Browser Benchmark & Diagnostics",
     app_subtitle: "Universal browser benchmark & diagnostics",
     home: "Home", ticket: "Ticket #", model: "Model / Serial", tech: "Technician",
     pwr: "PWR", net: "NET", batt: "BATT",
@@ -724,13 +756,13 @@ const I18N = {
     ctrl: "Automated intake bench", bench_passes: "Bench passes",
     "1_pass": "1 pass", "3_passes": "3 passes", "5_passes": "5 passes", "10_passes": "10 passes", "inf_passes": "∞ until stop",
     run_bench: "▶ Run bench", stop: "■ Stop",
-    idle_tests: "idle — 15 tests · multi-pass scores min / avg / max",
+    idle_tests: "idle — {n} tests · multi-pass scores min / avg / max",
     multi_pass_hint: "Multi-pass mode catches leaks & thermal creep: every pass is scored, trends below −15% are flagged, Stop halts between tests without touching recorded results.",
     sec_01: "Compute & RAM", warmup_gap: "WARM-UP → STABILIZED WINDOW · GAP-FREE LOOPS",
     cpu_single: "CPU · Single-core int", cpu_multi: "CPU · Multi-core", cpu_float: "CPU · FP math",
     mem_bw: "Memory · Bandwidth", mem_lat: "RAM · Random latency", mem_check: "RAM · Pattern check", run: "Run",
     errors: "errors",
-    cpu_single_hint: "200 ms untimed warm-up, then a 900 ms pinned-core window.",
+    cpu_single_hint: "200 ms untimed warm-up, then a 900 ms single-worker window.",
     cpu_multi_hint: "Warm-up burst, then one busy worker per logical core for 1.3 s.",
     cpu_float_hint: "FP64 sqrt + sin throughput after a warm-up pass.",
     mem_bw_hint: "Untimed warm copy, then timed 64 MB copies.",
@@ -776,14 +808,17 @@ const I18N = {
     no_gamepad: "No gamepad yet — plug one in and press a button.",
     sec_08: "Audio / Visual", per_device: "PER-DEVICE SELECTORS · RECORD → REPLAY",
     speakers_sweep: "Speakers · sweep", mic_meter: "Microphone · meter + record",
-    camera_preview: "Camera · preview + record", motion_sensors: "Motion sensors", test: "Test",
+    camera_preview: "Camera · preview + record", motion_sensors: "Motion sensors + compass", test: "Test",
+    motion_hint: "Test opens a 3 s window: accelerometer (tilt), gyroscope (rotation), compass (heading). Desktop expects NONE.",
+    net_hint: "Link type via Network Information API — Chromium only. Throughput and NAT mapping live in M-32 / M-33.",
+    tech_hint: "Capability matrix: browser features ≠ hardware. HW columns are only as good as the UA string allows.",
     sweep_l: "Sweep L", both: "Both", sweep_r: "Sweep R", meter: "Meter", record: "● Record", replay: "Replay", idle: "idle", live: "Live",
     sec_09: "Interfaces, Ports & Technologies", hw_sw_diff: "HW/SW DIFFERENTIATION",
     tech_matrix: "Technology matrix (HW/SW aware)", deep_port: "Deep port probe",
     media_devices: "Media devices", gamepads: "Gamepads", storage_quota: "Storage quota", serial: "Serial", bluetooth: "Bluetooth",
     ports_ok: "✓ Ports OK", ports_fail: "✗ Ports fail",
     probe_list_hint: "USB / Serial / HID list only previously-authorized devices (sandbox). Physical checks need a plug-in test.",
-    sec_10: "Network", state_local: "STATE · LOCAL INTERFACES",
+    sec_10: "Network", state_local: "STATE · THROUGHPUT · ICE / NAT",
     net_status: "Network status & interfaces", read: "Read", probe_local: "Probe local interfaces",
     local_interfaces_hint: "local interfaces: not probed yet",
     sec_11: "Bench Report", export_print: "EXPORT · PRINT · LOG",
@@ -793,13 +828,22 @@ const I18N = {
     export_settings: "Export Settings", import_settings: "Import Settings", language: "Language",
     no_tests_yet: "No tests recorded yet.", notes_ph: "Findings, parts required, customer-visible condition…",
     unit: "Unit", event_log_full: "Event log (full)",
-    footer_1: "BENCHKIT · single-file diagnostics · no network calls · no dependencies",
+    footer_1: "BENCHKIT · single-file diagnostics · zero dependencies",
     footer_2: "SCREENING TOOL — VERIFY FAILURES WITH NATIVE TESTERS",
     pix_tip: "click = next pattern · esc = exit", exit: "EXIT",
-    clear: "CLEAR", touch_hint: "drag everywhere — trace borders & corners · ESC exits"
+    clear: "CLEAR", touch_hint: "drag everywhere — trace borders & corners · ESC exits",
+    vibrate: "Haptics · Vibration motor", buzz: "Buzz",
+    vibrate_hint: "1-2-3 buzz pattern via navigator.vibrate. No buzz = no haptics (typical on desktops).",
+    serial_loop: "Serial loopback",
+    clipboard: "Clipboard · write → read",
+    clipboard_hint: "Random token written, read back, verified. Needs user gesture / clipboard permission.",
+    net_speed: "Network · Throughput & RTT",
+    net_speed_hint: "25 MB download + 4 RTT probes via Cloudflare edge. Reports h2/h3 — edge path is a lower bound.",
+    ice_probe: "Network · ICE / NAT mapping",
+    ice_hint: "STUN gather across 3 servers: one mapped endpoint ≈ cone NAT, several = symmetric, none = UDP blocked."
   },
   ru: {
-    app_title: "1nd1g0 Benchmark v1.9.4 — набор диагностических инструментов",
+    app_title: "1nd1g0 Benchmark v1.10.0 — набор диагностических инструментов",
     app_subtitle: "Творческий способ спалить устройство браузером",
     home: "Главная", ticket: "Заявка #", model: "Модель / Серийный №", tech: "Специалист",
     pwr: "Б/П", net: "СЕТЬ", batt: "БАТ",
@@ -809,13 +853,13 @@ const I18N = {
     ctrl: "Автоматический тест", bench_passes: "Кол-во повторов",
     "1_pass": "1 проход", "3_passes": "3 прохода", "5_passes": "5 проходов", "10_passes": "10 проходов", "inf_passes": "∞ до остановки",
     run_bench: "▶ Запустить тест", stop: "■ Стоп",
-    idle_tests: "ожидание — 15 тестов · мин / сред / макс",
+    idle_tests: "ожидание — {n} тестов · мин / сред / макс",
     multi_pass_hint: "Многопроходный режим выявляет нестабильность: каждый проход оценивается, падения ниже −15% отмечаются. Стоп останавливает между тестами, сохраняя результаты.",
     sec_01: "Вычисления и ОЗУ", warmup_gap: "РАЗОГРЕВ → СТАБИЛЬНОЕ ОКНО · НЕПРЕРЫВНЫЕ ЦИКЛЫ",
     cpu_single: "CPU · Однопоточный целые", cpu_multi: "CPU · Многопоточный целые", cpu_float: "CPU · дробные",
     mem_bw: "Память · Пропускная способность", mem_lat: "ОЗУ · задержки", mem_check: "ОЗУ · проверка ячеек", run: "Запуск",
     errors: "ошибки",
-    cpu_single_hint: "200 мс разогрев, затем 900 мс на одном ядре.",
+    cpu_single_hint: "200 мс разогрев, затем 900 мс одним потоком.",
     cpu_multi_hint: "Разогрев, затем по одному воркеру на логическое ядро на 1.3 с.",
     cpu_float_hint: "Пропускная способность FP64 sqrt + sin после разогрева.",
     mem_bw_hint: "Копирование 64 МБ после разогрева.",
@@ -861,14 +905,17 @@ const I18N = {
     no_gamepad: "Геймпад не найден — подключите и нажмите кнопку.",
     sec_08: "Аудио / Видео", per_device: "ВЫБОР УСТРОЙСТВ · ЗАПИСЬ → ВОСПРОИЗВЕДЕНИЕ",
     speakers_sweep: "Динамики · диапазон", mic_meter: "Микрофон · индикатор + запись",
-    camera_preview: "Камера · предпросмотр + запись", motion_sensors: "Датчики движения", test: "Тест",
+    camera_preview: "Камера · предпросмотр + запись", motion_sensors: "Датчики движения + компас", test: "Тест",
+    motion_hint: "«Тест» открывает окно 3 с: акселерометр (наклон), гироскоп (вращение), компас (азимут). На десктопе ожидается NONE.",
+    net_hint: "Тип канала через Network Information API — только Chromium. Скорость и NAT — в M-32 / M-33.",
+    tech_hint: "Матрица возможностей: возможности браузера ≠ железо. HW-колонки ограничены тем, что отдаёт UA-строка.",
     sweep_l: "Левый канал", both: "Оба", sweep_r: "Правый канал", meter: "Индикатор", record: "● Запись", replay: "Воспр.", idle: "ожидание", live: "Вживую",
     sec_09: "Интерфейсы, Порты и Технологии", hw_sw_diff: "РАЗДЕЛЕНИЕ HW/SW",
     tech_matrix: "Матрица технологий (HW/SW)", deep_port: "Глубокая проверка портов",
     media_devices: "Медиа устройства", gamepads: "Геймпады", storage_quota: "Квота хранилища", serial: "COM/RS232", bluetooth: "Bluetooth",
     ports_ok: "✓ Порты ОК", ports_fail: "✗ Порты отказ",
     probe_list_hint: "USB / Serial / HID показывают только ранее авторизованные устройства (песочница). Физические проверки требуют подключения.",
-    sec_10: "Сеть", state_local: "СОСТОЯНИЕ · ЛОКАЛЬНЫЕ ИНТЕРФЕЙСЫ",
+    sec_10: "Сеть", state_local: "СОСТОЯНИЕ · СКОРОСТЬ · ICE/NAT",
     net_status: "Статус сети и интерфейсы", read: "Считать", probe_local: "Проверить локальные интерфейсы",
     local_interfaces_hint: "локальные интерфейсы: еще не проверены",
     sec_11: "Отчет о тесте", export_print: "ЭКСПОРТ · ПЕЧАТЬ · ЛОГ",
@@ -881,7 +928,16 @@ const I18N = {
     footer_1: "1nd1g0 benchmark - тестируем оборудование браузером",
     footer_2: "ВОЗМОЖНОСТИ БРАУЗЕРА ОГРАНИЧЕНЫ, ДОПОЛНЯЙТЕ ДРУГИМИ ИНСТРУМЕНТАМИ",
     pix_tip: "клик = след. паттерн · esc = выход", exit: "ВЫХОД",
-    clear: "ОЧИСТИТЬ", touch_hint: "водите по экрану — особено краям и углам · ESC для выхода"
+    clear: "ОЧИСТИТЬ", touch_hint: "водите по экрану — особено краям и углам · ESC для выхода",
+    vibrate: "Вибромотор", buzz: "Вибрировать",
+    vibrate_hint: "Паттерн 1-2-3 через navigator.vibrate. Нет вибрации = нет вибромотора (типично для ПК).",
+    serial_loop: "Петля Serial",
+    clipboard: "Буфер обмена · запись → чтение",
+    clipboard_hint: "Случайный токен: запись → чтение → сверка. Нужен жест пользователя / разрешение.",
+    net_speed: "Сеть · Скорость и RTT",
+    net_speed_hint: "25 МБ загрузка + 4 RTT-зонда через Cloudflare. h2/h3 в отчёте — нижняя граница скорости.",
+    ice_probe: "Сеть · ICE / NAT",
+    ice_hint: "STUN через 3 сервера: один внешний адрес ≈ cone NAT, разные = symmetric, нет = UDP закрыт."
   }
 };
 
@@ -892,6 +948,7 @@ function applyTranslations() {
     const key = el.getAttribute('data-i18n');
     const translated = t(key);
     if (!translated) return;
+    if (el.hasAttribute('data-detail') && el.dataset.live) return;
     const tag = el.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA') {
       if (el.hasAttribute('data-i18n-ph')) el.placeholder = t(el.getAttribute('data-i18n-ph'));
@@ -914,6 +971,7 @@ function applyTranslations() {
       }
     }
   });
+  document.documentElement.lang = currentLang;
   document.title = t('app_title');
 }
 function initLang() {
@@ -932,11 +990,13 @@ function initLang() {
   const sel = document.getElementById('langSel');
   if (sel) sel.value = currentLang;
   applyTranslations();
+  idleStep();
 }
 
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const fmt=(x,d=0)=>Number(x).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+const escH=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function fmtAuto(x){if(!isFinite(x))return"—";const a=Math.abs(x);
 if(a>=100)return fmt(x,0);if(a>=10)return fmt(x,1);return fmt(x,2);}
 const hms=s=>{if(!isFinite(s))return"—";s=Math.round(s);return Math.floor(s/60)+":"+(s%60+"").padStart(2,"0")};
@@ -958,7 +1018,7 @@ const logBox=$("#logBox");
 function log(lv,msg){
 if(!logBox)return;
 const d=document.createElement("div");
-d.innerHTML=`<span class="t">${new Date().toTimeString().slice(0,8)}</span> <span class="${lv}">[${lv}]</span> ${msg}`;
+d.innerHTML=`<span class="t">${new Date().toTimeString().slice(0,8)}</span> <span class="${lv}">[${lv}]</span> ${escH(msg)}`;
 logBox.appendChild(d); logBox.scrollTop=logBox.scrollHeight;
 while(logBox.children.length>400)logBox.firstChild.remove();
 }
@@ -966,6 +1026,8 @@ window.addEventListener("error",e=>{try{log("FAIL","JS error: "+e.message+" @lin
 window.addEventListener("unhandledrejection",e=>{try{log("FAIL","Unhandled promise: "+((e.reason&&e.reason.message)||e.reason))}catch(x){}});
 function on(sel,ev,fn){const el=typeof sel==="string"?$(sel):sel;
 if(el)el.addEventListener(ev,fn);else log("WARN","Binder: missing element "+sel);return el;}
+function onOnce(sel,ev,fn){onOnce.s=onOnce.s||new Set();const k=sel+":"+ev;
+if(onOnce.s.has(k))return;onOnce.s.add(k);on(sel,ev,fn);}
 function setTxt(id,v){const e=$("#"+id);if(e)e.textContent=v;}
 function setProg(p){const a=$("#runMeter"),b=$("#runFill");
 if(a)a.style.width=p;if(b)b.style.width=p;}
@@ -1027,7 +1089,7 @@ var p=0;for(var w=0;w<n*2;w++)p=arr[p];
 var hops=8000000,t1=performance.now();
 for(var h=0;h<hops;h++)p=arr[p];
 var ms2=performance.now()-t1;
-postMessage({cmd:'memlat',ns:(ms2*1e6)/hops,hops:hops,p:p});}
+postMessage({cmd:'memlat',ns:(ms2*1e6)/hops,hops:hops,p:p,bytes:n*4});}
 else if(d.cmd==='memcheck'){var size3=1<<25,U=new Uint32Array(size3/4),errs=0,t0c=performance.now();
 var pats=[0,4294967295,2863311530,1431655765];
 for(var q=0;q<pats.length;q++){U.fill(pats[q]);for(var v=0;v<U.length;v++){if(U[v]!==pats[q])errs++;}}
@@ -1097,7 +1159,7 @@ let idx=0;for(let f=0;f<n;f++){arr[f]=idx;idx=(idx+step)&(n-1);}
 let p=0;for(let w=0;w<n*2;w++)p=arr[p];
 const hops=4000000,t0=performance.now();
 for(let h=0;h<hops;h++)p=arr[p];
-const ms=performance.now()-t0;return {ns:(ms*1e6)/hops,hops,p};}
+const ms=performance.now()-t0;return {ns:(ms*1e6)/hops,hops,p,bytes:n*4};}
 function mtMemCheck(){const size=1<<23,U=new Uint32Array(size/4);let errs=0;const t0=performance.now();
 const pats=[0,4294967295,2863311530,1431655765];
 for(let q=0;q<pats.length;q++){U.fill(pats[q]);for(let v=0;v<U.length;v++){if(U[v]!==pats[q])errs++;}}
@@ -1116,8 +1178,9 @@ const TESTS=[
 ["battery","Battery · Health/state"],
 ["display","Display · Panel suite"],
 ["keyboard","Keyboard · Matrix"],["pointer","Pointer · Mouse/TP/gestures"],["gamepad","Gamepad · controllers"],["touch","Touch · digitizer trails"],
-["audio","Speakers · Sweep"],["mic","Microphone · meter+record"],["camera","Camera · preview+record"],["sensors","Sensors · Motion"],
-["tech","Interfaces · technologies HW/SW"],["ports","Ports · deep probe"],["net","Network · status/interfaces"]];
+["audio","Speakers · Sweep"],["mic","Microphone · meter+record"],["camera","Camera · preview+record"],["sensors","Sensors · Motion + compass"],["vibrate","Haptics · Vibration motor"],
+["tech","Interfaces · technologies HW/SW"],["ports","Ports · deep probe"],["clipboard","Clipboard · write→read"],
+["net","Network · status/interfaces"],["netSpeed","Network · throughput/RTT"],["ice","Network · ICE/NAT mapping"]];
 const CARD={};$$("[data-t]").forEach(c=>{const id=c.dataset.t;
 CARD[id]={el:c,led:c.querySelector(".led"),val:c.querySelector("[data-val]"),det:c.querySelector("[data-detail]")};});
 const R={};
@@ -1133,14 +1196,14 @@ c.el.classList.remove("s-ok","s-warn","s-bad","s-info");
 if(pair[0])c.el.classList.add(pair[0]);
 if(c.led)c.led.className="led "+(pair[1]||"");
 if(val!=null&&c.val)c.val.textContent=val;
-if(detail&&c.det)c.det.textContent=detail;
+if(detail&&c.det){c.det.textContent=detail;c.det.dataset.live="1";}
 renderReport(); saveSession();
 if(!quiet){const n=(TESTS.find(t=>t[0]===id)||["",id])[1];
 log(st==="pass"?"OK":st==="fail"?"FAIL":st==="warn"?"WARN":"INFO",n+" → "+(val!=null?val:st));}
 }
 function liveVal(id,val,detail){const c=CARD[id];if(!c)return;
 if(val!=null&&c.val)c.val.textContent=val;
-if(detail&&c.det)c.det.textContent=detail;}
+if(detail&&c.det){c.det.textContent=detail;c.det.dataset.live="1";}}
 function markRunning(id){const c=CARD[id];if(!c)return;
 R[id]={st:"run",val:"…",detail:"Running…",ts:Date.now()};
 c.el.classList.remove("s-ok","s-warn","s-bad","s-info");
@@ -1289,7 +1352,7 @@ const el=(performance.now()-t0)/1000;
 if(fallback||total===0){const s=mtInt(500).ops/500/1e6;
 setStatus("cpuMulti","warn",fmt(s*cores*0.85,2),"Workers unavailable — estimated single-core × "+cores+" × 0.85.");return;}
 const gops=total/el/1e9;
-setStatus("cpuMulti","info",fmt(gops,2),cores+" logical cores pinned · "+fmt(total/1e9,2)+" Gops · BK-pts "+fmt(gops*1000));};
+setStatus("cpuMulti","info",fmt(gops,2),cores+" busy workers (web workers have no core affinity) · "+fmt(total/1e9,2)+" Gops · BK-pts "+fmt(gops*1000));};
 RUN.cpuFloat=async()=>{markRunning("cpuFloat");
 await wTask("float",200);
 const r=await wTask("float",1000)||mtFloat(1000);
@@ -1302,7 +1365,7 @@ setStatus("memBW",st,fmt(r.gbps,2),"64 MB copies after warm pass · "+fmt(r.ms)+
 RUN.memLat=async()=>{markRunning("memLat");
 const r=await wTask("memlat",0)||mtMemLat();
 const st=r.ns<=90?"pass":r.ns<=140?"warn":"fail";
-setStatus("memLat",st,fmt(r.ns,1),fmt(r.hops)+" random hops over 8 MB · typical DDR4 ≈ 70–110 ns.");};
+setStatus("memLat",st,fmt(r.ns,1),fmt(r.hops)+" random hops across "+fmt((r.bytes||1)/1048576,0)+" MiB cycle · typical DRAM ≈ 70–110 ns/hop. High RAM latency blunts pointer & UI responsiveness (see M-12).");};
 RUN.memCheck=async()=>{markRunning("memCheck");
 const r=await wTask("memcheck",0)||mtMemCheck();
 const st=r.errors===0?"pass":"fail";
@@ -1396,15 +1459,15 @@ it++;}
 const el=(performance.now()-t0)/1000,gf=2*n*n*n*it/el/1e9;
 setStatus("gpuAI","warn",fmt(gf,2),"No WebGPU ("+(e.message||"unavailable")+") — CPU FP32 fallback, "+fmt(it)+" matmuls.");}};
 /* ---------- codecs ---------- */
+function decodeCap(mime,label){return withTimeout(navigator.mediaCapabilities.decodingInfo({type:"file",
+video:{contentType:mime,width:3840,height:2160,bitrate:40e6,framerate:60}}),6000,label);}
 async function probeCodecCaps(){
 const box=$("#codecCaps");if(!box)return;box.innerHTML="";
 const list=[["H.264",'video/mp4; codecs="avc1.640033"'],["HEVC",'video/mp4; codecs="hev1.1.6.L150.90"'],
 ["VP9",'video/webm; codecs="vp09.00.50.08"'],["AV1",'video/mp4; codecs="av01.0.12M.08"']];
 for(const [name,mime] of list){
 let sup=false,smooth=false,pw=false;
-try{if(navigator.mediaCapabilities){
-const r=await withTimeout(navigator.mediaCapabilities.decodingInfo({type:"file",
-video:{contentType:mime,width:3840,height:2160,bitrate:40e6,framerate:60}}),6000,"codec capability probe");
+try{if(navigator.mediaCapabilities){const r=await decodeCap(mime,"codec capability probe");
 sup=!!r.supported;smooth=!!r.smooth;pw=!!r.powerEfficient;}}catch(e){}
 const s=document.createElement("span");s.className="cchip";
 s.innerHTML=`<b>${name}</b> 4K60: <span class="${sup?"y":"n"}">${sup?"✓":"✗"}</span>`+
@@ -1517,7 +1580,11 @@ const s=deltas.slice(10).sort((a,b)=>a-b);
 const med=s[Math.floor(s.length/2)]||16.7;
 const hz=1000/med;
 const st=hz>=58?"pass":hz>=50?"warn":"fail";
-setStatus("refresh",st,fmt(hz,1),"median frame "+fmt(med,2)+" ms over "+s.length+" stabilized frames."+(hz>63?" High-refresh panel detected.":""));
+let disp="";
+try{const g=matchMedia("(color-gamut: rec2020)").matches?"rec2020":matchMedia("(color-gamut: p3)").matches?"display-P3":"sRGB";
+const dr=matchMedia("(dynamic-range: high)");
+disp=" · colour "+g+(dr.media&&dr.media!==""?" · HDR "+(dr.matches?"flagged by CSS":"not flagged"):" · HDR query unsupported");}catch(e){}
+setStatus("refresh",st,fmt(hz,1),"median frame "+fmt(med,2)+" ms over "+s.length+" stabilized frames."+(hz>63?" High-refresh panel detected.":"")+disp);
 res();});});
 const lat=[];
 on("#latPad","pointerdown",()=>{
@@ -1742,9 +1809,13 @@ req.onerror=()=>res(setStatus("storageIDB","warn","—","Could not open test dat
 req.onsuccess=e=>{const db=e.target.result,chunk=new Uint8Array(1<<20);chunk.fill(197);
 const t0=performance.now();const tx=db.transaction("s","readwrite");
 for(let i=0;i<MB;i++)tx.objectStore("s").put(chunk,i);
+const failTx=ev=>{const nm=(ev&&ev.target&&ev.target.error&&ev.target.error.name)||"aborted";try{db.close()}catch(x){}
+setStatus("storageIDB","fail","ERROR","Transaction failed: "+nm);res();};
+tx.onabort=failTx;tx.onerror=failTx;
 tx.oncomplete=()=>{const wMs=performance.now()-t0;
 const t1=performance.now();const rx=db.transaction("s","readonly");
 rx.objectStore("s").openCursor().onsuccess=ev=>{const c=ev.target.result;if(c)c.continue()};
+rx.onabort=failTx;rx.onerror=failTx;
 rx.oncomplete=()=>{const rMs=performance.now()-t1;
 const w=MB/(wMs/1000),r=MB/(rMs/1000);
 db.close();indexedDB.deleteDatabase(name);
@@ -1786,11 +1857,17 @@ setTxt("bHealth","n/a");const bh2=$("#bHealth");if(bh2)bh2.className="v";
 setStatus("battery","info",lvl+"%","Capacity counters not exposed — use powercfg /batteryreport.",q);}}
 RUN.battery=async()=>{markRunning("battery");
 if(!navigator.getBattery)return setStatus("battery","info","MANUAL","Battery API unavailable in this browser.");
-const b=await navigator.getBattery();
+let b=null;try{b=await navigator.getBattery();}catch(e){return setStatus("battery","info","MANUAL","getBattery() rejected: "+(e&&e.message||e));}
+if(!b)return setStatus("battery","info","MANUAL","BatteryManager not returned.");
 if(!batSubbed){batSubbed=true;
 ["chargingchange","levelchange","chargingtimechange","dischargingtimechange"]
 .forEach(ev=>b.addEventListener(ev,()=>batUI(b)));}
 batUI(b);};
+function batWatch(){if(batSubbed||!navigator.getBattery)return;
+try{const p=navigator.getBattery();if(!p)return;
+Promise.resolve(p).then(b=>{if(!b||batSubbed)return;batSubbed=true;
+["chargingchange","levelchange","chargingtimechange","dischargingtimechange"]
+.forEach(ev=>b.addEventListener(ev,()=>batUI(b)));batUI(b);}).catch(()=>{});}catch(e){}}
 /* ---------- network (rebuilt honest) ---------- */
 function netUI(force){
 const c=navigator.connection,online=navigator.onLine;
@@ -1820,18 +1897,86 @@ pc.createOffer().then(o=>pc.setLocalDescription(o)).catch(e=>{log("FAIL","Offer 
 setTimeout(fin,3000);
 }catch(e){log("FAIL","Interface probe failed: "+e.message);}}
 on("#btnIfProbe","click",probeInterfaces);
+RUN.netSpeed=async()=>{markRunning("netSpeed");
+if(!navigator.onLine)return setStatus("netSpeed","fail","OFFLINE","navigator.onLine = false — no live link.");
+const rtts=[];
+for(let i=0;i<4;i++){try{const t0=performance.now();
+await fetch("https://speed.cloudflare.com/__down?bytes=0&_="+Date.now(),{cache:"no-store"});
+rtts.push(performance.now()-t0);}catch(e){}}
+if(!rtts.length)return setStatus("netSpeed","fail","PROBE FAILED","All RTT probes failed — outbound HTTPS blocked by network or extension?");
+let dl=null,hop="?";
+try{const t0=performance.now();let first=0,bytes=0;
+const resp=await fetch("https://speed.cloudflare.com/__down?bytes=25000000&_="+Date.now(),{cache:"no-store"});
+const rd=resp.body.getReader();
+while(true){const {value,done}=await rd.read();if(done)break;
+if(!first)first=performance.now()-t0;bytes+=value.byteLength;
+if(performance.now()-t0>8000){try{rd.cancel()}catch(e){}break;}}
+dl={bytes,first,el:performance.now()-t0};
+const en=performance.getEntriesByType("resource");
+for(let i=en.length-1;i>=0;i--)if(en[i].name.indexOf("__down")>=0&&en[i].nextHopProtocol){hop=en[i].nextHopProtocol;break;}}
+catch(e){return setStatus("netSpeed","fail","PROBE FAILED","Download probe failed (extension/privacy block?): "+(e&&e.message||e));}
+const srt=rtts.slice().sort((a,b)=>a-b),med=srt[srt.length>>1],jit=srt[srt.length-1]-srt[0];
+const mbps=dl.bytes*8/(dl.el/1000)/1e6;
+const st=mbps>=50?"pass":mbps>=10?"warn":"fail";
+setStatus("netSpeed",st,fmt(mbps,1),"down "+fmt(dl.bytes/1048576,1)+" MiB in "+fmt(dl.el/1000,2)+" s (TTFB "+fmt(dl.first,0)+" ms; 8 s cap — treat as lower bound on fast links) · RTT med "+fmt(med,1)+" ms, jitter "+fmt(jit,1)+" ms · "+hop);};
+RUN.ice=async()=>{markRunning("ice");
+if(typeof RTCPeerConnection==="undefined")return setStatus("ice","info","N/A","WebRTC unavailable in this browser.");
+const eps=new Set();let hostOnly=0,done=false;
+await new Promise(rz=>{try{
+const pc=new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"},{urls:"stun:global.stun.twilio.com:3478"}]});
+pc.createDataChannel("");
+const fin=()=>{if(done)return;done=true;try{pc.close()}catch(e){}rz();};
+pc.onicecandidate=e=>{if(!e.candidate)return;
+const parts=(e.candidate.candidate||"").split(" "),ti=parts.indexOf("typ"),typ=ti>=0?parts[ti+1]:"";
+if(typ==="srflx")eps.add(parts[4]+":"+parts[5]);else if(typ==="host")hostOnly++;};
+pc.createOffer().then(o=>pc.setLocalDescription(o)).catch(fin);
+setTimeout(fin,6000);}catch(e){rz();}});
+if(!eps.size)return setStatus("ice",hostOnly?"warn":"fail",hostOnly?"UDP BLOCKED":"NO SRFLX",
+hostOnly?"Only host candidates — server-reflexive gathering blocked: UDP/firewall will kill WebRTC peer-to-peer.":"No ICE candidates gathered at all — UDP or STUN servers blocked.");
+const uniq=[...eps];
+if(uniq.length===1)return setStatus("ice","pass","CONE","One mapped endpoint ("+uniq[0]+") across 3 STUN servers — cone NAT, WebRTC-friendly.");
+setStatus("ice","warn","SYMMETRIC?",uniq.length+" different mapped endpoints ("+uniq.join(" · ")+") — per-destination mapping; expect to need a TURN relay.");};
 addEventListener("online",()=>netUI(true));addEventListener("offline",()=>netUI(true));
 try{if(navigator.connection&&navigator.connection.addEventListener)navigator.connection.addEventListener("change",()=>netUI(false));}catch(e){}
 /* ---------- sensors ---------- */
-RUN.sensors=()=>new Promise(res=>{markRunning("sensors");
-let settled=false;
-const finish=()=>{if(settled)return;settled=true;removeEventListener("devicemotion",onm);res();};
+RUN.sensors=async()=>{markRunning("sensors");
+if(window.DeviceMotionEvent&&typeof DeviceMotionEvent.requestPermission==="function"){
+try{const p=await DeviceMotionEvent.requestPermission();
+if(p!=="granted")return setStatus("sensors","info","NO PERMISSION","Motion permission: "+p+" — press Run again after granting.");}catch(e){}}
+if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==="function"){try{await DeviceOrientationEvent.requestPermission();}catch(e){}}
+await new Promise(res=>{let settled=false,accel=null,gyro=null,compass=null;
 const onm=e=>{const a=e.accelerationIncludingGravity;
-if(a&&a.x!=null){setStatus("sensors","pass","OK",fmt(a.x,2)+", "+fmt(a.y,2)+", "+fmt(a.z,2)+" m/s² — motion sensor live.");finish();}};
-addEventListener("devicemotion",onm);
-setTimeout(()=>{if(!settled){setStatus("sensors","info","NONE","No accelerometer events in 2.5 s — normal for desktops.");finish();}},2500);
-if(window.DeviceMotionEvent&&DeviceMotionEvent.requestPermission)DeviceMotionEvent.requestPermission().catch(()=>{});
-liveVal("sensors","…","Listening — tilt the unit…");});
+if(a&&(a.x!=null||a.y!=null||a.z!=null))accel=fmt(a.x||0,2)+", "+fmt(a.y||0,2)+", "+fmt(a.z||0,2)+" m/s²";
+const r=e.rotationRate;
+if(r&&(r.alpha!=null||r.gamma!=null||r.beta!=null))gyro="α "+fmt(r.alpha||0,1)+" γ "+fmt(r.gamma||0,1)+" β "+fmt(r.beta||0,1)+" rad/s";};
+const ono=e=>{if(e.webkitCompassHeading!=null)compass=e.webkitCompassHeading;else if(e.alpha!=null)compass=360-e.alpha;};
+addEventListener("devicemotion",onm);addEventListener("deviceorientation",ono);
+const finish=()=>{if(settled)return;settled=true;
+removeEventListener("devicemotion",onm);removeEventListener("deviceorientation",ono);
+const parts=[];if(accel)parts.push("accel "+accel);if(gyro)parts.push("gyro "+gyro);
+if(compass!=null)parts.push("compass bearing "+fmt(compass,0)+"°");
+if(accel&&compass!=null)setStatus("sensors","pass","ACCEL+COMPASS",parts.join(" · "));
+else if(accel)setStatus("sensors","pass","OK",parts.join(" · "));
+else if(compass!=null)setStatus("sensors","warn","COMPASS ONLY","Magnetometer live, accelerometer silent — motion sensor suspect. "+parts.join(" · "));
+else setStatus("sensors","info","NONE","No motion/compass events in 3 s — normal on desktops; on iOS grant motion access, then Run again.");
+res();};
+liveVal("sensors","…","Listening — tilt / rotate the unit…");
+setTimeout(finish,3000);});};
+/* ---------- haptics ---------- */
+RUN.vibrate=async()=>{markRunning("vibrate");
+if(!navigator.vibrate)return setStatus("vibrate","info","N/A","navigator.vibrate not exposed (typical desktop) — verify with a native tester.");
+const ok=navigator.vibrate([180,80,180,80,320]);
+if(!ok)return setStatus("vibrate","warn","REFUSED","vibrate() returned false — refused without user gesture; use the Buzz button.");
+setStatus("vibrate","info","BUZZED","Pattern 1-2-3 sent — PASS only if physically felt. Sign off ✓/✗.",true);};
+/* ---------- clipboard round-trip ---------- */
+RUN.clipboard=async()=>{markRunning("clipboard");
+if(!navigator.clipboard||!navigator.clipboard.writeText)return setStatus("clipboard","info","N/A","Async Clipboard API not exposed.");
+const tok="bk-"+Math.random().toString(36).slice(2,10);
+try{await navigator.clipboard.writeText(tok);}catch(e){return setStatus("clipboard","warn","WRITE BLOCKED","writeText refused: "+(e&&e.name||e)+" — needs user gesture or site clipboard permission.");}
+try{const txt=await navigator.clipboard.readText();
+if(txt===tok)setStatus("clipboard","pass","OK","Random token written and read back intact — clipboard path verified.");
+else setStatus("clipboard","fail","MISMATCH","Read-back differs from token (clipboard hijack or intercepting extension).");}
+catch(e){setStatus("clipboard","warn","WRITE OK / READ BLOCKED","writeText succeeded, readText refused: "+(e&&e.name||e)+" — clipboard-read permission not granted.");}};
 /* ---------- keyboard matrix ---------- */
 const LBL=c=>{if(c.startsWith("Key"))return c.slice(3);if(c.startsWith("Digit"))return c.slice(5);
 if(c.startsWith("Numpad")&&c.length===7)return c.slice(6);
@@ -2369,9 +2514,7 @@ const list=[["H.264",'video/mp4; codecs="avc1.640033"',"avc1.42001f"],
 ["AV1",'video/mp4; codecs="av01.0.12M.08"',"av01.0.04M.08"]];
 for(const [name,mime,encCodec] of list){
 let dec="?",enc="—";
-try{if(navigator.mediaCapabilities){
-const r=await withTimeout(navigator.mediaCapabilities.decodingInfo({type:"file",
-video:{contentType:mime,width:3840,height:2160,bitrate:40e6,framerate:60}}),6000,"decode probe");
+try{if(navigator.mediaCapabilities){const r=await decodeCap(mime,"decode probe");
 dec=r.supported?(r.powerEfficient?"HW ✓":"SW ✓"):"✗";}}catch(e){dec="?";}
 if(typeof VideoEncoder!=="undefined"&&encCodec){
 try{const s=await withTimeout(VideoEncoder.isConfigSupported({codec:encCodec,width:1280,height:720,framerate:30}),4000,"encode probe");
@@ -2392,7 +2535,7 @@ on("#btnTechRe","click",()=>{runTechDetect();runCodecTech().catch(()=>{});});
 /* ---------- deep port probe ---------- */
 function probeLine(lv,msg){const L=$("#probeList");if(!L)return;
 const d=document.createElement("div");
-d.innerHTML=`<span class="${lv}">[${lv}]</span> ${msg}`;
+d.innerHTML=`<span class="${lv}">[${lv}]</span> ${escH(msg)}`;
 L.appendChild(d);L.scrollTop=L.scrollHeight;}
 function markPorts(){setStatus("ports","info","PROBED","Deep probe used — sign off physical ports with ✓/✗.",!!R.ports);}
 on("#pMedia","click",async()=>{markPorts();
@@ -2418,6 +2561,20 @@ if(!navigator.serial)return probeLine("WARN","Web Serial not available.");
 try{const ps=await navigator.serial.getPorts();
 probeLine(ps.length?"OK":"WARN","Serial ports (authorized list): "+ps.length);
 }catch(e){probeLine("FAIL","serial.getPorts: "+e.message)}});
+on("#pSerialLoop","click",async()=>{markPorts();
+if(!navigator.serial)return probeLine("WARN","Web Serial not available.");
+try{const p=await navigator.serial.requestPort();
+await p.open({bitrate:115200});
+probeLine("INFO","Serial open @115200 — sending BK-LOOP frame, waiting 3 s for echo…");
+const w=p.writable.getWriter();await w.write(new TextEncoder().encode("BK-LOOP\n"));w.releaseLock();
+const r=p.readable.getReader();const dec=new TextDecoder();let got="";const t0=Date.now();
+while(Date.now()-t0<3000){const {value,done}=await r.read();if(done)break;
+got+=dec.decode(value,{stream:true});if(got.indexOf("BK-LOOP")>=0)break;}
+try{r.releaseLock()}catch(e){}try{await p.close()}catch(e){}
+if(got.indexOf("BK-LOOP")>=0){probeLine("OK","Serial loopback OK — TX/RX path verified.");
+setStatus("ports","pass","SERIAL OK","Serial port echoes data — physical TX/RX verified.",true);}
+else probeLine("WARN","Serial sent 8 B, got "+got.length+" B — no echo. Check TX↔RX jumper or device firmware.");
+}catch(e){probeLine("FAIL","Serial loopback: "+(e&&e.message||e));}});
 on("#pHid","click",async()=>{markPorts();
 if(!navigator.hid)return probeLine("WARN","WebHID not available.");
 try{const ds=await navigator.hid.getDevices();
@@ -2454,7 +2611,7 @@ TESTS.forEach(([id])=>{if(R[id])delete R[id].loop;});
 const target=+(($("#loopSel")&&$("#loopSel").value)||1);
 const ba=$("#btnRunAll"),bs=$("#btnStopAll");
 if(ba)ba.disabled=true;
-if(bs){bs.disabled=false;setTxt("btnStopAll","■ Stop");}
+if(bs){bs.disabled=false;setTxt("btnStopAll",t("stop"));}
 await guardOn();
 const heap0=performance.memory?performance.memory.usedJSHeapSize:0;
 let pass=0;
@@ -2478,7 +2635,7 @@ await sleep(300);}
 guardOff();
 LOOP.running=false;
 if(ba)ba.disabled=false;
-if(bs){bs.disabled=true;setTxt("btnStopAll","■ Stop");}
+if(bs){bs.disabled=true;setTxt("btnStopAll",t("stop"));}
 setTxt("runStep",LOOP.abort?"stopped after "+LOOP.passes+" pass(es) — results preserved":"complete — "+LOOP.passes+" pass(es) · min/avg/max in ledger");
 log(LOOP.abort?"WARN":"OK","—— BENCH "+(LOOP.abort?"STOPPED":"COMPLETE")+" · "+LOOP.passes+" pass(es) ——");
 if(performance.memory&&heap0)log("INFO","Heap delta over "+LOOP.passes+" pass(es): "+((performance.memory.usedJSHeapSize-heap0)/1048576).toFixed(1)+" MB");
@@ -2508,13 +2665,14 @@ setStatus(id,"warn","TIMEOUT","Runner did not report completion within 120 s.");
 Promise.resolve().then(fn)
 .catch(e=>{setStatus(id,"fail","ERROR","Exception: "+(e&&e.message||e));log("FAIL",id+" threw: "+e);})
 .finally(()=>{clearTimeout(wd);restore();});}));
-const QUEUE=["cpuSingle","cpuMulti","cpuFloat","memBW","memLat","memCheck","gpu2d","gpu3d","gpuAI","gpuCodec","refresh","storageIDB","storageLS","battery","net"];
+const QUEUE=["cpuSingle","cpuMulti","cpuFloat","memBW","memLat","memCheck","gpu2d","gpu3d","gpuAI","gpuCodec","refresh","storageIDB","storageLS","battery","net","netSpeed","ice"];
 const GPU_COOLDOWN=new Set(["gpu2d","gpu3d","gpuAI"]);
+function idleStep(){const e=$("#runStep");if(e&&!LOOP.running)e.textContent=t("idle_tests").replace("{n}",String(QUEUE.length));}
 /* ---------- spec strip ---------- */
 let SPECS=[];
 function detect(){
 const ua=navigator.userAgent;
-const os=(/Windows/.test(ua)?"Windows":/Mac OS/.test(ua)?"macOS":/Android/.test(ua)?"Android":/Linux/.test(ua)?"Linux":/CrOS/.test(ua)?"ChromeOS":"?");
+const os=(/Windows/.test(ua)?"Windows":/CrOS/.test(ua)?"ChromeOS":/Android/.test(ua)?"Android":/Mac OS/.test(ua)?(navigator.maxTouchPoints>1?"iPadOS":"macOS"):/Linux/.test(ua)?"Linux":"?");
 const br=(/Edg\//.test(ua)?"Edge":/OPR\//.test(ua)?"Opera":/Firefox\//.test(ua)?"Firefox":/Chrome\//.test(ua)?"Chrome":/Safari\//.test(ua)?"Safari":"?");
 let gpu="—";
 try{const c=document.createElement("canvas"),g=c.getContext("webgl");
@@ -2536,7 +2694,7 @@ SPECS=[["OS",os],["Browser",br],["CPU threads",cpuThreads],
 ["Battery API",navigator.getBattery?"yes":"no"]];
 const s=$("#specStrip");if(!s)return;s.innerHTML="";
 SPECS.forEach(([k,v,hi])=>{const d=document.createElement("div");d.className="spec";
-d.innerHTML=`<div class="k">${k}</div><div class="v ${hi?"hi":""}">${v}</div>`;s.appendChild(d);});
+d.innerHTML=`<div class="k">${escH(k)}</div><div class="v ${hi?"hi":""}">${escH(v)}</div>`;s.appendChild(d);});
 const sl=$("#sysLed");if(sl)sl.className="led info";}
 detect();
 on("#btnReDetect","click",()=>{detect();runTechDetect();runCodecTech().catch(()=>{});log("INFO","Re-detection complete.");});
@@ -2570,9 +2728,9 @@ else if(nf){st.textContent="FAIL";st.classList.add("FAIL");setTxt("rpMeta2",nf+"
 else if(nw){st.textContent="PASS·NOTES";st.classList.add("NOTES");setTxt("rpMeta2",nw+" note · "+np+" pass.");}
 else{st.textContent="PASS";st.classList.add("PASS");setTxt("rpMeta2",np+" checks passed.");}
 setTxt("rpMeta1","UNIT "+($("#fModel")&&$("#fModel").value||"—")+" · TICKET "+($("#fTicket")&&$("#fTicket").value||"—")+" · TECH "+($("#fTech")&&$("#fTech").value||"—"));}
-["fTicket","fModel","fTech"].forEach(id=>on("#"+id,"input",()=>{renderReport();saveSession()}));
-on("#notes","input",saveSession);
-function gather(){return{app:"BENCHKIT v1.9.4",generated:new Date().toISOString(),
+["fTicket","fModel","fTech"].forEach(id=>onOnce("#"+id,"input",()=>{renderReport();saveSession()}));
+onOnce("#notes","input",saveSession);
+function gather(){return{app:"BENCHKIT v1.10.0",generated:new Date().toISOString(),
 benchPasses:LOOP.passes,gpuInterruptions:GPU_STATE.losses,gpuBackendHealthy:gpuHealthy(),
 ticket:$("#fTicket")?$("#fTicket").value:"",model:$("#fModel")?$("#fModel").value:"",
 tech:$("#fTech")?$("#fTech").value:"",specs:SPECS,notes:$("#notes")?$("#notes").value:"",
@@ -2586,14 +2744,14 @@ const untested=keyOrder.filter(c=>!seen.has(c)).map(LBL).join(" ");
 pk.textContent="TESTED "+seen.size+"/"+tot+(tested?": "+tested:"")+(untested?"   UNTESTED: "+untested:"   UNTESTED: none");}
 const pl=$("#printLog");if(pl&&logBox)pl.innerHTML=logBox.innerHTML;
 const pn=$("#printNotes");if(pn)pn.textContent=($("#notes")&&$("#notes").value)||"—";}
-on("#btnPrint","click",()=>{preparePrint();window.print();});
-on("#btnJson","click",()=>{const g=gather();
+onOnce("#btnPrint","click",()=>{preparePrint();window.print();});
+onOnce("#btnJson","click",()=>{const g=gather();
 const b=new Blob([JSON.stringify(g,null,2)],{type:"application/json"});
 const a=document.createElement("a");a.href=URL.createObjectURL(b);
 const tk=(g.ticket||"unit").replace(/[^\w\-]+/g,"-");
 a.download="benchkit_"+tk+"_"+Date.now()+".json";a.click();
 URL.revokeObjectURL(a.href);log("INFO","Report exported as JSON.")});
-on("#btnCsv","click",()=>{
+onOnce("#btnCsv","click",()=>{
 const g=gather();
 const esc=s=>{s=String(s==null?"":s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
 const rows=[];
@@ -2613,7 +2771,7 @@ const a=document.createElement("a");a.href=URL.createObjectURL(b);
 const tk=(g.ticket||"unit").replace(/[^\w\-]+/g,"-");
 a.download="benchkit_"+tk+"_"+Date.now()+".csv";a.click();
 URL.revokeObjectURL(a.href);log("INFO","Report exported as CSV.");});
-on("#btnCopyRpt","click",()=>{const g=gather();
+onOnce("#btnCopyRpt","click",()=>{const g=gather();
 let t="BENCHKIT REPORT — "+(g.ticket||"no ticket")+"\nUNIT: "+(g.model||"—")+" · TECH: "+(g.tech||"—")+" · "+g.generated+"\n";
 if(g.gpuInterruptions>0)t+="GPU backend interruptions this session: "+g.gpuInterruptions+(g.gpuBackendHealthy?" (recovered)":" (still down)")+"\n";
 t+="\n";
@@ -2701,11 +2859,12 @@ if(typeof MediaRecorder==="undefined"){
 setInterval(()=>setTxt("clock",new Date().toTimeString().slice(0,8)),1000);
 setTxt("clock",new Date().toTimeString().slice(0,8));
 const BUILD="build "+Date.now().toString(36).toUpperCase();
-setTxt("buildTag","v1.9.4 · "+BUILD);setTxt("footBuild",BUILD+" · runs fully offline");
+setTxt("buildTag","v1.10.0 · "+BUILD);setTxt("footBuild",BUILD+" · runs fully offline");
 on("#langSel", "change", (e) => {
   currentLang = e.target.value;
   localStorage.setItem('bk_lang', currentLang);
   applyTranslations();
+  idleStep();
   log("INFO", "Language changed to " + currentLang.toUpperCase());
 });
 try{
@@ -2713,11 +2872,12 @@ if("IntersectionObserver" in window&&!REDUCED){
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{threshold:.1});
 $$(".mod").forEach(m=>io.observe(m));
 }else $$(".mod").forEach(m=>m.classList.add("in"));
-log("INFO","BENCHKIT v1.9.4 online — "+(navigator.hardwareConcurrency||"?")+" threads · WebGPU "+(navigator.gpu?"yes":"no")+" · WebCodecs "+(typeof VideoEncoder!=="undefined"?"yes":"no"));
+initLang();
+log("INFO","BENCHKIT v1.10.0 online — "+(navigator.hardwareConcurrency||"?")+" threads · WebGPU "+(navigator.gpu?"yes":"no")+" · WebCodecs "+(typeof VideoEncoder!=="undefined"?"yes":"no"));
 netUI(false);
+batWatch();
 populateDevices(false).catch(()=>{});
 loadSession();
-initLang();
 renderReport();drawLab();
 }catch(e){log("FAIL","Boot error: "+(e&&e.message||e));}
 </script>

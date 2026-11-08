@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Arcade Bowling 3D</title>
-<meta name="version" content="2026.11.07.39">
+<meta name="version" content="2026.11.08.43">
 <meta name="description" content="3D bowling: step-by-step controls (place, aim, flick) with live lane projection, hook physics, ten-frame scoring, 10-pin and wide-lane 100-pin modes.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -55,7 +55,7 @@ border:1px solid #468;background:#123;color:#cfe}
 #modes button.on{background:#19b45e;border-color:#19b45e;color:#fff}
 #play{font:700 clamp(18px,3.4vw,28px)/1 Arial;padding:16px 44px;border-radius:99px;border:none;cursor:pointer;
 background:#19b45e;color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.6)}
-#sbtn,#helpbtn{font:700 clamp(11px,1.8vw,14px)/1 Arial;padding:10px 16px;border-radius:99px;border:1px solid #468;
+#sbtn,#helpbtn,#optbtn{font:700 clamp(11px,1.8vw,14px)/1 Arial;padding:10px 16px;border-radius:99px;border:1px solid #468;
 background:#123;color:#cfe;cursor:pointer}
 #scr .row{display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap}
 #dbgbtn{position:fixed;left:8px;bottom:8px;display:none;z-index:7;
@@ -74,6 +74,29 @@ background:#0a0f1e;border:1px solid #468;border-radius:14px;font:14px/1.6 Arial}
 #help h3{color:#ffd94a;font-size:14px;margin:16px 0 6px}
 #help p{margin:0 0 8px}
 #help .close{margin-top:14px;font:700 13px/1 Arial;padding:10px 18px;border-radius:99px;
+border:none;background:#19b45e;color:#fff;cursor:pointer;
+position:sticky;bottom:0}
+/* graphics menu: same mobile-safe scrollable card as #help; native selects
+because every option must be reachable by touch, screen reader, and gamepad */
+#opts{position:fixed;inset:0;z-index:10;display:none;place-items:center;
+background:rgba(4,6,14,.86);color:#cfe}
+#opts.on{display:grid}
+#opts .card{max-width:480px;max-height:82vh;overflow:auto;touch-action:pan-y;overscroll-behavior:contain;
+padding:22px 26px 58px;margin:0 12px;
+background:#0a0f1e;border:1px solid #468;border-radius:14px;font:14px/1.6 Arial}
+#opts h2{color:#4df;font-size:18px;margin:0 0 6px}
+#opts h3{color:#ffd94a;font-size:13px;margin:14px 0 4px}
+#opts p{margin:0 0 8px}
+#opts .sm{font-size:12px;opacity:.7}
+#olive{font-weight:bold;color:#9fe}
+#oprof{display:flex;gap:8px;flex-wrap:wrap}
+#oprof button{font:700 clamp(11px,1.8vw,14px)/1 Arial;padding:11px 13px;border-radius:10px;cursor:pointer;
+border:1px solid #468;background:#123;color:#cfe}
+#oprof button.on{background:#19b45e;border-color:#19b45e;color:#fff}
+#opts select{width:100%;font:700 13px/1.4 Arial;padding:10px;border-radius:10px;
+border:1px solid #468;background:#123;color:#cfe}
+#opts select:disabled{opacity:.45}
+#opts .close{margin-top:16px;font:700 13px/1 Arial;padding:10px 18px;border-radius:99px;
 border:none;background:#19b45e;color:#fff;cursor:pointer;
 position:sticky;bottom:0}
 #dbar{position:fixed;left:50%;bottom:0;transform:translateX(-50%);display:none;z-index:9;
@@ -110,7 +133,7 @@ font-size:10px;line-height:1.35}
 <p>THREE-STEP THROW: DRAG TO PLACE THE BALL &#8226; DRAG TO AIM &#8226; FLICK UP TO THROW: TRAVEL + SPEED = POWER, LEAN = HOOK</p>
 <div id="modes"><button id="m10">10 PINS</button><button id="m100">100 PINS &#8226; WIDE LANE</button></div>
 <button id="play">PLAY</button>
-<div class="row"><button id="sbtn">SOUND: ON</button><button id="helpbtn">HOW TO PLAY</button><a class="home" href="https://1nd1g0.github.io/">HOME</a></div>
+<div class="row"><button id="sbtn">SOUND: ON</button><button id="helpbtn">HOW TO PLAY</button><button id="optbtn" title="graphics quality: profiles, automatic, or manual">GRAPHICS</button><a class="home" href="https://1nd1g0.github.io/">HOME</a></div>
 </div>
 <div id="help"><div class="card">
 <h2>HOW TO PLAY</h2>
@@ -132,6 +155,40 @@ Highest total after ten frames wins; 300 is the perfect game.</p>
 <p>100-pin mode spreads a full ten-row rack across a wide lane for chaos; the score sheet stays on the classic 10-pin scale.</p>
 <button id="helpx" class="close">GOT IT</button>
 </div></div>
+<div id="opts"><div class="card">
+<h2>GRAPHICS</h2>
+<p><span id="olive"></span></p>
+<h3>PROFILE</h3>
+<div id="oprof">
+<button data-p="auto">AUTO</button>
+<button data-p="best">BEST</button>
+<button data-p="high">HIGH</button>
+<button data-p="medium">MEDIUM</button>
+<button data-p="low">LOW</button>
+<button data-p="custom">CUSTOM</button>
+</div>
+<p class="sm">AUTO lowers quality only while the game stays under ~40 fps for several seconds, and restores it as soon as frames are fast again &mdash; the line above always says what it picked. Every other profile is FIXED: nothing changes by itself.</p>
+<h3>RESOLUTION</h3>
+<select id="orsel">
+<option value="1">FULL &mdash; native pixels (100%)</option>
+<option value="0.9">HIGH &mdash; 90%</option>
+<option value="0.8">MEDIUM &mdash; 80%</option>
+<option value="0.7">LOW &mdash; 70%</option>
+<option value="0.6">SLOW &mdash; 60%</option>
+<option value="0.5">MINIMUM &mdash; 50% (fastest)</option>
+</select>
+<h3>SHADOWS</h3>
+<select id="oshqsel">
+<option value="0">ALL SIX LAMPS &mdash; full projected shadows</option>
+<option value="1">THREE LANE LAMPS</option>
+<option value="2">SINGLE MAIN LAMP</option>
+<option value="3">LOW-RES PROJECTION (blurred)</option>
+<option value="4">CONTACT SHADOWS ONLY</option>
+<option value="5">NONE</option>
+</select>
+<p class="sm">The menus are editable only in CUSTOM. A profile sets them for you (shown selected, locked); changing a menu switches to CUSTOM, so what you see is always what is used.</p>
+<button id="optsx" class="close">DONE</button>
+</div></div>
 <button id="dbgbtn" title="step through the last throw one physics frame at a time">REPLAY</button>
 <button id="skipbtn">SKIP</button>
 <div id="dbar">
@@ -150,13 +207,41 @@ const G=C.getContext('webgl',{antialias:true,alpha:false})||C.getContext('experi
 if(!G){document.body.innerHTML='<h2 style="color:#fff;text-align:center;margin-top:40vh">WebGL not supported</h2>';throw 0;}
 // DPR is capped, and RS drops the render resolution further when the frame
 // budget cannot hold: a phone at devicePixelRatio 2 paints ~1.7M px before
-// any physics runs, and the loop watchdog below walks RS down (floor 0.5)
-// until the frame time is comfortable again, back up only on sustained headroom.
+// any physics runs. Graphics is NEVER decided secretly anymore: the title
+// screen's GRAPHICS menu shows every performance knob - profiles are honest
+// presets of this ladder, 'auto' keeps the loop's frame-budget watchdog (the
+// menu shows its live choice), 'custom' pins both values by hand. Persisted.
 const DPRMAX=1.75;
-let RS=1,LOWT=false,W=1,H=1,ASP=1;
+// profile presets = pairs along the ladder below, so what a profile shows is
+// exactly the rung pair the auto ladder would build at that scale.
+const GFXPR={best:[1,0],high:[0.9,1],medium:[0.8,2],low:[0.6,3]};
+let gfx={p:'auto',rs:1,shq:0}; // p: auto | best | high | medium | low | custom
+try{const g=JSON.parse(localStorage.getItem('bowl32gfx')||'null');
+ if(g&&(GFXPR[g.p]||g.p==='auto'||g.p==='custom')&&g.rs>=0.5&&g.rs<=1&&
+  (g.shq|0)===g.shq&&g.shq>=0&&g.shq<=5)gfx=g}catch(e){}
+function applyGfx(){
+ if(GFXPR[gfx.p]){gfx.rs=GFXPR[gfx.p][0];gfx.shq=GFXPR[gfx.p][1]}
+ if(gfx.p==='auto'){RS=1;qualWin=0;qualGood=qualBad=0;ftEma=-1}
+ else RS=gfx.rs;
+ try{localStorage.setItem('bowl32gfx',JSON.stringify(gfx))}catch(e){}
+ resize()}
+let RS=1,LOWT=false,SHQ=0,W=1,H=1,ASP=1;
 function resize(){const dpr=Math.min(window.devicePixelRatio||1,DPRMAX)*RS;
  W=C.width=Math.max(2,innerWidth*dpr|0);H=C.height=Math.max(2,innerHeight*dpr|0);ASP=W/H;
- LOWT=RS<0.9;G.viewport(0,0,W,H);}
+ LOWT=RS<0.9;
+ // shadow quality ladder (the user-asked gradation, six rungs end to end):
+ // all six fixtures project the real mesh -> only the three lane/rack
+ // fixtures -> one main fixture -> the same silhouettes rendered HALF-SIZED
+ // into a low-res buffer, blurred and blitted back -> cheap soft contact
+ // ellipses oriented along the throw direction -> no shadows at all. Never a
+ // mode where shadows are simply absent because the camera happens to be
+ // high: presence is a quality decision only, and the same frame keeps it.
+ // (In 'auto' the watchdog steps RS in tenths, so with the 0.5 floor every
+ // rung is reachable and none of them can be flipped into randomly; a
+ // profile or CUSTOM sets the scale and the rung directly, nothing moves.)
+ SHQ=gfx.p==='auto'?
+  (RS>=0.98?0:RS>=0.85?1:RS>=0.75?2:RS>=0.65?3:RS>=0.55?4:5):gfx.shq;
+ G.viewport(0,0,W,H);}
 addEventListener('resize',resize);resize();
 const $=id=>document.getElementById(id);
 const PI=Math.PI,sin=Math.sin,cos=Math.cos,sqrt=Math.sqrt,abs=Math.abs,
@@ -222,10 +307,58 @@ const FS=`
 precision mediump float;
 varying vec3 vN,vW,vO;
 uniform vec3 uCol,uFog,uCam;
-uniform float uMode,uPhase,uSpec,uHi,uTime,uLWH,uLWF,uDECKZ;
+uniform float uMode,uPhase,uSpec,uHi,uTime,uLWH,uDECKZ;
 uniform vec4 uLights[6];
 uniform float uAlpha;
+uniform sampler2D uST;
+uniform vec2 uPix,uTPix;
+// surface identity, re-rolled by the JS per run (pickSurfaces): the lane is
+// REAL procedural wood - a random species (base/dark grain colors, board width,
+// ring+streak frequencies) - and the walls are a random typical material
+// (brick / plaster / wood paneling / acoustic diamond) with bump shading.
+// Everything is generated in the fragment shader from world coordinates: no
+// texture fetches, no texture uploads, one cheap value noise is the whole cost.
+uniform vec3 uWoodA,uWoodB;
+uniform float uWoodBW,uWoodR,uWoodF;
+uniform vec3 uWall0,uWall1;
+uniform float uWallKind,uSrand;
+float hash1(float n){return fract(sin(n*12.9898)*43758.5453);}
+float vn2(vec2 p){vec2 i=floor(p),f=p-i;f=f*f*(3.0-2.0*f);
+ return mix(mix(hash1(i.x*7.0+i.y*113.0),hash1(i.x*7.0+7.0+i.y*113.0),f.x),
+            mix(hash1(i.x*7.0+(i.y+1.0)*113.0),hash1(i.x*7.0+7.0+(i.y+1.0)*113.0),f.x),f.y);}
+// albedo of the lane boards at world point w (y ignored). Per-board color
+// jitter + phase; the "figure" of the wood comes from low-frequency rings
+// warped by the grain flow, plus fine streaks running ALONG the board (z).
+// The old pattern faked boards with a step() stripe and painted light/dark
+// bands as sin(z*15+x*4) - diagonal sinusoidal stripes that no wood has;
+// those are gone.
+vec3 laneWood(vec3 w){
+ float b=floor((w.x+uLWH+0.001)/uWoodBW);
+ float x=w.x+uLWH-b*uWoodBW;
+ float bj=hash1(b*1.37+uSrand)*2.0-1.0;
+ float bp=hash1(b*2.71+uSrand)*6.28;
+ float edge=smoothstep(0.0,0.008,x)*smoothstep(uWoodBW,uWoodBW-0.008,x);
+ float wy=vn2(vec2(x*2.5+bp,b*3.1+uSrand));
+ float ry=w.z*0.18+wy*0.55+bp*0.15;
+ float rings=0.5+0.5*sin(uSrand*3.0+ry*uWoodR);
+ float streak=0.5+0.5*sin(w.z*uWoodF+bp+vn2(vec2(w.x*13.0+bp,w.z*1.7))*3.0);
+ vec3 c=mix(uWoodA,uWoodB,pow(rings,1.6)*0.4+0.08);
+ c=mix(c,uWoodA*1.12+vec3(0.03),streak*0.20);
+ c*=1.0+bj*0.12;
+ return mix(c*0.72,c,edge);
+}
 float dotS(vec2 p,vec2 c,float r){return smoothstep(r,r*0.55,length(p-c));}
+float laneMark(vec3 w){ // aiming arrows + approach dots: subtle dark stains
+ float m=0.0;
+ m=max(m,dotS(vec2(w.x,(w.z+12.0)*1.35),vec2(0.0),0.028)*1.0);
+ m=max(m,dotS(vec2(w.x,(w.z+12.0)*1.35),vec2(0.114),0.026)*0.8);
+ m=max(m,dotS(vec2(w.x,(w.z+12.0)*1.35),vec2(-0.114),0.026)*0.8);
+ m=max(m,dotS(vec2(w.x,(w.z+12.0)*1.35),vec2(0.228),0.022)*0.6);
+ m=max(m,dotS(vec2(w.x,(w.z+12.0)*1.35),vec2(-0.228),0.022)*0.6);
+ m=max(m,dotS(vec2(w.x,(w.z+3.7)*0.6),vec2(0.052),0.020)*0.5);
+ m=max(m,dotS(vec2(w.x,(w.z+3.7)*0.6),vec2(-0.052),0.020)*0.5);
+ return m;
+}
 float lamb(vec3 lp,vec3 N,vec3 vW,float k){
  vec3 Li=lp-vW;
  float d2=dot(Li,Li);
@@ -236,22 +369,33 @@ float lamb(vec3 lp,vec3 N,vec3 vW,float k){
  return nd*min(k*exp(2.0-0.22*d2),4.0*k);
 }
 void main(){
+ // Low-res shadow rung (ladder step 3): that pass drew only the projected
+ // silhouettes into a half-resolution color buffer; blit it here as a
+ // fullscreen copy with a 3x3 tent over SHADOW texels. The bilinear upscale
+ // plus the tent filters out the aliasing the half-res edges would show,
+ // for a quarter of the silhouette fill cost.
+ if(uMode>8.5){
+  vec2 uv=gl_FragCoord.xy*uPix,tp=uTPix*2.0;
+  vec4 s=texture2D(uST,uv)*4.0;
+  s+=(texture2D(uST,uv+vec2(tp.x,0.0))+texture2D(uST,uv-vec2(tp.x,0.0))
+    +texture2D(uST,uv+vec2(0.0,tp.y))+texture2D(uST,uv-vec2(0.0,tp.y)))*2.0;
+  s+=texture2D(uST,uv+tp)+texture2D(uST,uv-tp)
+    +texture2D(uST,uv+vec2(tp.x,-tp.y))+texture2D(uST,uv+vec2(-tp.x,tp.y));
+  gl_FragColor=s*0.0625;return;}
  vec3 c=uCol;
+ float bH=0.0,fA=uAlpha;
  if(uMode>1.5&&uMode<2.5){
-  float g=1.0;
+  // deck: real procedural wood (see laneWood). The old generator multiplied a
+  // step() board stripe by sin(z*15+x*4) - sinusoidal light/dark bands running
+  // diagonally across the boards, which is what the "diagonal striped pattern"
+  // complaint was about - and painted the aiming markings as -0.5-deep holes,
+  // i.e. black spots. Markings are now shallow stains mixed INTO the wood.
   if(vW.z<0.0){
-   // board + arrow + spot pattern scales with lane half-width (1.06-wide reference)
-   g*=0.82+0.18*step(0.06,fract((vW.x+uLWH)/(0.10625*uLWF)));
-   g*=0.92+0.08*sin(vW.z*15.0+vW.x*4.0);
-   vec2 q=vec2(vW.x/uLWF,(vW.z+12.0)*1.35);
-   g-=0.5*(dotS(q,vec2(0.0),0.033)+dotS(q,vec2(0.1136),0.033)+dotS(q,vec2(-0.1136),0.033)
-        +dotS(q,vec2(0.2272),0.028)+dotS(q,vec2(-0.2272),0.028));
-   g-=0.4*(dotS(vec2(vW.x/uLWF,(vW.z+3.7)*0.6),vec2(0.0522,0.0),0.03)
-         +dotS(vec2(vW.x/uLWF,(vW.z+3.7)*0.6),vec2(-0.0522,0.0),0.03));
-   g-=0.6*smoothstep(0.014,0.0,abs(vW.z));
-  }else g*=0.70;
-  if(vW.z<uDECKZ)c=mix(c,vec3(0.74,0.60,0.40),0.55);
-  c*=max(g,0.0);
+   c=laneWood(vW);
+   c=mix(c,c*0.75,laneMark(vW));
+   c=mix(c,c*0.70,smoothstep(0.012,0.0,abs(vW.z))); // faint foul-line seam
+  }else c=uWoodB*0.55;
+  if(vW.z<uDECKZ)c=mix(c,uWoodB*0.45,0.6);
  }
  if(uMode>2.5&&uMode<3.5){
   // marble stripes are BODY-LOCKED: vO is the object-space position (unit-sphere
@@ -264,10 +408,65 @@ void main(){
   float s=0.5+0.5*sin(dot(vO,vec3(2.1,1.4,3.7))*3.0+uPhase);
   c=mix(uCol,vec3(0.92,0.22,0.32),smoothstep(0.35,0.65,s));
  }
+ if(uMode>6.5){
+  // walls: a typical material rolled per run (0 brick, 1 plaster, 2 wood
+  // paneling, 3 acoustic diamond). Pattern lives in wall-local (px,py); the
+  // height field bH perturbs the normal through screen-space derivatives, so
+  // the mortar grooves / panel gaps / plaster ripples catch the lamp light
+  // with zero texture memory and one extra sin-hash pass per wall pixel.
+  float kind=uWallKind;
+  if(uHi>0.25)kind=floor(uHi+0.5);
+  float px=abs(vN.x)>0.5?vW.z:vW.x,py=vW.y;
+  if(kind<0.5){
+   float row=floor(py/0.2);
+   float xo=hash1(row*3.1+uSrand)*0.43;
+   float bx=px+uSrand+xo;
+   float lx=fract(bx/0.43),ly=fract(py/0.2);
+   float my=smoothstep(0.13,0.06,ly)+smoothstep(0.87,0.94,ly);
+   float mx=smoothstep(0.06,0.0,lx)+smoothstep(0.94,1.0,lx);
+   float mortar=min(1.0,my+mx);
+   float j=hash1(floor(bx/0.43)*13.0+row*7.0+uSrand);
+   c=mix(uWall0*(0.85+0.3*j),uWall1,mortar);
+   bH=mortar+0.04*vn2(vec2(bx*24.0,py*24.0));
+  }else if(kind<1.5){
+   float b=vn2(vec2(px*1.3+uSrand,py*1.3));
+   float gr=vn2(vec2(px*8.0,py*8.0))*0.4+b;
+   c=mix(uWall0,uWall1,gr*0.6);
+   bH=b*0.7+gr*0.3;
+  }else if(kind<2.5){
+   float bd=floor(px/0.5),x=px-bd*0.5;
+   float edge=smoothstep(0.0,0.02,x)*smoothstep(0.5,0.48,x);
+   float j=hash1(bd*5.3+uSrand);
+   float gr=0.5+0.5*sin(py*(24.0+30.0*j)+hash1(bd*17.0+uSrand)*6.28);
+   c=mix(uWall0,uWall1,gr*0.22)*(0.85+0.3*j);
+   c=mix(uWall1*1.15,c,edge);
+   bH=(1.0-edge)+gr*0.12;
+  }else{
+   float u=fract((px+py)/0.32),v=fract((py-px)/0.32);
+   bH=max(1.0-abs(u-0.5)*2.0,1.0-abs(v-0.5)*2.0);
+   c=mix(uWall0,uWall1,pow(1.0-bH,1.5));
+  }
+ }
  vec3 N=normalize(vN),col;
- if(uMode>5.5){
+#ifdef USE_BUMP
+ if(uMode>6.5){
+  // Kot/Kowalski normal perturbation: map the height gradient from screen
+  // space onto the surface tangents (dFdx/dFdy of the world position).
+  vec2 hg=vec2(dFdx(bH),dFdy(bH));
+  vec3 t1=dFdx(vW),t2=dFdy(vW);
+  float d11=dot(t1,t1),d12=dot(t1,t2),d22=dot(t2,t2);
+  vec3 gr=((d22*hg.x-d12*hg.y)*t1+(d11*hg.y-d12*hg.x)*t2)/(d11*d22-d12*d12+1e-6);
+  N=normalize(N-gr*0.05);
+ }
+#endif
+ if(uMode>5.5&&uMode<6.5){
   col=c; // shadow quad: flat tint, alpha-blended by uAlpha
- }else if(uMode>4.5){
+  // uMode 6.2 = blob-rung shaping: vO.xz sweeps the whole footprint of a
+  // unit sphere flattened to a disc, so fading the alpha radially to nothing
+  // at the rim makes the cheapest contact shadow a soft blur, not a hard
+  // cut-out pasted onto the deck.
+  if(uMode>6.05)fA*=smoothstep(1.0,0.25,length(vO.xz));
+ }else if(uMode>4.5&&uMode<5.5){
   col=c*(0.92+0.08*sin(uTime*7.0+vW.x*3.0));
  }else{
   // scene lights from the uLights table (drawn lamp strips + pit fixture, kept
@@ -277,22 +476,26 @@ void main(){
   // baked-in static shadow, and left whole falling pins black-sided.
   // stronger top/bottom gradient: fixtures are above, so upward faces must
   // read brighter and downward faces darker even before any lamp term.
-  vec3 acc=c*(0.26+0.24*N.y)+c*uHi;
+  vec3 acc=c*(0.26+0.24*N.y)+c*(uMode>6.5?0.0:uHi); // uHi doubles as the wall kind selector
   // lane bounce: the lit deck is a big upward-facing area light. Its
   // irradiance is evaluated at the deck point directly under the fragment,
   // through the very same attenuation curve that lights the floor - so the
   // bounce is strongest exactly where the lane is brightest (under the
-  // fixtures) and dies away from it. Tinted by the maple albedo, carried
-  // upward with height falloff, and weighted onto downward+low side-facing
-  // surfaces: this is the second, dim light source from the lit lane that
-  // reads as warm under-lighting on a pin belly and the bottom of a ball.
+  // fixtures) and dies away from it. The tint is NOT a fixed maple color:
+  // it is the laneWood albedo sampled at that very deck point, so when the
+  // per-run wood roll changes species (walnut, cherry, oak...) the colored
+  // light reflected back onto pins and balls changes with it, for free.
+  // Carried upward with height falloff, weighted onto downward+low
+  // side-facing surfaces: the second, dim light source from the lit lane.
   // Upward faces get none. ir is kept for the gloss term below.
   float ir=0.0;
+  vec3 wt=uWoodA;
   {
    for(int i=0;i<6;i++){vec3 dL=uLights[i].xyz-vec3(vW.x,0.0,vW.z);
     ir+=min(uLights[i].w*exp(2.0-0.22*dot(dL,dL)),4.0*uLights[i].w);}
-   float hf=exp(-abs(vW.y)*1.6);
-   acc+=c*vec3(0.82,0.66,0.42)*ir*(0.5-0.5*N.y)*hf;
+   float hf=exp(-min(abs(vW.y),3.0)*1.6);
+   if(hf>0.03)wt=laneWood(vW); // the noise runs only where the bounce matters
+   acc+=c*wt*ir*(0.5-0.5*N.y)*hf;
   }
   float wx=uLWH+0.28;
   for(int i=0;i<6;i++)acc+=c*lamb(uLights[i].xyz,N,vW,uLights[i].w);
@@ -317,7 +520,7 @@ void main(){
    // broad, soft lobe about the floor-reflected direction, deliberately wide
    // and dim next to the sharp lamp streak above.
    vec3 Bg=normalize(vec3(0.0,1.0,0.0)+V);
-   col+=vec3(0.82,0.66,0.42)*ir*exp(-abs(vW.y)*1.6)*uSpec*pow(max(dot(N,Bg),0.0),14.0)*0.6;
+   col+=wt*ir*exp(-min(abs(vW.y),3.0)*1.6)*uSpec*pow(max(dot(N,Bg),0.0),14.0)*0.6;
    // filmic soft knee: directly under the fixtures the lit faces ran to
    // 2-3x white, so pin heads and ball tops clipped to flat featureless
    // blobs - every gradient near the top of the shape was lost. This
@@ -327,12 +530,16 @@ void main(){
    }
  float d=length(uCam-vW);
  col=mix(col,uFog,1.0-exp(-d*0.022));
- gl_FragColor=vec4(col,uAlpha);
+ gl_FragColor=vec4(col,fA);
 }`;
 function sh(t,src){const s=G.createShader(t);G.shaderSource(s,src);G.compileShader(s);
 if(!G.getShaderParameter(s,G.COMPILE_STATUS))throw new Error(G.getShaderInfoLog(s));return s}
+const HASD=!!G.getExtension('OES_standard_derivatives');
 const PG=G.createProgram();
-G.attachShader(PG,sh(G.VERTEX_SHADER,VS));G.attachShader(PG,sh(G.FRAGMENT_SHADER,FS));
+G.attachShader(PG,sh(G.VERTEX_SHADER,VS));
+// wall bump needs screen-space derivatives; on the rare device without the
+// extension the same walls render bumpLESS rather than failing to compile.
+G.attachShader(PG,sh(G.FRAGMENT_SHADER,(HASD?'#extension GL_OES_standard_derivatives : enable\n#define USE_BUMP 1\n':'')+FS));
 G.linkProgram(PG);
 if(!G.getProgramParameter(PG,G.LINK_STATUS))throw new Error(G.getProgramInfoLog(PG));
 G.useProgram(PG);
@@ -343,9 +550,16 @@ uCol=G.getUniformLocation(PG,'uCol'),uFog=G.getUniformLocation(PG,'uFog'),
 uCam=G.getUniformLocation(PG,'uCam'),uMode=G.getUniformLocation(PG,'uMode'),
 uPhase=G.getUniformLocation(PG,'uPhase'),uSpec=G.getUniformLocation(PG,'uSpec'),
 uHi=G.getUniformLocation(PG,'uHi'),uTime=G.getUniformLocation(PG,'uTime'),
-uLWH=G.getUniformLocation(PG,'uLWH'),uLWF=G.getUniformLocation(PG,'uLWF'),
+uLWH=G.getUniformLocation(PG,'uLWH'),
 uDECKZ=G.getUniformLocation(PG,'uDECKZ');
-const uLights=G.getUniformLocation(PG,'uLights[0]'),uAlpha=G.getUniformLocation(PG,'uAlpha');
+const uWoodA=G.getUniformLocation(PG,'uWoodA'),uWoodB=G.getUniformLocation(PG,'uWoodB'),
+uWoodBW=G.getUniformLocation(PG,'uWoodBW'),uWoodR=G.getUniformLocation(PG,'uWoodR'),
+uWoodF=G.getUniformLocation(PG,'uWoodF'),uSrand=G.getUniformLocation(PG,'uSrand'),
+uWall0=G.getUniformLocation(PG,'uWall0'),uWall1=G.getUniformLocation(PG,'uWall1'),
+uWallKind=G.getUniformLocation(PG,'uWallKind');
+const uLights=G.getUniformLocation(PG,'uLights[0]'),uAlpha=G.getUniformLocation(PG,'uAlpha'),
+uST=G.getUniformLocation(PG,'uST'),uPix=G.getUniformLocation(PG,'uPix'),
+uTPix=G.getUniformLocation(PG,'uTPix');
 /* scene light table: ceiling lamps over the lane + one above the pit.
    The same array draws the visible lamp strips (render) AND lights the scene
    (uLights uniform) - shadows and shading therefore move with the fixtures.
@@ -361,6 +575,33 @@ const ltA=new Float32Array(24);
 for(let i=0;i<6;i++)ltA.set(LIGHTS[i],i*4);
 G.uniform4fv(uLights,ltA);
 G.uniform1f(uAlpha,1);
+/* dynamic surface generator: every RUN (page load, and each resetGame) rolls
+   a wood species for the lane and a wall material. The patterns themselves
+   live in the shader (laneWood / wall materials above) - this only feeds the
+   identity parameters, so re-rolling is a handful of uniform writes, and the
+   bounce light + deck gloss automatically re-tint to the new wood because
+   they sample laneWood, not a hardcoded color. */
+const WOODS=[ // [base, dark grain] - maple (the classic lane), oak, walnut,
+ // ash, cherry, teak: distinct hues, all plausible for flooring
+ [[0.82,0.66,0.42],[0.52,0.36,0.18]],[[0.74,0.58,0.38],[0.44,0.30,0.16]],
+ [[0.46,0.31,0.20],[0.20,0.12,0.07]],[[0.85,0.77,0.60],[0.58,0.48,0.32]],
+ [[0.70,0.40,0.26],[0.42,0.18,0.11]],[[0.64,0.47,0.29],[0.35,0.23,0.12]]];
+const WALLMATS=[ // [base, accent] per kind id (0 brick, 1 plaster, 2 panel,
+ // 3 acoustic) - the typical materials for a basement alley
+ [[0.55,0.29,0.24],[0.80,0.76,0.68]],[[0.66,0.62,0.55],[0.52,0.49,0.44]],
+ [[0.48,0.34,0.21],[0.30,0.20,0.11]],[[0.16,0.18,0.26],[0.34,0.38,0.52]]];
+function pickSurfaces(){
+ const w=WOODS[Math.random()*WOODS.length|0];
+ G.uniform3fv(uWoodA,w[0]);G.uniform3fv(uWoodB,w[1]);
+ G.uniform1f(uWoodBW,0.085+0.03*Math.random());
+ G.uniform1f(uWoodR,11+14*Math.random()); // ring spacing varies per species
+ G.uniform1f(uWoodF,26+34*Math.random()); // and so does the fine grain
+ const k=Math.random()*WALLMATS.length|0,m=WALLMATS[k];
+ G.uniform1f(uWallKind,k);
+ G.uniform3fv(uWall0,m[0]);G.uniform3fv(uWall1,m[1]);
+ G.uniform1f(uSrand,Math.random()*97); // shared pattern seed for both
+}
+pickSurfaces();
 G.enable(G.DEPTH_TEST);
 G.clearColor(0.027,0.035,0.071,1);
 let PV=m4();
@@ -408,6 +649,31 @@ const M_BOX=mkBox(),M_SPH=mkSphere(14,24);
 const PIN_PROFILE=[[0,0],[0.024,0],[0.0254,0.008],[0.038,0.045],[0.0605,0.114],[0.046,0.178],
 [0.030,0.235],[0.0226,0.277],[0.0324,0.320],[0.030,0.355],[0.022,0.369],[0.012,0.377],[0,0.381]];
 const M_PIN=mkLathe(PIN_PROFILE,28);
+// NDC quad for the low-res shadow blit (mode 9): drawn with the identity
+// matrix, the FS samples the shadow buffer from gl_FragCoord, so the verts
+// only have to cover the screen.
+const M_QUAD=mb([-1,-1,0,1,-1,0,-1,1,0,1,1,0],[0,0,1,0,0,1,0,0,1,0,0,1],[0,1,2,1,3,2]);
+// half-resolution shadow buffer for the low-res blurred rung. Colour only:
+// cast shadows never depth-test, so the FBO needs no depth attachment; if a
+// driver refuses the framebuffer the rung falls back to drawing the
+// silhouettes straight, which still looks right, just unblurred.
+let sFB=null,sTX=null,sTW=0,sTH=0;
+function ensureSFB(){const w=max(2,W>>1),h=max(2,H>>1);
+ if(sFB&&sTW===w&&sTH===h)return true;
+ if(sFB){G.deleteFramebuffer(sFB);sFB=null;}
+ if(sTX){G.deleteTexture(sTX);sTX=null;}
+ sTW=w;sTH=h;
+ sTX=G.createTexture();G.bindTexture(G.TEXTURE_2D,sTX);
+ G.texImage2D(G.TEXTURE_2D,0,G.RGBA,w,h,0,G.RGBA,G.UNSIGNED_BYTE,null);
+ G.texParameteri(G.TEXTURE_2D,G.TEXTURE_MIN_FILTER,G.LINEAR);
+ G.texParameteri(G.TEXTURE_2D,G.TEXTURE_MAG_FILTER,G.LINEAR);
+ G.texParameteri(G.TEXTURE_2D,G.TEXTURE_WRAP_S,G.CLAMP_TO_EDGE);
+ G.texParameteri(G.TEXTURE_2D,G.TEXTURE_WRAP_T,G.CLAMP_TO_EDGE);
+ sFB=G.createFramebuffer();G.bindFramebuffer(G.FRAMEBUFFER,sFB);
+ G.framebufferTexture2D(G.FRAMEBUFFER,G.COLOR_ATTACHMENT0,G.TEXTURE_2D,sTX,0);
+ const ok=G.checkFramebufferStatus(G.FRAMEBUFFER)===G.FRAMEBUFFER_COMPLETE;
+ G.bindFramebuffer(G.FRAMEBUFFER,null);G.bindTexture(G.TEXTURE_2D,null);
+ return ok;}
 function draw(mk,mat,col,mode,spec,hi,alpha){
  G.uniformMatrix4fv(uM,false,mat);
  G.uniformMatrix4fv(uMVP,false,m4mul(PV,mat));
@@ -456,7 +722,7 @@ function setMode(m100){
  // -19.32 with wood texture (no dark cutoff) under every pin. 10-pin values unchanged.
  LANEZ=m100?-19.32:-18.975;
  MPIN=1.56*(m100?PMW:1);I_CM=0.0130*(m100?PMW:1);
- G.uniform1f(uLWH,LWH);G.uniform1f(uLWF,LW/1.06);
+ G.uniform1f(uLWH,LWH);
  G.uniform1f(uDECKZ,m100?LANEZ:RACKZ-0.162);
 }
 const BALL_R=0.109,MBALL=6.8;
@@ -1293,8 +1559,10 @@ function camUpdate(dt){
  PV=m4mul(m4persp(fov*PI/180,ASP,0.05,60),m4look([camX,camY,camZ],[lkX,lkY,lkZ],[0,1,0]));
 }
 /* ---------- render ---------- */
-const COL={lane:[0.82,0.66,0.42],floor:[0.07,0.08,0.13],gutter:[0.20,0.20,0.25],wall:[0.34,0.28,0.24],
-back:[0.10,0.10,0.17],pin:[0.96,0.95,0.90],ball:[0.14,0.16,0.72],neo:[0.30,0.80,1.0],
+// lane/wall/back colors are gone: those surfaces are shader-generated now
+// (uWood*/uWall* uniforms), so they have no entry here.
+const COL={floor:[0.07,0.08,0.13],gutter:[0.20,0.20,0.25],
+pin:[0.96,0.95,0.90],ball:[0.14,0.16,0.72],neo:[0.30,0.80,1.0],
 lit:[1.0,0.97,0.85],pit:[0.04,0.045,0.07]};
 let uTimeVal=0;
 /* world-space arrow helpers for the aim guides. arrow(): flat arrow, tail at
@@ -1346,14 +1614,16 @@ function render(){
  draw(M_BOX,m4mul(m4t(0,-0.05,-6.62),m4s(40,0.1,24.75)),COL.floor,0,0,0);
  draw(M_BOX,m4mul(m4t(0,-0.05,-23.15),m4s(40,0.1,5.7)),COL.floor,0,0,0);
  draw(M_BOX,m4mul(m4t(0,-0.15,(LANEZ-20.225)/2),m4s(3.2*U,0.1,PL)),COL.pit,0,0,0);
- draw(M_BOX,m4mul(m4t(0,-0.057,ZC),m4s(LW,0.12,LEN)),COL.lane,2,0.30,0);
+ draw(M_BOX,m4mul(m4t(0,-0.057,ZC),m4s(LW,0.12,LEN)),[1,1,1],2,0.30,0);
  for(const s of[-1,1]){
   draw(M_BOX,m4mul(m4t(s*(LWH+GUTW/2),-0.019,ZC),m4s(GUTW,0.03,LEN)),COL.gutter,0,0,0);
-  draw(M_BOX,m4mul(m4t(s*(WALLX+0.03),0.14,ZC),m4s(0.06,0.42,LEN)),COL.wall,0,0,0);
+  draw(M_BOX,m4mul(m4t(s*(WALLX+0.03),0.14,ZC),m4s(0.06,0.42,LEN)),[1,1,1],7,0,0);
   draw(M_BOX,m4mul(m4t(s*WALLX,0.365,ZC),m4s(0.03,0.03,LEN)),COL.neo,5,0,0);
-  draw(M_BOX,m4mul(m4t(s*(WALLX+0.99),1.5,-7.4),m4s(1.4,3.0,25)),COL.wall,0,0,0);
+  draw(M_BOX,m4mul(m4t(s*(WALLX+0.99),1.5,-7.4),m4s(1.4,3.0,25)),[1,1,1],7,0,0);
  }
- draw(M_BOX,m4mul(m4t(0,1.5,PITZ-1.1),m4s(6.4*U,3.0,0.2)),COL.back,0,0,0);
+ // back wall gets the acoustic-diamond material (kind override via uHi=3.5):
+ // behind a rack that is the one material a real alley always has.
+ draw(M_BOX,m4mul(m4t(0,1.5,PITZ-1.1),m4s(6.4*U,3.0,0.2)),[1,1,1],7,0,3.5);
  draw(M_BOX,m4mul(m4t(0,-0.37,PITZ+0.55),m4s(3.0*U,0.6,1.3)),COL.pit,0,0,0);
  draw(M_BOX,m4mul(m4t(0,2.6,PITZ-0.95),m4s(4.0*U,0.06,0.06)),COL.neo,5,0,0);
  // live dotted trajectory while flicking, and the angle ruler while aiming
@@ -1433,27 +1703,102 @@ function render(){
  // perspective divide performs the projection, so shadows carry the object's
  // true silhouette - pin profile, not an approximation - and every lamp's
  // share pools directly underfoot with its own tail, because the fixtures are
- // above the lane. Each layer stays faint (0.05): even where all six lamps
- // agree the pool darkens only ~26%, soft gray, so a blob can never read as
- // black paint laid on the object itself. No depth writes.
+ // above the lane. Each layer stays translucent (~43% where all six agree,
+ // ~31% at three, one stronger lone tail still reads as contact), so a blob
+ // can never read as black paint laid on the object itself. No depth writes.
  G.enable(G.BLEND);G.blendFunc(G.SRC_ALPHA,G.ONE_MINUS_SRC_ALPHA);G.depthMask(false);
- const SHCOL=[0.010,0.010,0.020],SHW=0.05;
+ const SHCOL=[0.010,0.010,0.020];
+ // rung selection per the ladder in resize(): 0 full 6-fixture silhouette,
+ // 1 the three lane/rack fixtures, 2 the single main fixture (stronger alpha
+ // so one lone tail still reads as contact), 3 the same silhouette drawn
+ // half-sized into the shadow buffer and blitted back blurred, 4 the cheap
+ // soft contact ellipse oriented along the throw, 5 no shadows at all.
+ // Pins past the deck edge get no shadow - but the deck ends at the MODE's
+ // LANEZ, so the wide-lane rack's back rows are treated exactly like the
+ // front rows; the old skip used the 10-pin PITEDGE and silently shadowed
+ // nothing beyond z=-19.0, which is why the 100-pin rack looked half
+ // shadow-free at every rung.
+ const SHED=min(PITEDGE,LANEZ)-0.02;
  // maps any point onto the plane y=e through light (lx,ly,lz):
  // x'=((ly-e)px-lx*py+e*lx)/(ly-py); y'==e; z' symmetric. (row-major:
  // [ly-e,-lx,0,e*lx; 0,-e,0,e*ly; 0,-lz,ly-e,e*lz; 0,-1,0,ly])
  function shadowM(L,e){const lx=L[0],ly=L[1],lz=L[2];
   return[ly-e,0,0,0, -lx,-e,-lz,-1, 0,0,ly-e,0, e*lx,e*ly,e*lz,ly];}
- for(const p of pins){
-  if(p.dead||p.drop||p.z<PITEDGE)continue;
-  const off=sin(p.th)*PIN_CG,lift=p.th>0.02?0.0605*sin(min(p.th,PI/2)):0;
-  const m=m4mul(m4mul(m4t(p.x-cos(p.dir)*off,(p.y||0)+lift,p.z-sin(p.dir)*off),
-   m4ry(-p.dir)),m4rz(-p.th));
-  if(camY<3.1)for(const q of(LOWT?LIGHTS3:LIGHTS))draw(M_PIN,m4mul(shadowM(q,0.004),m),SHCOL,6,0,0,SHW);
- }
- if(ball&&!ball.dead&&ball.y>-0.05){
-  const bm=m4mul(m4t(ball.x,max(ball.y,BALL_R),ball.z),m4s(BALL_R,BALL_R,BALL_R));
-  if(camY<3.1)for(const q of(LOWT?LIGHTS3:LIGHTS))draw(M_SPH,m4mul(shadowM(q,0.006),bm),SHCOL,6,0,0,SHW);
- }
+ if(SHQ<=3){
+  const LG=SHQ===0?LIGHTS:SHQ===1?LIGHTS3:[LIGHTS[3]],
+   SHA=[0.09,0.11,0.16,0.16][SHQ],FB=SHQ===3;
+  // the low-res rung renders the exact same silhouettes, just into the
+  // half-size buffer: quarter fill cost, and the upscale + FS tent hide the
+  // jaggies that drawing half-res straight to the screen would show.
+  let sFBok=false;
+  if(FB&&ensureSFB()){sFBok=true;
+   G.bindFramebuffer(G.FRAMEBUFFER,sFB);G.viewport(0,0,sTW,sTH);
+   G.clearColor(0,0,0,0);G.clear(G.COLOR_BUFFER_BIT);
+   // sFB has no depth attachment: ES2 leaves the depth test UNDEFINED against
+   // a missing buffer, and some rasterisers (SwiftShader at least) fail every
+   // fragment outright - the pass looked black. Nothing to gain anyway: the
+   // silhouettes accumulate onto a freshly cleared target, so leave depth off
+   // for this pass only; the blit below re-enables it.
+   G.disable(G.DEPTH_TEST);
+   // ...and split the blend channels: on a transparent-black target SRC_ALPHA
+   // SQUARS the coverage into alpha too (a 0.16 silhouette stored 0.026),
+   // which is exactly what made this rung near-invisible. Colour keeps its
+   // premultiplied "over"; alpha just writes through, then accumulates over.
+   G.blendFuncSeparate(G.SRC_ALPHA,G.ONE_MINUS_SRC_ALPHA,
+                       G.ONE,G.ONE_MINUS_SRC_ALPHA);}
+  for(const p of pins){
+   if(p.dead||p.drop||p.z<SHED)continue;
+   const off=sin(p.th)*PIN_CG,lift=p.th>0.02?0.0605*sin(min(p.th,PI/2)):0;
+   const m=m4mul(m4mul(m4t(p.x-cos(p.dir)*off,(p.y||0)+lift,p.z-sin(p.dir)*off),
+    m4ry(-p.dir)),m4rz(-p.th));
+   for(const q of LG)draw(M_PIN,m4mul(shadowM(q,0.004),m),SHCOL,6,0,0,SHA);
+  }
+  if(ball&&!ball.dead&&ball.y>-0.05){
+   const bm=m4mul(m4t(ball.x,max(ball.y,BALL_R),ball.z),m4s(BALL_R,BALL_R,BALL_R));
+   for(const q of LG)draw(M_SPH,m4mul(shadowM(q,0.006),bm),SHCOL,6,0,0,SHA);
+  }
+  if(FB){
+   G.bindFramebuffer(G.FRAMEBUFFER,null);G.viewport(0,0,W,H);
+   G.clearColor(0.027,0.035,0.071,1);
+   if(sFBok){
+    // the buffer holds coverage-tinted colour already multiplied by alpha
+    // (shadows accumulated onto transparent black), so the blit composites
+    // with ONE, not SRC_ALPHA — the latter would square the coverage and
+    // make this rung a quarter as dark as the single-lamp one it replaces.
+    G.disable(G.DEPTH_TEST);G.blendFunc(G.ONE,G.ONE_MINUS_SRC_ALPHA);
+    G.activeTexture(G.TEXTURE0);G.bindTexture(G.TEXTURE_2D,sTX);
+    G.uniform2f(uPix,1/W,1/H);G.uniform2f(uTPix,1/sTW,1/sTH);
+    // draw() uploads uMVP=PV*mat: the quad verts ARE screen coords, so this
+    // one draw runs with PV pinned to identity (restored right after).
+    const _pv=PV;PV=m4id();
+    draw(M_QUAD,m4id(),SHCOL,9,0,0,1);
+    PV=_pv;
+    G.bindTexture(G.TEXTURE_2D,null);
+    G.blendFunc(G.SRC_ALPHA,G.ONE_MINUS_SRC_ALPHA);G.enable(G.DEPTH_TEST);
+   }
+  }
+ }else if(SHQ===4){
+  // ellipse rung: one flattened sphere per object, no projection, no
+  // per-fixture loop - the cheapest shadow that still grounds the object.
+  // The spot is stretched ALONG its axis: along the away-from-lamp
+  // direction for an upright pin, along the pin's own axis once it is down
+  // (a floor pin's shadow is a long streak, not a sideways blob); the FS
+  // fades it radially, so it blurs out instead of cutting out.
+  // A ball is round: circular spot, rotation would be pointless.
+  const L=LIGHTS[3];
+  for(const p of pins){
+   if(p.dead||p.drop||p.z<SHED)continue;
+   let ax,az;
+   if(p.th>0.7){ax=cos(p.dir);az=sin(p.dir)} // down: along the pin axis
+   else{ax=p.x-L[0];az=p.z-L[2]}             // upright: tail runs from the rack lamp
+   const ln=sqrt(ax*ax+az*az)||1;ax/=ln;az/=ln;
+   const e=ln<0.3?m4s(0.16,0.004,0.16): // under the lamp: direction undefined -> round
+    m4mul(m4ry(atan2(-az,ax)),m4s(0.30,0.004,0.11));
+   draw(M_SPH,m4mul(m4t(p.x,0.004,p.z),e),SHCOL,6.2,0,0,0.16);
+  }
+  if(ball&&!ball.dead&&ball.y>-0.05)
+   draw(M_SPH,m4mul(m4t(ball.x,0.006,ball.z),m4s(BALL_R*1.3,0.005,BALL_R*1.3)),SHCOL,6.2,0,0,0.2);
+ } // SHQ===5: the floor of the ladder - no shadows, the cheapest frame there is
  G.depthMask(true);G.disable(G.BLEND);
  for(const p of pins){
   if(p.dead)continue;
@@ -1475,18 +1820,56 @@ function render(){
 /* ---------- audio ---------- */
 let AC=null,noiseBuf=null,rumble=null,actHits=0;const MAXHITS=16;
 // every sfx runs through one master bus: it feeds the speakers and, during a
-// throw, a MediaStream tap that records the live mix - the replay replays the
-// REAL sound (see the replay audio block), so the approach segment sounds
-// exactly like the throw did and the slow segment is that same audio
-// time-stretched rather than re-synthesized.
-let master=null,recDest=null,mrec=null,THROW_AUD=null,IRBUF=null;
+// throw, a tap that records the live mix - the replay replays the REAL sound
+// (see the replay audio block), so the approach segment sounds exactly like
+// the throw did and the slow segment is that same audio time-stretched rather
+// than re-synthesized.
+// The tap is an AudioWorklet that streams the master bus out as raw samples:
+// capture starts at the exact render quantum and needs no encoder, no blob,
+// no decode. MediaRecorder was the weak link - on a loaded device its stream
+// start lags up to ~1s and the webm decode finishes after the replay has
+// already begun, so the slow-motion segment got no audio at all (the
+// reported "sound disappears when the ball hits the pins").
+let master=null,CAP=null,THROW_AUD=null,IRBUF=null;
+let capChunks=null,capStart=0,capHead=0;
 function audioInit(){
  if(AC||muted)return;
  try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return}
  noiseBuf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);
  const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=rand()*2-1;
  master=AC.createGain();master.connect(AC.destination);
- try{recDest=AC.createMediaStreamDestination();master.connect(recDest)}catch(e){recDest=null}
+ const src='class Cap extends AudioWorkletProcessor{'
+  +'constructor(){super();this.on=false;this.hdr=false;'
+  +'this.port.onmessage=e=>{if(e.data==="off"){this.on=false;this.port.postMessage("end")}else{this.on=true;this.hdr=true}}}'
+  +'process(i){if(this.on){if(this.hdr){this.hdr=false;this.port.postMessage({k:"s",t:currentTime})}'
+  +'const c=i[0]&&i[0][0];if(c){const d=new Float32Array(c);this.port.postMessage(d,[d.buffer])}}return true}}'
+  +'registerProcessor("cap",Cap)';
+ try{
+  const url=URL.createObjectURL(new Blob([src],{type:"application/javascript"}));
+  AC.audioWorklet.addModule(url).then(()=>{
+   const n=new AudioWorkletNode(AC,"cap",{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[1]});
+   const sink=AC.createGain();sink.gain.value=0;sink.connect(AC.destination);
+   n.connect(sink);master.connect(n);
+   n.port.onmessage=e=>{
+    const v=e.data;
+    if(v==="end"){ // FIFO: every block has arrived -> assemble the buffer
+     if(!capChunks)return; // a newer recStart already replaced it: discard
+     let n=capHead|0;for(const d of capChunks)n+=d.length;
+     if(n>capHead){
+      const bf=AC.createBuffer(1,n,AC.sampleRate),ch=bf.getChannelData(0);
+      let p=capHead;for(const d of capChunks){ch.set(d,p);p+=d.length}
+      THROW_AUD=bf;
+     }else THROW_AUD=null;
+     capChunks=null;capHead=0;
+    }else if(v&&v.k==="s"){
+     // head of the buffer = recStart's instant: pad the gap between that and
+     // the first quantum the worklet actually captured (message transit)
+     capHead=max(0,Math.round((v.t-capStart)*AC.sampleRate));
+    }else if(capChunks)capChunks.push(v);
+   };
+   CAP={node:n,port:n.port};
+  }).catch(()=>{});
+ }catch(e){}
 }
 function tone(f,t0,dur,type,vol){
  if(!AC)return;
@@ -1539,20 +1922,14 @@ function rumbleOn(){
 }
 function rumbleOff(){if(rumble){rumble.src.stop();rumble=null}}
 /* record the live throw mix (rec[] starts at the same instant, so recorded
- buffer time f*DT lines up with rec frame f); decoded on stop for the replay */
+ buffer time f*DT lines up with rec frame f); the worklet's "off" ack
+ assembles the AudioBuffer synchronously - no encode, no decode */
 function recStart(){
- if(muted||!AC||!recDest||typeof MediaRecorder==='undefined')return;
- THROW_AUD=null;
- try{mrec=new MediaRecorder(recDest.stream)}catch(e){mrec=null;return}
- const ck=[];
- mrec.ondataavailable=e=>{if(e.data.size)ck.push(e.data)};
- mrec.onstop=()=>{mrec=null;
-  const bl=new Blob(ck,{type:'audio/webm'});ck.length=0;if(!bl.size)return;
-  bl.arrayBuffer().then(ab=>AC.decodeAudioData(ab))
-   .then(bf=>{THROW_AUD=bf}).catch(()=>{})};
- mrec.start();
+ if(muted||!AC||!CAP)return;
+ THROW_AUD=null;capChunks=[];capHead=0;capStart=AC.currentTime;
+ try{CAP.port.postMessage("on")}catch(e){capChunks=null}
 }
-function recStop(){if(mrec){try{mrec.stop()}catch(e){mrec=null}}}
+function recStop(){if(CAP)try{CAP.port.postMessage("off")}catch(e){}}
 function sGutter(){if(!AC)return;const t=AC.currentTime;const o=AC.createOscillator(),g=AC.createGain();
  o.type='sawtooth';o.frequency.setValueAtTime(300,t);o.frequency.exponentialRampToValueAtTime(110,t+0.5);
  g.gain.setValueAtTime(0.12,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.5);
@@ -1863,7 +2240,8 @@ $('dbgbtn').addEventListener('click',dbEnter);
 // from the first pin contact the visuals drop to slow motion while the audio
 // stretches down by the same factor and opens into a reverb (see repAudStart).
 // A camera straight above the live rack always runs; good shots get two
-// diagonal corner angles too. SKIP cuts the sequence at any point.
+// diagonal corner angles too. SKIP ends the whole sequence at any point and
+// goes straight to the next ball.
 let RP=null;
 const REP_SPD=0.35; // fraction of real time
 /* Replay audio = the throw's own recorded mix (recStart at the throw frame,
@@ -1886,8 +2264,8 @@ function getIR(){
  IRBUF=b;return b}
 function repAudStart(frm,n){
  if(!RP||RP.aud)return;
- // startReplay fires while the decoded buffer may still be in flight
- // (recStop -> blob -> decode); retry a moment until it lands.
+ // startReplay can fire while the worklet's last blocks are still in
+ // flight (the "off" ack assembles the buffer); retry briefly until it lands.
  if(!THROW_AUD){if((n|0)<10)setTimeout(()=>repAudStart(RP?RP.cur:frm,(n|0)+1),150);return}
  if(!AC||AC.state!=='running'||muted)return;
  const off=max(0,frm*DT);if(off>=THROW_AUD.duration)return;
@@ -1913,6 +2291,12 @@ function repAudStart(frm,n){
  }catch(e){RP.aud=null}
 }
 function repAudStop(){if(RP&&RP.aud){try{RP.aud.s.stop()}catch(e){}RP.aud=null}}
+function repEndAll(){
+ // SKIP ends the WHOLE replay sequence, not just this camera angle: the
+ // player asked for the next move, so every remaining angle is cancelled.
+ if(!RP)return;
+ repAudStop();RP=null;$('skipbtn').style.display='none';finishThrow();
+}
 function startReplay(good){
  // window: ~0.75s before the ball first touches a pin until the pile settles.
  // The approach segment runs at REAL speed with real sound; slow motion (and
@@ -1963,16 +2347,24 @@ function startReplay(good){
   // clips the pile on the horizontal short axis. Scaling px past the wall
   // line would put the wall body in the shot, so on extreme fits height and
   // depth grow while px holds at the corridor line.
+  // The corridor limit applies to the CAMERA's world x, not the offset: a
+  // pile centered to one side (typical after an angle-shot carry) shifts the
+  // camera by cx too, and offset-only clamping buried the far camera inside
+  // the wall body — it filmed wall instead of the pile. Offsets are clamped
+  // so cx+px stays at the corridor line; the fit is computed from the real
+  // offset, so the wall-side angle steepens toward overhead instead of
+  // clipping through masonry.
   const tzd=Math.min(cz+0.7,RACKZ-0.2);
   const spread=max(0,max(hw,hd)-0.9);
-  const tv2=tan(46*PI/360);
+  const tv2=tan(46*PI/360),lim=WALLX+0.19;
   for(const s of[-1,1]){
-   let px=s*min(1.05+spread*0.55,WALLX+0.19),py=1.9+spread*0.35,pz=tzd+3.6+spread*1.1;
+   let px=s*min(1.05+spread*0.55,lim),py=1.9+spread*0.35,pz=tzd+3.6+spread*1.1;
+   px=clamp(px,-lim-cx,lim-cx);
    const need=max(hw/(tv2*max(ASP,0.3)),hd/tv2)*1.12;
    const d=sqrt(px*px+py*py+(pz-tzd)*(pz-tzd));
    const k2=min(need/d,2.2);
    if(k2>1){py*=k2;pz=tzd+(pz-tzd)*k2;
-    px=clamp(px*k2,-(WALLX+0.19),WALLX+0.19);}
+    px=clamp(px*k2,-lim-cx,lim-cx);}
    cams.push({px:cx+px,py,pz,tx:cx,ty:0.35,tz:tzd,up:[0,1,0],fv:46});
   }
  }
@@ -1988,8 +2380,7 @@ function repNext(){
  if(!RP)return;
  repAudStop();
  RP.ci++;
- if(RP.ci>=RP.cams.length){
-  RP=null;$('skipbtn').style.display='none';finishThrow();return}
+ if(RP.ci>=RP.cams.length){repEndAll();return}
  RP.cur=RP.i0;RP.acc=0;RP.wait=0;recApply(RP.i0);repAudStart(RP.i0);
 }
 function replayStep(dt){
@@ -2005,13 +2396,13 @@ function repCam(){
  lkX=c.tx;lkY=c.ty;lkZ=c.tz;fov=c.fv;
  PV=m4mul(m4persp(c.fv*PI/180,ASP,0.05,60),m4look([c.px,c.py,c.pz],[c.tx,c.ty,c.tz],c.up));
 }
-$('skipbtn').addEventListener('click',()=>{audioInit();repNext()});
+$('skipbtn').addEventListener('click',()=>{audioInit();repEndAll()});
 addEventListener('keydown',e=>{
  if(dbgOn||phase!=='replay')return;
  const a=document.activeElement;
  if(a&&a.id==='skipbtn'&&(e.code==='Space'||e.code==='Enter'))return; // native press
  if(e.code==='Space'||e.code==='Enter'||e.code==='Escape'||e.code==='KeyB'||e.code==='Backspace'){
-  e.preventDefault();repNext()}
+  e.preventDefault();repEndAll()}
 });
 function drawDebug(){
  // velocity vectors: red = pin slide, cyan = ball motion, amber = tip-over direction
@@ -2033,7 +2424,7 @@ window.DBG={on:dbEnter,off:dbExit,step:dbgStep,seek:recApply,n:()=>rec.length,
  throw:()=>throwSnap,copy:copyThrow};
 /* ---------- main loop ---------- */
 const DT=1/120;
-let last=performance.now(),acc=0,ftEma=-1,qualWin=0,qualGood=0;
+let last=performance.now(),acc=0,ftEma=-1,qualWin=0,qualGood=0,qualBad=0;
 // gamepad: A on a focused button presses it (menu buttons are auto-focused);
 // in the aim phase A mirrors the SPACE path - lock steps, hold to charge
 let gpPrev=false;
@@ -2059,15 +2450,27 @@ function loop(now){
  requestAnimationFrame(loop);
  let dt=(now-last)/1000;last=now;if(dt>0.1)dt=0.1;
  uTimeVal=now/1000;
- // frame-budget watchdog: an EMA of real frame time decides headroom. Drop the
- // render scale one notch per 2s while sustained below ~40fps; climb back only
- // after ~6s of comfortable frames, so the two directions cannot fight.
+ // frame-budget watchdog ('auto' profile only): an EMA of real frame time
+ // decides headroom. The comfort target is 0.021s (~48fps), NEVER a constant
+ // at or below one display refresh: a 60Hz vsync-capped machine can never
+ // produce a 16.5ms frame, so the old unreachable recovery target meant one
+ // early dip - shader compiles in the first seconds always trip it - walked
+ // the quality down forever and it never climbed back: a capable laptop sat
+ // at scale 0.5 with every shadow switched off. The two thresholds leave a
+ // 4ms deadband between them (recover <21ms, drop only when EMA holds
+ // >25ms, ~40fps, for TWO consecutive 2s windows) so a device cannot
+ // oscillate and one hitch cannot cost a notch. Notches are tenths: the
+ // shadow ladder reads RS in the same tenths, so a slow device passes
+ // through EVERY rung (fewer lamps, single main, blurred low-res, contact
+ // ellipses) on the way down instead of jumping past them.
  ftEma=ftEma<0?dt:ftEma*0.92+min(dt,0.05)*0.08;
  qualWin+=dt;
- if(qualWin>2){qualWin=0;
-  if(ftEma>0.025&&RS>0.5){RS=max(0.5,RS-0.25);qualGood=0;resize()}
-  else{if(ftEma<0.0165)qualGood++;else qualGood=0;
-   if(RS<1&&qualGood>=3){RS=min(1,RS+0.25);qualGood=0;resize()}}}
+ if(gfx.p==='auto'&&qualWin>2){qualWin=0;
+  if(ftEma>0.025){qualBad++;qualGood=0;
+   if(qualBad>=2&&RS>0.5){RS=max(0.5,RS-0.1);qualBad=0;resize()}}
+  else if(ftEma<0.021){qualBad=0;qualGood++;
+   if(qualGood>=2&&RS<1){RS=min(1,RS+0.1);qualGood=0;resize()}}
+  else{qualBad=0;qualGood=0}}
  acc+=dt;
  // bound catch-up to 6 substeps (0.05s of sim) per frame: after a GC pause or
  // a tab-return the dt clamp still queued up to 12 physics steps + record
@@ -2104,6 +2507,7 @@ function loop(now){
  render();
 }
 function resetGame(){
+ pickSurfaces(); // a new game runs on a freshly-rolled lane wood + wall set
  fr=blankFrames();frame=0;throwN=0;
  $('end').classList.remove('on');
  startThrow(false);updateSheet();
@@ -2131,11 +2535,38 @@ $('play').addEventListener('click',()=>{audioInit();$('scr').classList.remove('o
 $('helpbtn').addEventListener('click',()=>{audioInit();$('help').classList.add('on');focusEl($('helpx'))});
 $('helpx').addEventListener('click',()=>{$('help').classList.remove('on');focusEl($('play'))});
 $('help').addEventListener('click',e=>{if(e.target.id==='help')$('helpx').click()});
+/* ---------- graphics menu: the profile, manual picks, and the ALWAYS-HONEST ----------
+   live line: whatever the game is really rendering right now, shown where the
+   decision used to be hidden. Profiles fix both knobs; AUTO hands them to the
+   loop's watchdog; CUSTOM edits them directly. Everything persisted. ---------- */
+let gfxTimer=0;
+const SHQLAB=['all six lamps','three lane lamps','single main lamp','low-res projection','contact shadows','none'];
+function gfxUI(){
+ for(const b of $('oprof').children)b.classList.toggle('on',b.dataset.p===gfx.p);
+ $('orsel').disabled=$('oshqsel').disabled=gfx.p!=='custom';
+ $('orsel').value=String(gfx.rs);$('oshqsel').value=String(gfx.shq);
+ gfxLive()}
+function gfxLive(){
+ if(gfx.p==='auto'){$('orsel').value=String(RS);$('oshqsel').value=String(SHQ)}
+ const sc=gfx.p==='auto'?RS:gfx.rs,sq=gfx.p==='auto'?SHQ:gfx.shq;
+ $('olive').textContent=(gfx.p==='auto'?'AUTO is using right now: ':'FIXED settings: ')+
+  W+'\u00d7'+H+'px ('+Math.round(sc*100)+'% scale), shadows: '+SHQLAB[sq]+'.'}
+$('optbtn').addEventListener('click',()=>{audioInit();$('opts').classList.add('on');
+ gfxUI();gfxTimer=setInterval(gfxLive,1000);focusEl($('optsx'))});
+$('optsx').addEventListener('click',()=>{$('opts').classList.remove('on');
+ clearInterval(gfxTimer);focusEl($('play'))});
+$('opts').addEventListener('click',e=>{if(e.target.id==='opts')$('optsx').click()});
+$('oprof').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+ audioInit();gfx.p=b.dataset.p;applyGfx();gfxUI()});
+$('orsel').addEventListener('change',()=>{gfx.p='custom';gfx.rs=+$('orsel').value;applyGfx();gfxUI()});
+$('oshqsel').addEventListener('change',()=>{gfx.p='custom';gfx.shq=+$('oshqsel').value|0;applyGfx();gfxUI()});
 addEventListener('keydown',e=>{
  if($('help').classList.contains('on')&&(e.code==='Escape'))$('helpx').click();
+ if($('opts').classList.contains('on')&&(e.code==='Escape'))$('optsx').click();
 });
 try{muted=localStorage.getItem('bowl32snd')==='off';
  if(localStorage.getItem('bowl32mode')==='100')setMode(true)}catch(e){}
+applyGfx(); // a remembered profile takes effect BEFORE the first frame
 newRack();updateSheet();modeUI();
 $('sbtn').textContent='SOUND: '+(muted?'OFF':'ON');
 $('scr').classList.add('on');
