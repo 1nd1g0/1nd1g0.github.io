@@ -180,7 +180,7 @@ Highest total after ten frames wins; 300 is the perfect game.</p>
 <h3>SHADOWS</h3>
 <select id="oshqsel">
 <option value="0">ALL SIX LAMPS &mdash; full projected shadows</option>
-<option value="1">THREE LANE LAMPS</option>
+<option value="1">FOUL + MID + RACK LAMPS</option>
 <option value="2">SINGLE MAIN LAMP</option>
 <option value="3">LOW-RES PROJECTION (blurred)</option>
 <option value="4">CONTACT SHADOWS ONLY</option>
@@ -230,8 +230,9 @@ function resize(){const dpr=Math.min(window.devicePixelRatio||1,DPRMAX)*RS;
  W=C.width=Math.max(2,innerWidth*dpr|0);H=C.height=Math.max(2,innerHeight*dpr|0);ASP=W/H;
  LOWT=RS<0.9;
  // shadow quality ladder (the user-asked gradation, six rungs end to end):
- // all six fixtures project the real mesh -> only the three lane/rack
- // fixtures -> one main fixture -> the same silhouettes rendered HALF-SIZED
+ // all six fixtures project the real mesh -> only the foul, mid and rack
+ // fixtures (a set that SPANS the hall, so no rung is shadow-blind at the
+ // rack) -> one main fixture -> the same silhouettes rendered HALF-SIZED
  // into a low-res buffer, blurred and blitted back -> cheap soft contact
  // ellipses oriented along the throw direction -> no shadows at all. Never a
  // mode where shadows are simply absent because the camera happens to be
@@ -568,9 +569,19 @@ uTPix=G.getUniformLocation(PG,'uTPix');
    so the last fixture sits over the deck at the rack instead. */
 const LIGHTS=[[0,3.0,-1,0.68],[0,3.0,-5,0.68],[0,3.0,-9,0.68],[0.25,3.25,-16.35,1.25],
  [0,3.0,-17,0.68],[0,2.9,-19.6,0.55]];
-// shadow fallback under load: the first three fixtures cover lane and rack,
-// and a half-bright single-source shadow still reads as contact with the deck
-const LIGHTS3=LIGHTS.slice(0,3);
+// shadow fallback under load: with distance-weighted shadows a fixture only
+// casts where it actually lights (~4m reach), so the fallback set has to SPAN
+// the hall - foul lamp + mid lamp + rack main - not three adjacent strips,
+// which would leave the rack shadowless at that rung.
+const LIGHTS3=[LIGHTS[0],LIGHTS[1],LIGHTS[3]];
+// A cast shadow can only be as dark as the light it blocks: the fixture's
+// illumination falls off as the shader's lamp term (w*exp(2.0-0.22*d2)), so
+// each fixture's shadow layer is scaled by that term normalized to the
+// fixture's own value directly underfoot: ~41% as dark 2m away, ~14% at 3m,
+// and past ~3.9m (r<0.04) the fixture contributes no light at the object -
+// it casts NO shadow there at all, so the draw is skipped entirely.
+function shA(L,px,pz){const dx=L[0]-px,dz=L[2]-pz;
+ const r=Math.exp(-0.22*(dx*dx+dz*dz));return r<0.04?0:r;}
 const ltA=new Float32Array(24);
 for(let i=0;i<6;i++)ltA.set(LIGHTS[i],i*4);
 G.uniform4fv(uLights,ltA);
@@ -674,6 +685,45 @@ function ensureSFB(){const w=max(2,W>>1),h=max(2,H>>1);
  const ok=G.checkFramebufferStatus(G.FRAMEBUFFER)===G.FRAMEBUFFER_COMPLETE;
  G.bindFramebuffer(G.FRAMEBUFFER,null);G.bindTexture(G.TEXTURE_2D,null);
  return ok;}
+// The static-shadow accumulation buffer for the silhouette rungs 0..2: an
+// object at rest projects an IDENTICAL silhouette every frame, so its layers
+// are baked ONCE into this full-res colour-only buffer and blitted; only
+// objects whose pose changed redraw. Same channel contract as sFB (proven at
+// the low-res rung): coverage premultiplies on bake, blits with ONE. A
+// refused framebuffer disables the cache (shOK=false) and everything draws
+// direct - the pre-cache behaviour, never a missing-shadow behaviour.
+let aFB=null,aTX=null,aTW=0,aTH=0;
+function ensureAFB(){
+ if(aFB&&aTW===W&&aTH===H)return true;
+ if(aFB){G.deleteFramebuffer(aFB);aFB=null;}
+ if(aTX){G.deleteTexture(aTX);aTX=null;}
+ aTW=W;aTH=H;
+ aTX=G.createTexture();G.bindTexture(G.TEXTURE_2D,aTX);
+ G.texImage2D(G.TEXTURE_2D,0,G.RGBA,W,H,0,G.RGBA,G.UNSIGNED_BYTE,null);
+ G.texParameteri(G.TEXTURE_2D,G.TEXTURE_MIN_FILTER,G.NEAREST);
+ G.texParameteri(G.TEXTURE_2D,G.TEXTURE_MAG_FILTER,G.NEAREST);
+ G.texParameteri(G.TEXTURE_2D,G.TEXTURE_WRAP_S,G.CLAMP_TO_EDGE);
+ G.texParameteri(G.TEXTURE_2D,G.TEXTURE_WRAP_T,G.CLAMP_TO_EDGE);
+ aFB=G.createFramebuffer();G.bindFramebuffer(G.FRAMEBUFFER,aFB);
+ G.framebufferTexture2D(G.FRAMEBUFFER,G.COLOR_ATTACHMENT0,G.TEXTURE_2D,aTX,0);
+ const ok=G.checkFramebufferStatus(G.FRAMEBUFFER)===G.FRAMEBUFFER_COMPLETE;
+ G.bindFramebuffer(G.FRAMEBUFFER,null);G.bindTexture(G.TEXTURE_2D,null);
+ return ok;}
+// Per-object pose bookkeeping for the bake: p.bk marks pins whose CURRENT
+// pose is baked into aFB; p.sp is the pose tuple [x,y,z,dir,th] last frame
+// (exactly the shadowM inputs). Motion below a float pixel counts as AT REST
+// - a 1e-4 m tail shift is invisible on the deck - so physics' residual
+// micro-slide never defeats the cache; real motion bails out immediately.
+let shQ=-1,shZ=0,shW=0,shH=0,shOK=false,bb=false,bsp=null,
+ shPV=null,shStale=true;
+function poseTick(p){const x=p.x,y=p.y||0,z=p.z,d=p.dir,t=p.th,s=p.sp;
+ const q=!!s&&abs(x-s[0])<1e-4&&abs(y-s[1])<1e-4&&abs(z-s[2])<1e-4&&
+  abs(d-s[3])<1e-4&&abs(t-s[4])<1e-4;
+ if(s){s[0]=x;s[1]=y;s[2]=z;s[3]=d;s[4]=t;}else p.sp=[x,y,z,d,t];
+ return q;}
+function bposeTick(){const b=ball?[ball.x,max(ball.y,BALL_R),ball.z]:null,s=bsp;
+ const q=!!s&&!!b&&abs(b[0]-s[0])<1e-4&&abs(b[1]-s[1])<1e-4&&abs(b[2]-s[2])<1e-4;
+ bsp=b;return q;}
 function draw(mk,mat,col,mode,spec,hi,alpha){
  G.uniformMatrix4fv(uM,false,mat);
  G.uniformMatrix4fv(uMVP,false,m4mul(PV,mat));
@@ -731,6 +781,7 @@ function setMode(m100){
  G.uniform1f(uLWH,LWH);
  G.uniform1f(uDECKZ,LANEZ);
  modeAudio(); // the live reverb follows the room: small (10) / moderate (100)
+ buildRoom(); // the room furniture scales with the lane: rebuild the baked list
 }
 const BALL_R=0.109,MBALL=6.8;
 const PIN_H=0.381,PR=0.059;
@@ -1576,6 +1627,40 @@ function camUpdate(dt){
 const COL={floor:[0.07,0.08,0.13],gutter:[0.20,0.20,0.25],
 pin:[0.96,0.95,0.90],ball:[0.14,0.16,0.72],neo:[0.30,0.80,1.0],
 lit:[1.0,0.97,0.85],pit:[0.04,0.045,0.07]};
+// ROOM SURFACES BAKED: floor, pit mouth, deck, gutters, rails, neon strips
+// and side/back walls are geometrically IDENTICAL every frame - the room and
+// its fixtures are static - so their matrices are built ONCE per mode and
+// replayed as a draw list, not re-derived 60-120 times a second. What stays
+// in the shader is the per-fragment LAMP term (lamb ×6 fixtures, spec, fog):
+// it is VIEW-dependent (the camera moves), so a screen-space bake would
+// smear with the camera and a world lightmap would cost a texture fetch per
+// fragment on the largest surfaces in frame - more bandwidth than the half
+// dozen exp() terms it replaces. Baking the geometry kills the CPU-side
+// per-frame cost of these 15 draws; the pixels cost what one quad costs.
+let ROOML=null;
+function buildRoom(){const LEN=4.175-LANEZ,ZC=(4.175+LANEZ)/2,U=LW/1.06,
+ PL=LANEZ+20.375,R=[];
+ // floor split around pit opening: lane ends z=LANEZ (both modes -19.32 so
+ // the whole rack stands on wood), kickback front face z=PITZ-1.0 (-20.35);
+ // the lane/railing run and the dark pit mouth (1.03m between deck end and
+ // kickback) parameterize from LANEZ.
+ R.push([m4mul(m4t(0,-0.05,-6.62),m4s(40,0.1,24.75)),COL.floor,0,0,0]);
+ R.push([m4mul(m4t(0,-0.05,-23.15),m4s(40,0.1,5.7)),COL.floor,0,0,0]);
+ R.push([m4mul(m4t(0,-0.15,(LANEZ-20.225)/2),m4s(3.2*U,0.1,PL)),COL.pit,0,0,0]);
+ R.push([m4mul(m4t(0,-0.057,ZC),m4s(LW,0.12,LEN)),[1,1,1],2,0.30,0]);
+ for(const s of[-1,1]){
+  R.push([m4mul(m4t(s*(LWH+GUTW/2),-0.019,ZC),m4s(GUTW,0.03,LEN)),COL.gutter,0,0,0]);
+  R.push([m4mul(m4t(s*(WALLX+0.03),0.14,ZC),m4s(0.06,0.42,LEN)),[1,1,1],7,0,0]);
+  R.push([m4mul(m4t(s*WALLX,0.365,ZC),m4s(0.03,0.03,LEN)),COL.neo,5,0,0]);
+  R.push([m4mul(m4t(s*(WALLX+0.99),1.5,-7.4),m4s(1.4,3.0,25)),[1,1,1],7,0,0]);
+ }
+ // back wall gets the acoustic-diamond material (kind override uHi=3.5):
+ // behind a rack that is the one material a real alley always has.
+ R.push([m4mul(m4t(0,1.5,PITZ-1.1),m4s(6.4*U,3.0,0.2)),[1,1,1],7,0,3.5]);
+ R.push([m4mul(m4t(0,-0.37,PITZ+0.55),m4s(3.0*U,0.6,1.3)),COL.pit,0,0,0]);
+ R.push([m4mul(m4t(0,2.6,PITZ-0.95),m4s(4.0*U,0.06,0.06)),COL.neo,5,0,0]);
+ ROOML=R;}
+buildRoom(); // 10-pin defaults are inline in the module lets; setMode rebuilds
 let uTimeVal=0;
 /* world-space arrow helpers for the aim guides. arrow(): flat arrow, tail at
  (x,z), pointing along unit dir (dx,dz), length len (head = last 0.15*sc).
@@ -1618,26 +1703,9 @@ function render(){
  G.uniform3fv(uFog,[0.027,0.035,0.071]);
  G.uniform3fv(uCam,[camX,camY,camZ]);
  const U=LW/1.06; // pit/kickback/room furniture scales with lane width
- // floor split around pit opening: lane ends z=LANEZ (both modes -19.32 so the
- // whole rack stands on wood), kickback wall front face z=PITZ-1.0 (-20.35).
- // The lane/railing run + the dark pit mouth (1.03m between deck end and
- // kickback) are parameterized from LANEZ.
- const LEN=4.175-LANEZ,ZC=(4.175+LANEZ)/2,PL=LANEZ+20.375;
- draw(M_BOX,m4mul(m4t(0,-0.05,-6.62),m4s(40,0.1,24.75)),COL.floor,0,0,0);
- draw(M_BOX,m4mul(m4t(0,-0.05,-23.15),m4s(40,0.1,5.7)),COL.floor,0,0,0);
- draw(M_BOX,m4mul(m4t(0,-0.15,(LANEZ-20.225)/2),m4s(3.2*U,0.1,PL)),COL.pit,0,0,0);
- draw(M_BOX,m4mul(m4t(0,-0.057,ZC),m4s(LW,0.12,LEN)),[1,1,1],2,0.30,0);
- for(const s of[-1,1]){
-  draw(M_BOX,m4mul(m4t(s*(LWH+GUTW/2),-0.019,ZC),m4s(GUTW,0.03,LEN)),COL.gutter,0,0,0);
-  draw(M_BOX,m4mul(m4t(s*(WALLX+0.03),0.14,ZC),m4s(0.06,0.42,LEN)),[1,1,1],7,0,0);
-  draw(M_BOX,m4mul(m4t(s*WALLX,0.365,ZC),m4s(0.03,0.03,LEN)),COL.neo,5,0,0);
-  draw(M_BOX,m4mul(m4t(s*(WALLX+0.99),1.5,-7.4),m4s(1.4,3.0,25)),[1,1,1],7,0,0);
- }
- // back wall gets the acoustic-diamond material (kind override via uHi=3.5):
- // behind a rack that is the one material a real alley always has.
- draw(M_BOX,m4mul(m4t(0,1.5,PITZ-1.1),m4s(6.4*U,3.0,0.2)),[1,1,1],7,0,3.5);
- draw(M_BOX,m4mul(m4t(0,-0.37,PITZ+0.55),m4s(3.0*U,0.6,1.3)),COL.pit,0,0,0);
- draw(M_BOX,m4mul(m4t(0,2.6,PITZ-0.95),m4s(4.0*U,0.06,0.06)),COL.neo,5,0,0);
+ // floor, pit, deck, gutters, rails, neon, walls: one baked static draw list
+ // (matrices built in buildRoom; U above stays for the aim-guide CAP below).
+ for(const r of ROOML)draw(M_BOX,r[0],r[1],r[2],r[3],r[4]);
  // live dotted trajectory while flicking, and the angle ruler while aiming
  if(pred.length)for(const q of pred)
   draw(M_BOX,m4mul(m4t(q[0],0.003,q[1]),m4s(0.055,0.006,0.055)),COL.lit,0,0,0.6);
@@ -1715,13 +1783,17 @@ function render(){
  // perspective divide performs the projection, so shadows carry the object's
  // true silhouette - pin profile, not an approximation - and every lamp's
  // share pools directly underfoot with its own tail, because the fixtures are
- // above the lane. Each layer stays translucent (~43% where all six agree,
- // ~31% at three, one stronger lone tail still reads as contact), so a blob
- // can never read as black paint laid on the object itself. No depth writes.
+ // above the lane. A fixture's share is only as dark as the light it blocks:
+ // every layer is weighted by the shader's lamp falloff (shA), so distant
+ // fixtures cast NOTHING at all and an object keeps only its near lamps'
+ // pools (~43% where the six agree underfoot, ~31% at three, one stronger
+ // lone tail still reads as contact) - a blob can never read as black paint
+ // laid on the object itself. Objects at rest bake their layers once into
+ // the accumulation buffer; only movers redraw. No depth writes.
  G.enable(G.BLEND);G.blendFunc(G.SRC_ALPHA,G.ONE_MINUS_SRC_ALPHA);G.depthMask(false);
  const SHCOL=[0.010,0.010,0.020];
  // rung selection per the ladder in resize(): 0 full 6-fixture silhouette,
- // 1 the three lane/rack fixtures, 2 the single main fixture (stronger alpha
+ // 1 the foul/mid/rack fixtures, 2 the single main fixture (stronger alpha
  // so one lone tail still reads as contact), 3 the same silhouette drawn
  // half-sized into the shadow buffer and blitted back blurred, 4 the cheap
  // soft contact ellipse oriented along the throw, 5 no shadows at all.
@@ -1739,37 +1811,47 @@ function render(){
  if(SHQ<=3){
   const LG=SHQ===0?LIGHTS:SHQ===1?LIGHTS3:[LIGHTS[3]],
    SHA=[0.09,0.11,0.16,0.16][SHQ],FB=SHQ===3;
-  // the low-res rung renders the exact same silhouettes, just into the
-  // half-size buffer: quarter fill cost, and the upscale + FS tent hide the
-  // jaggies that drawing half-res straight to the screen would show.
-  let sFBok=false;
-  if(FB&&ensureSFB()){sFBok=true;
-   G.bindFramebuffer(G.FRAMEBUFFER,sFB);G.viewport(0,0,sTW,sTH);
-   G.clearColor(0,0,0,0);G.clear(G.COLOR_BUFFER_BIT);
-   // sFB has no depth attachment: ES2 leaves the depth test UNDEFINED against
-   // a missing buffer, and some rasterisers (SwiftShader at least) fail every
-   // fragment outright - the pass looked black. Nothing to gain anyway: the
-   // silhouettes accumulate onto a freshly cleared target, so leave depth off
-   // for this pass only; the blit below re-enables it.
-   G.disable(G.DEPTH_TEST);
-   // ...and split the blend channels: on a transparent-black target SRC_ALPHA
-   // SQUARS the coverage into alpha too (a 0.16 silhouette stored 0.026),
-   // which is exactly what made this rung near-invisible. Colour keeps its
-   // premultiplied "over"; alpha just writes through, then accumulates over.
-   G.blendFuncSeparate(G.SRC_ALPHA,G.ONE_MINUS_SRC_ALPHA,
-                       G.ONE,G.ONE_MINUS_SRC_ALPHA);}
-  for(const p of pins){
-   if(p.dead||p.drop||p.z<SHED)continue;
+  // one object's layers for every fixture in LG: a fixture only contributes
+  // where it actually lights (shA), skipped entirely when it doesn't.
+  function castPin(p){
    const off=sin(p.th)*PIN_CG,lift=p.th>0.02?0.0605*sin(min(p.th,PI/2)):0;
    const m=m4mul(m4mul(m4t(p.x-cos(p.dir)*off,(p.y||0)+lift,p.z-sin(p.dir)*off),
     m4ry(-p.dir)),m4rz(-p.th));
-   for(const q of LG)draw(M_PIN,m4mul(shadowM(q,0.004),m),SHCOL,6,0,0,SHA);
+   for(const q of LG){const al=SHA*shA(q,p.x,p.z);if(al>0)
+    draw(M_PIN,m4mul(shadowM(q,0.004),m),SHCOL,6,0,0,al);}
   }
-  if(ball&&!ball.dead&&ball.y>-0.05){
+  function castBall(){
    const bm=m4mul(m4t(ball.x,max(ball.y,BALL_R),ball.z),m4s(BALL_R,BALL_R,BALL_R));
-   for(const q of LG)draw(M_SPH,m4mul(shadowM(q,0.006),bm),SHCOL,6,0,0,SHA);
+   for(const q of LG){const al=SHA*shA(q,ball.x,ball.z);if(al>0)
+    draw(M_SPH,m4mul(shadowM(q,0.006),bm),SHCOL,6,0,0,al);}
   }
+  const shEl=(p)=>!p.dead&&!p.drop&&p.z>=SHED;
   if(FB){
+   // the low-res rung renders the exact same silhouettes, just into the
+   // half-size buffer: quarter fill cost, and the upscale + FS tent hide the
+   // jaggies that drawing half-res straight to the screen would show. It
+   // redraws every frame on purpose: its buffer must stay the source of the
+   // blur, and a buffer holding last frame's moving-object coverage would
+   // ghost. The bake cache lives on the direct rungs (below), where the
+   // per-draw overhead - not fill - is what hurts.
+   let sFBok=false;
+   if(ensureSFB()){sFBok=true;
+    G.bindFramebuffer(G.FRAMEBUFFER,sFB);G.viewport(0,0,sTW,sTH);
+    G.clearColor(0,0,0,0);G.clear(G.COLOR_BUFFER_BIT);
+    // sFB has no depth attachment: ES2 leaves the depth test UNDEFINED against
+    // a missing buffer, and some rasterisers (SwiftShader at least) fail every
+    // fragment outright - the pass looked black. Nothing to gain anyway: the
+    // silhouettes accumulate onto a freshly cleared target, so leave depth off
+    // for this pass only; the blit below re-enables it.
+    G.disable(G.DEPTH_TEST);
+    // ...and split the blend channels: on a transparent-black target SRC_ALPHA
+    // SQUARS the coverage into alpha too (a 0.16 silhouette stored 0.026),
+    // which is exactly what made this rung near-invisible. Colour keeps its
+    // premultiplied "over"; alpha just writes through, then accumulates over.
+    G.blendFuncSeparate(G.SRC_ALPHA,G.ONE_MINUS_SRC_ALPHA,
+                        G.ONE,G.ONE_MINUS_SRC_ALPHA);}
+   for(const p of pins)if(shEl(p))castPin(p);
+   if(ball&&!ball.dead&&ball.y>-0.05)castBall();
    G.bindFramebuffer(G.FRAMEBUFFER,null);G.viewport(0,0,W,H);
    G.clearColor(0.027,0.035,0.071,1);
    if(sFBok){
@@ -1788,6 +1870,68 @@ function render(){
     G.bindTexture(G.TEXTURE_2D,null);
     G.blendFunc(G.SRC_ALPHA,G.ONE_MINUS_SRC_ALPHA);G.enable(G.DEPTH_TEST);
    }
+  }else{
+   // STATIC SHADOW BAKE (rungs 0..2): at aim the whole rack plus the ball
+   // stand still, and after a hit the settled pins do too - their silhouettes
+   // are frame-invariant, so they bake ONCE into aFB and ride to screen as a
+   // single blit; only objects whose pose CHANGED redraw. Membership drives
+   // rebuilds: a pin leaving a baked pose bails out of the buffer (no stale
+   // ghost where it used to be), a pin coming to rest joins on the next
+   // rebuild, and eligibility flips (drop/dead/deck edge) rebake too. At
+   // aim: ONE blit, zero silhouette draws. Mid-throw the camera dollies, so
+   // the cache stays OFF and everything draws direct - the pre-cache
+   // behaviour, which is also the CORRECT behaviour under a moving camera.
+   // The buffer holds SCREEN-space coverage baked through the camera that was
+   // current when it was built: a DOLLY, the pit top-down, the debug free
+   // camera (drag=orbit, wheel=zoom, WASD=pan) moves every silhouette on
+   // screen, so the pose keys alone are NOT enough. Gate on the PV matrix
+   // ITSELF - the single authority for what draw() projects - so EVERY camera
+   // path is covered, including the free camera that never touches
+   // camX/camY/camZ. While PV moves the cache is OFF (direct draw, the
+   // pre-cache behaviour, which is also the CORRECT behaviour under a moving
+   // camera); the first SETTLED frame rebuilds the buffer under the new view.
+   // No stale overlay can ever blit onto a camera it was not baked for.
+   let camSt=shPV!=null;
+   if(shPV){for(let i=0;i<16;i++)if(abs(PV[i]-shPV[i])>1e-4){camSt=false;break;}}
+   else shPV=new Float32Array(16);
+   shPV.set(PV);
+   let bake=SHQ!==shQ||SHED!==shZ||W!==shW||H!==shH||shStale;
+   shQ=SHQ;shZ=SHED;shW=W;shH=H;shStale=!camSt;
+   shOK=ensureAFB()&&camSt;
+   const mv=[];
+   for(const p of pins){
+    const e=shEl(p),same=poseTick(p);
+    if(p.bk){if(!e||!same){p.bk=false;bake=true;}}
+    else if(e&&same){p.bk=true;bake=true;}
+    if(e&&!p.bk)mv.push(p);
+   }
+   const bE=!!ball&&!ball.dead&&ball.y>-0.05,bS=bposeTick();
+   if(bb){if(!bE||!bS){bb=false;bake=true;}}
+   else if(bE&&bS){bb=true;bake=true;}
+   if(!shOK){ // buffer refused by the driver: full direct draw, no cache
+    mv.length=0;for(const p of pins)if(shEl(p))mv.push(p);bb=false;}
+   if(shOK&&bake){ // rebake the CURRENT static set
+    G.bindFramebuffer(G.FRAMEBUFFER,aFB);G.viewport(0,0,aTW,aTH);
+    G.clearColor(0,0,0,0);G.clear(G.COLOR_BUFFER_BIT);
+    G.disable(G.DEPTH_TEST);
+    G.blendFuncSeparate(G.SRC_ALPHA,G.ONE_MINUS_SRC_ALPHA,
+                        G.ONE,G.ONE_MINUS_SRC_ALPHA);
+    for(const p of pins)if(shEl(p)&&p.bk)castPin(p);
+    if(bE&&bb)castBall();
+    G.bindFramebuffer(G.FRAMEBUFFER,null);G.viewport(0,0,W,H);
+    G.clearColor(0.027,0.035,0.071,1);}
+   if(shOK){ // blit the baked coverage - premultiplied, so ONE (see sFB blit)
+    G.disable(G.DEPTH_TEST);G.blendFunc(G.ONE,G.ONE_MINUS_SRC_ALPHA);
+    G.activeTexture(G.TEXTURE0);G.bindTexture(G.TEXTURE_2D,aTX);
+    G.uniform2f(uPix,1/W,1/H);G.uniform2f(uTPix,1/aTW,1/aTH);
+    const _pv=PV;PV=m4id();
+    draw(M_QUAD,m4id(),SHCOL,9,0,0,1);
+    PV=_pv;
+    G.bindTexture(G.TEXTURE_2D,null);
+    G.blendFunc(G.SRC_ALPHA,G.ONE_MINUS_SRC_ALPHA);G.enable(G.DEPTH_TEST);}
+   // movers draw straight through, pooling over the baked statics
+   for(const p of mv)castPin(p);
+   if(bE&&!bb)castBall();
   }
  }else if(SHQ===4){
   // ellipse rung: one flattened sphere per object, no projection, no
@@ -1800,16 +1944,18 @@ function render(){
   const L=LIGHTS[3];
   for(const p of pins){
    if(p.dead||p.drop||p.z<SHED)continue;
+   const r4=shA(L,p.x,p.z);if(r4<=0)continue; // past the main lamp's reach: no shadow
    let ax,az;
    if(p.th>0.7){ax=cos(p.dir);az=sin(p.dir)} // down: along the pin axis
    else{ax=p.x-L[0];az=p.z-L[2]}             // upright: tail runs from the rack lamp
    const ln=sqrt(ax*ax+az*az)||1;ax/=ln;az/=ln;
    const e=ln<0.3?m4s(0.16,0.004,0.16): // under the lamp: direction undefined -> round
     m4mul(m4ry(atan2(-az,ax)),m4s(0.30,0.004,0.11));
-   draw(M_SPH,m4mul(m4t(p.x,0.004,p.z),e),SHCOL,6.2,0,0,0.16);
+   draw(M_SPH,m4mul(m4t(p.x,0.004,p.z),e),SHCOL,6.2,0,0,0.16*r4);
   }
-  if(ball&&!ball.dead&&ball.y>-0.05)
-   draw(M_SPH,m4mul(m4t(ball.x,0.006,ball.z),m4s(BALL_R*1.3,0.005,BALL_R*1.3)),SHCOL,6.2,0,0,0.2);
+  if(ball&&!ball.dead&&ball.y>-0.05){const r4=shA(L,ball.x,ball.z);
+   if(r4>0)
+    draw(M_SPH,m4mul(m4t(ball.x,0.006,ball.z),m4s(BALL_R*1.3,0.005,BALL_R*1.3)),SHCOL,6.2,0,0,0.2*r4);}
  } // SHQ===5: the floor of the ladder - no shadows, the cheapest frame there is
  G.depthMask(true);G.disable(G.BLEND);
  for(const p of pins){
@@ -1830,7 +1976,15 @@ function render(){
  for(const q of parts){const s=0.02+0.02*min(1,q.life*2);draw(M_BOX,m4mul(m4t(q.x,q.y,q.z),m4s(s,s,s)),[1.0,0.8,0.3],0,0,0.9);}
 }
 /* ---------- audio ---------- */
-let AC=null,noiseBuf=null,rumble=null,actHits=0;const MAXHITS=16;
+let AC=null,noiseBuf=null,rumble=null,actHits=0;const MAXHITS=40;
+/* Contact voice pool: a 100-pin avalanche delivers 100-300 contacts per
+ second. Building 5 fresh nodes per contact is pure per-hit cost, and a
+ 16-voice cap with 0.15s tails saturates in ~50ms: the avalanche's knocks
+ were DROPPED from the live mix, the replay tap recorded that thin mix,
+ and the replay's wet 0.7 convolver made it sound like "reverb only".
+ Voices are pre-wired ONCE in audioInit; every hit just retunes the next
+ voice in the ring and restarts it - zero allocation, cap 16 -> 40. */
+const VP={i:0,n:0,oi:0,s:[],f:[],g:[],o:[],og:[]};
 // every sfx runs through one master bus: it feeds the speakers and, during a
 // throw, a tap that records the live mix - the replay replays the REAL sound
 // (see the replay audio block), so the approach segment sounds exactly like
@@ -1878,6 +2032,7 @@ function audioInit(){
  rvLive=AC.createConvolver();
  rvBus.connect(rvLive);rvLive.connect(AC.destination);
  master.connect(rvBus); // the wet send: dry to speakers, a tap into the room
+ buildVP();
  modeAudio();
  const src='class Cap extends AudioWorkletProcessor{'
   +'constructor(){super();this.on=false;this.hdr=false;'
@@ -1938,39 +2093,69 @@ function tone(f,t0,dur,type,vol){
  g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(0.001,t0+dur);
  o.connect(g);g.connect(master);o.start(t0);o.stop(t0+dur+0.02);
 }
+function buildVP(){
+ VP.i=VP.oi=VP.n=0;VP.f=[];VP.g=[];VP.o=[];VP.og=[];
+ for(let i=0;i<MAXHITS;i++){
+  const f=AC.createBiquadFilter();f.type='bandpass';
+  const g=AC.createGain();g.gain.value=0;
+  f.connect(g);g.connect(master);
+  VP.f.push(f);VP.g.push(g);}
+ // thump oscillators run forever at gain 0; hits only move pitch + envelope
+ for(let i=0;i<24;i++){
+  const o=AC.createOscillator();o.type='sine';o.frequency.value=30;
+  const g=AC.createGain();g.gain.value=0;
+  o.connect(g);g.connect(master);o.start();
+  VP.o.push(o);VP.og.push(g);}
+ VP.n=VP.f.length;
+}
 function hitSound(rv,dark){
- if(!AC)return;
+ if(!AC||!VP.n)return;
  const t=AC.currentTime;
  // dark = pin on pin. The bandpass that gives a BALL hit its crack sits at
  // 1.3-2.7kHz; plastic body-on-body contact lands far lower and duller, and
  // with that filter in the pack every clack cut through the mix as a shrill
  // click storm (reported: pin hits sound too high). Pin-pin gets a ~450-900Hz
  // knock, shorter, quieter, plus a softer body thump.
- const v=min(0.5,rv*0.09)*(dark?0.45:1);
+ const v=min(0.5,rv*0.09)*(dark?0.55:1);
  if(v<0.015||actHits>=MAXHITS)return;
- // one global gate used to drop most contacts of a strike (20+ hits inside
- // half a second): instead every contact above the audibility floor gets its
- // own voice, and a hard cap keeps a full pile from stacking into a click
- // wall — the excess contacts fold into the voices already sounding. A strike
- // lands ~25-30 contacts over ~0.6s; ~16 concurrent short voices stay far
- // under WebAudio's per-context cost ceiling on phones.
+ // Every contact above the audibility floor gets a voice; 40 concurrent
+ // voices stay far under WebAudio's per-context cost ceiling on phones, and
+ // a 100-pin strike's 100-200 contacts all land in the mix - the recorded
+ // replay of that mix is what the replay must reproduce.
+ // The filter+gain+thump-osc are POOLED and retuned per hit, but the noise
+ // SOURCE is fresh every hit: WebKit BufferSourceNodes are one-shot - a
+ // second start() throws InvalidStateError - and the increment ran before
+ // the throw, so every failed restart leaked a voice slot: one avalanche
+ // pinned the cap at 40 and the gate dropped every contact after it. The
+ // user heard total pin silence with the ball rumble intact, and the
+ // replay recorded that silence. A one-shot source is Safari's own
+ // recommended pattern: allocate one node, play, end, GC.
  // ALL contact pitches x0.35 (the user's reference: the pitch slo-mo used to
  // have is now the normal pitch). The bandpass center and the body thump are
  // what the ear reads as pitch, so both move together; a recorded replay
  // stretches this mix by another 0.35, so slow motion lands a fifth lower yet.
  // Variation per hit (rate, filter center+Q, envelope length, noise read position,
  // thump pitch) so a layered pile reads as a scatter of knocks, not one sample.
- const n=AC.createBufferSource();n.buffer=noiseBuf;
- n.playbackRate.value=(dark?0.55+rand()*0.3:0.8+rand()*0.5)*(0.85+rand()*0.3);
- const f=AC.createBiquadFilter();f.type='bandpass';
+ const dur=(dark?0.12:0.18)*(0.75+rand()*0.5);
+ const i=VP.i;VP.i=i+1>=VP.n?0:i+1;
+ const f=VP.f[i],g=VP.g[i];
  f.frequency.value=((dark?147:455)+rand()*(dark?168:490))*(0.9+rand()*0.22);
  f.Q.value=(dark?1.2:0.7)*(0.8+rand()*0.5);
- const dur=(dark?0.12:0.18)*(0.75+rand()*0.5);
- const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);
- n.connect(f);f.connect(g);g.connect(master);
- actHits++;n.onended=()=>{actHits--};
- n.start(t,rand()*0.7,dur+0.03);
- tone((dark?23:32)*(0.85+rand()*0.3),t,dur*0.7,'sine',v*0.8);
+ g.gain.cancelScheduledValues(t);
+ g.gain.setValueAtTime(v,t);
+ g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+ const s=AC.createBufferSource();s.buffer=noiseBuf;
+ s.playbackRate.value=(dark?0.55+rand()*0.3:0.8+rand()*0.5)*(0.85+rand()*0.3);
+ actHits++;
+ s.onended=()=>{actHits--};
+ s.connect(f);
+ s.start(t,rand()*0.7,dur+0.03);
+ const j=VP.oi;VP.oi=j+1>=VP.o.length?0:j+1;
+ VP.o[j].frequency.value=(dark?23:32)*(0.85+rand()*0.3);
+ const og=VP.og[j];
+ og.gain.cancelScheduledValues(t);
+ og.gain.setValueAtTime(v*0.8,t);
+ og.gain.exponentialRampToValueAtTime(0.001,t+dur*0.7);
 }
 function rumbleOn(){
  if(!AC||rumble)return;
@@ -2680,7 +2865,7 @@ $('help').addEventListener('click',e=>{if(e.target.id==='help')$('helpx').click(
    decision used to be hidden. Profiles fix both knobs; AUTO hands them to the
    loop's watchdog; CUSTOM edits them directly. Everything persisted. ---------- */
 let gfxTimer=0;
-const SHQLAB=['all six lamps','three lane lamps','single main lamp','low-res projection','contact shadows','none'];
+const SHQLAB=['all six lamps','foul, mid & rack lamps','single main lamp','low-res projection','contact shadows','none'];
 function gfxUI(){
  for(const b of $('oprof').children)b.classList.toggle('on',b.dataset.p===gfx.p);
  $('orsel').disabled=$('oshqsel').disabled=gfx.p!=='custom';
