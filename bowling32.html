@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Arcade Bowling 3D</title>
-<meta name="version" content="2026.11.08.43">
+<meta name="version" content="2026.11.08.45">
 <meta name="description" content="3D bowling: step-by-step controls (place, aim, flick) with live lane projection, hook physics, ten-frame scoring, 10-pin and wide-lane 100-pin modes.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -689,7 +689,7 @@ function draw(mk,mat,col,mode,spec,hi,alpha){
 // lane/rack geometry is per-mode; every consumer reads these live (the FS lane
 // pattern is scaled by the uLW* uniforms set in setMode)
 let PC=10,RACKZ=-18.288,LW=1.06,LWH=LW/2,GUTW=0.241,WALLX=LWH+GUTW+0.04,
-AIMCAP=0.032,STARTXW=0.4,LANEZ=-18.975;
+AIMCAP=0.032,STARTXW=0.4,LANEZ=-19.32;
 const PITZ=-19.35,PITEDGE=-19.0;
 // A regulation 1.56 kg pin against a 100-pin triangle is a wall: no single
 // ball realistically sweeps it, so strikes never happen in wide mode. The
@@ -718,12 +718,19 @@ function setMode(m100){
  // unshootable on the 4.3m lane. 0.032 rad stays tuned for the regulation lane.
  AIMCAP=m100?0.4:0.032;STARTXW=m100?1.47:0.4;
  // the deck's far end + the shader's wood cutoff follow the rack: the 100-pin base
- // row stands at z=RACKZ-13*PIN_RZ=-19.08, so on the wide lane the deck runs to
- // -19.32 with wood texture (no dark cutoff) under every pin. 10-pin values unchanged.
- LANEZ=m100?-19.32:-18.975;
+ // row stands at z=RACKZ-13*PIN_RZ=-19.08, and the 10-pin back row at
+ // RACKZ-3*PIN_RZ=-19.067. The old 10-pin deck ENDED at -18.975 - a regulation
+ // 60ft lane - so the back row stood 9cm past the wood on the black pit/floor
+ // slabs (the reported "pins standing on black"), and the uDECKZ darkening from
+ // RACKZ-0.162 painted rows 2-4 60% dark. Both modes now run the wood deck to
+ // -19.32, 25cm past the deepest row, with NO dark cutoff: a real pin deck is
+ // the same lit maple as the lane, and the pit mouth opens behind it
+ // (deck -19.32 .. kickback -20.35).
+ LANEZ=-19.32;
  MPIN=1.56*(m100?PMW:1);I_CM=0.0130*(m100?PMW:1);
  G.uniform1f(uLWH,LWH);
- G.uniform1f(uDECKZ,m100?LANEZ:RACKZ-0.162);
+ G.uniform1f(uDECKZ,LANEZ);
+ modeAudio(); // the live reverb follows the room: small (10) / moderate (100)
 }
 const BALL_R=0.109,MBALL=6.8;
 const PIN_H=0.381,PR=0.059;
@@ -1606,10 +1613,10 @@ function render(){
  G.uniform3fv(uFog,[0.027,0.035,0.071]);
  G.uniform3fv(uCam,[camX,camY,camZ]);
  const U=LW/1.06; // pit/kickback/room furniture scales with lane width
- // floor split around pit opening: lane ends z=LANEZ (mode-scaled so the whole
- // rack stands on it; -18.975 in 10-pin), kickback wall front face z=PITZ-1.0.
- // The lane/railing run + the dark pit mouth are parameterized from LANEZ - the
- // 10-pin arithmetic below reproduces the old constants exactly (-7.4 / 23.15).
+ // floor split around pit opening: lane ends z=LANEZ (both modes -19.32 so the
+ // whole rack stands on wood), kickback wall front face z=PITZ-1.0 (-20.35).
+ // The lane/railing run + the dark pit mouth (1.03m between deck end and
+ // kickback) are parameterized from LANEZ.
  const LEN=4.175-LANEZ,ZC=(4.175+LANEZ)/2,PL=LANEZ+20.375;
  draw(M_BOX,m4mul(m4t(0,-0.05,-6.62),m4s(40,0.1,24.75)),COL.floor,0,0,0);
  draw(M_BOX,m4mul(m4t(0,-0.05,-23.15),m4s(40,0.1,5.7)),COL.floor,0,0,0);
@@ -1830,20 +1837,76 @@ let AC=null,noiseBuf=null,rumble=null,actHits=0;const MAXHITS=16;
 // start lags up to ~1s and the webm decode finishes after the replay has
 // already begun, so the slow-motion segment got no audio at all (the
 // reported "sound disappears when the ball hits the pins").
-let master=null,CAP=null,THROW_AUD=null,IRBUF=null;
+let master=null,CAP=null,THROW_AUD=null,IRBUF={},rvBus=null,rvLive=null;
 let capChunks=null,capStart=0,capHead=0;
+/* One IR per acoustic size, generated once and cached: noise * exponential
+ decay + discrete early reflections of the lane corridor (side-wall / back-
+ wall slaps). small = tight basement room (10-pin playtime), med = full alley
+ (100-pin playtime, 10-pin cinematic), big = wide hall (100-pin cinematic). */
+function getIR(k){
+ if(IRBUF[k])return IRBUF[k];
+ const P={small:[0.6,10,[[0.009,.35],[0.019,.2],[0.033,.11],[0.05,.05]]],
+  med:[1.3,5.5,[[0.011,.5],[0.021,.33],[0.034,.2],[0.053,.12],[0.081,.07],[0.13,.04]]],
+  big:[2.6,3,[[0.011,.6],[0.027,.45],[0.047,.35],[0.075,.25],[0.115,.18],[0.17,.12],[0.26,.08],[0.4,.05]]]}[k];
+ const sr=AC.sampleRate,len=sr*P[0]|0,b=AC.createBuffer(2,len,sr);
+ for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);
+  for(let i=0;i<len;i++){const t=i/sr;d[i]=(rand()*2-1)*Math.exp(-P[1]*t)}
+  // discrete reflections of the lane corridor: side wall / back wall slap
+  for(const q of P[2]){
+   const k2=(q[0]*sr+(ch?13:0))|0;if(k2<len)d[k2]+=q[1]}}
+ IRBUF[k]=b;return b}
+// live-mix reverb send: master feeds the dry path to the speakers AND a wet
+// send through the live convolver. 10-pin small room: low but audible;
+// 100-pin wide room: moderate. Called at audioInit and on every mode switch.
+function modeAudio(){
+ if(!AC)return;
+ const m100=PC===100;
+ rvLive.buffer=getIR(m100?'med':'small');
+ rvBus.gain.setTargetAtTime(m100?0.3:0.12,AC.currentTime,0.1)}
 function audioInit(){
  if(AC||muted)return;
  try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return}
  noiseBuf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);
  const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=rand()*2-1;
  master=AC.createGain();master.connect(AC.destination);
+ rvBus=AC.createGain();rvBus.gain.value=0;
+ rvLive=AC.createConvolver();
+ rvBus.connect(rvLive);rvLive.connect(AC.destination);
+ master.connect(rvBus); // the wet send: dry to speakers, a tap into the room
+ modeAudio();
  const src='class Cap extends AudioWorkletProcessor{'
   +'constructor(){super();this.on=false;this.hdr=false;'
   +'this.port.onmessage=e=>{if(e.data==="off"){this.on=false;this.port.postMessage("end")}else{this.on=true;this.hdr=true}}}'
   +'process(i){if(this.on){if(this.hdr){this.hdr=false;this.port.postMessage({k:"s",t:currentTime})}'
   +'const c=i[0]&&i[0][0];if(c){const d=new Float32Array(c);this.port.postMessage(d,[d.buffer])}}return true}}'
   +'registerProcessor("cap",Cap)';
+ /* THE SILENT-REPLAY ROOT CAUSE (v45): a worklet is a WORKER, and Chromium
+  refuses to load a worker script from a blob: URL on a file:// page (opaque
+  'null' origin): addModule rejects AbortError, CAP stays null, recStart is a
+  no-op, THROW_AUD never lands, and repAudStart gives up - every replay silent
+  while live SFX (no worker) plays. Firefox runs file:// worklets fine, which
+  is exactly why the same file is silent in Chromium (and its clones, e.g.
+  Yandex Browser) and audible in Firefox. ScriptProcessorNode is main-thread:
+  no worker, no origin gate, supported by every engine. Same block format,
+  same capChunks ring. Only on worklet FAILURE - if it were created alongside
+  a live worklet both capturers would push into one ring and corrupt it. */
+ const mkSP=()=>{
+  if(CAP)return;
+  try{
+   const sp=AC.createScriptProcessor(2048,1,1);
+   const sink=AC.createGain();sink.gain.value=0;sink.connect(AC.destination);
+   sp.onaudioprocess=e=>{if(!capChunks)return;
+    if(!capHead){const w=(e.when!==undefined&&e.when>0)?e.when:AC.currentTime;
+     // a loaded device can deliver the first SP block long after real time;
+     // padding the FULL gap shifts the whole capture late and can push the
+     // pin contact past the end of the buffer (then the slow segment plays
+     // silence). Cap the pad at 2 SP blocks (~93ms): inaudible start lag,
+     // contact always inside the buffer.
+     capHead=Math.min(4096,max(0,Math.round((w-capStart)*AC.sampleRate)))}
+    capChunks.push(new Float32Array(e.inputBuffer.getChannelData(0)))};
+   sp.connect(sink);master.connect(sp);
+   CAP={sp:1,node:sp};
+  }catch(e){}};
  try{
   const url=URL.createObjectURL(new Blob([src],{type:"application/javascript"}));
   AC.audioWorklet.addModule(url).then(()=>{
@@ -1852,24 +1915,16 @@ function audioInit(){
    n.connect(sink);master.connect(n);
    n.port.onmessage=e=>{
     const v=e.data;
-    if(v==="end"){ // FIFO: every block has arrived -> assemble the buffer
-     if(!capChunks)return; // a newer recStart already replaced it: discard
-     let n=capHead|0;for(const d of capChunks)n+=d.length;
-     if(n>capHead){
-      const bf=AC.createBuffer(1,n,AC.sampleRate),ch=bf.getChannelData(0);
-      let p=capHead;for(const d of capChunks){ch.set(d,p);p+=d.length}
-      THROW_AUD=bf;
-     }else THROW_AUD=null;
-     capChunks=null;capHead=0;
-    }else if(v&&v.k==="s"){
+    if(v==="end")capAssemble(); // FIFO: every block has arrived -> assemble
+    else if(v&&v.k==="s"){
      // head of the buffer = recStart's instant: pad the gap between that and
      // the first quantum the worklet actually captured (message transit)
      capHead=max(0,Math.round((v.t-capStart)*AC.sampleRate));
     }else if(capChunks)capChunks.push(v);
    };
    CAP={node:n,port:n.port};
-  }).catch(()=>{});
- }catch(e){}
+  }).catch(mkSP); // file:// Chromium: worklet blocked -> SP takes the tap
+ }catch(e){mkSP()}
 }
 function tone(f,t0,dur,type,vol){
  if(!AC)return;
@@ -1924,12 +1979,24 @@ function rumbleOff(){if(rumble){rumble.src.stop();rumble=null}}
 /* record the live throw mix (rec[] starts at the same instant, so recorded
  buffer time f*DT lines up with rec frame f); the worklet's "off" ack
  assembles the AudioBuffer synchronously - no encode, no decode */
+function capAssemble(){
+ if(!capChunks)return; // a newer recStart already replaced it: discard
+ let n=capHead|0;for(const d of capChunks)n+=d.length;
+ if(n>capHead){
+  const bf=AC.createBuffer(1,n,AC.sampleRate),ch=bf.getChannelData(0);
+  let p=capHead;for(const d of capChunks){ch.set(d,p);p+=d.length}
+  THROW_AUD=bf;
+ }else THROW_AUD=null;
+ capChunks=null;capHead=0;
+}
 function recStart(){
  if(muted||!AC||!CAP)return;
  THROW_AUD=null;capChunks=[];capHead=0;capStart=AC.currentTime;
- try{CAP.port.postMessage("on")}catch(e){capChunks=null}
+ if(CAP.port){try{CAP.port.postMessage("on")}catch(e){capChunks=null}}
 }
-function recStop(){if(CAP)try{CAP.port.postMessage("off")}catch(e){}}
+function recStop(){if(!CAP)return;
+ if(CAP.port){try{CAP.port.postMessage("off")}catch(e){}}
+ else capAssemble()} // SP: blocks arrive on the main thread - assemble now
 function sGutter(){if(!AC)return;const t=AC.currentTime;const o=AC.createOscillator(),g=AC.createGain();
  o.type='sawtooth';o.frequency.setValueAtTime(300,t);o.frequency.exponentialRampToValueAtTime(110,t+0.5);
  g.gain.setValueAtTime(0.12,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.5);
@@ -2247,50 +2314,102 @@ const REP_SPD=0.35; // fraction of real time
 /* Replay audio = the throw's own recorded mix (recStart at the throw frame,
  the same instant rec[0] is pushed, so buffer time f*DT maps to rec frame f).
  While the visuals run the approach at 1x the playback rate is 1x; at the
- contact frame it ramps to REP_SPD, the same factor the frame stepper uses -
- pitch therefore drops exactly in step with the picture (the resampler
- duplicates/interpolates samples; it is the real sound slowed down, not a
- re-synth). From that same instant the stretched signal also feeds a
- convolver: reverb processing and the wet tail run at the context sample
- rate like normal - only the SFX entering the reverb are time-stretched. */
-function getIR(){
- if(IRBUF)return IRBUF;
- const sr=AC.sampleRate,len=sr*1.2|0,b=AC.createBuffer(2,len,sr);
- for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);
-  for(let i=0;i<len;i++){const t=i/sr;d[i]=(rand()*2-1)*Math.exp(-6*t)}
-  // discrete reflections of the lane corridor: side wall / back wall slap
-  for(const q of[[0.011,.5],[0.021,.33],[0.034,.2],[0.053,.12],[0.081,.07],[0.13,.04]]){
-   const k=(q[0]*sr+(ch?13:0))|0;if(k<len)d[k]+=q[1]}}
- IRBUF=b;return b}
+ contact frame it steps to REP_SPD, the same factor the frame stepper uses -
+ pitch therefore drops exactly in step with the picture. From that same
+ instant the signal also feeds a convolver: reverb processing and the wet
+ tail run at the context sample rate like normal - only the SFX entering the
+ reverb are time-stretched. Reverb size follows the room: 10-pin cinematic
+ gets the MODERATE alley IR, 100-pin the HIGH hall IR.
+ THE SILENT-SLO-MO FIX (v44): the approach and the slow segment are now TWO
+ BufferSources - 1x up to the switch, 0.35x from it - each with a FIXED
+ playbackRate set before start, handing over at the switch instant. The old
+ single source automated playbackRate mid-stream (setTargetAtTime), and on
+ engines with broken a-rate automation on a running AudioBufferSourceNode
+ that left the whole slow segment silent (the reported "stretched phase is
+ completely silent" - the 1x approach always played, everything after the
+ rate event did not). No automation on a running source survives that bug:
+ .value-before-start is the one pattern every engine implements. */
 function repAudStart(frm,n){
  if(!RP||RP.aud)return;
  // startReplay can fire while the worklet's last blocks are still in
  // flight (the "off" ack assembles the buffer); retry briefly until it lands.
- if(!THROW_AUD){if((n|0)<10)setTimeout(()=>repAudStart(RP?RP.cur:frm,(n|0)+1),150);return}
+ if(!THROW_AUD){if((n|0)<10)setTimeout(()=>repAudStart(RP?RP.cur:frm,(n|0)+1),150);
+  else repAudSynth();return} // capture dead (Chromium file://): play the pile
  if(!AC||AC.state!=='running'||muted)return;
  const off=max(0,frm*DT);if(off>=THROW_AUD.duration)return;
  try{
-  const s=AC.createBufferSource();s.buffer=THROW_AUD;
-  const dry=AC.createGain(),wet=AC.createGain(),cv=AC.createConvolver();
-  cv.buffer=getIR();dry.gain.value=0.85;
-  s.connect(dry);dry.connect(AC.destination);
-  s.connect(wet);wet.connect(cv);cv.connect(AC.destination);
-  const t0=AC.currentTime+0.03;
+  const m100=PC===100;
+  const cv=AC.createConvolver();cv.buffer=getIR(m100?'big':'med');
+  const dry=AC.createGain(),wet=AC.createGain();
+  const WL=m100?0.7:0.42; // moderate (10-pin) / high (100-pin) cinematic reverb
+  dry.gain.value=0.8;
+  dry.connect(AC.destination);
+  wet.connect(cv);cv.connect(AC.destination);
+  const t0=AC.currentTime+0.03,srcs=[];
+  /* DESIGN INVARIANT - the sound the user approved as "normal" (deployed
+   26427ff): the slow segment stretches the ENTIRE recorded throw mix
+   continuously at REP_SPD; pitch drop + reverb are its only treatment.
+   The 2c4aa25 experiment (crash-only 1.15s slice + synthetic LP170 noise
+   bed) deleted every real pin ping after 3.3s and sounded broken - never
+   replace working recorded content with synthesis; a synthetic path is
+   ONLY the last-resort fallback when the capture is dead (repAudSynth). */
   if(frm<RP.c0){
-   // the rate switch is scheduled from the frame clock (t0+(c0-frm)*DT),
-   // identical to the visual switch at frame c0 - both follow the same
-   // frame time, so they stay locked unless the sim itself lost time
+   // the switch instant is scheduled from the frame clock (t0+(c0-frm)*DT),
+   // identical to the visual switch at frame c0 - both follow the same frame
+   // time, so they stay locked unless the sim itself lost time
    const tSw=t0+(RP.c0-frm)*DT;
-   wet.gain.value=0;
-   s.playbackRate.setValueAtTime(1,t0);
-   s.playbackRate.setTargetAtTime(REP_SPD,tSw,0.02);
-   wet.gain.setTargetAtTime(0.32,tSw,0.05);
-  }else{s.playbackRate.value=REP_SPD;wet.gain.value=0.32}
-  s.start(t0,off);
-  RP.aud={s:s,wet:wet,dry:dry,cv:cv};
+   const s1=AC.createBufferSource();s1.buffer=THROW_AUD;s1.playbackRate.value=1;
+   s1.connect(dry);s1.connect(wet);
+   wet.gain.setValueAtTime(0,t0);
+   wet.gain.setTargetAtTime(WL,tSw,0.05);
+   s1.start(t0,off);s1.stop(tSw);
+   // s2 continues the SAME buffer at the exact content offset s1 consumed to
+   // (off+(c0-frm)*DT) - seamless, no doubled samples, no gap
+   const s2=AC.createBufferSource();s2.buffer=THROW_AUD;s2.playbackRate.value=REP_SPD;
+   s2.connect(dry);s2.connect(wet);
+   s2.start(tSw,off+(RP.c0-frm)*DT);
+   srcs.push(s1,s2);
+  }else{
+   wet.gain.value=WL;
+   const s2=AC.createBufferSource();s2.buffer=THROW_AUD;s2.playbackRate.value=REP_SPD;
+   s2.connect(dry);s2.connect(wet);
+   s2.start(t0,off);
+   srcs.push(s2);
+  }
+  RP.aud={s:srcs,wet:wet,dry:dry,cv:cv};
  }catch(e){RP.aud=null}
 }
-function repAudStop(){if(RP&&RP.aud){try{RP.aud.s.stop()}catch(e){}RP.aud=null}}
+function repAudStop(){if(RP&&RP.aud){for(const s of RP.aud.s)try{s.stop()}catch(e){}RP.aud=null}}
+/* No recorded mix at all (capture unavailable): rebuild the pile from the
+ primitives the live game has PROVEN on this engine - fixed-rate rumble slices
+ that end by buffer length (no stop(), no start-offset, no rate automation)
+ plus the live crash primitives at the contact instant. A replay must never be
+ silent; that silent no-op branch is what shipped the bug three times. */
+function repAudSynth(){
+ if(!RP||RP.aud||!AC||AC.state!=='running'||muted)return;
+ const m100=PC===100,t0=AC.currentTime+0.03,tSw=t0+max(0,RP.c0-RP.cur)*DT;
+ const cv=AC.createConvolver();cv.buffer=getIR(m100?'big':'med');
+ const dry=AC.createGain(),wet=AC.createGain();
+ dry.gain.value=0.8;wet.gain.value=m100?0.7:0.42;
+ dry.connect(AC.destination);wet.connect(cv);cv.connect(AC.destination);
+ const srcs=[],sr=AC.sampleRate;
+ const nz=(sec,rate,vol,cut,when)=>{
+  const b=AC.createBuffer(1,max(1,Math.round(sec*sr)),sr),ch=b.getChannelData(0);
+  // fresh random noise, NOT the 1s noiseBuf repeated: a repeated buffer has a
+  // baked-in 1s periodicity that, at 0.35x, sounds like a rolling clip loop
+  for(let i=0;i<ch.length;i++)ch[i]=(rand()*2-1)*0.5;
+  const s=AC.createBufferSource();s.buffer=b;s.playbackRate.value=rate;
+  const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=cut;
+  const g=AC.createGain();g.gain.value=vol;
+  s.connect(f);f.connect(g);g.connect(dry);g.connect(wet);
+  s.start(when);srcs.push(s)};
+ const app=max(0,RP.c0-RP.cur)*DT;
+ if(app>0.05)nz(app,1,0.06,260,t0); // 1x approach rumble, natural end
+ nz(max(1,RP.end-RP.c0)*DT/REP_SPD,REP_SPD,0.10,200,tSw); // slow pile bed
+ tone(315*REP_SPD,tSw,1.1,'square',0.30); // crash at contact, pitched x0.35
+ tone(110*REP_SPD,tSw+0.05,1.4,'sine',0.42);
+ RP.aud={s:srcs,wet:wet,dry:dry,cv:cv,synth:1};
+}
 function repEndAll(){
  // SKIP ends the WHOLE replay sequence, not just this camera angle: the
  // player asked for the next move, so every remaining angle is cancelled.
