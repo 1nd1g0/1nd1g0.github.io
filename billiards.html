@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>MIDNIGHT RACK · 3D Arcade Billiards</title>
-<meta name="version" content="2026.11.07.1">
+<meta name="version" content="2026.11.11.2">
 <style>
   html,body{margin:0;padding:0;height:100%;background:#08080a;overflow:hidden;
     font-family:"Courier New",ui-monospace,monospace;color:#eee;touch-action:none;
@@ -280,6 +280,176 @@ function buildMiterRing(iw,il,th,y0,y1,uvS){
       u.push(0,0,len*uvS,0,len*uvS,(y1-y0)*uvS,0,(y1-y0)*uvS);
       ix.push(base,base+1,base+2,base,base+2,base+3);});});
   return mesh(p,n,u,ix);}
+/* same mitered frame as buildMiterRing, but with vertical cylindrical cut-outs
+   carved around the pockets so the leather rims and holes are never covered
+   by the wood. holes=[{x,z,r}] straddle the inner edge of the frame. */
+function buildCarvedMiterRing(iw,il,th,y0,y1,uvS,holes){
+  const p=[],n=[],u=[],ix=[];
+  const ow=iw+th, ol=il+th;
+  const planks=[
+    [[-iw,il],[iw,il],[ow,ol],[-ow,ol]],
+    [[iw,-il],[-iw,-il],[-ow,-ol],[ow,-ol]],
+    [[iw,il],[iw,-il],[ow,-ol],[ow,ol]],
+    [[-iw,-il],[-iw,il],[-ow,ol],[-ow,-ol]]];
+  const arcs=[];
+  const cr=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+  const area2=pg=>{let s=0;for(let i=0;i<pg.length;i++)s+=cr([0,0],pg[i],pg[(i+1)%pg.length]);return s;};
+  function vert(x,y,z,nv,uu,vv){p.push(x,y,z);n.push(nv[0],nv[1],nv[2]);u.push(uu,vv);return p.length/3-1;}
+  function quad(a,b,c,d){ix.push(a,b,c,a,c,d);}
+  /* clip a CCW polygon against the outside of one disk; boundary notches are
+     replaced by clockwise arc samples (the arc that lies inside the plank) */
+  function subtractDisk(pg,h,collect){
+    const cx=h.x,cz=h.z,r=h.r,N=pg.length;
+    const ins=v=>(v[0]-cx)*(v[0]-cx)+(v[1]-cz)*(v[1]-cz)<r*r;
+    const cross=[];let anyIn=false,anyX=false;
+    for(let i=0;i<N;i++){
+      const A=pg[i],B=pg[(i+1)%N],dx=B[0]-A[0],dz=B[1]-A[1];
+      const fx=A[0]-cx,fz=A[1]-cz;
+      const a=dx*dx+dz*dz,b=2*(fx*dx+fz*dz),c=fx*fx+fz*fz-r*r;
+      const disc=b*b-4*a*c,list=[];
+      if(a>1e-12&&disc>0){const sq=Math.sqrt(disc);
+        for(const t of [(-b-sq)/(2*a),(-b+sq)/(2*a)])
+          if(t>1e-9&&t<1-1e-9){list.push({pt:[A[0]+dx*t,A[1]+dz*t],en:(b+2*a*t)<0});anyX=true;}}
+      if(ins(A))anyIn=true;
+      cross.push(list);}
+    if(!anyX)return anyIn?[]:[pg];
+    let start=0;while(start<N&&ins(pg[start]))start++;
+    if(start===N)return[];
+    const items=[];
+    for(let k=0;k<N;k++){const i=(start+k)%N;
+      if(!ins(pg[i]))items.push({pt:pg[i],x:0});
+      for(const e of cross[i])items.push({pt:e.pt,x:1,en:e.en});}
+    const out=[];
+    for(let k=0;k<items.length;k++){
+      const it=items[k];out.push(it.pt);
+      if(!it.x||!it.en)continue;
+      let m=k+1;while(m<items.length&&!(items[m].x&&!items[m].en))m++;
+      if(m>=items.length)continue;
+      const Q=items[m].pt;
+      const a0=Math.atan2(it.pt[1]-cz,it.pt[0]-cx),a1=Math.atan2(Q[1]-cz,Q[0]-cx);
+      let sweep=a0-a1;while(sweep<=1e-7)sweep+=2*Math.PI;
+      const steps=Math.max(2,Math.ceil(sweep/(Math.PI/32)));
+      if(collect)arcs.push({h,a0,sweep,steps});
+      for(let s=1;s<steps;s++){const a=a0-sweep*s/steps;
+        out.push([cx+r*Math.cos(a),cz+r*Math.sin(a)]);}
+      out.push(Q);k=m;}
+    return out.length>=3?[out]:[];}
+  function earClip(pg){
+    const tris=[],idx=[];for(let i=0;i<pg.length;i++)idx.push(i);
+    let guard=pg.length*pg.length+16;
+    while(idx.length>3&&guard-->0){
+      let done=false;
+      for(let i=0;i<idx.length;i++){
+        const ia=idx[(i+idx.length-1)%idx.length],ib=idx[i],ic=idx[(i+1)%idx.length];
+        const A=pg[ia],B=pg[ib],C=pg[ic];
+        if(cr(A,B,C)<=1e-10)continue;
+        let ok=true;
+        for(const j of idx){if(j===ia||j===ib||j===ic)continue;const P=pg[j];
+          if(cr(A,B,P)>=-1e-10&&cr(B,C,P)>=-1e-10&&cr(C,A,P)>=-1e-10){ok=false;break;}}
+        if(ok){tris.push([ia,ib,ic]);idx.splice(i,1);done=true;break;}}
+      if(!done)break;}
+    if(idx.length===3)tris.push([idx[0],idx[1],idx[2]]);
+    return tris;}
+  /* exact UV of the original quad mapping (two-triangle barycentric) */
+  function faceUV(P,q,L,H){
+    const U=[[0,0],[L,0],[L,H],[0,H]];
+    for(const t of [[0,1,2],[0,2,3]]){
+      const A=q[t[0]],B=q[t[1]],C=q[t[2]],D=cr(A,B,C);
+      if(Math.abs(D)<1e-12)continue;
+      const w0=cr(B,C,P)/D,w1=cr(C,A,P)/D,w2=cr(A,B,P)/D;
+      if(w0>=-1e-7&&w1>=-1e-7&&w2>=-1e-7)
+        return [w0*U[t[0]][0]+w1*U[t[1]][0]+w2*U[t[2]][0],
+                w0*U[t[0]][1]+w1*U[t[1]][1]+w2*U[t[2]][1]];}
+    return [0,0];}
+  planks.forEach(q=>{
+    const len=Math.hypot(q[1][0]-q[0][0],q[1][1]-q[0][1]);
+    const dx=(q[1][0]-q[0][0])/len, dz=(q[1][1]-q[0][1])/len;
+    const ixn=-dz, izn=dx;
+    const L=len*uvS, H=(y1-y0)*uvS;
+    const faces=[
+      {pts:[[q[0][0],y1,q[0][1]],[q[3][0],y1,q[3][1]],[q[2][0],y1,q[2][1]],[q[1][0],y1,q[1][1]]],n:[0,1,0],hor:1},
+      {pts:[[q[0][0],y0,q[0][1]],[q[1][0],y0,q[1][1]],[q[2][0],y0,q[2][1]],[q[3][0],y0,q[3][1]]],n:[0,-1,0],hor:1},
+      {pts:[[q[0][0],y0,q[0][1]],[q[0][0],y1,q[0][1]],[q[1][0],y1,q[1][1]],[q[1][0],y0,q[1][1]]],n:[-ixn,0,-izn],hor:0},
+      {pts:[[q[2][0],y0,q[2][1]],[q[2][0],y1,q[2][1]],[q[3][0],y1,q[3][1]],[q[3][0],y0,q[3][1]]],n:[ixn,0,izn],hor:0},
+      {pts:[[q[1][0],y0,q[1][1]],[q[1][0],y1,q[1][1]],[q[2][0],y1,q[2][1]],[q[2][0],y0,q[2][1]]],n:[dx,0,dz],hor:0},
+      {pts:[[q[3][0],y0,q[3][1]],[q[3][0],y1,q[3][1]],[q[0][0],y1,q[0][1]],[q[0][0],y0,q[0][1]]],n:[-dx,0,-dz],hor:0}];
+    faces.forEach(f=>{
+      if(f.hor){
+        const q2=f.pts.map(P=>[P[0],P[2]]);
+        let pg=q2.slice();const flip=area2(pg)<0;if(flip)pg.reverse();
+        let polys=[pg];
+        for(const h of holes){const nx=[];
+          for(const g of polys)for(const r2 of subtractDisk(g,h,f.n[1]>0))nx.push(r2);
+          polys=nx;}
+        for(const g of polys)for(const t of earClip(g)){
+          const ids=t.map(i=>{const P=g[i],uv=faceUV(P,q2,L,H);
+            return vert(P[0],f.pts[0][1],P[1],f.n,uv[0],uv[1]);});
+          if(flip)ix.push(ids[0],ids[2],ids[1]);else ix.push(ids[0],ids[1],ids[2]);}
+      }else{
+        const A=[f.pts[0][0],f.pts[0][2]],B=[f.pts[3][0],f.pts[3][2]];
+        const wl=Math.hypot(B[0]-A[0],B[1]-A[1]),ex=(B[0]-A[0])/wl,ez=(B[1]-A[1])/wl;
+        const cuts=[];
+        for(const h of holes){
+          const rx=h.x-A[0],rz=h.z-A[1],t0=rx*ex+rz*ez,dd=Math.abs(rx*ez-rz*ex);
+          if(dd<h.r){const half=Math.sqrt(h.r*h.r-dd*dd);cuts.push([t0-half,t0+half]);}}
+        cuts.sort((a,b)=>a[0]-b[0]);
+        let cur=0;const segs=[];
+        for(const c of cuts){if(c[0]>cur+1e-6)segs.push([cur,Math.min(c[0],wl)]);
+          cur=Math.max(cur,c[1]);if(cur>=wl)break;}
+        if(cur<wl-1e-6)segs.push([cur,wl]);
+        for(const s of segs){
+          const v0=s[0]/wl*H,v1=s[1]/wl*H;
+          const a=vert(A[0]+ex*s[0],y0,A[1]+ez*s[0],f.n,0,v0);
+          const b=vert(A[0]+ex*s[0],y1,A[1]+ez*s[0],f.n,L,v0);
+          const c=vert(A[0]+ex*s[1],y1,A[1]+ez*s[1],f.n,L,v1);
+          const d=vert(A[0]+ex*s[1],y0,A[1]+ez*s[1],f.n,0,v1);
+          quad(a,b,c,d);}
+      }});});
+  /* carved cylindrical walls, sampled identically to the top-face arcs */
+  arcs.forEach(a=>{
+    const r=a.h.r,len=r*a.sweep,L=len*uvS,H=(y1-y0)*uvS;
+    let prev=null;
+    for(let s=0;s<=a.steps;s++){
+      const ang=a.a0-a.sweep*s/a.steps,ca=Math.cos(ang),sa=Math.sin(ang);
+      const x=a.h.x+r*ca,z=a.h.z+r*sa,nv=[-ca,0,-sa],vv=s/a.steps*H;
+      const b=vert(x,y0,z,nv,0,vv),t=vert(x,y1,z,nv,L,vv);
+      if(prev)quad(prev[0],prev[1],t,b);
+      prev=[b,t];}});
+  return mesh(p,n,u,ix);}
+/* the cushion ring split into 6 separate parts (2 end rails + 4 side-rail
+   halves) so no rubber crosses a pocket mouth. gaps use the physics constants
+   (cgap at corners, sgap at sides); every pocket-facing end is cut as an
+   angled jaw (flare) that stays fully outside the leather rim circle. */
+function buildCushionParts(iw,il,th,y0,y1,uvS,cgap,sgap,flare){
+  const p=[],n=[],u=[],ix=[];
+  const ex=iw-cgap, ez=il-cgap;
+  const planks=[
+    [[-ex,il],[ex,il],[ex+flare,il+th],[-ex-flare,il+th]],
+    [[ex,-il],[-ex,-il],[-ex-flare,-il-th],[ex+flare,-il-th]],
+    [[iw,ez],[iw,sgap],[iw+th,sgap-flare],[iw+th,ez+flare]],
+    [[iw,-sgap],[iw,-ez],[iw+th,-ez-flare],[iw+th,-sgap+flare]],
+    [[-iw,sgap],[-iw,ez],[-iw-th,ez+flare],[-iw-th,sgap-flare]],
+    [[-iw,-ez],[-iw,-sgap],[-iw-th,-sgap+flare],[-iw-th,-ez-flare]]];
+  planks.forEach(q=>{
+    const v=[
+      [q[0][0],y0,q[0][1]],[q[1][0],y0,q[1][1]],[q[2][0],y0,q[2][1]],[q[3][0],y0,q[3][1]],
+      [q[0][0],y1,q[0][1]],[q[1][0],y1,q[1][1]],[q[2][0],y1,q[2][1]],[q[3][0],y1,q[3][1]]];
+    const len=Math.hypot(q[1][0]-q[0][0],q[1][1]-q[0][1]);
+    const dx=(q[1][0]-q[0][0])/len, dz=(q[1][1]-q[0][1])/len;
+    const ixn=-dz, izn=dx;
+    /* true normals of the angled jaw faces (perpendicular to the cut edge) */
+    const e1x=q[2][0]-q[1][0], e1z=q[2][1]-q[1][1], e1l=Math.hypot(e1x,e1z);
+    const e0x=q[3][0]-q[0][0], e0z=q[3][1]-q[0][1], e0l=Math.hypot(e0x,e0z);
+    const faces=[
+      {pts:[4,7,6,5],n:[0,1,0]},{pts:[0,1,2,3],n:[0,-1,0]},
+      {pts:[0,4,5,1],n:[-ixn,0,-izn]},{pts:[2,6,7,3],n:[ixn,0,izn]},
+      {pts:[1,5,6,2],n:[e1z/e1l,0,-e1x/e1l]},{pts:[3,7,4,0],n:[-e0z/e0l,0,e0x/e0l]}];
+    faces.forEach(f=>{const base=p.length/3;
+      for(let i=0;i<4;i++){const vi=f.pts[i];
+        p.push(v[vi][0],v[vi][1],v[vi][2]);n.push(f.n[0],f.n[1],f.n[2]);}
+      u.push(0,0,len*uvS,0,len*uvS,(y1-y0)*uvS,0,(y1-y0)*uvS);
+      ix.push(base,base+1,base+2,base,base+2,base+3);});});
+  return mesh(p,n,u,ix);}
 
 /* ================= textures ================= */
 function tex(cv,rep){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);
@@ -355,8 +525,9 @@ const LAMP_Y=2.5;
 const T_wood=woodTex(), T_felt=feltTex(), T_glow=glowTex();
 const G_sph=buildSphere(16,22), G_box=buildBox(1,1,1), G_cyl=buildCyl(1,1,1,16,true),
       G_disc=buildDisc(1,26);
-const G_cush=buildMiterRing(W/2, L/2, CUSH, -0.012, 0.075, 1.4);
-const G_wood=buildMiterRing(W/2+CUSH, L/2+CUSH, WOOD, -0.03, 0.105, 0.55);
+const G_cush=buildCushionParts(W/2, L/2, CUSH, -0.012, 0.075, 1.4, CGAP, SGAP, 0.03);
+const G_wood=buildCarvedMiterRing(W/2+CUSH, L/2+CUSH, WOOD, -0.03, 0.105, 0.55,
+  POCKETS.map(p=>({x:p.x,z:p.z,r:p.r+0.035})));
 const G_stick=buildCyl(0.011,0.026,1.35,12,true), G_ferr=buildCyl(0.012,0.012,0.06,10,true);
 const G_shade=buildCyl(0.07,0.40,0.30,20,false);
 
