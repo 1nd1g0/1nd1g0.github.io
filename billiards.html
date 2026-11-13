@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>MIDNIGHT RACK · 3D Arcade Billiards</title>
-<meta name="version" content="2026.11.11.2">
+<meta name="version" content="2026.11.13.2">
 <style>
   html,body{margin:0;padding:0;height:100%;background:#08080a;overflow:hidden;
     font-family:"Courier New",ui-monospace,monospace;color:#eee;touch-action:none;
@@ -12,7 +12,6 @@
   #gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;}
   #ui{position:fixed;inset:0;pointer-events:none;z-index:5;}
   .pe{pointer-events:auto;}
-  /* compact chrome so nothing blocks the table */
   #homeBtn{position:absolute;top:8px;left:8px;padding:5px 10px;font-size:11px;letter-spacing:1px;
     color:#ddd;text-decoration:none;background:rgba(12,12,15,.55);border:1px solid rgba(255,255,255,.14);border-radius:5px;}
   #homeBtn:hover{background:#26262c;color:#fff;}
@@ -25,24 +24,57 @@
     background:#1d1d22;color:#9fe8c0;border:1px solid #3a3a40;border-radius:4px;}
   #bgmBtn{color:#e8c99f;}
   .hbtn.off{color:#77777c;}
-  #hint{position:absolute;left:8px;bottom:8px;font-size:10px;letter-spacing:1px;color:#9aa0a8;
-    background:rgba(10,10,12,.5);padding:4px 8px;border-radius:5px;line-height:1.5;max-width:76vw;
-    transition:opacity 1.2s;}
-  #hint.faded{opacity:.22;}
-  #meter{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);width:min(240px,58vw);height:12px;
+  /* help: collapsed into a button; expanded panel is opaque & readable */
+  #helpBtn{position:absolute;left:8px;bottom:8px;width:30px;height:30px;border-radius:50%;
+    font:inherit;font-size:14px;font-weight:700;color:#ffd76a;cursor:pointer;
+    background:rgba(12,12,15,.62);border:1px solid rgba(255,255,255,.18);}
+  #helpBtn:hover{background:#26262c;}
+  #helpPanel{position:absolute;left:8px;bottom:46px;max-width:min(430px,calc(100vw - 16px));
+    max-height:min(62vh,520px);overflow-y:auto;touch-action:pan-y;
+    background:rgba(8,10,13,.95);border:1px solid rgba(255,255,255,.22);border-radius:8px;
+    padding:12px 14px;font-size:11px;line-height:1.7;letter-spacing:.5px;color:#d7dce3;
+    box-shadow:0 12px 40px rgba(0,0,0,.6);}
+  #helpPanel h3{margin:9px 0 2px;font-size:10px;letter-spacing:2px;color:#ffd76a;font-weight:700;}
+  #helpPanel h3:first-child{margin-top:0;}
+  #helpPanel b{color:#9fe8c0;font-weight:700;}
+  #helpPanel .dim{color:#8a948e;}
+  #meter{position:absolute;left:50%;bottom:30px;transform:translateX(calc(-50% - 58px));width:min(240px,46vw);height:12px;
     border:1px solid #c9c9cf;border-radius:8px;background:rgba(0,0,0,.55);overflow:hidden;display:none;}
   #meterFill{height:100%;width:0%;background:linear-gradient(90deg,#39d98a,#ffd76a,#ff5d47);}
-  #meterLbl{position:absolute;left:50%;bottom:46px;transform:translateX(-50%);font-size:10px;letter-spacing:2px;
-    color:#cfcfd6;display:none;text-shadow:0 1px 2px #000;}
+  #meterLbl{position:absolute;left:50%;bottom:46px;transform:translateX(calc(-50% - 58px));font-size:10px;letter-spacing:2px;
+    color:#cfcfd6;display:none;text-shadow:0 1px 2px #000;white-space:nowrap;}
   #toasts{position:absolute;left:50%;top:16%;transform:translateX(-50%);text-align:center;}
   .toast{font-size:18px;font-weight:700;letter-spacing:2px;color:#ffd76a;text-shadow:0 2px 6px #000;
     animation:rise 1.4s ease-out forwards;margin-bottom:4px;}
   .toast.bad{color:#ff6b5e;}
   @keyframes rise{0%{opacity:0;transform:translateY(14px)}15%{opacity:1}70%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
+  /* spin / massé control: full window + minimized cue-ball */
+  #spinBox{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;align-items:center;gap:5px;
+    background:rgba(12,12,15,.62);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:8px 9px;}
+  #spinTitle{font-size:9px;letter-spacing:2px;color:#9aa0a8;}
+  #spinPad{width:104px;height:104px;display:block;touch-action:none;cursor:crosshair;border-radius:50%;}
+  #spinRead{font-size:9px;letter-spacing:1px;color:#ffd76a;min-height:11px;text-align:center;white-space:nowrap;}
+  #elevRow{display:flex;align-items:center;gap:6px;}
+  #elevLbl{font-size:9px;letter-spacing:1px;color:#9aa0a8;}
+  #elev{width:72px;height:14px;accent-color:#ffd76a;cursor:pointer;touch-action:none;background:transparent;}
+  #elevVal{font-size:9px;color:#cfcfd6;width:24px;text-align:right;}
+  #spinBtns{display:flex;gap:4px;}
+  .sbtn{cursor:pointer;font:inherit;font-size:9px;letter-spacing:1px;padding:3px 6px;background:#1d1d22;
+    color:#9fe8c0;border:1px solid #3a3a40;border-radius:4px;}
+  .sbtn:hover{background:#26262c;color:#fff;}
+  #spinMini{position:absolute;right:8px;bottom:8px;width:60px;height:60px;border-radius:50%;
+    background:rgba(12,12,15,.62);border:1px solid rgba(255,255,255,.18);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;}
+  #spinMini:hover{background:rgba(30,30,36,.8);}
+  #miniPad{width:52px;height:52px;display:block;border-radius:50%;}
+  #miniElev{position:absolute;right:-3px;bottom:-3px;font-size:9px;color:#ffd76a;
+    background:rgba(12,12,15,.88);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:0 4px;}
+  #miniElev:empty{display:none;}
   .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
     background:radial-gradient(ellipse at 50% 40%,rgba(20,24,22,.88),rgba(4,4,6,.96));pointer-events:auto;}
   .panel{max-width:560px;width:calc(100% - 48px);text-align:center;background:rgba(12,14,13,.92);
-    border:1px solid #2e3a34;border-radius:10px;padding:26px 22px;box-shadow:0 20px 60px rgba(0,0,0,.7);}
+    border:1px solid #2e3a34;border-radius:10px;padding:26px 22px;box-shadow:0 20px 60px rgba(0,0,0,.7);
+    max-height:calc(100vh - 32px);overflow-y:auto;touch-action:pan-y;}
   .panel h1{margin:0 0 4px;font-size:30px;letter-spacing:8px;color:#f4e9c8;text-shadow:0 0 24px rgba(255,214,110,.35);}
   .panel h2{margin:0 0 12px;font-size:11px;letter-spacing:4px;color:#7fa896;font-weight:400;}
   .panel p{font-size:12px;line-height:1.75;color:#b9c4bd;margin:9px 0;}
@@ -71,9 +103,46 @@
   <div id="meterLbl">PULL = DRAG THE STICK &middot; RELEASE TO FIRE</div>
   <div id="meter"><div id="meterFill"></div></div>
   <div id="toasts"></div>
-  <div id="hint">DRAG = ORBIT/TILT AROUND FOCUSED BALL &middot; TAP ANY BALL = FOCUS (CAMERA CENTER)<br>
-    HOLD CUE BALL + PULL = SHOOT (FPS VIEW) &middot; WHEEL/PINCH = ZOOM &middot; &#8592;/&#8594; FINE AIM<br>
-    C = RE-CENTER CUE &middot; R = RE-RACK &middot; BGM = LIVE JAZZ</div>
+
+  <button id="helpBtn" class="pe" title="Help (H)">?</button>
+  <div id="helpPanel" class="pe hidden">
+    <h3>AIM &amp; SHOOT</h3>
+    <b>Hold cue ball + drag DOWN</b> = pull for power (sideways = aim), release = fire.<br>
+    <b>Hold cue ball + drag UP</b> = tilt the cue (mass&eacute; elevation) up/down until release.<br>
+    <b>Drag the STICK itself</b> = move the tip contact point &mdash; the red dot follows.
+    Stick and ball drags are independent: use two fingers at once.
+    <h3>SPIN WINDOW</h3>
+    Pad dot = tip hit point: <b>top</b> follow, <b>bottom</b> draw, <b>sides</b> english.<br>
+    <b>CUE slider</b> = elevation. Side spin + elevation = curved mass&eacute; path.<br>
+    Unrelated actions minimize it to a mini cue ball; <b>tap the mini ball</b> or use
+    spin/tilt keys (or gamepad) to bring it back.
+    <h3>CAMERA</h3>
+    Drag table = orbit around focused ball &middot; tap any ball = focus.<br>
+    Wheel / two-finger pinch = zoom &middot; double-tap or <b>C</b> = back behind the cue.
+    <h3>KEYS</h3>
+    &#8592;&#8594; aim &middot; <b>Shift+arrows</b> spin &middot; <b>[ ]</b> cue angle &middot;
+    <b>X</b> center spin &middot; <b>R</b> re-rack &middot; <b>H</b> help &middot; <b>Esc</b>/back closes help.
+    <h3>GAMEPAD</h3>
+    L-stick aim &middot; hold <b>A</b> = power, release = fire &middot; R-stick = spin &middot;
+    D-pad &#8593;&#8595; = tilt &middot; <b>B</b> = center.
+    <div class="dim">Aim guide shows the curved path at 50% power (your live pull while charging).
+    Red ghost = predicted scratch.</div>
+  </div>
+
+  <div id="spinBox" class="pe hidden">
+    <div id="spinTitle">TIP CONTACT &middot; SPIN</div>
+    <canvas id="spinPad"></canvas>
+    <div id="spinRead">CENTER &middot; 0&deg;</div>
+    <div id="elevRow"><span id="elevLbl">CUE</span><input id="elev" class="pe" type="range" min="0" max="75" step="1" value="0"><span id="elevVal">0&deg;</span></div>
+    <div id="spinBtns">
+      <button id="curveL" class="sbtn pe" title="Preset: mass&eacute; curve left">&#8630; CURVE</button>
+      <button id="spinReset" class="sbtn pe" title="Center hit (X)">&bull;</button>
+      <button id="curveR" class="sbtn pe" title="Preset: mass&eacute; curve right">CURVE &#8631;</button>
+    </div>
+  </div>
+  <div id="spinMini" class="pe hidden" title="Tip contact / spin — tap to open">
+    <canvas id="miniPad"></canvas><span id="miniElev"></span>
+  </div>
 
   <div id="startOv" class="overlay">
     <div class="panel">
@@ -82,9 +151,12 @@
       <p>Sink all fifteen, chase the streak, keep the cue ball out of the leather.</p>
       <p class="gold">BALL 100 PTS &middot; BLACK 8 300 PTS &middot; CONSECUTIVE POTS MULTIPLY &times;2 &times;3 &times;4 &hellip;</p>
       <p class="gold">SCRATCH &minus;200 &amp; STREAK LOST &middot; CLEAR THE TABLE +1000 &amp; 250 PER SHOT LEFT</p>
-      <p class="dim">TAP ANY BALL TO FOCUS IT (ORBIT PIVOTS AROUND IT, ALWAYS CENTERED)<br>
-        HOLD CUE BALL &rarr; PULL DOWN (STICK FOLLOWS YOUR HAND) &rarr; RELEASE TO FIRE<br>
-        DRAG ELSEWHERE = ORBIT &middot; WHEEL/PINCH = ZOOM &middot; &#8592;&#8594; FINE AIM &middot; R = RE-RACK<br>
+      <p class="gold">SPIN &amp; MASS&Eacute;: DRAG THE STICK TO MOVE THE TIP CONTACT (RED DOT).
+        HOLD THE CUE BALL AND DRAG UP TO TILT THE CUE &mdash; SIDE SPIN + TILT BENDS THE SHOT.
+        TOP = FOLLOW, BOTTOM = DRAW.</p>
+      <p class="dim">HOLD CUE BALL + DRAG DOWN = POWER, RELEASE = FIRE &middot; DRAG TABLE = ORBIT<br>
+        TAP BALL = FOCUS &middot; WHEEL/PINCH = ZOOM &middot; &#8592;&#8594; FINE AIM &middot; R = RE-RACK<br>
+        ALL CONTROLS LISTED UNDER THE <b>?</b> BUTTON (BOTTOM LEFT) &middot; GAMEPAD SUPPORTED<br>
         JAZZ BGM PLAYS BY DEFAULT (PREFERENCE SAVED)&mdash;TOGGLE IN HUD</p>
       <button id="rackBtn" class="big pe">RACK &rsquo;EM UP</button>
     </div>
@@ -255,34 +327,8 @@ function buildDisc(r,seg){const p=[0,0,0],n=[0,1,0],u=[.5,.5],ix=[];
     p.push(Math.cos(a)*r,0,Math.sin(a)*r);n.push(0,1,0);u.push(i/seg,0);}
   for(let i=0;i<seg;i++)ix.push(0,i+2,i+1);
   return mesh(p,n,u,ix);}
-function buildMiterRing(iw,il,th,y0,y1,uvS){
-  const p=[],n=[],u=[],ix=[];
-  const ow=iw+th, ol=il+th;
-  const planks=[
-    [[-iw,il],[iw,il],[ow,ol],[-ow,ol]],
-    [[iw,-il],[-iw,-il],[-ow,-ol],[ow,-ol]],
-    [[iw,il],[iw,-il],[ow,-ol],[ow,ol]],
-    [[-iw,-il],[-iw,il],[-ow,ol],[-ow,-ol]]];
-  planks.forEach(q=>{
-    const v=[
-      [q[0][0],y0,q[0][1]],[q[1][0],y0,q[1][1]],[q[2][0],y0,q[2][1]],[q[3][0],y0,q[3][1]],
-      [q[0][0],y1,q[0][1]],[q[1][0],y1,q[1][1]],[q[2][0],y1,q[2][1]],[q[3][0],y1,q[3][1]]];
-    const len=Math.hypot(q[1][0]-q[0][0],q[1][1]-q[0][1]);
-    const dx=(q[1][0]-q[0][0])/len, dz=(q[1][1]-q[0][1])/len;
-    const ixn=-dz, izn=dx;
-    const faces=[
-      {pts:[4,7,6,5],n:[0,1,0]},{pts:[0,1,2,3],n:[0,-1,0]},
-      {pts:[0,4,5,1],n:[-ixn,0,-izn]},{pts:[2,6,7,3],n:[ixn,0,izn]},
-      {pts:[1,5,6,2],n:[dx,0,dz]},{pts:[3,7,4,0],n:[-dx,0,-dz]}];
-    faces.forEach(f=>{const base=p.length/3;
-      for(let i=0;i<4;i++){const vi=f.pts[i];
-        p.push(v[vi][0],v[vi][1],v[vi][2]);n.push(f.n[0],f.n[1],f.n[2]);}
-      u.push(0,0,len*uvS,0,len*uvS,(y1-y0)*uvS,0,(y1-y0)*uvS);
-      ix.push(base,base+1,base+2,base,base+2,base+3);});});
-  return mesh(p,n,u,ix);}
-/* same mitered frame as buildMiterRing, but with vertical cylindrical cut-outs
-   carved around the pockets so the leather rims and holes are never covered
-   by the wood. holes=[{x,z,r}] straddle the inner edge of the frame. */
+/* mitered wood frame with vertical cylindrical cut-outs carved around the
+   pockets so the leather rims and holes are never covered by the wood. */
 function buildCarvedMiterRing(iw,il,th,y0,y1,uvS,holes){
   const p=[],n=[],u=[],ix=[];
   const ow=iw+th, ol=il+th;
@@ -296,8 +342,6 @@ function buildCarvedMiterRing(iw,il,th,y0,y1,uvS,holes){
   const area2=pg=>{let s=0;for(let i=0;i<pg.length;i++)s+=cr([0,0],pg[i],pg[(i+1)%pg.length]);return s;};
   function vert(x,y,z,nv,uu,vv){p.push(x,y,z);n.push(nv[0],nv[1],nv[2]);u.push(uu,vv);return p.length/3-1;}
   function quad(a,b,c,d){ix.push(a,b,c,a,c,d);}
-  /* clip a CCW polygon against the outside of one disk; boundary notches are
-     replaced by clockwise arc samples (the arc that lies inside the plank) */
   function subtractDisk(pg,h,collect){
     const cx=h.x,cz=h.z,r=h.r,N=pg.length;
     const ins=v=>(v[0]-cx)*(v[0]-cx)+(v[1]-cz)*(v[1]-cz)<r*r;
@@ -350,7 +394,6 @@ function buildCarvedMiterRing(iw,il,th,y0,y1,uvS,holes){
       if(!done)break;}
     if(idx.length===3)tris.push([idx[0],idx[1],idx[2]]);
     return tris;}
-  /* exact UV of the original quad mapping (two-triangle barycentric) */
   function faceUV(P,q,L,H){
     const U=[[0,0],[L,0],[L,H],[0,H]];
     for(const t of [[0,1,2],[0,2,3]]){
@@ -405,7 +448,6 @@ function buildCarvedMiterRing(iw,il,th,y0,y1,uvS,holes){
           const d=vert(A[0]+ex*s[1],y0,A[1]+ez*s[1],f.n,0,v1);
           quad(a,b,c,d);}
       }});});
-  /* carved cylindrical walls, sampled identically to the top-face arcs */
   arcs.forEach(a=>{
     const r=a.h.r,len=r*a.sweep,L=len*uvS,H=(y1-y0)*uvS;
     let prev=null;
@@ -416,10 +458,7 @@ function buildCarvedMiterRing(iw,il,th,y0,y1,uvS,holes){
       if(prev)quad(prev[0],prev[1],t,b);
       prev=[b,t];}});
   return mesh(p,n,u,ix);}
-/* the cushion ring split into 6 separate parts (2 end rails + 4 side-rail
-   halves) so no rubber crosses a pocket mouth. gaps use the physics constants
-   (cgap at corners, sgap at sides); every pocket-facing end is cut as an
-   angled jaw (flare) that stays fully outside the leather rim circle. */
+/* cushion ring split into 6 parts so no rubber crosses a pocket mouth */
 function buildCushionParts(iw,il,th,y0,y1,uvS,cgap,sgap,flare){
   const p=[],n=[],u=[],ix=[];
   const ex=iw-cgap, ez=il-cgap;
@@ -437,7 +476,6 @@ function buildCushionParts(iw,il,th,y0,y1,uvS,cgap,sgap,flare){
     const len=Math.hypot(q[1][0]-q[0][0],q[1][1]-q[0][1]);
     const dx=(q[1][0]-q[0][0])/len, dz=(q[1][1]-q[0][1])/len;
     const ixn=-dz, izn=dx;
-    /* true normals of the angled jaw faces (perpendicular to the cut edge) */
     const e1x=q[2][0]-q[1][0], e1z=q[2][1]-q[1][1], e1l=Math.hypot(e1x,e1z);
     const e0x=q[3][0]-q[0][0], e0z=q[3][1]-q[0][1], e0l=Math.hypot(e0x,e0z);
     const faces=[
@@ -493,7 +531,7 @@ function feltTex(){
     D[o]=clamp(base[0]*k,0,255);D[o+1]=clamp(base[1]*k,0,255);D[o+2]=clamp(base[2]*k,0,255);D[o+3]=255;}
   x.putImageData(img,0,0);
   return tex(c,true);}
-function ballTex(col,num,stripe){
+function ballTex(col,num,stripe,dots){
   const c=document.createElement("canvas");c.width=128;c.height=64;
   const x=c.getContext("2d");
   x.fillStyle=stripe?"#f4f2ec":col;x.fillRect(0,0,128,64);
@@ -507,6 +545,10 @@ function ballTex(col,num,stripe){
     x.strokeStyle="rgba(0,0,0,0.28)";x.lineWidth=1.2;x.stroke();
     x.fillStyle="#141414";x.font="bold 17px monospace";
     x.textAlign="center";x.textBaseline="middle";x.fillText(String(num),64,33);}
+  /* "measle" practice cue ball: red dots make the spin visible */
+  if(dots){x.fillStyle="#d8352b";
+    [[16,18],[48,46],[80,18],[112,46],[32,32],[96,32]].forEach(p=>{
+      x.beginPath();x.arc(p[0],p[1],4.5,0,7);x.fill();});}
   return tex(c,false);}
 function glowTex(){const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d");
   const g=x.createRadialGradient(32,32,1,32,32,31);
@@ -534,11 +576,11 @@ const G_shade=buildCyl(0.07,0.40,0.30,20,false);
 const BALLCOL=["#f2f0e8","#f6c445","#2456d8","#d8352b","#7d3bd0","#ef7d21","#1d9e4f","#8f2f20",
   "#161616","#f6c445","#2456d8","#d8352b","#7d3bd0","#ef7d21","#1d9e4f","#8f2f20"];
 const balls=[];
-for(let i=0;i<16;i++)balls.push({id:i,x:0,z:0,vx:0,vz:0,sunk:false,sink:0,px:0,pz:0,
-  q:[0,0,0,1],tex:ballTex(BALLCOL[i],i,i>8)});
+for(let i=0;i<16;i++)balls.push({id:i,x:0,z:0,vx:0,vz:0,wx:0,wy:0,wz:0,
+  sunk:false,sink:0,px:0,pz:0,q:[0,0,0,1],tex:ballTex(BALLCOL[i],i,i>8,i===0)});
 
 /* ================= flat buffer ================= */
-const flatBuf=gl.createBuffer(); let flatCount=0; const flatArr=new Float32Array(9*1536);
+const flatBuf=gl.createBuffer(); let flatCount=0; const flatArr=new Float32Array(9*8192);
 function flatPush(px,py,pz,r,g,b,a,u,v){if(flatCount*9+9>flatArr.length)return;
   const o=flatCount*9;
   flatArr[o]=px;flatArr[o+1]=py;flatArr[o+2]=pz;flatArr[o+3]=r;flatArr[o+4]=g;flatArr[o+5]=b;
@@ -590,7 +632,7 @@ const SFX={
   clear:()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone("sine",f,f,0.22,0.3),i*95));},
   ui:()=>tone("sine",700,700,0.05,0.15)};
 
-/* ================= procedural jazz BGM (default ON, preference saved) ================= */
+/* ================= procedural jazz BGM ================= */
 const m2f=m=>440*Math.pow(2,(m-69)/12);
 const JPROGS=[
   [[2,"min7"],[7,"dom7"],[0,"maj7"],[9,"dom7"]],
@@ -696,8 +738,12 @@ syncBgm();
 
 /* ================= state ================= */
 const G={phase:"menu",score:0,streak:0,shots:0,potted:0,scratch:false,
-  aim:0,aimBase:0,power:0,charging:false,rolling:false,zoom:1,grab:null,orbitDrag:null,
+  aim:0,power:0,charging:false,rolling:false,zoom:1,
+  grab:null,          /* cue-ball gesture: {x,y,id,mode:"pending"|"power"|"tilt",aimBase,elev0} */
+  stickDrag:null,     /* stick gesture: {x,y,id,sx,sy} -> moves tip contact */
+  orbitDrag:null,
   focus:0,orbC:[0,R,-1.0],
+  spinX:0,spinY:0,elev:0,
   camMode:"behind",camPos:[0,1.6,-3.4],camLook:[0,0,-0.6],
   orb:{th:0,ph:0.9,r:3.2}};
 const PAR=15;
@@ -707,12 +753,15 @@ function rack(){
   let bi=1;const z0=1.0;
   for(let r=0;r<5;r++)for(let c=0;c<=r;c++){
     const b=balls[bi++];b.x=(c-r/2)*(2*R+0.004);b.z=z0+r*(R*1.732+0.004);
-    b.vx=b.vz=0;b.sunk=false;b.sink=0;
+    b.vx=b.vz=0;b.wx=b.wy=b.wz=0;b.sunk=false;b.sink=0;
     b.q=qNorm(qMul(qAxis(rand()*6.283,0,1,0),qAxis(rand()*6.283,1,0,0)));}
-  const cue=balls[0];cue.x=0;cue.z=-1.0;cue.vx=cue.vz=0;cue.sunk=false;cue.sink=0;cue.q=[0,0,0,1];
+  const cue=balls[0];cue.x=0;cue.z=-1.0;cue.vx=cue.vz=0;cue.wx=cue.wy=cue.wz=0;
+  cue.sunk=false;cue.sink=0;cue.q=[0,0,0,1];
   G.shots=0;G.potted=0;G.scratch=false;G.rolling=false;G.power=0;G.charging=false;
-  G.aim=0;G.aimBase=0;G.focus=0;G.camMode="behind";
-  G.orbC=[cue.x,R,cue.z];hideMeter();hud();}
+  G.grab=null;G.stickDrag=null;G.orbitDrag=null;
+  G.aim=0;G.focus=0;G.camMode="behind";
+  G.spinX=0;G.spinY=0;G.elev=0;syncSpinUI();
+  G.orbC=[cue.x,R,cue.z];hideMeter();hud();spinExpand();}
 function hud(){document.getElementById("hScore").textContent=G.score;
   document.getElementById("hStreak").innerHTML=G.streak>0?"&times;"+G.streak:"&mdash;";
   document.getElementById("hShots").textContent=G.shots;}
@@ -720,14 +769,61 @@ function toast(txt,bad){const d=document.createElement("div");d.className="toast
   d.textContent=txt;document.getElementById("toasts").appendChild(d);
   setTimeout(()=>d.remove(),1450);}
 
-/* ================= physics ================= */
+/* ================= physics =================
+   Spin vector w=(wx,wy,wz); cloth slip u=(vx+R*wz, vz-R*wx). Sliding friction
+   torques w toward natural roll -> stun/follow/draw AND the massé curve
+   (elevated off-center strikes create forward-axis spin whose lateral slip
+   bends the path). A small swerve term bends rolling balls with side spin. */
+const SLIDE=2.0, SPIN_DECAY=1.25, SWERVE=0.055, MASSE=0.5, CUSH_SPIN=0.28;
+function integrateBall(b,h){
+  const ux0=b.vx+R*b.wz, uz0=b.vz-R*b.wx;
+  const sliding=Math.hypot(ux0,uz0)>0.03;
+  const f=Math.exp(-0.95*h);b.vx*=f;b.vz*=f;
+  let sp=Math.hypot(b.vx,b.vz);
+  if(sp>1e-4){const dr=Math.min(0.32*h,sp);b.vx-=b.vx/sp*dr;b.vz-=b.vz/sp*dr;}
+  if(sliding){
+    const ux=b.vx+R*b.wz, uz=b.vz-R*b.wx, ul=Math.hypot(ux,uz);
+    if(ul>1e-6){
+      const ax=-SLIDE*ux/ul, az=-SLIDE*uz/ul;
+      b.vx+=ax*h;b.vz+=az*h;
+      b.wx-=2.5*az/R*h;b.wz+=2.5*ax/R*h;
+      const u2x=b.vx+R*b.wz, u2z=b.vz-R*b.wx;
+      if(u2x*ux+u2z*uz<=0){b.wx=b.vz/R;b.wz=-b.vx/R;}
+    }
+  }else{b.wx=b.vz/R;b.wz=-b.vx/R;}
+  if(b.wy){
+    b.wy*=Math.exp(-SPIN_DECAY*h);
+    sp=Math.hypot(b.vx,b.vz);
+    if(sp>0.05){
+      const k=SWERVE*b.wy*R*h/sp, ox=b.vx, oz=b.vz;
+      b.vx+=k*(-oz);b.vz+=k*ox;}
+    if(Math.abs(b.wy)<0.08)b.wy=0;}
+  sp=Math.hypot(b.vx,b.vz);
+  const ul2=Math.hypot(b.vx+R*b.wz,b.vz-R*b.wx);
+  if(sp<0.028&&ul2<0.06){b.vx=0;b.vz=0;b.wx=0;b.wz=0;}
+}
+function shotState(power){
+  const el=G.elev*Math.PI/180, ca=Math.cos(el), sa=Math.sin(el);
+  const sp=(1.9+7.3*Math.pow(power,1.12))*(1-0.28*sa);
+  const dx=Math.sin(G.aim), dz=Math.cos(G.aim);
+  const lx=-dz, lz=dx;
+  const b=G.spinX*0.55*R, a=G.spinY*0.55*R;
+  const c0=Math.sqrt(Math.max(R*R-a*a-b*b,0.25*R*R));
+  const K=2.5*sp/(R*R*Math.max(ca,0.35));
+  const mL=K*(MASSE*c0*sa-a*ca), mY=K*b*ca, mD=K*MASSE*b*sa;
+  return{x:balls[0].x,z:balls[0].z,vx:dx*sp,vz:dz*sp,
+    wx:mL*lx+mD*dx, wy:mY, wz:mL*lz+mD*dz};}
 function cushionHit(b){
-  const hw=W/2-R, hl=L/2-R;
-  if(b.z> hl && b.x>-W/2+CGAP && b.x<W/2-CGAP){b.z= hl;b.vz=-Math.abs(b.vz)*0.72;b.vx*=0.985;return 1;}
-  if(b.z<-hl && b.x>-W/2+CGAP && b.x<W/2-CGAP){b.z=-hl;b.vz= Math.abs(b.vz)*0.72;b.vx*=0.985;return 1;}
-  if(b.x> hw && ((b.z> SGAP && b.z<L/2-CGAP)||(b.z<-SGAP && b.z>-L/2+CGAP))){b.x= hw;b.vx=-Math.abs(b.vx)*0.72;b.vz*=0.985;return 1;}
-  if(b.x<-hw && ((b.z> SGAP && b.z<L/2-CGAP)||(b.z<-SGAP && b.z>-L/2+CGAP))){b.x=-hw;b.vx= Math.abs(b.vx)*0.72;b.vz*=0.985;return 1;}
-  return 0;}
+  const hw=W/2-R, hl=L/2-R;let hit=0;
+  if(b.z> hl && b.x>-W/2+CGAP && b.x<W/2-CGAP){b.z= hl;b.vz=-Math.abs(b.vz)*0.72;b.vx*=0.985;
+    b.vx-=CUSH_SPIN*R*b.wy;b.wy*=0.55;b.wx*=0.6;b.wz*=0.5;hit=1;}
+  else if(b.z<-hl && b.x>-W/2+CGAP && b.x<W/2-CGAP){b.z=-hl;b.vz= Math.abs(b.vz)*0.72;b.vx*=0.985;
+    b.vx+=CUSH_SPIN*R*b.wy;b.wy*=0.55;b.wx*=0.6;b.wz*=0.5;hit=1;}
+  else if(b.x> hw && ((b.z> SGAP && b.z<L/2-CGAP)||(b.z<-SGAP && b.z>-L/2+CGAP))){b.x= hw;b.vx=-Math.abs(b.vx)*0.72;b.vz*=0.985;
+    b.vz+=CUSH_SPIN*R*b.wy;b.wy*=0.55;b.wz*=0.6;b.wx*=0.5;hit=1;}
+  else if(b.x<-hw && ((b.z> SGAP && b.z<L/2-CGAP)||(b.z<-SGAP && b.z>-L/2+CGAP))){b.x=-hw;b.vx= Math.abs(b.vx)*0.72;b.vz*=0.985;
+    b.vz-=CUSH_SPIN*R*b.wy;b.wy*=0.55;b.wz*=0.6;b.wx*=0.5;hit=1;}
+  return hit;}
 function pocketTest(b){
   for(const p of POCKETS){const d=Math.hypot(b.x-p.x,b.z-p.z);
     if(d<p.r-0.012)return p;
@@ -736,21 +832,22 @@ function pocketTest(b){
     let best=POCKETS[0],bd=1e9;for(const p of POCKETS){const d=Math.hypot(b.x-p.x,b.z-p.z);if(d<bd){bd=d;best=p;}}
     return best;}
   return null;}
-function sink(b,p){b.sunk=true;b.sink=0;b.px=p.x;b.pz=p.z;b.vx=b.vz=0;
+function sink(b,p){b.sunk=true;b.sink=0;b.px=p.x;b.pz=p.z;b.vx=b.vz=0;b.wx=b.wy=b.wz=0;
   SFX.pocket();
   if(b.id===0){G.scratch=true;}
   else{G.potted++;G.streak++;const base=b.id===8?300:100,pts=base*G.streak;
     G.score+=pts;toast("+"+pts+(G.streak>1?" \u00d7"+G.streak:""));hud();}}
 function step(dt){
-  let maxV=0;for(const b of balls)if(!b.sunk)maxV=Math.max(maxV,Math.hypot(b.vx,b.vz));
-  const n=clamp(Math.ceil(maxV*dt/0.018),1,8),h=dt/n;
+  let maxEff=0;
+  for(const b of balls){if(b.sunk)continue;
+    const sp=Math.hypot(b.vx,b.vz), sl=Math.hypot(b.vx+R*b.wz,b.vz-R*b.wx);
+    maxEff=Math.max(maxEff,sp,sl);}
+  const n=clamp(Math.ceil(maxEff*dt/0.018),1,16),h=dt/n;
   for(let s=0;s<n;s++){
     for(const b of balls){if(b.sunk)continue;
+      integrateBall(b,h);
       b.x+=b.vx*h;b.z+=b.vz*h;
-      const f=Math.exp(-0.95*h);b.vx*=f;b.vz*=f;
       const sp=Math.hypot(b.vx,b.vz);
-      if(sp>0.0001){const dr=Math.min(0.32*h,sp);b.vx-=b.vx/sp*dr;b.vz-=b.vz/sp*dr;}
-      if(Math.hypot(b.vx,b.vz)<0.028){b.vx=0;b.vz=0;}
       if(cushionHit(b)&&sp>0.25)SFX.thud(clamp(sp/6,0.2,1));
       const p=pocketTest(b);if(p){sink(b,p);continue;}}
     for(let i=0;i<16;i++)for(let j=i+1;j<16;j++){
@@ -762,18 +859,19 @@ function step(dt){
         if(rv>0){const k=rv*0.965;
           a.vx-=k*nx;a.vz-=k*nz;c.vx+=k*nx;c.vz+=k*nz;
           if(rv>0.3)SFX.click(clamp(rv/6,0.15,1));}}}}
-  for(const b of balls){if(b.sunk)continue;const sp=Math.hypot(b.vx,b.vz);
-    if(sp>0.05){const ax=b.vz/sp,az=-b.vx/sp;
-      b.q=qNorm(qMul(qAxis(sp*dt/R,ax,0,az),b.q));}}
+  for(const b of balls){if(b.sunk)continue;
+    const w=Math.hypot(b.wx,b.wy,b.wz);
+    if(w>0.01)b.q=qNorm(qMul(qAxis(w*dt,b.wx/w,b.wy/w,b.wz/w),b.q));}
   let moving=false;
   for(const b of balls){if(b.sunk){if(b.sink<1)moving=true;continue;}
-    if(b.vx||b.vz)moving=true;}
+    if(b.vx||b.vz)moving=true;
+    else if(Math.hypot(b.vx+R*b.wz,b.vz-R*b.wx)>0.06)moving=true;}
   if(G.rolling&&!moving)endShot();
   else if(moving)G.rolling=true;}
 function endShot(){
-  G.rolling=false;
+  G.rolling=false;G.power=0;
   if(G.scratch){G.score-=200;G.streak=0;toast("SCRATCH \u2212200",true);SFX.scratch();
-    const c=balls[0];c.sunk=false;c.sink=0;c.x=0;c.z=-1.0;c.vx=c.vz=0;c.q=[0,0,0,1];
+    const c=balls[0];c.sunk=false;c.sink=0;c.x=0;c.z=-1.0;c.vx=c.vz=0;c.wx=c.wy=c.wz=0;c.q=[0,0,0,1];
     let guard=0;
     while(guard++<40&&balls.some(b=>b.id!==0&&!b.sunk&&Math.hypot(b.x-c.x,b.z-c.z)<2.6*R))c.z-=0.18;
     c.z=clamp(c.z,-L/2+R+0.02,L/2-R-0.02);}
@@ -786,9 +884,11 @@ function endShot(){
     document.getElementById("clearLines").innerHTML=
       "CLEAR BONUS <b>+1000</b><br>SHOTS LEFT "+sl+" \u00d7 250 = <b>+"+(sl*250)+"</b><br>TOTAL SCORE <b>"+G.score+"</b>";
     document.getElementById("clearOv").classList.remove("hidden");
+    document.getElementById("spinBox").classList.add("hidden");
+    document.getElementById("spinMini").classList.add("hidden");
     G.phase="clear";}}
 
-/* ================= camera (pivot = focused ball) ================= */
+/* ================= camera ================= */
 function camBasis(){
   const e=G.camPos,l=G.camLook;
   let f=[l[0]-e[0],l[1]-e[1],l[2]-e[2]];
@@ -824,7 +924,6 @@ function updateCam(dt){
     dl=[c.x+d[0]*1.0, 0.03, c.z+d[2]*1.0];}
   const k=1-Math.exp(-6*dt);
   for(let i=0;i<3;i++){G.camPos[i]+=(dp[i]-G.camPos[i])*k;G.camLook[i]+=(dl[i]-G.camLook[i])*k;}}
-/* init orbit spherical coords around the focused ball (no jump) */
 function initOrbitAroundFocus(){
   const fb=balls[G.focus], c=[fb.x,R,fb.z];
   G.orbC=[c[0],c[1],c[2]];
@@ -833,8 +932,37 @@ function initOrbitAroundFocus(){
   G.orb={th:Math.atan2(v[0],v[2]),ph:Math.acos(clamp(v[1]/r,-1,1)),r};
   G.camMode="orbit";}
 
-/* ================= input ================= */
+/* ================= cue stick geometry & picking ================= */
+function stickGeom(){
+  const c=balls[0],el=G.elev*Math.PI/180,ca=Math.cos(el),sa=Math.sin(el);
+  const d=[Math.sin(G.aim),0,Math.cos(G.aim)],Lv=[-d[2],0,d[0]];
+  const D=[d[0]*ca,-sa,d[2]*ca];                 /* butt -> tip direction */
+  const b=G.spinX*0.55*R,a=G.spinY*0.55*R;
+  const c0=Math.sqrt(Math.max(R*R-a*a-b*b,0.25*R*R));
+  const gap=0.025+G.power*0.42;
+  const T=[c.x+Lv[0]*b-d[0]*c0-D[0]*gap, R+a-D[1]*gap, c.z+Lv[2]*b-d[2]*c0-D[2]*gap];
+  return{T,D};}
+function distSeg(px,py,a,b){
+  const vx=b.x-a.x,vy=b.y-a.y,l2=vx*vx+vy*vy||1;
+  let t=((px-a.x)*vx+(py-a.y)*vy)/l2;t=clamp(t,0,1);
+  return Math.hypot(px-(a.x+vx*t),py-(a.y+vy*t));}
+function stickHit(px,py){
+  if(G.camMode!=="behind"||G.rolling||balls[0].sunk||G.phase!=="play")return false;
+  const{T,D}=stickGeom();let prev=null;
+  for(let i=0;i<=6;i++){
+    const t=0.08+1.33*i/6;
+    const s=screenProj(T[0]-D[0]*t,T[1]-D[1]*t,T[2]-D[2]*t);
+    if(s.x<-1e8){prev=null;continue;}
+    if(prev&&distSeg(px,py,prev,s)<22)return true;
+    prev=s;}
+  return false;}
+
+/* ================= input =================
+   Pointer roles keep gestures independent: "ball" (power/tilt), "stick"
+   (tip contact), "free" (orbit; two frees = pinch). They never cancel
+   each other, so stick-spin + ball-power works with two thumbs. */
 const pointers=new Map();let pinchD=0;
+function freePts(){const o=[];for(const[id,p]of pointers)if(p.role==="free")o.push(p);return o;}
 function pickBall(px,py){
   let best=-1,bd=1e9;
   for(const b of balls){if(b.sunk)continue;
@@ -848,87 +976,288 @@ document.addEventListener("gesturestart",e=>e.preventDefault());
 canvas.addEventListener("pointerdown",e=>{
   audio();
   if(canvas.setPointerCapture)canvas.setPointerCapture(e.pointerId);
-  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(pointers.size===2){const p=[...pointers.values()];pinchD=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);
-    G.charging=false;G.orbitDrag=null;hideMeter();return;}
+  const pt={x:e.clientX,y:e.clientY,role:"free"};
+  pointers.set(e.pointerId,pt);
+  const fr=freePts();
+  if(fr.length>=2){pinchD=Math.hypot(fr[0].x-fr[1].x,fr[0].y-fr[1].y);
+    G.orbitDrag=null;return;}
   if(G.phase!=="play")return;
-  const id=pickBall(e.clientX,e.clientY);
-  if(id>=0){
-    G.focus=id;
-    if(id===0&&!G.rolling){
-      /* grab cue: FPS snap + charge; stick & camera share one axis */
+  if(!G.rolling){
+    const bid=pickBall(e.clientX,e.clientY);
+    if(bid===0&&!G.grab){
+      /* cue ball grab: direction decides power (down) vs tilt (up) */
+      pt.role="ball";
       const f=camBasis().f, hl=Math.hypot(f[0],f[2]);
       if(hl>0.25)G.aim=Math.atan2(f[0],f[2]);
-      G.camMode="behind";G.orbC=[balls[0].x,R,balls[0].z];
-      G.charging=true;G.power=0;G.grab={x:e.clientX,y:e.clientY};G.aimBase=G.aim;showMeter();
-      return;}}
-  /* any other press (ball or table): orbit/tilt around the FOCUSED ball */
+      G.camMode="behind";G.focus=0;G.orbC=[balls[0].x,R,balls[0].z];
+      G.grab={x:e.clientX,y:e.clientY,id:e.pointerId,mode:"pending",aimBase:G.aim,elev0:G.elev};
+      G.power=0;return;}
+    if(bid>0){G.focus=bid;spinMinimize();}
+    else if(bid<0&&stickHit(e.clientX,e.clientY)&&!G.stickDrag){
+      /* stick grab: drag moves the tip contact red dot */
+      pt.role="stick";
+      G.stickDrag={x:e.clientX,y:e.clientY,id:e.pointerId,sx:G.spinX,sy:G.spinY};
+      spinExpand();SFX.ui();return;}
+    else spinMinimize();}
+  else spinMinimize();
   initOrbitAroundFocus();
-  G.orbitDrag={x:e.clientX,y:e.clientY};});
+  G.orbitDrag={x:e.clientX,y:e.clientY,id:e.pointerId};});
+function ballMove(e){
+  const g=G.grab,dx=e.clientX-g.x,dy=e.clientY-g.y;
+  if(g.mode==="pending"){
+    if(Math.hypot(dx,dy)<12)return;
+    if(dy<-10&&-dy>Math.abs(dx)){
+      g.mode="tilt";spinExpand();showMeter();SFX.ui();
+    }else{
+      g.mode="power";G.charging=true;spinMinimize();showMeter();}}
+  if(g.mode==="tilt"){
+    /* finger up/down tilts the cue until release; mirrors the CUE slider */
+    G.elev=clamp(g.elev0-dy*0.25,0,75);syncSpinUI();
+    document.getElementById("meterLbl").textContent=
+      "TILT \u00b7 CUE "+Math.round(G.elev)+"\u00b0 \u00b7 RELEASE TO SET";
+    document.getElementById("meterFill").style.width=(G.elev/75*100)+"%";
+  }else{
+    G.power=clamp(dy/230,0,1);
+    G.aim=g.aimBase+dx*0.0038;
+    meterSet();}}
+function stickMove(e){
+  const s=G.stickDrag;
+  let nx=s.sx+(e.clientX-s.x)*0.0065, ny=s.sy-(e.clientY-s.y)*0.0065;
+  const l=Math.hypot(nx,ny);if(l>1){nx/=l;ny/=l;}
+  G.spinX=nx;G.spinY=ny;drawPad();}
 window.addEventListener("pointermove",e=>{
   const pt=pointers.get(e.pointerId);
   if(pt){pt.x=e.clientX;pt.y=e.clientY;}
-  if(pointers.size===2){const p=[...pointers.values()];
-    const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);
-    if(pinchD>0){if(G.camMode==="orbit")G.orb.r=clamp(G.orb.r*pinchD/d,0.6,12);
-      else G.zoom=clamp(G.zoom*pinchD/d,0.55,1.9);}
+  if(G.grab&&e.pointerId===G.grab.id){ballMove(e);return;}
+  if(G.stickDrag&&e.pointerId===G.stickDrag.id){stickMove(e);return;}
+  const fr=freePts();
+  if(fr.length>=2){
+    const d=Math.hypot(fr[0].x-fr[1].x,fr[0].y-fr[1].y);
+    if(pinchD>0&&d>0){if(G.camMode==="orbit")G.orb.r=clamp(G.orb.r*pinchD/d,0.6,12);
+      else G.zoom=clamp(G.zoom*pinchD/d,0.55,1.9);spinMinimize();}
     pinchD=d;return;}
-  if(G.charging){
-    const dx=e.clientX-G.grab.x, dy=e.clientY-G.grab.y;
-    G.power=clamp(dy/230,0,1);
-    G.aim=G.aimBase+dx*0.0038;
-    meterSet();return;}
-  if(G.orbitDrag){
+  if(G.orbitDrag&&e.pointerId===G.orbitDrag.id){
     const dx=e.clientX-G.orbitDrag.x, dy=e.clientY-G.orbitDrag.y;
     G.orb.th-=dx*0.0052;G.orb.ph=clamp(G.orb.ph-dy*0.0052,0.12,1.5);
-    G.orbitDrag={x:e.clientX,y:e.clientY};}});
-window.addEventListener("pointerup",e=>{
-  pointers.delete(e.pointerId);if(pointers.size<2)pinchD=0;
-  if(G.charging){
+    G.orbitDrag={x:e.clientX,y:e.clientY,id:e.pointerId};}});
+function endGrab(e,cancel){
+  const g=G.grab;G.grab=null;G.charging=false;hideMeter();
+  if(!g)return;
+  if(g.mode==="power"&&!cancel){
     const s=screenProj(balls[0].x,R,balls[0].z);
-    const back=s.x>-1e8&&Math.hypot(e.clientX-s.x,e.clientY-s.y)<Math.max(30,screenRadiusAt(0,0)*1.9);
-    if(G.power<0.02||back){/* cancelled: zero power or returned onto cue ball */}
-    else fire();
-    G.charging=false;hideMeter();}
-  G.orbitDrag=null;});
-window.addEventListener("pointercancel",e=>{pointers.delete(e.pointerId);
-  G.charging=false;G.orbitDrag=null;hideMeter();});
-canvas.addEventListener("wheel",e=>{e.preventDefault();
+    const back=s.x>-1e8&&Math.hypot(e.clientX-s.x,e.clientY-s.y)<
+      Math.max(30,screenRadiusAt(balls[0].x,balls[0].z)*1.9);
+    if(G.power>=0.02&&!back)fire();
+  }else if(g.mode==="pending"&&!cancel){spinMinimize();}
+  /* tilt release: keep the elevation, window stays open */}
+window.addEventListener("pointerup",e=>{
+  pointers.delete(e.pointerId);
+  if(freePts().length<2)pinchD=0;
+  if(G.grab&&e.pointerId===G.grab.id){endGrab(e,false);return;}
+  if(G.stickDrag&&e.pointerId===G.stickDrag.id){G.stickDrag=null;return;}
+  if(G.orbitDrag&&e.pointerId===G.orbitDrag.id)G.orbitDrag=null;});
+window.addEventListener("pointercancel",e=>{
+  pointers.delete(e.pointerId);
+  if(freePts().length<2)pinchD=0;
+  if(G.grab&&e.pointerId===G.grab.id){endGrab(e,true);return;}
+  if(G.stickDrag&&e.pointerId===G.stickDrag.id){G.stickDrag=null;return;}
+  if(G.orbitDrag&&e.pointerId===G.orbitDrag.id)G.orbitDrag=null;});
+canvas.addEventListener("wheel",e=>{e.preventDefault();spinMinimize();
   const f=Math.exp(e.deltaY*0.001);
   if(G.camMode==="orbit")G.orb.r=clamp(G.orb.r*f,0.6,12);
   else G.zoom=clamp(G.zoom*f,0.55,1.9);},{passive:false});
-canvas.addEventListener("dblclick",()=>{G.focus=0;G.camMode="behind";G.orbC=[balls[0].x,R,balls[0].z];});
+canvas.addEventListener("dblclick",()=>{spinMinimize();
+  G.focus=0;G.camMode="behind";G.orbC=[balls[0].x,R,balls[0].z];});
 window.addEventListener("keydown",e=>{
-  if(e.key==="ArrowLeft"){G.aim+=0.018;e.preventDefault();}
-  if(e.key==="ArrowRight"){G.aim-=0.018;e.preventDefault();}
-  if(e.key==="r"||e.key==="R"){if(G.phase==="play"){rack();SFX.ui();}}
-  if(e.key==="c"||e.key==="C"){G.focus=0;G.camMode="behind";G.orbC=[balls[0].x,R,balls[0].z];}});
+  const k=e.key;
+  if(k==="Escape"){closeHelp();spinMinimize();return;}
+  if(k==="h"||k==="H"||k==="?"){helpOpen?closeHelp():openHelp();return;}
+  if(k==="ArrowLeft"||k==="ArrowRight"||k==="ArrowUp"||k==="ArrowDown"){
+    if(e.shiftKey){ /* spin tuning -> window appears */
+      if(k==="ArrowLeft")G.spinX-=0.1; if(k==="ArrowRight")G.spinX+=0.1;
+      if(k==="ArrowUp")G.spinY+=0.1;   if(k==="ArrowDown")G.spinY-=0.1;
+      const l=Math.hypot(G.spinX,G.spinY);
+      if(l>1){G.spinX/=l;G.spinY/=l;}
+      G.spinX=clamp(G.spinX,-1,1);G.spinY=clamp(G.spinY,-1,1);
+      spinExpand();drawPad();
+    }else{
+      if(k==="ArrowLeft")G.aim+=0.018;
+      if(k==="ArrowRight")G.aim-=0.018;
+      spinMinimize();}
+    e.preventDefault();return;}
+  if(k==="["){G.elev=clamp(G.elev-5,0,75);spinExpand();syncSpinUI();}
+  if(k==="]"){G.elev=clamp(G.elev+5,0,75);spinExpand();syncSpinUI();}
+  if(k==="x"||k==="X"){G.spinX=0;G.spinY=0;G.elev=0;spinExpand();syncSpinUI();}
+  if(k==="r"||k==="R"){if(G.phase==="play"){rack();SFX.ui();}}
+  if(k==="c"||k==="C"){spinMinimize();
+    G.focus=0;G.camMode="behind";G.orbC=[balls[0].x,R,balls[0].z];}});
 function fire(){
-  const sp=1.9+7.3*Math.pow(G.power,1.12);
-  const c=balls[0];c.vx=Math.sin(G.aim)*sp;c.vz=Math.cos(G.aim)*sp;
-  G.rolling=true;G.shots++;G.potted=0;G.scratch=false;hud();SFX.shot(0.4+0.6*G.power);}
-function showMeter(){document.getElementById("meter").style.display="block";
-  document.getElementById("meterLbl").style.display="block";meterSet();}
-function hideMeter(){document.getElementById("meter").style.display="none";
-  document.getElementById("meterLbl").style.display="none";}
-function meterSet(){document.getElementById("meterFill").style.width=(G.power*100)+"%";}
+  const s=shotState(G.power),c=balls[0];
+  c.vx=s.vx;c.vz=s.vz;c.wx=s.wx;c.wy=s.wy;c.wz=s.wz;
+  G.rolling=true;G.shots++;G.potted=0;G.scratch=false;hud();
+  SFX.shot(0.4+0.6*G.power);spinMinimize();}
+const meterEl=document.getElementById("meter"),
+      meterFillEl=document.getElementById("meterFill"),
+      meterLblEl=document.getElementById("meterLbl");
+function showMeter(){meterEl.style.display="block";meterLblEl.style.display="block";
+  meterLblEl.textContent="PULL = DRAG THE STICK \u00b7 RELEASE TO FIRE";meterSet();}
+function hideMeter(){meterEl.style.display="none";meterLblEl.style.display="none";}
+function meterSet(){meterFillEl.style.width=(G.power*100)+"%";}
 
-/* ================= prediction ================= */
+/* ================= spin window (full <-> mini cue ball) ================= */
+const spinBox=document.getElementById("spinBox"),spinMini=document.getElementById("spinMini");
+const pad=document.getElementById("spinPad"),padCtx=pad.getContext("2d");
+const miniPad=document.getElementById("miniPad"),miniCtx=miniPad.getContext("2d");
+const elevIn=document.getElementById("elev"),elevVal=document.getElementById("elevVal");
+let padDrag=false;
+function spinExpand(){
+  if(G.phase!=="play")return;
+  spinBox.classList.remove("hidden");spinMini.classList.add("hidden");drawPad();}
+function spinMinimize(){
+  if(G.phase!=="play")return;
+  /* never hide it while a spin/tilt gesture is demonstrating changes */
+  if(G.stickDrag||(G.grab&&G.grab.mode==="tilt"))return;
+  spinBox.classList.add("hidden");spinMini.classList.remove("hidden");drawMini();}
+function padInit(){const d=Math.min(devicePixelRatio||1,2);
+  pad.width=Math.round(104*d);pad.height=Math.round(104*d);
+  pad.style.width="104px";pad.style.height="104px";
+  miniPad.width=Math.round(52*d);miniPad.height=Math.round(52*d);
+  drawPad();}
+function drawPad(){
+  const S=pad.width,k=S/104,c=padCtx,cx=S/2,cy=S/2,rad=S/2-6*k;
+  c.clearRect(0,0,S,S);
+  const g=c.createRadialGradient(cx-rad*0.3,cy-rad*0.35,rad*0.1,cx,cy,rad);
+  g.addColorStop(0,"#fbfaf5");g.addColorStop(0.75,"#e8e5da");g.addColorStop(1,"#b3b0a6");
+  c.fillStyle=g;c.beginPath();c.arc(cx,cy,rad,0,7);c.fill();
+  c.strokeStyle="rgba(255,255,255,0.25)";c.lineWidth=1*k;c.stroke();
+  c.strokeStyle="rgba(20,20,20,0.28)";
+  c.beginPath();c.moveTo(cx-rad,cy);c.lineTo(cx+rad,cy);c.moveTo(cx,cy-rad);c.lineTo(cx,cy+rad);c.stroke();
+  c.setLineDash([3*k,3*k]);c.beginPath();c.arc(cx,cy,rad*0.55,0,7);c.stroke();c.setLineDash([]);
+  const dx=cx+G.spinX*rad,dy=cy-G.spinY*rad;
+  c.fillStyle="#d8352b";c.beginPath();c.arc(dx,dy,6*k,0,7);c.fill();
+  c.strokeStyle="#fff";c.lineWidth=1.5*k;c.stroke();
+  spinReadout();drawMini();}
+function drawMini(){
+  const S=miniPad.width,k=S/52,c=miniCtx,cx=S/2,cy=S/2,rad=S/2-3*k;
+  c.clearRect(0,0,S,S);
+  const g=c.createRadialGradient(cx-rad*0.3,cy-rad*0.35,rad*0.1,cx,cy,rad);
+  g.addColorStop(0,"#fbfaf5");g.addColorStop(0.75,"#e8e5da");g.addColorStop(1,"#a9a69c");
+  c.fillStyle=g;c.beginPath();c.arc(cx,cy,rad,0,7);c.fill();
+  c.strokeStyle="rgba(20,20,20,0.2)";c.lineWidth=1*k;
+  c.beginPath();c.moveTo(cx-rad,cy);c.lineTo(cx+rad,cy);c.moveTo(cx,cy-rad);c.lineTo(cx,cy+rad);c.stroke();
+  const dx=cx+G.spinX*rad*0.8,dy=cy-G.spinY*rad*0.8;
+  c.fillStyle="#d8352b";c.beginPath();c.arc(dx,dy,4.5*k,0,7);c.fill();
+  c.strokeStyle="#fff";c.lineWidth=1.2*k;c.stroke();
+  document.getElementById("miniElev").textContent=G.elev>0?Math.round(G.elev)+"\u00b0":"";}
+function spinReadout(){
+  const sx=Math.round(G.spinX*100),sy=Math.round(G.spinY*100),t=[];
+  if(sx!==0)t.push((sx>0?"R":"L")+Math.abs(sx));
+  if(sy!==0)t.push((sy>0?"TOP":"BACK")+Math.abs(sy));
+  let s=t.length?t.join(" \u00b7 "):"CENTER";
+  s+=" \u00b7 "+Math.round(G.elev)+"\u00b0";
+  if(Math.abs(sx)>5)s+=G.elev>=8?(sx>0?" \u21b7":" \u21b6"):(sx>0?" \u2192":" \u2190");
+  document.getElementById("spinRead").textContent=s;}
+function syncSpinUI(){elevIn.value=Math.round(G.elev);
+  elevVal.textContent=Math.round(G.elev)+"\u00b0";drawPad();}
+function padSet(e){
+  const r=pad.getBoundingClientRect();
+  let nx=(e.clientX-r.left-r.width/2)/(r.width/2-6);
+  let ny=-(e.clientY-r.top-r.height/2)/(r.height/2-6);
+  const l=Math.hypot(nx,ny);if(l>1){nx/=l;ny/=l;}
+  G.spinX=nx;G.spinY=ny;drawPad();}
+pad.addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation();audio();SFX.ui();
+  if(pad.setPointerCapture)pad.setPointerCapture(e.pointerId);padDrag=true;padSet(e);});
+pad.addEventListener("pointermove",e=>{if(padDrag){e.preventDefault();e.stopPropagation();padSet(e);}});
+pad.addEventListener("pointerup",e=>{e.stopPropagation();padDrag=false;});
+pad.addEventListener("pointercancel",()=>{padDrag=false;});
+pad.addEventListener("lostpointercapture",()=>{padDrag=false;});
+elevIn.addEventListener("pointerdown",e=>e.stopPropagation());
+elevIn.addEventListener("input",()=>{G.elev=+elevIn.value;
+  elevVal.textContent=Math.round(G.elev)+"\u00b0";drawPad();});
+document.getElementById("curveL").onclick=()=>{G.spinX=-0.7;G.spinY=0;G.elev=45;syncSpinUI();SFX.ui();};
+document.getElementById("curveR").onclick=()=>{G.spinX=0.7;G.spinY=0;G.elev=45;syncSpinUI();SFX.ui();};
+document.getElementById("spinReset").onclick=()=>{G.spinX=0;G.spinY=0;G.elev=0;syncSpinUI();SFX.ui();};
+spinMini.addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation();
+  audio();SFX.ui();spinExpand();});
+padInit();
+
+/* ================= help (button <-> readable panel, back-gesture aware) ================= */
+const helpBtn=document.getElementById("helpBtn"),helpPanel=document.getElementById("helpPanel");
+let helpOpen=false;
+function openHelp(){
+  if(helpOpen)return;helpOpen=true;spinMinimize();
+  helpPanel.classList.remove("hidden");
+  try{history.pushState({mrHelp:1},"");}catch(e){}}
+function closeHelp(viaPop){
+  if(!helpOpen)return;helpOpen=false;
+  helpPanel.classList.add("hidden");
+  if(!viaPop){try{if(history.state&&history.state.mrHelp)history.back();}catch(e){}}}
+helpBtn.addEventListener("click",e=>{e.stopPropagation();audio();SFX.ui();
+  helpOpen?closeHelp():openHelp();});
+window.addEventListener("popstate",()=>closeHelp(true));
+window.addEventListener("pointerdown",e=>{
+  if(helpOpen&&!(e.target.closest&&e.target.closest("#helpPanel,#helpBtn")))closeHelp();
+},true);
+
+/* ================= gamepad =================
+   L-stick aim | hold A power, release fire | R-stick spin | D-pad up/down tilt
+   B center. Spin/tilt input expands the window; other input minimizes it. */
+const PAD={held:false,prev:[]};
+function pollPad(dt){
+  let gp=null;
+  if(navigator.getGamepads){for(const g of navigator.getGamepads()){if(g&&g.connected){gp=g;break;}}}
+  if(!gp)return;
+  const ax=i=>{const v=gp.axes[i]||0;return Math.abs(v)<0.18?0:v;};
+  const bt=i=>!!(gp.buttons[i]&&gp.buttons[i].pressed);
+  const edge=i=>bt(i)&&!PAD.prev[i];
+  const a0=ax(0),a2=ax(2),a3=ax(3);
+  if(G.phase!=="play"){
+    if(edge(0)){audio();
+      if(G.phase==="menu")document.getElementById("rackBtn").click();
+      else if(G.phase==="clear")document.getElementById("againBtn").click();}
+  }else{
+    if(a0&&!G.grab){G.aim-=a0*1.7*dt;spinMinimize();}
+    if(bt(14)){G.aim+=1.4*dt;spinMinimize();}
+    if(bt(15)){G.aim-=1.4*dt;spinMinimize();}
+    if(Math.hypot(a2,a3)>0.25){
+      let nx=a2,ny=-a3;const l=Math.hypot(nx,ny);if(l>1){nx/=l;ny/=l;}
+      G.spinX=nx;G.spinY=ny;spinExpand();drawPad();}
+    if(bt(12)){G.elev=clamp(G.elev+45*dt,0,75);spinExpand();syncSpinUI();}
+    if(bt(13)){G.elev=clamp(G.elev-45*dt,0,75);spinExpand();syncSpinUI();}
+    if(edge(1)){G.spinX=0;G.spinY=0;G.elev=0;spinExpand();syncSpinUI();SFX.ui();}
+    if(!G.rolling&&!balls[0].sunk){
+      if(bt(0)&&!PAD.held&&!G.grab){PAD.held=true;G.charging=true;G.power=0;
+        showMeter();spinMinimize();audio();}
+      if(PAD.held){
+        if(bt(0)){G.power=clamp(G.power+dt*0.75,0,1);meterSet();}
+        else{if(G.power>=0.02)fire();
+          PAD.held=false;G.charging=false;hideMeter();G.power=0;}}
+    }else if(PAD.held){PAD.held=false;G.charging=false;hideMeter();G.power=0;}}
+  PAD.prev=gp.buttons.map(b=>b.pressed);}
+
+/* ================= prediction (simulates the real curved path) ================= */
 function predict(){
-  const c=balls[0],dx=Math.sin(G.aim),dz=Math.cos(G.aim);
-  let tB=1e9,hit=null;
-  for(const b of balls){if(b.sunk||b.id===0)continue;
-    const px=c.x-b.x,pz=c.z-b.z;
-    const bq=2*(px*dx+pz*dz),cq=px*px+pz*pz-4*R*R;
-    const disc=bq*bq-4*cq;if(disc<=0)continue;
-    const t=(-bq-Math.sqrt(disc))/2;if(t>0.001&&t<tB){tB=t;hit=b;}}
-  const hw=W/2-R,hl=L/2-R;let tW=1e9;
-  if(dx> 1e-4)tW=Math.min(tW,(hw-c.x)/dx);
-  if(dx<-1e-4)tW=Math.min(tW,(-hw-c.x)/dx);
-  if(dz> 1e-4)tW=Math.min(tW,(hl-c.z)/dz);
-  if(dz<-1e-4)tW=Math.min(tW,(-hl-c.z)/dz);
-  const t=Math.min(tB,tW,14);
-  return{t,hit:(hit&&tB<=tW)?hit:null,gx:c.x+dx*t,gz:c.z+dz*t};}
+  const pw=G.charging?Math.max(G.power,0.05):0.5;
+  const s=shotState(pw);
+  const sim={x:s.x,z:s.z,vx:s.vx,vz:s.vz,wx:s.wx,wy:s.wy,wz:s.wz};
+  const pts=[[sim.x,sim.z]];let hit=null,pocket=false;
+  const h=1/120,hw=W/2-R,hl=L/2-R;
+  for(let i=0;i<420;i++){
+    integrateBall(sim,h);
+    sim.x+=sim.vx*h;sim.z+=sim.vz*h;
+    for(const b of balls){if(b.sunk||b.id===0)continue;
+      const dx=b.x-sim.x,dz=b.z-sim.z,d=Math.hypot(dx,dz);
+      if(d<2*R&&d>1e-6){
+        const sp=Math.hypot(sim.vx,sim.vz)||1;
+        sim.x-=sim.vx/sp*(2*R-d);sim.z-=sim.vz/sp*(2*R-d);hit=b;break;}}
+    if(hit)break;
+    if(pocketTest(sim)){pocket=true;break;}
+    if((sim.z>hl||sim.z<-hl)&&Math.abs(sim.x)<W/2-CGAP)break;
+    if((sim.x>hw||sim.x<-hw)&&Math.abs(sim.z)>SGAP&&Math.abs(sim.z)<L/2-CGAP)break;
+    if(i%3===0)pts.push([sim.x,sim.z]);
+    if(sim.vx===0&&sim.vz===0)break;}
+  pts.push([sim.x,sim.z]);
+  return{pts,hit,gx:sim.x,gz:sim.z,pocket};}
 
 /* ================= render ================= */
 function resize(){const d=Math.min(devicePixelRatio||1,1.5);
@@ -968,6 +1297,7 @@ let last=performance.now();
 function frame(now){
   requestAnimationFrame(frame);
   const dt=Math.min((now-last)/1000,1/30);last=now;
+  pollPad(dt);
   if(G.phase==="play")step(dt);
   for(const b of balls)if(b.sunk&&b.sink<1)b.sink=Math.min(1,b.sink+dt/0.38);
   updateCam(dt);
@@ -1000,11 +1330,11 @@ function frame(now){
     Mq[0]*=s;Mq[1]*=s;Mq[2]*=s;Mq[4]*=s;Mq[5]*=s;Mq[6]*=s;Mq[8]*=s;Mq[9]*=s;Mq[10]*=s;
     drawMain(G_sph,M4.mul(M4.T(x,y,z),Mq),[1,1,1],{tex:b.tex,amb:0.45,spec:0.85,shin:90});}
   if(G.phase==="play"&&!G.rolling&&!balls[0].sunk){
-    const d=[Math.sin(G.aim),0,Math.cos(G.aim)],c=balls[0];
-    const g=R+0.035+G.power*0.42;
-    const rot=M4.mul(M4.RY(G.aim),M4.RX(Math.PI/2));
-    drawMain(G_ferr,M4.mul(M4.T(c.x-d[0]*(g+0.06),R,c.z-d[2]*(g+0.06)),rot),[0.9,0.9,0.85],{amb:0.35,spec:0.5});
-    drawMain(G_stick,M4.mul(M4.T(c.x-d[0]*(g+0.06+1.35),R,c.z-d[2]*(g+0.06+1.35)),rot),[0.72,0.5,0.26],{amb:0.32,spec:0.45,shin:50});}
+    /* cue stick: elevated by G.elev, tip on the exact contact point */
+    const{T,D}=stickGeom();
+    const rot=M4.mul(M4.RY(G.aim),M4.RX(Math.PI/2+G.elev*Math.PI/180));
+    drawMain(G_ferr,M4.mul(M4.T(T[0]-D[0]*0.06,T[1]-D[1]*0.06,T[2]-D[2]*0.06),rot),[0.9,0.9,0.85],{amb:0.35,spec:0.5});
+    drawMain(G_stick,M4.mul(M4.T(T[0]-D[0]*1.41,T[1]-D[1]*1.41,T[2]-D[2]*1.41),rot),[0.72,0.5,0.26],{amb:0.32,spec:0.45,shin:50});}
 
   gl.enable(gl.BLEND);gl.depthMask(false);gl.disable(gl.CULL_FACE);
   flatCount=0;
@@ -1012,9 +1342,15 @@ function frame(now){
     const sc=b.sunk?1-0.4*b.sink:1;
     flatRingXZ(b.x,b.z,0,R*1.0*sc,0.005,[0,0,0,0.38],12);}
   if(G.phase==="play"&&!G.rolling&&!balls[0].sunk){
-    const pr=predict(),c=balls[0],d=[Math.sin(G.aim),0,Math.cos(G.aim)];
-    flatLineXZ(c.x+d[0]*R,c.z+d[2]*R,pr.gx,pr.gz,0.012,0.008,[0.85,1,0.95,0.55]);
-    flatRingXZ(pr.gx,pr.gz,R*0.92,R,0.008,[0.85,1,0.95,0.5],18);
+    const pr=predict();
+    const curvy=Math.abs(G.spinX)>0.04||G.elev>3;
+    const col=curvy?[1,0.87,0.55]:[0.85,1,0.95];
+    const n=pr.pts.length;
+    for(let i=1;i<n;i++){
+      const a0=pr.pts[i-1],a1=pr.pts[i],al=0.55*(1-0.55*i/n);
+      flatLineXZ(a0[0],a0[1],a1[0],a1[1],0.012,0.008,[col[0],col[1],col[2],al]);}
+    const gc=pr.pocket?[1,0.45,0.4,0.7]:[col[0],col[1],col[2],0.5];
+    flatRingXZ(pr.gx,pr.gz,R*0.92,R,0.008,gc,18);
     if(pr.hit){const tx=pr.hit.x-pr.gx,tz=pr.hit.z-pr.gz,l=Math.hypot(tx,tz)||1;
       flatLineXZ(pr.hit.x,pr.hit.z,pr.hit.x+tx/l*0.55,pr.hit.z+tz/l*0.55,0.012,0.008,[1,0.85,0.5,0.5]);}}
   drawFlat(gl.SRC_ALPHA);
@@ -1044,35 +1380,28 @@ function frame(now){
 
 /* ================= ui ================= */
 document.getElementById("rackBtn").onclick=()=>{audio();SFX.ui();
-  document.getElementById("startOv").classList.add("hidden");G.phase="play";rack();
-  setTimeout(()=>document.getElementById("hint").classList.add("faded"),8000);};
+  document.getElementById("startOv").classList.add("hidden");G.phase="play";rack();};
 document.getElementById("againBtn").onclick=()=>{SFX.ui();
   document.getElementById("clearOv").classList.add("hidden");G.phase="play";rack();};
-document.getElementById("sfxBtn").onclick=e=>{sfxOn=!sfxOn;audio();
+document.getElementById("sfxBtn").onclick=e=>{sfxOn=!sfxOn;audio();spinMinimize();
   e.target.textContent=sfxOn?"SFX ON":"SFX OFF";e.target.classList.toggle("off",!sfxOn);if(sfxOn)SFX.ui();};
-document.getElementById("bgmBtn").onclick=e=>{audio();
+document.getElementById("bgmBtn").onclick=e=>{audio();spinMinimize();
   if(JAZZ.on){JAZZ.on=false;JAZZ.want=false;}
   else{JAZZ.want=true;if(AC){JAZZ.on=true;startJazz();}}
   try{localStorage.setItem("mr_bgm",JAZZ.want?"1":"0");}catch(err){}
   syncBgm();SFX.ui();};
+document.getElementById("homeBtn").addEventListener("pointerdown",()=>spinMinimize());
 
 requestAnimationFrame(frame);
 })();
 </script>
 <script>
 // self-update v3: one-time title-screen freshness check, two HEAD requests,
-// a page body is NEVER downloaded. The baseline is NOT the HTTP cache: Firefox
-// serves a HEAD cached before a deploy forever within max-age, and a reload
-// never evicts it => endless reload loop after an update. Instead the baseline
-// is the last validator THIS browser session saw, kept in sessionStorage; the
-// cached HEAD only stands in for it on the first visit of a session. The
-// no-store HEAD is always the source of truth; on mismatch a newer deploy
-// exists => reload exactly once per session per version (the new validator is
-// stored BEFORE reloading, so the reloaded page compares equal and never
-// loops). Offline/file:// hosts: no request at all, never an error. Hosts
-// without validators: silent. Never re-runs in-page.
-// Versioning: meta[name=version] = <last-edited-date>.<build>; bump the
-// build number whenever the file is edited. window.GAME_VERSION exposes it.
+// a page body is NEVER downloaded. The baseline is the last validator THIS
+// browser session saw (sessionStorage); the no-store HEAD is the source of
+// truth; on mismatch reload exactly once per session per version. Offline /
+// file:// hosts: no request at all. Hosts without validators: silent.
+// Versioning: meta[name=version] = <last-edited-date>.<build>.
 (function () {
 var vm = document.querySelector('meta[name="version"]');
 window.GAME_VERSION = vm ? vm.content : "";
@@ -1085,7 +1414,7 @@ function last() { try { return sessionStorage.getItem("$ver:" + location.href) |
 var base = last();
 fetch(location.href, { method: "HEAD" }).then(function (r) {
 var cached = val(r);
-if (!base && !cached) return; // nothing to compare against
+if (!base && !cached) return;
 return fetch(location.href, { method: "HEAD", cache: "no-store" }).then(function (r2) {
 var cur = val(r2);
 if (!cur) return;
