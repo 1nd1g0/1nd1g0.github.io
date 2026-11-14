@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>MIDNIGHT RACK · 3D Arcade Billiards</title>
-<meta name="version" content="2026.11.14.8">
+<meta name="version" content="2026.11.14.9">
 <style>
   :root{
     --gold:#ffd76a;--mint:#9fe8c0;--ink:#0c1210;--danger:#ff6b5e;
@@ -148,7 +148,6 @@
   #pcountRow span,#breakRow span,#replayRow span{font-size:11px;letter-spacing:1px;color:#9aa0a8;}
   .pcbtn{cursor:pointer;font:inherit;font-size:12px;min-width:32px;height:28px;padding:0 8px;background:#1d1d22;color:#cfd4da;border:1px solid #3a3a40;border-radius:6px;}
   .pcbtn.sel{border-color:var(--gold);color:var(--gold);background:#2a2a18;box-shadow:0 0 8px rgba(255,215,106,.22);}
-  /* compact wrapping player blocks */
   #players{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0;}
   .prow{flex:0 1 auto;width:auto;display:inline-flex;align-items:center;gap:6px;background:rgba(20,24,22,.6);
     border:1px solid #2e3a34;border-radius:7px;padding:5px 7px;}
@@ -342,13 +341,177 @@ function scheduleBar(bar,t0){const beat=60/JAZZ.tempo,ch=JAZZ.prog[bar%8],root=J
 function jazzTick(){if(!JAZZ.on||!AC)return;const ahead=AC.currentTime+.35,beat=60/JAZZ.tempo;while(JAZZ.nextT<ahead){scheduleBar(JAZZ.bar,JAZZ.nextT);JAZZ.bar++;JAZZ.nextT+=4*beat;if(JAZZ.bar%8===0)newChorus();}}setInterval(jazzTick,120);syncBgm();
 
 /* ===== physics ===== */
-const SLIDE=2,SPIN_DECAY=1.25,SWERVE=.055,MASSE=.5,CUSH_SPIN=.28;
-function integrateBall(b,h){const ux0=b.vx+R*b.wz,uz0=b.vz-R*b.wx,sliding=Math.hypot(ux0,uz0)>.03,f=Math.exp(-.95*h);b.vx*=f;b.vz*=f;let sp=Math.hypot(b.vx,b.vz);if(sp>1e-4){const dr=Math.min(.32*h,sp);b.vx-=b.vx/sp*dr;b.vz-=b.vz/sp*dr;}if(sliding){const ux=b.vx+R*b.wz,uz=b.vz-R*b.wx,ul=Math.hypot(ux,uz);if(ul>1e-6){const ax=-SLIDE*ux/ul,az=-SLIDE*uz/ul;b.vx+=ax*h;b.vz+=az*h;b.wx-=2.5*az/R*h;b.wz+=2.5*ax/R*h;if((b.vx+R*b.wz)*ux+(b.vz-R*b.wx)*uz<=0){b.wx=b.vz/R;b.wz=-b.vx/R;}}}else{b.wx=b.vz/R;b.wz=-b.vx/R;}if(b.wy){b.wy*=Math.exp(-SPIN_DECAY*h);sp=Math.hypot(b.vx,b.vz);if(sp>.05){const k=SWERVE*b.wy*R*h/sp,ox=b.vx,oz=b.vz;b.vx+=k*(-oz);b.vz+=k*ox;}if(Math.abs(b.wy)<.08)b.wy=0;}sp=Math.hypot(b.vx,b.vz);if(sp<.028&&Math.hypot(b.vx+R*b.wz,b.vz-R*b.wx)<.06){b.vx=0;b.vz=0;b.wx=0;b.wz=0;}}
-function makeShot(cx,cz,aim,power,nx,ny,elev){const el=(elev||0)*Math.PI/180,ca=Math.cos(el),sa=Math.sin(el),sp=(1.9+7.3*Math.pow(power,1.12))*(1-.28*sa),dx=Math.sin(aim),dz=Math.cos(aim),lx=-dz,lz=dx,b=(nx||0)*.55*R,a=(ny||0)*.55*R,c0=Math.sqrt(Math.max(R*R-a*a-b*b,.25*R*R)),K=2.5*sp/(R*R*Math.max(ca,.35)),mL=K*(MASSE*c0*sa-a*ca),mY=K*b*ca,mD=K*MASSE*b*sa;return{x:cx,z:cz,vx:dx*sp,vz:dz*sp,wx:mL*lx+mD*dx,wy:mY,wz:mL*lz+mD*dz};}
+const SLIDE=2.6,SPIN_DECAY=2.0,SWERVE=.042,MASSE=.5,CUSH_SPIN=.18;
+const TRANS_DAMP=1.15,ROLL_DRAG=.45,ANG_DAMP=1.4,STOP_SPEED=.045,STOP_SLIP=.11,MAX_ANG=45;
+function integrateBall(b,h){
+  const ad=Math.exp(-ANG_DAMP*h);
+  b.wx*=ad; b.wy*=Math.exp(-SPIN_DECAY*h); b.wz*=ad;
+
+  const td=Math.exp(-TRANS_DAMP*h);
+  b.vx*=td; b.vz*=td;
+
+  let sp=Math.hypot(b.vx,b.vz);
+  if(sp>1e-5){
+    const dr=Math.min(ROLL_DRAG*h,sp);
+    b.vx-=b.vx/sp*dr;
+    b.vz-=b.vz/sp*dr;
+  }
+
+  let ux=b.vx+R*b.wz, uz=b.vz-R*b.wx, slip=Math.hypot(ux,uz);
+  if(slip>.02){
+    const ax=-SLIDE*ux/slip, az=-SLIDE*uz/slip;
+    b.vx+=ax*h; b.vz+=az*h;
+    b.wx-=2.5*az/R*h; b.wz+=2.5*ax/R*h;
+    if((b.vx+R*b.wz)*ux+(b.vz-R*b.wx)*uz<=0){
+      b.wx=b.vz/R; b.wz=-b.vx/R;
+    }
+  }else{
+    b.wx=b.vz/R; b.wz=-b.vx/R;
+  }
+
+  sp=Math.hypot(b.vx,b.vz);
+  if(b.wy && sp>.05){
+    const k=SWERVE*b.wy*R*h/sp, ox=b.vx, oz=b.vz;
+    b.vx+=k*(-oz);
+    b.vz+=k*ox;
+  }
+  if(Math.abs(b.wy)<.18)b.wy=0;
+
+  let aw=Math.hypot(b.wx,b.wy,b.wz);
+  if(aw>MAX_ANG){
+    const s=MAX_ANG/aw;
+    b.wx*=s; b.wy*=s; b.wz*=s;
+  }
+
+  sp=Math.hypot(b.vx,b.vz);
+  slip=Math.hypot(b.vx+R*b.wz,b.vz-R*b.wx);
+  if(sp<STOP_SPEED && slip<STOP_SLIP && Math.abs(b.wy)<.35){
+    b.vx=0; b.vz=0; b.wx=0; b.wy=0; b.wz=0;
+  }
+}
+function makeShot(cx,cz,aim,power,nx,ny,elev){
+  const el=(elev||0)*Math.PI/180,ca=Math.cos(el),sa=Math.sin(el);
+  const sp=(2.0+7.7*Math.pow(power,1.1))*(1-.28*sa);
+  const dx=Math.sin(aim),dz=Math.cos(aim),lx=-dz,lz=dx;
+  const b=(nx||0)*.55*R,a=(ny||0)*.55*R;
+  const c0=Math.sqrt(Math.max(R*R-a*a-b*b,.25*R*R));
+  const K=2.5*sp/(R*R*Math.max(ca,.35));
+  const mL=K*(MASSE*c0*sa-a*ca),mY=K*b*ca,mD=K*MASSE*b*sa;
+  return{x:cx,z:cz,vx:dx*sp,vz:dz*sp,wx:mL*lx+mD*dx,wy:mY,wz:mL*lz+mD*dz};
+}
 function shotState(power){return makeShot(balls[0].x,balls[0].z,G.aim,power,G.spinX,G.spinY,G.elev);}
-function cushionHit(b){const hw=W/2-R,hl=L/2-R;let hit=0;if(b.z>hl&&b.x>-W/2+CGAP&&b.x<W/2-CGAP){b.z=hl;b.vz=-Math.abs(b.vz)*.72;b.vx*=.985;b.vx-=CUSH_SPIN*R*b.wy;b.wy*=.55;b.wx*=.6;b.wz*=.5;hit=1;}else if(b.z<-hl&&b.x>-W/2+CGAP&&b.x<W/2-CGAP){b.z=-hl;b.vz=Math.abs(b.vz)*.72;b.vx*=.985;b.vx+=CUSH_SPIN*R*b.wy;b.wy*=.55;b.wx*=.6;b.wz*=.5;hit=1;}else if(b.x>hw&&((b.z>SGAP&&b.z<L/2-CGAP)||(b.z<-SGAP&&b.z>-L/2+CGAP))){b.x=hw;b.vx=-Math.abs(b.vx)*.72;b.vz*=.985;b.vz+=CUSH_SPIN*R*b.wy;b.wy*=.55;b.wz*=.6;b.wx*=.5;hit=1;}else if(b.x<-hw&&((b.z>SGAP&&b.z<L/2-CGAP)||(b.z<-SGAP&&b.z>-L/2+CGAP))){b.x=-hw;b.vx=Math.abs(b.vx)*.72;b.vz*=.985;b.vz-=CUSH_SPIN*R*b.wy;b.wy*=.55;b.wz*=.6;b.wx*=.5;hit=1;}return hit;}
-function pocketTest(b){for(const p of POCKETS){const d=Math.hypot(b.x-p.x,b.z-p.z);if(d<p.r-.012)return p;if(d<p.r+.05&&(Math.abs(b.x)>W/2-.02||Math.abs(b.z)>L/2-.02))return p;}if(Math.abs(b.x)>W/2+.05||Math.abs(b.z)>L/2+.05){let best=POCKETS[0],bd=1e9;for(const p of POCKETS){const d=Math.hypot(b.x-p.x,b.z-p.z);if(d<bd){bd=d;best=p;}}return best;}return null;}
-function simShot(list,cue,h,maxT){const bs=list.map(b=>({id:b.id,x:b.x,z:b.z,vx:0,vz:0,wx:0,wy:0,wz:0,sunk:false}));for(const b of bs)if(b.id===0){Object.assign(b,cue);break;}const potted=[];let first=null;const steps=Math.floor(maxT/h);for(let s=0;s<steps;s++){let moving=false;for(const b of bs){if(b.sunk)continue;integrateBall(b,h);b.x+=b.vx*h;b.z+=b.vz*h;cushionHit(b);if(pocketTest(b)){b.sunk=true;b.vx=b.vz=0;potted.push(b.id);continue;}if(b.vx||b.vz)moving=true;}for(let i=0;i<bs.length;i++){const a=bs[i];if(a.sunk)continue;for(let j=i+1;j<bs.length;j++){const c=bs[j];if(c.sunk)continue;const dx=c.x-a.x,dz=c.z-a.z,d=Math.hypot(dx,dz);if(d<2*R&&d>1e-6){const nx=dx/d,nz=dz/d,ov=(2*R-d)/2;a.x-=nx*ov;a.z-=nz*ov;c.x+=nx*ov;c.z+=nz*ov;const rv=(a.vx-c.vx)*nx+(a.vz-c.vz)*nz;if(rv>0){const k=rv*.965;a.vx-=k*nx;a.vz-=k*nz;c.vx+=k*nx;c.vz+=k*nz;if(first===null&&(a.id===0||c.id===0))first=a.id===0?c.id:a.id;}}}}if(!moving&&s>10)break;}return{potted,first,scratch:potted.indexOf(0)>=0};}
+function cushionHit(b){
+  const hw=W/2-R,hl=L/2-R;
+  let hit=0;
+  if(b.z>hl&&b.x>-W/2+CGAP&&b.x<W/2-CGAP){
+    b.z=hl; b.vz=-Math.abs(b.vz)*.72; b.vx*=.97;
+    b.vx-=CUSH_SPIN*R*b.wy;
+    b.wy*=.45; b.wx*=.45; b.wz*=.40;
+    hit=1;
+  }else if(b.z<-hl&&b.x>-W/2+CGAP&&b.x<W/2-CGAP){
+    b.z=-hl; b.vz=Math.abs(b.vz)*.72; b.vx*=.97;
+    b.vx+=CUSH_SPIN*R*b.wy;
+    b.wy*=.45; b.wx*=.45; b.wz*=.40;
+    hit=1;
+  }else if(b.x>hw&&((b.z>SGAP&&b.z<L/2-CGAP)||(b.z<-SGAP&&b.z>-L/2+CGAP))){
+    b.x=hw; b.vx=-Math.abs(b.vx)*.72; b.vz*=.97;
+    b.vz+=CUSH_SPIN*R*b.wy;
+    b.wy*=.45; b.wz*=.45; b.wx*=.40;
+    hit=1;
+  }else if(b.x<-hw&&((b.z>SGAP&&b.z<L/2-CGAP)||(b.z<-SGAP&&b.z>-L/2+CGAP))){
+    b.x=-hw; b.vx=Math.abs(b.vx)*.72; b.vz*=.97;
+    b.vz-=CUSH_SPIN*R*b.wy;
+    b.wy*=.45; b.wz*=.45; b.wx*=.40;
+    hit=1;
+  }
+  if(hit){
+    const sp=Math.hypot(b.vx,b.vz);
+    if(sp<STOP_SPEED && Math.abs(b.wy)<.35){
+      b.vx=0; b.vz=0; b.wx=0; b.wy=0; b.wz=0;
+    }
+  }
+  return hit;
+}
+function pocketTest(b){
+  for(const p of POCKETS){
+    const d=Math.hypot(b.x-p.x,b.z-p.z);
+    if(d<p.r-.012)return p;
+    if(d<p.r+.05&&(Math.abs(b.x)>W/2-.02||Math.abs(b.z)>L/2-.02))return p;
+  }
+  if(Math.abs(b.x)>W/2+.05||Math.abs(b.z)>L/2+.05){
+    let best=POCKETS[0],bd=1e9;
+    for(const p of POCKETS){
+      const d=Math.hypot(b.x-p.x,b.z-p.z);
+      if(d<bd){bd=d;best=p;}
+    }
+    return best;
+  }
+  return null;
+}
+function ballCollisionResponse(a,c,nx,nz){
+  const rvx=a.vx-c.vx, rvz=a.vz-c.vz;
+  const rn=rvx*nx+rvz*nz;
+  if(rn<=0)return 0;
+
+  const e=rn>1.5?.95:rn>.45?.88:.74;
+  const k=rn*e;
+  a.vx-=k*nx; a.vz-=k*nz;
+  c.vx+=k*nx; c.vz+=k*nz;
+
+  const tx=rvx-rn*nx, tz=rvz-rn*nz;
+  const tl=Math.hypot(tx,tz);
+  if(tl>.02){
+    const j=Math.min(.12*tl,.18);
+    a.vx-=tx/tl*j; a.vz-=tz/tl*j;
+    c.vx+=tx/tl*j; c.vz+=tz/tl*j;
+  }
+
+  const sk=.62;
+  a.wx*=sk; a.wz*=sk; a.wy*=.72;
+  c.wx*=sk; c.wz*=sk; c.wy*=.72;
+
+  return rn;
+}
+function simShot(list,cue,h,maxT){
+  const bs=list.map(b=>({id:b.id,x:b.x,z:b.z,vx:0,vz:0,wx:0,wy:0,wz:0,sunk:false}));
+  for(const b of bs)if(b.id===0){Object.assign(b,cue);break;}
+  const potted=[];
+  let first=null;
+  const steps=Math.floor(maxT/h);
+  for(let s=0;s<steps;s++){
+    let moving=false;
+    for(const b of bs){
+      if(b.sunk)continue;
+      integrateBall(b,h);
+      b.x+=b.vx*h; b.z+=b.vz*h;
+      cushionHit(b);
+      if(pocketTest(b)){
+        b.sunk=true; b.vx=b.vz=0;
+        potted.push(b.id);
+        continue;
+      }
+      if(b.vx||b.vz)moving=true;
+    }
+    for(let i=0;i<bs.length;i++){
+      const a=bs[i];
+      if(a.sunk)continue;
+      for(let j=i+1;j<bs.length;j++){
+        const c=bs[j];
+        if(c.sunk)continue;
+        const dx=c.x-a.x,dz=c.z-a.z,d=Math.hypot(dx,dz);
+        if(d<2*R&&d>1e-6){
+          const nx=dx/d,nz=dz/d,ov=(2*R-d)/2;
+          a.x-=nx*ov; a.z-=nz*ov;
+          c.x+=nx*ov; c.z+=nz*ov;
+          const rn=ballCollisionResponse(a,c,nx,nz);
+          if(rn>0&&first===null&&(a.id===0||c.id===0))first=a.id===0?c.id:a.id;
+        }
+      }
+    }
+    if(!moving&&s>10)break;
+  }
+  return{potted,first,scratch:potted.indexOf(0)>=0};
+}
 
 /* ===== state / modes ===== */
 const MODES={arcade:{name:"ARCADE RACK",players:[1,2,3,4],def:1,rules:"Free play. Pot balls to score (100 each, black 8 = 300), consecutive pots multiply your streak. Scratch = -200. Clear the table for a bonus; highest score wins in multiplayer."},eight:{name:"8-BALL",players:[2],def:2,rules:"Solids (1-7) vs Stripes (9-15), assigned on the first legal pot. You must hit your own group first (the 8 first on an open table is a foul). Clear your group, then pot the 8 to win. Potting the 8 early, or scratching on it, loses. Foul = ball in hand. 8 on the break is re-spotted."},nine:{name:"9-BALL",players:[2],def:2,rules:"Always contact the LOWEST ball first. Pot the 9 legally (even by combo) to win; the 9 on the break wins. Foul = ball in hand and the 9 is re-spotted. Every legal pot keeps your turn."},straight:{name:"STRAIGHT POOL",players:[2,3,4],def:2,rules:"14.1 Continuous: any ball scores 1 point and your turn continues while you pot. A foul (no contact or scratch) costs 1 point and re-spots every ball potted that shot. First to 25 wins. The table auto re-racks when cleared."},cut:{name:"CUTTHROAT",players:[3],def:3,rules:"3 players own 1-5, 6-10, 11-15. You MUST strike an OPPONENT ball first. Potting an opponent ball scores +1 and keeps your turn; potting your own scores -1, ends your turn and brings you closer to elimination (own balls potted on a foul are re-spotted). Last player with balls on the table wins."},trick:{name:"TRICK SHOTS",players:[1],def:1,rules:"Goal-backward puzzles that are NEVER a straight shot: every layout is built from the pocket backward as a BANK (one or two rails), a COMBO chain, or a MASSÉ CURVE around a ball wall — and the generator then blocks the direct line and re-verifies solvability. Low levels leave dozens of ways to solve; high levels narrow it to a razor-thin, non-obvious path."}};
@@ -498,7 +661,6 @@ function screenProj(x,y,z){if(!PROJ||!VIEW)return{x:-1e9,y:-1e9,w:1};const M=M4.
 function screenRadiusAt(x,z){const d=Math.hypot(G.camPos[0]-x,G.camPos[1]-R,G.camPos[2]-z)||1;return(R/d)*(canvas.clientHeight/(2*Math.tan(FOV/2)));}
 function screenToTable(px,py){const b=camBasis(),nx=(px/canvas.clientWidth*2-1)*Math.tan(FOV/2)*aspect,ny=(1-py/canvas.clientHeight*2)*Math.tan(FOV/2),d=[b.f[0]+b.r[0]*nx+b.u[0]*ny,b.f[1]+b.r[1]*nx+b.u[1]*ny,b.f[2]+b.r[2]*nx+b.u[2]*ny];if(Math.abs(d[1])<1e-4)return null;const t=(R-G.camPos[1])/d[1];if(t<0)return null;return[G.camPos[0]+d[0]*t,G.camPos[2]+d[2]*t];}
 function faceUpQuat(up){const yaw=Math.atan2(-up[2],up[0])+Math.PI;return qMul(qAxis(yaw,0,1,0),qAxis(-Math.PI/2,0,0,1));}
-/* bounding circle of all balls still on the table -> used to frame the live shot */
 function computeActive(){
   let cx=0,cz=0,n=0;
   for(const b of balls){if(b.sunk)continue;cx+=b.x;cz+=b.z;n++;}
@@ -507,11 +669,11 @@ function computeActive(){
   return{cx,cz,rad,n};
 }
 function updateCam(dt){let dp,dl,up=[0,1,0];
-  if(G.replaying){ /* 2nd showing: fixed top-down, table long axis vertical */
+  if(G.replaying){
     dp=[0,6.2,0];dl=[0,0,0];up=[0,0,-1];
   }
   else if(G.bih){const tan=Math.tan(FOV/2),asp=aspect,HWo=W/2+CUSH+WOOD+.06,HLo=L/2+CUSH+WOOD+.06,land=asp>=1,h=land?Math.max(HLo/(tan*asp),HWo/tan):Math.max(HWo/(tan*asp),HLo/tan);dp=[0,h,0];dl=[0,0,0];G.bihUp=land?[1,0,0]:[0,0,-1];G.bihH=h;up=G.bihUp;}
-  else if(G.rolling){ /* 1st showing: SAME behind-cue view, dynamically zoomed to fit all action */
+  else if(G.rolling){
     const act=computeActive(),cue=balls[0];
     if(act){
       const fit=act.rad/Math.tan(FOV/2)*1.18+0.7;
@@ -616,7 +778,7 @@ function fire(){if(balls[0].sunk||G.rolling||G.replaying||G.phase!=="play")retur
   G.frames=[];G.recT0=performance.now();pushFrame(0);
   resetShotControls();hud();SFX.shot(.4+.6*pw);spinMinimize();banner("");}
 function sink(b,p){b.sunk=true;b.sink=0;b.px=p.x;b.pz=p.z;b.vx=b.vz=b.wx=b.wy=b.wz=0;SFX.pocket();if(G.shot)G.shot.potted.push(b.id);if(b.id===0&&G.shot)G.shot.scratch=true;}
-function step(dt){let maxEff=0;for(const b of balls){if(b.sunk)continue;const sp=Math.hypot(b.vx,b.vz),sl=Math.hypot(b.vx+R*b.wz,b.vz-R*b.wx);maxEff=Math.max(maxEff,sp,sl);}const n=clamp(Math.ceil(maxEff*dt/.018),1,16),h=dt/n;for(let s=0;s<n;s++){for(const b of balls){if(b.sunk)continue;integrateBall(b,h);b.x+=b.vx*h;b.z+=b.vz*h;const sp=Math.hypot(b.vx,b.vz);if(cushionHit(b)&&sp>.25)SFX.thud(clamp(sp/6,.2,1));const p=pocketTest(b);if(p){sink(b,p);continue;}}for(let i=0;i<16;i++)for(let j=i+1;j<16;j++){const a=balls[i],c=balls[j];if(a.sunk||c.sunk)continue;const dx=c.x-a.x,dz=c.z-a.z,d=Math.hypot(dx,dz);if(d<2*R&&d>1e-6){const nx=dx/d,nz=dz/d,ov=(2*R-d)/2;a.x-=nx*ov;a.z-=nz*ov;c.x+=nx*ov;c.z+=nz*ov;const rv=(a.vx-c.vx)*nx+(a.vz-c.vz)*nz;if(rv>0){const k=rv*.965;a.vx-=k*nx;a.vz-=k*nz;c.vx+=k*nx;c.vz+=k*nz;if(G.shot&&G.shot.first===null&&(a.id===0||c.id===0))G.shot.first=a.id===0?c.id:a.id;if(rv>.3)SFX.click(clamp(rv/6,.15,1));}}}}for(const b of balls){if(b.sunk)continue;const w=Math.hypot(b.wx,b.wy,b.wz);if(w>.01)b.q=qNorm(qMul(qAxis(w*dt,b.wx/w,b.wy/w,b.wz/w),b.q));}let moving=false;for(const b of balls){if(b.sunk){if(b.sink<1)moving=true;continue;}if(b.vx||b.vz)moving=true;else if(Math.hypot(b.vx+R*b.wz,b.vz-R*b.wx)>.06)moving=true;}if(G.rolling&&!moving){G.rolling=false;G.power=0;
+function step(dt){let maxEff=0;for(const b of balls){if(b.sunk)continue;const sp=Math.hypot(b.vx,b.vz),sl=Math.hypot(b.vx+R*b.wz,b.vz-R*b.wx);maxEff=Math.max(maxEff,sp,sl);}const n=clamp(Math.ceil(maxEff*dt/.018),1,16),h=dt/n;for(let s=0;s<n;s++){for(const b of balls){if(b.sunk)continue;integrateBall(b,h);b.x+=b.vx*h;b.z+=b.vz*h;const sp=Math.hypot(b.vx,b.vz);if(cushionHit(b)&&sp>.25)SFX.thud(clamp(sp/6,.2,1));const p=pocketTest(b);if(p){sink(b,p);continue;}}for(let i=0;i<16;i++)for(let j=i+1;j<16;j++){const a=balls[i],c=balls[j];if(a.sunk||c.sunk)continue;const dx=c.x-a.x,dz=c.z-a.z,d=Math.hypot(dx,dz);if(d<2*R&&d>1e-6){const nx=dx/d,nz=dz/d,ov=(2*R-d)/2;a.x-=nx*ov;a.z-=nz*ov;c.x+=nx*ov;c.z+=nz*ov;const rn=ballCollisionResponse(a,c,nx,nz);if(rn>0){if(G.shot&&G.shot.first===null&&(a.id===0||c.id===0))G.shot.first=a.id===0?c.id:a.id;if(rn>.3)SFX.click(clamp(rn/6,.15,1));}}}}for(const b of balls){if(b.sunk)continue;const w=Math.hypot(b.wx,b.wy,b.wz);if(w>.01)b.q=qNorm(qMul(qAxis(w*dt,b.wx/w,b.wy/w,b.wz/w),b.q));}let moving=false;for(const b of balls){if(b.sunk){if(b.sink<1)moving=true;continue;}if(b.vx||b.vz)moving=true;else if(Math.hypot(b.vx+R*b.wz,b.vz-R*b.wx)>.05)moving=true;}if(G.rolling&&!moving){G.rolling=false;G.power=0;
     if(G.replayOn&&G.frames.length>3)startReplay();else endShot();}
   else if(moving)G.rolling=true;}
 function learnUpdate(){const sh=G.shot;if(!sh)return;const p=G.players[sh.shooter];if(!p||!p.human)return;const Ln=G.learn[sh.shooter];if(!Ln)return;Ln.shots++;const good=sh.potted.filter(id=>id!==0).length;if(good>0)Ln.pots++;if(sh.scratch||sh.first===null)Ln.fouls++;if(sh.spin)Ln.spin++;if(sh.curve)Ln.curve++;if(sh.curve&&good>0)Ln.curvePots++;}
@@ -722,10 +884,10 @@ function* cpuSearch(){const p=cur(),skill=cpuSkill(p),ctx={targets:legalTargetsF
   cands.sort((a,b)=>b.cut-a.cut);
   const spinP=p.skill==="auto"?clamp((G.learn.map((Ln,i)=>G.players[i].human&&Ln&&Ln.shots?Ln.spin/Ln.shots:0).reduce((a,b)=>a+b,0)/Math.max(1,G.players.filter(q=>q.human).length))*1.3+.05,0,.8):skill*.8;
   let best=null,bestScore=-1e9;const top=cands.slice(0,Math.round(4+skill*10));
-  for(const c of top){for(const m of[.9,1,1.12]){const pw=clamp(c.pw*m,.15,.95),r=simShot(list,makeShot(cue.x,cue.z,c.aim,pw,0,0,0),1/120,3.2),sc=evalSim(r,ctx);if(sc>bestScore){bestScore=sc;best={aim:c.aim,power:pw,nx:0,ny:0,elev:0};}yield;}}
-  if(best&&Math.random()<spinP){for(const ny of[-.55,.55]){const r=simShot(list,makeShot(cue.x,cue.z,best.aim,best.power,0,ny,0),1/120,3.2),sc=evalSim(r,ctx)+8;if(sc>bestScore){bestScore=sc;best={aim:best.aim,power:best.power,nx:0,ny,elev:0};}yield;}}
+  for(const c of top){for(const m of[.9,1,1.12]){const pw=clamp(c.pw*m,.15,.95),r=simShot(list,makeShot(cue.x,cue.z,c.aim,pw,0,0,0),1/120,3.4),sc=evalSim(r,ctx);if(sc>bestScore){bestScore=sc;best={aim:c.aim,power:pw,nx:0,ny:0,elev:0};}yield;}}
+  if(best&&Math.random()<spinP){for(const ny of[-.55,.55]){const r=simShot(list,makeShot(cue.x,cue.z,best.aim,best.power,0,ny,0),1/120,3.4),sc=evalSim(r,ctx)+8;if(sc>bestScore){bestScore=sc;best={aim:best.aim,power:best.power,nx:0,ny,elev:0};}yield;}}
   if((!best||bestScore<50)&&skill>.4){const tid=ctx.targets[0];if(tid!==undefined){const tb=balls[tid],base=Math.atan2(tb.x-cue.x,tb.z-cue.z);
-    outer:for(const el of[40,55,68])for(const side of[1,-1])for(const off of[.4,.6,.8])for(const nx of[.6,.85]){const aim=base+side*off,r=simShot(list,makeShot(cue.x,cue.z,aim,.6,side*nx,0,el),1/120,3.0),sc=evalSim(r,ctx);
+    outer:for(const el of[40,55,68])for(const side of[1,-1])for(const off of[.4,.6,.8])for(const nx of[.6,.85]){const aim=base+side*off,r=simShot(list,makeShot(cue.x,cue.z,aim,.6,side*nx,0,el),1/120,3.2),sc=evalSim(r,ctx);
       if(sc>bestScore){bestScore=sc;best={aim,power:.6,nx:side*nx,ny:0,elev:el};if(sc>=100)break outer;}yield;}}}
   if(!best){const tid=ctx.targets.length?ctx.targets[0]:lowestBall(),tb=balls[tid||1],aim=Math.atan2(tb.x-cue.x,tb.z-cue.z);best={aim,power:.35,nx:0,ny:0,elev:0};}
   const sigma=(1-skill)*.05+.004;best.aim+=(Math.random()*2-1)*sigma;best.power=clamp(best.power+(Math.random()*2-1)*(1-skill)*.12,.12,.97);return best;}
@@ -752,7 +914,7 @@ function updateCPUAim(dt){const a=G.cpuAim;if(!a)return;a.t+=dt;const k=clamp(a.
    ========================================================= */
 function inTable(x,z,m){return Math.abs(x)<W/2-m&&Math.abs(z)<L/2-m;}
 function noOverlap(x,z,list,rad){for(const b of list)if(Math.hypot(b.x-x,b.z-z)<rad)return false;return true;}
-function potsTarget(list,sol,h){const r=simShot(list,makeShot(list[0].x,list[0].z,sol.aim,sol.pw,sol.nx,sol.ny,sol.elev),h||1/120,3.0);return r.potted.indexOf(1)>=0&&!r.scratch;}
+function potsTarget(list,sol,h){const r=simShot(list,makeShot(list[0].x,list[0].z,sol.aim,sol.pw,sol.nx,sol.ny,sol.elev),h||1/120,3.4);return r.potted.indexOf(1)>=0&&!r.scratch;}
 function findPower(list,aim,nx,ny,elev){for(let pw=.30;pw<=.95;pw+=.06)if(potsTarget(list,{aim,pw,nx:nx||0,ny:ny||0,elev:elev||0},1/90))return pw;return null;}
 function robustSol(list,sol){for(const h of[1/100,1/180])if(!potsTarget(list,sol,h))return false;return true;}
 function directAvailable(list){const cue=list[0],tg=list[1];
@@ -1057,7 +1219,6 @@ function selectMode(k,doScroll){selMode=k;selCount=MODES[k].def;
 function buildCount(){const row=$("pcBtns");row.innerHTML="";MODES[selMode].players.forEach(n=>{const b=document.createElement("button");b.className="pcbtn"+(n===selCount?" sel":"");b.textContent=n;b.onclick=()=>{audio();selCount=n;buildCount();buildPlayers();SFX.ui();};row.appendChild(b);});}
 function buildPlayers(){const box=$("players");box.innerHTML="";setupPlayers=[];for(let i=0;i<selCount;i++){const human=i===0,row=document.createElement("div");row.className="prow";
   const nm=document.createElement("span");nm.className="nm";nm.textContent="P"+(i+1);
-  /* both icons always visible; chosen one highlighted */
   const seg=document.createElement("span");seg.className="seg";
   const bH=document.createElement("button");bH.className="ht"+(human?" sel":"");bH.textContent="👤";bH.title="Human";
   const bC=document.createElement("button");bC.className="ht"+(human?"":" sel");bC.textContent="🤖";bC.title="Computer";
