@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>PROPLOOP — FPV Stunt Simulator</title>
-<meta name="version" content="2026.11.07.1">
+<meta name="version" content="2026.11.20.2">
 <style>
 :root{--bg:#0b0e11;--panel:#12161bf2;--line:#2a323b;--line2:#3a444e;--txt:#dce5eb;--dim:#7f8d99;
 --amber:#ffb454;--org:#ff5f1f;--teal:#38e1c6;--red:#ff5252;
@@ -72,6 +72,7 @@ input[type=text]:focus{outline:1px solid var(--amber)}
 .btn{background:#1a2026;border:1px solid var(--line2);color:var(--txt);font-family:var(--mono);font-weight:700;
 font-size:11px;letter-spacing:1px;padding:8px 12px;cursor:pointer;transition:all .12s;
 clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
+a.btn{text-decoration:none;display:inline-block;text-align:center}
 .btn:hover{border-color:var(--amber);color:var(--amber);box-shadow:0 0 14px rgba(255,180,84,.25);transform:translateY(-1px)}
 .btn:active{transform:translateY(1px)}
 .btn.pri{background:var(--org);border-color:var(--org);color:#12100d;font-size:15px;padding:13px 34px;letter-spacing:2px}
@@ -159,7 +160,7 @@ summary{cursor:pointer;font-size:11px;letter-spacing:2px;color:var(--teal)}
 Every seed builds a brand-new stunt circuit: gates, rings, windmills, elevator gates, wrecking pendulums, tunnels, slalom.
 </div>
 </details>
-<div class="row" style="margin-top:18px"><button class="btn pri" id="btnStart">▶ ARM &amp; LAUNCH</button></div>
+<div class="row" style="margin-top:18px"><button class="btn pri" id="btnStart">▶ ARM &amp; LAUNCH</button><a class="btn" id="btnHome" href="https://1nd1g0.github.io/">⌂ HOME</a></div>
 </div></div>
 <div id="pauseOv" class="ov hide"><div class="panel">
 <h1 style="font-size:40px">PAUSED</h1><div class="hz"></div>

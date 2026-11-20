@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0a0d08">
 <title>IRON VANGUARD — Tank '90</title>
-<meta name="version" content="2026.11.07.1">
+<meta name="version" content="2026.11.20.2">
 <style>
 :root{--amber:#ffb000;--amber2:#ffd75e;--olive:#6a7d3f;--olive-d:#2c3519;--steel:#9fb4c7;--red:#ff5040;--cyan:#7fd4ff;--ink:#0a0d08;--panel:#161c11}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -25,6 +25,7 @@ body.lite #fx{background:none}
 .row label.tag{width:112px;color:#9aa87c;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-family:"Courier New",monospace;font-weight:700}
 .seg{display:flex;flex-wrap:wrap;gap:6px}
 .seg button,.btn{font-family:"Courier New",monospace;font-weight:700;letter-spacing:.08em;background:#232b18;color:#cfd8b8;border:2px solid #4a5530;padding:8px 12px;font-size:13px;cursor:pointer;transition:transform .06s,background .12s,border-color .12s;text-transform:uppercase}
+a.btn{text-decoration:none;display:inline-block;text-align:center}
 .seg button:hover,.btn:hover{background:#33401f;border-color:#7d8c4d}
 .seg button:active,.btn:active{transform:translateY(2px)}
 .seg button.on{background:var(--olive-d);color:var(--amber2);border-color:var(--amber);box-shadow:0 0 10px rgba(255,176,0,.35),inset 0 0 6px rgba(255,176,0,.2)}
@@ -77,6 +78,7 @@ body.touch #touch{display:block}
 <div class="row"><label class="tag">Start Level</label><input type="number" id="lvlIn" min="1" max="99" value="1"></div>
 <div class="row"><label class="tag">Options</label><div class="seg"><button id="fxBtn"></button><button id="sndBtn2"></button></div></div>
 <button class="btn big h-stencil" id="btnDeploy">► Deploy</button>
+<div class="row" style="justify-content:center"><a class="btn" id="btnHome" href="https://1nd1g0.github.io/">⌂ Home</a></div>
 <div class="help center" id="helpTxt"></div>
 <div class="help center"><b>P</b> pause · <b>M</b> minimap · Gamepad / Touch → P1</div>
 <div class="help center">The Eagle sits on the bottom border — nothing can attack it from below.</div>

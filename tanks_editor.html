@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0a0d08">
 <title>IRON VANGUARD — Resource Editor</title>
-<meta name="version" content="2026.11.07.1">
+<meta name="version" content="2026.11.20.2">
 <style>
 :root{--amber:#ffb000;--amber2:#ffd75e;--olive:#6a7d3f;--olive-d:#2c3519;--steel:#9fb4c7;--red:#ff5040;--cyan:#7fd4ff;--grn:#7dffb0;--ink:#0a0d08;--panel:#161c11;--line:#4a5530}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -27,6 +27,7 @@ h1{font-size:clamp(20px,3.4vw,32px);color:var(--amber);text-shadow:0 2px 0 #5c3c
 .btn.red{border-color:#8a3a30;color:#ffb0a0}
 .btn.grn{border-color:#4a8a5c;color:#b8ffc8}
 .btn.sm{padding:3px 7px;font-size:11px}
+a.btn{text-decoration:none;display:inline-block;text-align:center}
 .tabs{display:flex;flex-wrap:wrap;gap:6px;padding:12px 0 0}
 .tabs button{font-family:"Courier New",monospace;font-weight:700;letter-spacing:.1em;background:#1a2113;color:#9aa87c;border:2px solid var(--line);border-bottom:none;padding:10px 16px;font-size:13px;cursor:pointer;text-transform:uppercase}
 .tabs button:hover{color:#dfe6cf}
@@ -99,6 +100,7 @@ legend{font-family:"Courier New",monospace;font-weight:700;letter-spacing:.12em;
   <div class="spacer"></div>
   <button class="btn amber" id="btnCopyAll">⧉ Copy All Resources</button>
   <button class="btn red" id="btnResetAll">↺ Reset To Defaults</button>
+  <a class="btn grn" id="btnHome" href="https://1nd1g0.github.io/">⌂ Home</a>
 </div>
 </header>
 

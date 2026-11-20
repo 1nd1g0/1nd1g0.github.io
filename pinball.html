@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#07080d">
 <title>STARDUST PINBALL — procedural 3D pinball</title>
+<meta name="version" content="2026.11.20.1">
 <style>
 :root{
   --dom:#ff6a00;--acc:#ffc400;--acc2:#ff2e3d;--field:#2a0f0a;--glow:#ff9a3c;
@@ -121,6 +122,7 @@ h1.title{font-family:var(--disp);text-align:center;font-size:34px;font-size:clam
 .btn.ghost{background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.17);box-shadow:none;color:var(--text);font-size:13px;padding:12px}
 .btn.ghost:hover{border-color:var(--acc)}
 .btnRow{display:flex}
+a.btn{text-decoration:none;text-align:center}
 .btnRow .btn{flex:1;margin-left:8px}
 .btnRow .btn:first-child{margin-left:0}
 .menuHigh{text-align:center;margin-top:14px;font-family:var(--mono);color:var(--dim);font-size:12px;letter-spacing:1px}
@@ -307,6 +309,7 @@ body.dbgOn #dbgRoot{display:block}
     <div class="seg" id="diffSeg"><button data-d="easy">EASY</button><button data-d="classic" class="on">CLASSIC</button><button data-d="wild">WILD</button></div>
     <div id="diffDesc">the real thing &mdash; 8s ball save</div>
     <button class="btn" id="btnStart">&#9654; &nbsp;Start Game</button>
+    <a class="btn ghost" id="btnHome" href="https://1nd1g0.github.io/">&#8962; Home</a>
     <div class="menuHigh">HIGH SCORE&nbsp; <b id="menuHigh">0</b></div>
     <div class="keysGrid">
       <div><b>Z</b>/<b>&#8679;L</b> left flipper</div><div><b>/</b>/<b>&#8679;R</b> right flipper</div>
@@ -2908,6 +2911,43 @@ function boot(){
   G.booted=true;lastT=NOW();RAF(frame);
  }catch(e){fatal("STARTUP ERROR",(e&&e.message?e.message:String(e))+"\nGPU: "+gpuInfo());}}
 setTimeout(boot,30);
+})();
+</script>
+<script>
+// self-update v3: one-time title-screen freshness check, two HEAD requests,
+// a page body is NEVER downloaded. The baseline is NOT the HTTP cache: Firefox
+// serves a HEAD cached before a deploy forever within max-age, and a reload
+// never evicts it => endless reload loop after an update. Instead the baseline
+// is the last validator THIS browser session saw, kept in sessionStorage; the
+// cached HEAD only stands in for it on the first visit of a session. The
+// no-store HEAD is always the source of truth; on mismatch a newer deploy
+// exists => reload exactly once per session per version (the new validator is
+// stored BEFORE reloading, so the reloaded page compares equal and never
+// loops). Offline/file:// hosts: no request at all, never an error. Hosts
+// without validators: silent. Never re-runs in-page.
+// Versioning: meta[name=version] = <last-edited-date>.<build>; bump the
+// build number whenever the file is edited. window.GAME_VERSION exposes it.
+(function () {
+var vm = document.querySelector('meta[name="version"]');
+window.GAME_VERSION = vm ? vm.content : "";
+if (typeof fetch !== "function") return;
+if (!/^https?:$/.test(location.protocol)) return;
+if (navigator.onLine === false) return;
+function val(r) { return r.headers.get("etag") || r.headers.get("last-modified") || ""; }
+function seen(v) { try { sessionStorage.setItem("$ver:" + location.href, v); } catch (e) {} }
+function last() { try { return sessionStorage.getItem("$ver:" + location.href) || ""; } catch (e) { return ""; } }
+var base = last();
+fetch(location.href, { method: "HEAD" }).then(function (r) {
+var cached = val(r);
+if (!base && !cached) return; // nothing to compare against
+return fetch(location.href, { method: "HEAD", cache: "no-store" }).then(function (r2) {
+var cur = val(r2);
+if (!cur) return;
+var old = base || cached;
+if (cur !== old) { seen(cur); location.reload(); }
+else seen(cur);
+});
+}).catch(function () {});
 })();
 </script>
 </body>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#04050c">
 <title>3D Arcade Pinball DX</title>
-<meta name="version" content="2026.11.07.1">
+<meta name="version" content="2026.11.20.2">
 <style>
   html,body{height:100%;margin:0;overflow:hidden;background:#04050c;touch-action:none;
     -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;font-family:'Segoe UI',system-ui,sans-serif}
@@ -43,6 +43,10 @@
   #overlay .coin{font-weight:900;font-size:clamp(14px,4vmin,22px);color:#ffe27a;letter-spacing:2px;
     text-shadow:0 0 14px rgba(255,200,0,.9);animation:blink 1s steps(2) infinite}
   #overlay .hi{margin-top:12px;color:#7df3ff;font-size:13px}
+  #overlay .homelink{margin-top:14px;pointer-events:auto;text-decoration:none;color:#7df3ff;
+    border:1px solid rgba(0,255,255,.4);background:rgba(0,255,255,.08);border-radius:8px;
+    padding:8px 16px;font-size:13px;letter-spacing:2px}
+  #overlay .homelink:active{background:rgba(0,255,255,.3)}
   @keyframes blink{50%{opacity:.15}}
   #touchUI{position:absolute;inset:0;z-index:8;pointer-events:none;transition:opacity .35s}
   #touchUI.hidden{opacity:0}
@@ -736,7 +740,8 @@ function showOverlay(mode,rec){
     'Clear targets to level up · light all lanes for <b>MULTIBALL</b> · lit lane = <b>SKILL SHOT</b><br>'+
     '2 save-kicks per ball · outlane kickbacks auto-fire</div>'+
     '<div class="coin">▶ TAP OR PRESS SPACE ◀</div>'+
-    '<div class="hi">HIGH SCORE — '+hiScore.toLocaleString()+'</div>';
+    '<div class="hi">HIGH SCORE — '+hiScore.toLocaleString()+'</div>'+
+    '<a class="homelink" id="homeLink" href="https://1nd1g0.github.io/">⌂ HOME</a>';
   }else if(mode==='over'){
     o.innerHTML='<h1>GAME OVER</h1><h2>'+(rec?'★ NEW RECORD ★':'')+'</h2>'+
     '<div class="ctl" style="font-size:22px;color:#ffb32b">FINAL SCORE<br><b style="font-size:34px">'+
@@ -749,6 +754,7 @@ function showOverlay(mode,rec){
 }
 el('overlay').addEventListener('pointerdown',e=>{
   e.stopPropagation();
+  if(e.target&&e.target.closest&&e.target.closest('a'))return;
   if(state==='menu'||state==='over')begin();
   else if(paused)togglePause();});
 showOverlay('menu');hud();

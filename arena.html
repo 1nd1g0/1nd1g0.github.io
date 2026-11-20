@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#150e07">
 <title>RUSTFALL — Diesel Arena</title>
+<meta name="version" content="2026.11.20.1">
 <!--
 ==============================================================================
  RUSTFALL v5 — single-file build, module-ready.
@@ -78,6 +79,7 @@ filter:drop-shadow(0 3px 0 #000) drop-shadow(0 0 26px rgba(255,120,40,.4));anima
 .btn.volt:hover{border-color:var(--volt);box-shadow:0 3px 0 #000,0 0 20px rgba(79,232,255,.45)}
 .btn.small{font-size:12px;padding:10px;letter-spacing:2px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+a.btn{text-decoration:none}
 .row .btn{flex:1;margin:4px 0}
 .seg{display:flex;border:1px solid var(--edge2);border-radius:6px;overflow:hidden;margin:6px 0}
 .seg div{flex:1;text-align:center;padding:10px 6px;font:900 12px "Arial Black",Impact,sans-serif;letter-spacing:1.5px;color:#907b60;background:#17120d;cursor:pointer}
@@ -180,7 +182,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 <button class="btn hot" id="btnSurv">Start Survival &mdash; Endless Arena</button>
 <div class="row"><button class="btn" id="btnQuests">Quest Log</button><button class="btn volt" id="btnDaily">Daily Run</button></div>
 <div class="row" style="margin-top:6px"><div style="flex:1"><input type="text" id="seedIn" maxlength="18" placeholder="ARENA SEED (blank = random)"></div><button class="tbtn" id="btnDice" style="padding:12px 14px">RND</button></div>
-<div class="row"><button class="btn small" id="btnOpts">Options</button><button class="btn small" id="btnKeys">Controls</button><button class="btn small" id="btnFull">Fullscreen</button></div>
+<div class="row"><button class="btn small" id="btnOpts">Options</button><button class="btn small" id="btnKeys">Controls</button><button class="btn small" id="btnFull">Fullscreen</button><a class="btn small" id="btnHome" href="https://1nd1g0.github.io/">⌂ Home</a></div>
 </div>
 <div class="panel"><div class="ptitle">Field Manual</div><div class="hint" id="manual"></div></div>
 <div class="sub" id="bestLine"></div>
@@ -3469,6 +3471,43 @@ window.addEventListener("orientationchange",function(){setTimeout(resize,140)},f
 Input.init();wireUI();resize();toTitle();
 /* ==== END: boot.js ==== */
 /* IIFE-END */
+})();
+</script>
+<script>
+// self-update v3: one-time title-screen freshness check, two HEAD requests,
+// a page body is NEVER downloaded. The baseline is NOT the HTTP cache: Firefox
+// serves a HEAD cached before a deploy forever within max-age, and a reload
+// never evicts it => endless reload loop after an update. Instead the baseline
+// is the last validator THIS browser session saw, kept in sessionStorage; the
+// cached HEAD only stands in for it on the first visit of a session. The
+// no-store HEAD is always the source of truth; on mismatch a newer deploy
+// exists => reload exactly once per session per version (the new validator is
+// stored BEFORE reloading, so the reloaded page compares equal and never
+// loops). Offline/file:// hosts: no request at all, never an error. Hosts
+// without validators: silent. Never re-runs in-page.
+// Versioning: meta[name=version] = <last-edited-date>.<build>; bump the
+// build number whenever the file is edited. window.GAME_VERSION exposes it.
+(function () {
+var vm = document.querySelector('meta[name="version"]');
+window.GAME_VERSION = vm ? vm.content : "";
+if (typeof fetch !== "function") return;
+if (!/^https?:$/.test(location.protocol)) return;
+if (navigator.onLine === false) return;
+function val(r) { return r.headers.get("etag") || r.headers.get("last-modified") || ""; }
+function seen(v) { try { sessionStorage.setItem("$ver:" + location.href, v); } catch (e) {} }
+function last() { try { return sessionStorage.getItem("$ver:" + location.href) || ""; } catch (e) { return ""; } }
+var base = last();
+fetch(location.href, { method: "HEAD" }).then(function (r) {
+var cached = val(r);
+if (!base && !cached) return; // nothing to compare against
+return fetch(location.href, { method: "HEAD", cache: "no-store" }).then(function (r2) {
+var cur = val(r2);
+if (!cur) return;
+var old = base || cached;
+if (cur !== old) { seen(cur); location.reload(); }
+else seen(cur);
+});
+}).catch(function () {});
 })();
 </script>
 </body>

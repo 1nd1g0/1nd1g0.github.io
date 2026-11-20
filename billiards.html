@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>MIDNIGHT RACK · 3D Arcade Billiards</title>
-<meta name="version" content="2026.11.14.12">
+<meta name="version" content="2026.11.20.13">
 <style>
 :root{
 --gold:#ffd76a;--mint:#9fe8c0;--ink:#0c1210;--danger:#ff6b5e;
@@ -126,6 +126,7 @@ border-radius:12px;padding:16px 16px;box-shadow:0 20px 60px rgba(0,0,0,.7);max-h
 .big{margin-top:12px;cursor:pointer;font:inherit;font-size:15px;letter-spacing:3px;color:var(--ink);
 background:linear-gradient(180deg,#ffe9a8,#e0b452);border:1px solid #8a6a20;border-radius:7px;padding:11px 26px;}
 .big:hover{filter:brightness(1.1);} .big.ghost{background:#1d1d22;color:var(--mint);border-color:#3a3a40;}
+a.big{text-decoration:none;display:inline-block;text-align:center;}
 #modeGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:8px;margin:10px 0;text-align:left;}
 .mcard{cursor:pointer;background:rgba(20,24,22,.7);border:1px solid #2e3a34;border-radius:9px;padding:9px;transition:.15s;outline:none;}
 .mcard:hover{border-color:#4a5a50;} .mcard:focus{border-color:#5a6a60;} .mcard.sel{border-color:var(--gold);box-shadow:0 0 14px rgba(255,215,106,.2);}
@@ -220,6 +221,7 @@ background:#1d1d22;color:#77777c;display:inline-flex;align-items:center;justify-
 <button id="replayOff" class="pcbtn pe">■ OFF</button>
 </div>
 <button id="rackBtn" class="big pe">RACK &rsquo;EM UP</button>
+<a id="homeBtn" class="big ghost pe" href="https://1nd1g0.github.io/">⌂ HOME</a>
 </div></div>
 <div id="clearOv" class="overlay hidden"><div class="panel" id="clearPanel"><h1>TABLE CLEARED!</h1><div class="line" id="clearLines"></div>
 <button id="againBtn" class="big pe">RACK AGAIN</button><button id="clearMenuBtn" class="big ghost pe">MENU</button></div></div>
