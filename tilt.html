@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#141210">
 <title>Crystal Ball in a Tilted Maze</title>
-<meta name="version" content="2026.11.20.2">
+<meta name="version" content="2026.11.21.1">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;background:#0d0b08;color:#e8e0d0;
@@ -2302,14 +2302,16 @@ function frame(ts){
 optLoad();ctlLoad(); // stored preferences: sound, haptics, graphics, input tunings
 AU.muted=OPT.muted;AU.vol=OPT.vol; // (calibration lives in its own stored key)
 resize();buildTextures('BOOT');
-// Language comes FIRST: on a fresh install the title screen would otherwise
-// be untranslated. A stored choice paints the whole UI in that language;
-// without one, the game intro IS the language screen and no other screen
-// opens until a flag is tapped.
+// Language order: an explicit ?language=xx in the URL (the catalogue page
+// appends it to every game link once a language is chosen) beats the stored
+// choice; a code with no table is ignored rather than sticking. With neither
+// the game speaks English, and the language screen stays reachable from the
+// title's language button (#langB2).
+var urlLang=((location.search.match(/[?&]language=([A-Za-z-]+)/)||[])[1]||'').toLowerCase();
 var savedLang=store('tll:lang');
 langBuild();
-if(savedLang&&TR[savedLang]){LANG=savedLang;applyLang();show('menu',true)}
-else{show('menu',false);langOpen()}
+if(TR[urlLang])LANG=urlLang;else if(TR[savedLang])LANG=savedLang;else LANG='en';
+applyLang();show('menu',true);
 show('pause',false);show('win',false);
 $('seed').value=store('tll:lastseed')||randSeed();
 requestAnimationFrame(frame);

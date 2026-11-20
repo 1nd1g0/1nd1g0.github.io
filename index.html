@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0f">
 <meta name="description" content="1nd1g0 Games — Free browser-based game collection">
 <title>1nd1g0 Games</title>
-<meta name="version" content="2026.11.20.1">
+<meta name="version" content="2026.11.21.1">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -124,6 +124,38 @@ footer a{color:var(--acc);text-decoration:none}
 .archive li a:hover{border-color:var(--acc);background:var(--card-h)}
 .archive li a span{font-size:.7rem;color:var(--dim)}
 
+/* LANGUAGE: header pill + picker overlay (flag, native name, native word) */
+header{position:relative}
+.langbtn{position:absolute;top:.4rem;right:0;display:inline-flex;align-items:center;gap:.45rem;
+padding:.4rem .8rem;background:var(--card);border:1px solid var(--border);border-radius:999px;
+color:var(--txt);font:inherit;font-size:.8rem;cursor:pointer;transition:border-color .15s,background .15s}
+.langbtn:hover,.langbtn:focus{border-color:var(--acc);background:var(--card-h);outline:none}
+.langbtn svg{width:24px;height:16px;border:1px solid var(--border);border-radius:3px;display:block}
+.ov{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+padding:1rem;background:rgba(5,5,10,.86)}
+.ov[hidden]{display:none}
+.ovpanel{width:100%;max-width:640px;background:var(--card);border:1px solid var(--border);
+border-radius:16px;padding:1.6rem 1.2rem;text-align:center}
+.ovpanel h2{font-size:.9rem;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
+.ovsub{max-width:34rem;margin:.6rem auto 1.1rem;color:var(--dim);font-size:.85rem}
+.lgbwrap{display:flex;flex-wrap:wrap;justify-content:center;gap:.6rem}
+.lgb{width:150px;display:flex;flex-direction:column;align-items:center;gap:.15rem;
+padding:.6rem .4rem;background:var(--bg);border:1px solid var(--border);border-radius:12px;
+color:var(--txt);font:inherit;cursor:pointer;transition:border-color .15s,background .15s}
+.lgb:hover,.lgb:focus{border-color:var(--acc);background:var(--card-h);outline:none}
+.lgb svg{width:52px;height:35px;border:1px solid var(--border);border-radius:4px;display:block}
+.lgb b{font-size:.9rem}
+.lgb span{font-size:.72rem;color:var(--dim)}
+.ovrow{display:flex;justify-content:center;gap:.6rem;margin-top:1.2rem}
+.ovbtn{padding:.5rem 1.1rem;background:var(--bg);border:1px solid var(--border);border-radius:10px;
+color:var(--txt);font:inherit;font-size:.85rem;cursor:pointer;transition:border-color .15s,background .15s}
+.ovbtn:hover,.ovbtn:focus{border-color:var(--acc);background:var(--card-h);outline:none}
+@media(max-width:600px){
+.langbtn{position:static;margin:0 auto 1rem;display:flex}
+.ovpanel{padding:1.2rem .8rem}
+.lgb{width:130px}
+}
+
 /* RESPONSIVE */
 @media(max-width:600px){
 .grid{grid-template-columns:1fr}
@@ -151,14 +183,15 @@ header{padding:1.5rem .5rem 1rem}
 <body>
 <div class="wrap">
 <header>
+<button class="langbtn" id="langBtn" type="button" aria-haspopup="dialog"></button>
 <h1>1nd1g0 Games</h1>
-<p>Free browser-based retro game collection — no installs, no ads</p>
-<div class="stats"><span><b id="count">20</b> games available</span></div>
+<p data-t="sub">Free browser-based retro game collection — no installs, no ads</p>
+<div class="stats"><span id="statWrap"><b id="count">20</b> games available</span></div>
 </header>
 
 <div class="search-wrap">
 <span class="s-icon">🔍</span>
-<input type="text" id="search" placeholder="Search games... (e.g. &quot;arcade&quot;, &quot;puzzle&quot;)" autocomplete="off" spellcheck="false">
+<input type="text" id="search" placeholder="Search games... (e.g. &quot;arcade&quot;, &quot;puzzle&quot;)" data-ph="searchPh" autocomplete="off" spellcheck="false">
 </div>
 
 <main>
@@ -387,40 +420,167 @@ header{padding:1.5rem .5rem 1rem}
 
 <div class="empty" id="empty">
 <span>🕹️</span>
-<p>No games found. Try a different search term.</p>
+<p data-t="noGames">No games found. Try a different search term.</p>
 </div>
 </main>
 
 <footer>
 <div class="archive">
-<h2>Archive</h2>
+<h2 data-t="archive">Archive</h2>
 <ul>
 <li><a href="tetris2.html">TE3S<span>45.0 KB</span></a></li>
 <li><a href="tanks_editor.html">Tanks Editor<span>48.5 KB</span></a></li>
 </ul>
 </div>
-<p>Play classic games reimagined</p>
+<p data-t="tagline">Play classic games reimagined</p>
 </footer>
 </div>
+
+<div class="ov" id="langOv" hidden>
+<div class="ovpanel" role="dialog" aria-modal="true" aria-labelledby="langQ">
+<h2 id="langQ">LANGUAGE</h2>
+<p class="ovsub" id="langSub"></p>
+<div class="lgbwrap" id="langB"></div>
+<div class="ovrow"><button class="ovbtn" id="langX" type="button" data-t="close">CLOSE</button></div>
+</div>
+</div>
+
+<script>
+// i18n for the catalogue page. The language table style, the five flag
+// buttons and the storage key (tll:lang) are the ones tilt.html uses, so a
+// choice made in either place is the other's default. Truth order here: a
+// stored choice, else English — the markup is already English, so an unset
+// language paints nothing and leaves the game links exactly as written.
+// Once a language IS stored, every game link carries ?language=<code>, which
+// is how the games are told what to speak.
+(function(){
+var TR={
+en:{sub:'Free browser-based retro game collection — no installs, no ads',
+    statLine:'{n} games available',
+    searchPh:'Search games... (e.g. "arcade", "puzzle")',
+    noGames:'No games found. Try a different search term.',
+    archive:'Archive',tagline:'Play classic games reimagined',close:'CLOSE',
+    langSub:'Choose your language — it is remembered, and it applies to this catalogue and to the games that support it.',
+    tags:{}},
+es:{sub:'Colección gratuita de juegos retro en el navegador — sin instalaciones ni anuncios',
+    statLine:'{n} juegos disponibles',
+    searchPh:'Buscar juegos… (p. ej. «arcade», «puzzle»)',
+    noGames:'No se encontraron juegos. Prueba otro término de búsqueda.',
+    archive:'Archivo',tagline:'Juega a los clásicos reinventados',close:'CERRAR',
+    langSub:'Elige tu idioma: se recordará y se aplica a este catálogo y a los juegos que lo admiten.',
+    tags:{arcade:'arcade',shooter:'shooter',space:'espacio',sport:'deportes',puzzle:'rompecabezas',
+          physics:'física',action:'acción',maze:'laberinto',simulation:'simulación','3d':'3D',
+          racing:'carreras',editor:'editor',utility:'utilidad',classic:'clásico',sandbox:'juego libre',
+          strategy:'estrategia',breakout:'breakout',defense:'defensa','100-pin':'100 pines',arena:'arena'}},
+pt:{sub:'Coleção gratuita de jogos retrô no navegador — sem instalações e sem anúncios',
+    statLine:'{n} jogos disponíveis',
+    searchPh:'Buscar jogos… (ex.: “arcade”, “quebra-cabeça”)',
+    noGames:'Nenhum jogo encontrado. Tente outro termo de busca.',
+    archive:'Arquivo',tagline:'Jogue clássicos reinventados',close:'FECHAR',
+    langSub:'Escolha seu idioma: ele fica lembrado e vale para este catálogo e para os jogos que o suportam.',
+    tags:{arcade:'arcade',shooter:'shooter',space:'espaço',sport:'esporte',puzzle:'quebra-cabeça',
+          physics:'física',action:'ação',maze:'labirinto',simulation:'simulação','3d':'3D',
+          racing:'corrida',editor:'editor',utility:'utilitário',classic:'clássico',sandbox:'jogo livre',
+          strategy:'estratégia',breakout:'breakout',defense:'defesa','100-pin':'100 pinos',arena:'arena'}},
+ru:{sub:'Бесплатная коллекция ретро-игр в браузере — без установок и рекламы',
+    statLine:'{n} игр доступно',
+    searchPh:'Поиск игр… (например «аркада», «головоломка»)',
+    noGames:'Игры не найдены. Попробуйте другой запрос.',
+    archive:'Архив',tagline:'Играйте в переосмысленную классику',close:'ЗАКРЫТЬ',
+    langSub:'Выберите язык — он запомнится и будет применён к этому каталогу и к играм, которые его поддерживают.',
+    tags:{arcade:'аркада',shooter:'шутер',space:'космос',sport:'спорт',puzzle:'головоломка',
+          physics:'физика',action:'экшен',maze:'лабиринт',simulation:'симулятор','3d':'3D',
+          racing:'гонки',editor:'редактор',utility:'утилита',classic:'классика',sandbox:'песочница',
+          strategy:'стратегия',breakout:'арканоид',defense:'оборона','100-pin':'100 кеглей',arena:'арена'}},
+zh:{sub:'免费浏览器复古游戏合集 — 无需安装，没有广告',
+    statLine:'可玩游戏 {n} 款',
+    searchPh:'搜索游戏…（例如“街机”“益智”）',
+    noGames:'未找到游戏。请换一个搜索词。',
+    archive:'归档',tagline:'玩焕然一新的经典游戏',close:'关闭',
+    langSub:'选择你的语言 — 它会被记住，并用于本目录以及支持该语言的游戏。',
+    tags:{arcade:'街机',shooter:'射击',space:'太空',sport:'体育',puzzle:'益智',
+          physics:'物理',action:'动作',maze:'迷宫',simulation:'模拟','3d':'3D',
+          racing:'竞速',editor:'编辑器',utility:'工具',classic:'经典',sandbox:'沙盒',
+          strategy:'策略',breakout:'打砖块',defense:'防守','100-pin':'100 瓶',arena:'竞技场'}}};
+// code · name in its own language · that word for "language" · its flag
+var LANGS=[
+ ['en','English','Language','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0,0 60,40M60,0 0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 60,40M60,0 0,40" stroke="#C8102E" stroke-width="3.2"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="13"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="8"/></svg>'],
+ ['es','Español','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#AA151B"/><path d="M0,10H60M0,30H60" stroke="#F1BF00" stroke-width="20"/>  </svg>'],
+ ['pt','Português','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="40" fill="#046A38"/><rect x="24" width="36" height="40" fill="#DA291C"/><circle cx="24" cy="20" r="7.5" fill="#FEDF00" stroke="#046A38" stroke-width="1.4"/><path d="M24,14.5 24,22.5M20.5,17.5H27.5" stroke="#DA291C" stroke-width="2.2" fill="none"/></svg>'],
+ ['ru','Русский','Язык','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.34" width="60" height="13.33" fill="#0039A6"/><rect y="26.67" width="60" height="13.33" fill="#D52B1E"/></svg>'],
+ ['zh','中文','语言','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#EE1C25"/><circle cx="10" cy="10" r="5.6" fill="#FFDC00"/><circle cx="21" cy="6" r="2.1" fill="#FFDC00"/><circle cx="26" cy="11.5" r="2.1" fill="#FFDC00"/><circle cx="26" cy="18.5" r="2.1" fill="#FFDC00"/><circle cx="21" cy="24" r="2.1" fill="#FFDC00"/></svg>']
+];
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+var LANG='en';var saved=store('tll:lang');if(TR[saved])LANG=saved; // unsupported code -> English
+function t(k){var b=TR[LANG],s=b?b[k]:null;if(s==null)s=TR.en[k];return s==null?k:s}
+function flagOf(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][3];return ''}
+function wordOf(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][2];return 'Language'}
+function links(){var c=store('tll:lang'),code=(c&&TR[c])?c:'';
+ var as=document.querySelectorAll('a[href]'),i,a,base;
+ for(i=0;i<as.length;i++){a=as[i];base=(a.getAttribute('href')||'').split('?')[0];
+  if(/\.html$/.test(base))a.setAttribute('href',code?base+'?language='+code:base)}}
+// tags: the markup's text is the canonical key, remembered once per element
+function tags(){var els=document.querySelectorAll('.tag'),i,e,k,m=TR[LANG].tags;
+ for(i=0;i<els.length;i++){e=els[i];
+  if(!e.hasAttribute('data-tag'))e.setAttribute('data-tag',e.textContent.trim());
+  k=e.getAttribute('data-tag');e.textContent=(m&&m[k])||k}}
+// {n} in the template is where the live game count goes
+function stat(){var w=document.getElementById('statWrap'),c=document.getElementById('count');
+ if(!w)return;var n=c?c.textContent:'0';
+ w.innerHTML=t('statLine').split('{n}').join('<b id="count">'+n+'</b>')}
+function picker(){var h='',i;
+ for(i=0;i<LANGS.length;i++)h+='<button class="lgb" type="button" data-lang="'+LANGS[i][0]+'">'+
+  LANGS[i][3]+'<b>'+LANGS[i][1]+'</b><span>'+LANGS[i][2]+'</span></button>';
+ document.getElementById('langB').innerHTML=h;
+ document.getElementById('langQ').textContent=wordOf(LANG).toUpperCase();
+ document.getElementById('langSub').textContent=t('langSub')}
+function btnUi(){document.getElementById('langBtn').innerHTML=flagOf(LANG)+'<span>'+wordOf(LANG)+'</span>'}
+function apply(){if(!TR[LANG])LANG='en';
+ document.documentElement.lang=LANG;
+ var els=document.querySelectorAll('[data-t]'),i;
+ for(i=0;i<els.length;i++)els[i].textContent=t(els[i].getAttribute('data-t'));
+ els=document.querySelectorAll('[data-ph]');
+ for(i=0;i<els.length;i++)els[i].placeholder=t(els[i].getAttribute('data-ph'));
+ tags();stat();links();picker();btnUi()}
+var ov=document.getElementById('langOv');
+document.getElementById('langBtn').onclick=function(){ov.hidden=false};
+document.getElementById('langX').onclick=function(){ov.hidden=true};
+ov.onclick=function(e){if(e.target===ov)ov.hidden=true}; // backdrop click closes it
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!ov.hidden)ov.hidden=true});
+document.getElementById('langB').onclick=function(e){var b=e.target,root=document.getElementById('langB');
+ while(b&&b!==root&&!(b.getAttribute&&b.getAttribute('data-lang')))b=b.parentNode;
+ if(!b||b===root)return;
+ LANG=b.getAttribute('data-lang');store('tll:lang',LANG);apply();ov.hidden=true};
+apply();
+})();
+</script>
 
 <script>
 (function(){
 const input=document.getElementById("search");
 const grid=document.getElementById("grid");
 const cards=[...grid.querySelectorAll(".card")];
-const countEl=document.getElementById("count");
 const empty=document.getElementById("empty");
+
+function hay(c){
+// match against the English canonical data (names, descriptions, tag keys)
+// AND the visible text, so a query works whatever language is on screen;
+// the ?language= parameter the i18n pass appends is never part of it
+const tags=[...c.querySelectorAll(".tag")].map(e=>(e.getAttribute("data-tag")||e.textContent)+" "+e.textContent).join(" ");
+return((c.dataset.name||"")+" "+(c.dataset.desc||"")+" "+tags+" "+(c.getAttribute("href")||"").split("?")[0]+" "+c.textContent).toLowerCase();
+}
 
 function filter(){
 const q=input.value.trim().toLowerCase();
 let n=0;
 cards.forEach(c=>{
-const text=(c.textContent+" "+c.getAttribute("href")).toLowerCase();
-const match=!q||text.includes(q);
+const match=!q||hay(c).includes(q);
 c.style.display=match?"":"none";
 if(match)n++;
 });
-countEl.textContent=n;
+// re-queried, not cached: the stat line is rebuilt when the language changes
+const cEl=document.getElementById("count");
+if(cEl)cEl.textContent=n;
 empty.classList.toggle("show",n===0);
 }
 
