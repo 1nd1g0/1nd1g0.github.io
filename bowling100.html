@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Bowling 100</title>
-<meta name="version" content="2026.11.09.47">
+<meta name="version" content="2026.11.24.1">
 <meta name="description" content="Bowling 100: 3D bowling with step-by-step controls (place, aim, flick), live lane projection, hook physics, ten-frame scoring, 10-pin and wide-lane 100-pin modes.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -58,9 +58,6 @@ background:#19b45e;color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.6)}
 #sbtn,#helpbtn,#optbtn{font:700 clamp(11px,1.8vw,14px)/1 Arial;padding:10px 16px;border-radius:99px;border:1px solid #468;
 background:#123;color:#cfe;cursor:pointer}
 #scr .row{display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap}
-#dbgbtn{position:fixed;left:8px;bottom:8px;display:none;z-index:7;
-font:700 clamp(10px,1.6vw,13px)/1 Arial;padding:10px 14px;border-radius:99px;
-border:1px solid #4df;color:#4df;background:rgba(0,10,20,.75);cursor:pointer}
 #skipbtn{position:fixed;right:8px;bottom:8px;display:none;z-index:8;
 font:700 clamp(12px,2vw,16px)/1 Arial;padding:12px 20px;border-radius:99px;
 border:none;background:#19b45e;color:#fff;cursor:pointer}
@@ -99,27 +96,6 @@ border:1px solid #468;background:#123;color:#cfe}
 #opts .close{margin-top:16px;font:700 13px/1 Arial;padding:10px 18px;border-radius:99px;
 border:none;background:#19b45e;color:#fff;cursor:pointer;
 position:sticky;bottom:0}
-#dbar{position:fixed;left:50%;bottom:0;transform:translateX(-50%);display:none;z-index:9;
-align-items:center;gap:6px;padding:8px 10px;background:rgba(4,6,14,.85);
-border:1px solid rgba(77,221,255,.4);border-radius:10px 10px 0 0;color:#cfe}
-#dbar button{font:700 13px/1 Arial;padding:8px 11px;border-radius:8px;border:1px solid #468;
-background:#123;color:#cfe;cursor:pointer}
-#dbar button.on{background:#246;border-color:#4df}
-#dscrub{width:min(38vw,320px);accent-color:#4df}
-#dtxt{font:11px/1.5 monospace;white-space:pre;color:#9fe;min-width:230px}
-/* phones (portrait and landscape) cannot fit the bar as one row: the 230px
- readout and the fixed 38vw scrub overflowed both edges and the bar grew
- taller than the view. Below 760px the readout becomes a full-width header
- line above the controls, the scrub flexes instead of forcing width, and the
- buttons shrink - the bar wraps inside left/right 4px on any phone. */
-@media(max-width:760px),(max-height:420px){
-#dbar{left:4px;right:4px;transform:none;flex-wrap:wrap;justify-content:center;
-gap:4px;padding:5px 6px;max-width:calc(100vw - 8px)}
-#dscrub{flex:1 1 140px;width:auto;min-width:0}
-#dtxt{order:-1;flex:1 0 100%;width:auto;min-width:0;text-align:center;
-font-size:10px;line-height:1.35}
-#dbar button{font-size:11px;padding:7px 9px}
-}
 </style>
 </head>
 <body>
@@ -127,84 +103,569 @@ font-size:10px;line-height:1.35}
 <div id="hud"><div id="status"></div><div id="sheet"></div><div id="info"></div></div>
 <div id="msg"></div>
 <button id="btn"></button>
-<div id="end"><h1 id="endT"></h1><p id="endP"></p><div class="row"><button id="again">PLAY AGAIN</button><a class="home" href="https://1nd1g0.github.io/">HOME</a></div></div>
+<div id="end"><h1 id="endT"></h1><p id="endP"></p><div class="row"><button id="again" data-t="playAgain">PLAY AGAIN</button><a class="home" href="https://1nd1g0.github.io/"><span data-t="home">HOME</span></a></div></div>
 <div id="scr">
 <h1>BOWLING 100</h1>
-<p>THREE-STEP THROW: DRAG TO PLACE THE BALL &#8226; DRAG TO AIM &#8226; FLICK UP TO THROW: TRAVEL + SPEED = POWER, LEAN = HOOK</p>
-<div id="modes"><button id="m10">10 PINS</button><button id="m100">100 PINS &#8226; WIDE LANE</button></div>
-<button id="play">PLAY</button>
-<div class="row"><button id="sbtn">SOUND: ON</button><button id="helpbtn">HOW TO PLAY</button><button id="optbtn" title="graphics quality: profiles, automatic, or manual">GRAPHICS</button><a class="home" href="https://1nd1g0.github.io/">HOME</a></div>
+<p data-t="tagline">THREE-STEP THROW: DRAG TO PLACE THE BALL &#8226; DRAG TO AIM &#8226; FLICK UP TO THROW: TRAVEL + SPEED = POWER, LEAN = HOOK</p>
+<div id="modes"><button id="m10" data-t="m10">10 PINS</button><button id="m100" data-t="m100">100 PINS &#8222; WIDE LANE</button></div>
+<button id="play" data-t="play">PLAY</button>
+<div class="row"><button id="sbtn"><span id="sbtnTxt">SOUND: ON</span></button><button id="helpbtn" data-t="howToPlay">HOW TO PLAY</button><button id="optbtn" data-t="graphics" data-tip="graphicsTip">GRAPHICS</button><a class="home" href="https://1nd1g0.github.io/"><span data-t="home">HOME</span></a></div>
 </div>
 <div id="help"><div class="card">
-<h2>HOW TO PLAY</h2>
-<h3>CONTROLS &#8212; TOUCH / MOUSE</h3>
-<p><b>1. PLACE:</b> drag left / right to set where the ball starts, then tap to lock.
+<h2 data-t="howToPlay">HOW TO PLAY</h2>
+<h3 data-t="kTouch">CONTROLS &#8212; TOUCH / MOUSE</h3>
+<p id="ctrlPara"><b>1. PLACE:</b> drag left / right to set where the ball starts, then tap to lock.
 <b>2. AIM:</b> drag to set the shot angle, tap to lock.
 <b>3. THROW:</b> flick UP toward the pins &#8212; the flick's travel and speed set the power,
 and leaning left / right as you release puts hook on the ball.</p>
-<h3>CONTROLS &#8212; KEYBOARD</h3>
-<p>&#8592;&#8594; (or A / D) steps the ball through PLACE &#8594; AIM &#8594; THROW, ENTER or SPACE locks a step.
+<h3 data-t="kKbd">CONTROLS &#8212; KEYBOARD</h3>
+<p id="kbdPara">&#8592;&#8594; (or A / D) steps the ball through PLACE &#8594; AIM &#8594; THROW, ENTER or SPACE locks a step.
 On the throw step, <b>hold SPACE</b> to charge power (a longer hold is a harder hit) and release to throw;
 &#8592;&#8594; while holding adds spin. Tab reaches the on-screen buttons, Space or Enter presses them.</p>
-<h3>THE RULES &#8212; CLASSIC 10-PIN</h3>
-<p>Ten frames; each frame gets up to two balls, three in the 10th if your first two go well.
+<h3 data-t="rulesTitle">THE RULES &#8212; CLASSIC 10-PIN</h3>
+<p id="rulesPara">Ten frames; each frame gets up to two balls, three in the 10th if your first two go well.
 Clear all ten with the first ball = <b>STRIKE</b>: it scores 10 plus a bonus of whatever your next two balls knock down.
 Clear the rest with the second ball = <b>SPARE</b>: 10 plus the next ball as bonus.
 Pins left standing after two balls count as themselves. A gutter ball scores nothing and the pins are swept clear between balls.
 Highest total after ten frames wins; 300 is the perfect game.</p>
-<p>100-pin mode spreads a full ten-row rack across a wide lane for chaos; the score sheet stays on the classic 10-pin scale.</p>
-<button id="helpx" class="close">GOT IT</button>
+<p data-t="modeNote">100-pin mode spreads a full ten-row rack across a wide lane for chaos; the score sheet stays on the classic 10-pin scale.</p>
+<button id="helpx" class="close" data-t="gotIt">GOT IT</button>
 </div></div>
 <div id="opts"><div class="card">
-<h2>GRAPHICS</h2>
+<h2 data-t="graphics">GRAPHICS</h2>
 <p><span id="olive"></span></p>
-<h3>PROFILE</h3>
+<h3 data-t="profile">PROFILE</h3>
 <div id="oprof">
-<button data-p="auto">AUTO</button>
-<button data-p="best">BEST</button>
-<button data-p="high">HIGH</button>
-<button data-p="medium">MEDIUM</button>
-<button data-p="low">LOW</button>
-<button data-p="custom">CUSTOM</button>
+<button data-p="auto" data-t="gAuto">AUTO</button>
+<button data-p="best" data-t="gBest">BEST</button>
+<button data-p="high" data-t="gHigh">HIGH</button>
+<button data-p="medium" data-t="gMedium">MEDIUM</button>
+<button data-p="low" data-t="gLow">LOW</button>
+<button data-p="custom" data-t="gCustom">CUSTOM</button>
 </div>
-<p class="sm">AUTO lowers quality only while the game stays under ~40 fps for several seconds, and restores it as soon as frames are fast again &mdash; the line above always says what it picked. Every other profile is FIXED: nothing changes by itself.</p>
-<h3>RESOLUTION</h3>
+<p class="sm" data-t="autoNote">AUTO lowers quality only while the game stays under ~40 fps for several seconds, and restores it as soon as frames are fast again &mdash; the line above always says what it picked. Every other profile is FIXED: nothing changes by itself.</p>
+<h3 data-t="resolution">RESOLUTION</h3>
 <select id="orsel">
-<option value="1">FULL &mdash; native pixels (100%)</option>
-<option value="0.9">HIGH &mdash; 90%</option>
-<option value="0.8">MEDIUM &mdash; 80%</option>
-<option value="0.7">LOW &mdash; 70%</option>
-<option value="0.6">SLOW &mdash; 60%</option>
-<option value="0.5">MINIMUM &mdash; 50% (fastest)</option>
+<option value="1" data-t="rsFull">FULL &mdash; native pixels (100%)</option>
+<option value="0.9" data-t="rsHigh">HIGH &mdash; 90%</option>
+<option value="0.8" data-t="rsMed">MEDIUM &mdash; 80%</option>
+<option value="0.7" data-t="rsLow">LOW &mdash; 70%</option>
+<option value="0.6" data-t="rsSlow">SLOW &mdash; 60%</option>
+<option value="0.5" data-t="rsMin">MINIMUM &mdash; 50% (fastest)</option>
 </select>
-<h3>SHADOWS</h3>
+<h3 data-t="shadows">SHADOWS</h3>
 <select id="oshqsel">
-<option value="0">ALL SIX LAMPS &mdash; full projected shadows</option>
-<option value="1">FOUL + MID + RACK LAMPS</option>
-<option value="2">SINGLE MAIN LAMP</option>
-<option value="3">LOW-RES PROJECTION (blurred)</option>
-<option value="4">CONTACT SHADOWS ONLY</option>
-<option value="5">NONE</option>
+<option value="0" data-t="shAll">ALL SIX LAMPS &mdash; full projected shadows</option>
+<option value="1" data-t="shThree">FOUL + MID + RACK LAMPS</option>
+<option value="2" data-t="shOne">SINGLE MAIN LAMP</option>
+<option value="3" data-t="shLowres">LOW-RES PROJECTION (blurred)</option>
+<option value="4" data-t="shContact">CONTACT SHADOWS ONLY</option>
+<option value="5" data-t="shNone">NONE</option>
 </select>
-<p class="sm">The menus are editable only in CUSTOM. A profile sets them for you (shown selected, locked); changing a menu switches to CUSTOM, so what you see is always what is used.</p>
-<button id="optsx" class="close">DONE</button>
+<p class="sm" data-t="gfxNote">The menus are editable only in CUSTOM. A profile sets them for you (shown selected, locked); changing a menu switches to CUSTOM, so what you see is always what is used.</p>
+<button id="optsx" class="close" data-t="done">DONE</button>
 </div></div>
-<button id="dbgbtn" title="step through the last throw one physics frame at a time">REPLAY</button>
-<button id="skipbtn">SKIP</button>
-<div id="dbar">
-<button id="dbb" title="back one frame (, / Left)">◀ 1</button>
-<button id="dbp" title="play/pause (Space)">▶</button>
-<button id="dbf" title="forward one frame (. / Right)">1 ▶</button>
-<input id="dscrub" type="range" min="0" max="0" value="0">
-<span id="dtxt"></span>
-<button id="dbc" title="copy this throw's full initial state to clipboard">COPY THROW</button>
-<button id="dbo">EXIT (V)</button>
-</div>
+<button id="skipbtn" data-t="skip">SKIP</button>
+<!-- inlined i18n.js — the source of truth is i18n.js: edit that file and re-inline this block -->
+<script>
+/* ============================================================================
+   i18n.js — shared language kit for every page of this site.
+   Language code decision tree (identical everywhere, in this order):
+     0. any technical problem with this kit -> English
+     1. URL ?language=xx      (a region suffix is fine: pt-BR, zh-CN)
+     2. localStorage['tll:lang']
+     3. the browser's language list (navigator.languages, then navigator.language)
+     4. English
+   A code outside CODES is dropped, not trusted, so the next level decides. Only
+   the picker button writes storage, so a ?language= link never overwrites the
+   visitor's saved choice.
+
+   Page usage
+     <script src="i18n.js"><\/script>            BEFORE the game script
+     <script>TLI18N.add({en:{k:"Text"},es:{...},pt:{...},ru:{...},zh:{...}})<\/script>
+     markup:  <b data-t="score">SCORE</b>  <button data-tip="help">?</button>
+              <input data-ph="name">  <i data-aria="pause">  <img data-alt="car">
+     js:      el.textContent=TLI18N.t("gameOver");
+              el.innerHTML="<b>"+TLI18N.t("best")+": "+n+"</b>";
+              ctx.fillText(TLI18N.t("paused"),x,y);
+     canvas / innerHTML redraws: TLI18N.onChange(()=>redrawAll());
+     pick a host for the language button: TLI18N.mount("#startPanel")
+       (omit it and the kit parks a pill in the lower-left corner)
+   Keys missing from a non-English table fall back to English, so a half
+   translated table still runs. Values for *Fmt keys carry {placeholders}.
+   ========================================================================= */
+(function(){
+"use strict";
+var KEY="tll:lang", CODES=["en","es","pt","ru","zh"];
+var LANGS=[ // code · name in its own language · that word for "language" · its flag
+ ['en','English','Language','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0,0 60,40M60,0 0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 60,40M60,0 0,40" stroke="#C8102E" stroke-width="3.2"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="13"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="8"/></svg>'],
+ ['es','Español','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#AA151B"/><path d="M0,10H60M0,30H60" stroke="#F1BF00" stroke-width="20"/>  </svg>'],
+ ['pt','Português','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="40" fill="#046A38"/><rect x="24" width="36" height="40" fill="#DA291C"/><circle cx="24" cy="20" r="7.5" fill="#FEDF00" stroke="#046A38" stroke-width="1.4"/><path d="M24,14.5 24,22.5M20.5,17.5H27.5" stroke="#DA291C" stroke-width="2.2" fill="none"/></svg>'],
+ ['ru','Русский','Язык','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.34" width="60" height="13.33" fill="#0039A6"/><rect y="26.67" width="60" height="13.33" fill="#D52B1E"/></svg>'],
+ ['zh','中文','语言','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#EE1C25"/><circle cx="10" cy="10" r="5.6" fill="#FFDC00"/><circle cx="21" cy="6" r="2.1" fill="#FFDC00"/><circle cx="26" cy="11.5" r="2.1" fill="#FFDC00"/><circle cx="26" cy="18.5" r="2.1" fill="#FFDC00"/><circle cx="21" cy="24" r="2.1" fill="#FFDC00"/></svg>']
+];
+/* ---- shared vocabulary: the same word means the same thing in every game.
+       Values carry no glyphs — pages keep their ⌂ ▶ ■ icons in the markup. ---- */
+var COMMON={
+en:{
+ paused:"PAUSED",pause:"PAUSE",resume:"RESUME",start:"START",play:"PLAY",home:"HOME",menu:"MENU",
+ options:"OPTIONS",settings:"SETTINGS",help:"HELP",howToPlay:"HOW TO PLAY",rules:"RULES",controls:"CONTROLS",
+ keys:"KEYS",gamepad:"GAMEPAD",mouse:"MOUSE",touch:"TOUCH",
+ sound:"SOUND",music:"MUSIC",sfx:"SOUND FX",on:"ON",off:"OFF",fullscreen:"FULLSCREEN",exitFullscreen:"EXIT FULLSCREEN",
+ difficulty:"DIFFICULTY",easy:"EASY",normal:"NORMAL",hard:"HARD",low:"LOW",high:"HIGH",
+ score:"SCORE",best:"BEST",hiScore:"HIGH SCORE",level:"LEVEL",lives:"LIVES",time:"TIME",
+ speed:"SPEED",round:"ROUND",wave:"WAVE",seed:"SEED",newSeed:"NEW SEED",
+ restart:"RESTART",retry:"RETRY",continue:"CONTINUE",tryAgain:"TRY AGAIN",nextLevel:"NEXT LEVEL",
+ gameOver:"GAME OVER",youWin:"YOU WIN",youLose:"GAME OVER",clear:"CLEARED",
+ fire:"FIRE",jump:"JUMP",back:"BACK",exit:"EXIT",close:"CLOSE",ok:"OK",cancel:"CANCEL",
+ loading:"LOADING",shots:"SHOTS",moves:"MOVES",power:"POWER",angle:"ANGLE",
+ langTitle:"LANGUAGE",langNote:"Choose your language — it is remembered, and it applies to this game and to the whole catalogue.",
+ langBack:"CHANGE LANGUAGE",players:"PLAYERS",player:"PLAYER",you:"YOU",cpu:"CPU",random:"RANDOM"},
+es:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INICIO",play:"JUGAR",home:"INICIO",menu:"MENÚ",
+ options:"OPCIONES",settings:"AJUSTES",help:"AYUDA",howToPlay:"CÓMO JUGAR",rules:"REGLAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"MANDO",mouse:"RATÓN",touch:"TÁCTIL",
+ sound:"SONIDO",music:"MÚSICA",sfx:"EFECTOS",on:"ACTIVO",off:"APAGADO",fullscreen:"PANTALLA COMPLETA",exitFullscreen:"SALIR DE PANTALLA COMPLETA",
+ difficulty:"DIFICULTAD",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAJO",high:"ALTO",
+ score:"PUNTOS",best:"RÉCORD",hiScore:"RÉCORD",level:"NIVEL",lives:"VIDAS",time:"TIEMPO",
+ speed:"VELOCIDAD",round:"RONDA",wave:"OLEADA",seed:"SEMILLA",newSeed:"NUEVA SEMILLA",
+ restart:"REINICIAR",retry:"REINTENTAR",continue:"CONTINUAR",tryAgain:"INTÉNTALO OTRA VEZ",nextLevel:"SIGUIENTE NIVEL",
+ gameOver:"FIN DEL JUEGO",youWin:"¡GANASTE!",youLose:"FIN DEL JUEGO",clear:"SUPERADO",
+ fire:"DISPARO",jump:"SALTAR",back:"ATRÁS",exit:"SALIR",close:"CERRAR",ok:"ACEPTAR",cancel:"CANCELAR",
+ loading:"CARGANDO",shots:"LANZAMIENTOS",moves:"MOVIMIENTOS",power:"FUERZA",angle:"ÁNGULO",
+ langTitle:"IDIOMA",langNote:"Elige tu idioma: se recuerda y se aplica a este juego y a todo el catálogo.",
+ langBack:"CAMBIAR IDIOMA",players:"JUGADORES",player:"JUGADOR",you:"TÚ",cpu:"CPU",random:"ALEATORIO"},
+pt:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INÍCIO",play:"JOGAR",home:"INÍCIO",menu:"MENU",
+ options:"OPÇÕES",settings:"CONFIGURAÇÕES",help:"AJUDA",howToPlay:"COMO JOGAR",rules:"REGRAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"CONTROLE",mouse:"MOUSE",touch:"TOQUE",
+ sound:"SOM",music:"MÚSICA",sfx:"EFEITOS",on:"LIGADO",off:"DESLIGADO",fullscreen:"TELA CHEIA",exitFullscreen:"SAIR DA TELA CHEIA",
+ difficulty:"DIFICULDADE",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAIXO",high:"ALTO",
+ score:"PONTOS",best:"RECORDE",hiScore:"RECORDE",level:"NÍVEL",lives:"VIDAS",time:"TEMPO",
+ speed:"VELOCIDADE",round:"RODADA",wave:"ONDA",seed:"SEMENTE",newSeed:"NOVA SEMENTE",
+ restart:"REINICIAR",retry:"TENTAR DE NOVO",continue:"CONTINUAR",tryAgain:"TENTE DE NOVO",nextLevel:"PRÓXIMO NÍVEL",
+ gameOver:"FIM DE JOGO",youWin:"VOCÊ VENCEU",youLose:"FIM DE JOGO",clear:"COMPLETO",
+ fire:"DISPARO",jump:"SALTAR",back:"VOLTAR",exit:"SAIR",close:"FECHAR",ok:"OK",cancel:"CANCELAR",
+ loading:"CARREGANDO",shots:"BATIDAS",moves:"JOGADAS",power:"FORÇA",angle:"ÂNGULO",
+ langTitle:"IDIOMA",langNote:"Escolha seu idioma: ele é lembrado e vale para este jogo e para todo o catálogo.",
+ langBack:"MUDAR IDIOMA",players:"JOGADORES",player:"JOGADOR",you:"VOCÊ",cpu:"CPU",random:"ALEATÓRIO"},
+ru:{
+ paused:"ПАУЗА",pause:"ПАУЗА",resume:"ПРОДОЛЖИТЬ",start:"СТАРТ",play:"ИГРАТЬ",home:"ДОМОЙ",menu:"МЕНЮ",
+ options:"НАСТРОЙКИ",settings:"НАСТРОЙКИ",help:"ПОМОЩЬ",howToPlay:"КАК ИГРАТЬ",rules:"ПРАВИЛА",controls:"УПРАВЛЕНИЕ",
+ keys:"КЛАВИШИ",gamepad:"ГЕЙМПАД",mouse:"МЫШЬ",touch:"СЕНСОР",
+ sound:"ЗВУК",music:"МУЗЫКА",sfx:"ЗВУКИ",on:"ВКЛ",off:"ВЫКЛ",fullscreen:"НА ВЕСЬ ЭКРАН",exitFullscreen:"ВЫЙТИ С ЭКРАНА",
+ difficulty:"СЛОЖНОСТЬ",easy:"ЛЕГКО",normal:"НОРМА",hard:"СЛОЖНО",low:"НИЗ",high:"ВЕРХ",
+ score:"СЧЁТ",best:"РЕКОРД",hiScore:"РЕКОРД",level:"УРОВЕНЬ",lives:"ЖИЗНИ",time:"ВРЕМЯ",
+ speed:"СКОРОСТЬ",round:"РАУНД",wave:"ВОЛНА",seed:"КОД УРОВНЯ",newSeed:"НОВЫЙ КОД",
+ restart:"ЗАНОВО",retry:"ЕЩЁ РАЗ",continue:"ПРОДОЛЖИТЬ",tryAgain:"ПОПРОБУЙ ЕЩЁ",nextLevel:"СЛЕДУЮЩИЙ УРОВЕНЬ",
+ gameOver:"КОНЕЦ",youWin:"ПОБЕДА",youLose:"КОНЕЦ",clear:"УРОВЕНЬ ПРОЙДЕН",
+ fire:"ОГОНЬ",jump:"ПРЫЖОК",back:"НАЗАД",exit:"ВЫХОД",close:"ЗАКРЫТЬ",ok:"ОК",cancel:"ОТМЕНА",
+ loading:"ЗАГРУЗКА",shots:"УДАРЫ",moves:"ХОДЫ",power:"СИЛА",angle:"УГОЛ",
+ langTitle:"ЯЗЫК",langNote:"Выберите язык — он запоминается и действует для этой игры и для всего каталога.",
+ langBack:"СМЕНИТЬ ЯЗЫК",players:"ИГРОКИ",player:"ИГРОК",you:"ВЫ",cpu:"БОТ",random:"СЛУЧАЙНО"},
+zh:{
+ paused:"暂停",pause:"暂停",resume:"继续",start:"开始",play:"开始游戏",home:"主页",menu:"菜单",
+ options:"选项",settings:"设置",help:"帮助",howToPlay:"怎么玩",rules:"规则",controls:"操作",
+ keys:"按键",gamepad:"手柄",mouse:"鼠标",touch:"触摸",
+ sound:"声音",music:"音乐",sfx:"音效",on:"开",off:"关",fullscreen:"全屏",exitFullscreen:"退出全屏",
+ difficulty:"难度",easy:"简单",normal:"普通",hard:"困难",low:"低",high:"高",
+ score:"得分",best:"最高分",hiScore:"最高分",level:"关卡",lives:"生命",time:"时间",
+ speed:"速度",round:"回合",wave:"波次",seed:"种子",newSeed:"新种子",
+ restart:"重新开始",retry:"重试",continue:"继续",tryAgain:"再试一次",nextLevel:"下一关",
+ gameOver:"游戏结束",youWin:"胜利",youLose:"游戏结束",clear:"过关",
+ fire:"射击",jump:"跳跃",back:"返回",exit:"退出",close:"关闭",ok:"确定",cancel:"取消",
+ loading:"加载中",shots:"击球",moves:"步数",power:"力量",angle:"角度",
+ langTitle:"语言",langNote:"选择语言：会被记住，并用于这个游戏和整个游戏目录。",
+ langBack:"更换语言",players:"玩家",player:"玩家",you:"你",cpu:"电脑",random:"随机"}
+};
+var PAGE={en:{},es:{},pt:{},ru:{},zh:{}};
+function lget(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+function lset(v){try{localStorage.setItem(KEY,v)}catch(e){}}
+var code=null;
+/* A browser language list -> a supported code, or null when it says nothing
+   usable. "pt-BR", "ru_RU", "zh-CN" all match on their 2-letter base. */
+function fromBrowser(){
+ try{
+  var list=null;
+  if(navigator&&Array.isArray(navigator.languages)&&navigator.languages.length)list=navigator.languages;
+  else if(navigator)list=[navigator.language||navigator.userLanguage||""];
+  for(var i=0;i<(list||[]).length;i++){
+   var c=String(list[i]||"").toLowerCase().slice(0,2);
+   if(CODES.indexOf(c)>=0)return c;
+  }
+ }catch(e){}
+ return null;
+}
+(function(){
+ try{
+  var c=null,m=/[?&]language=([a-zA-Z]{2,3})/.exec(location.search||"");
+  if(m)c=m[1].toLowerCase().slice(0,2);           // ?language=pt-BR counts as pt
+  if(c&&CODES.indexOf(c)<0)c=null;
+  if(!c){var s=(lget()||"").toLowerCase().slice(0,2);if(CODES.indexOf(s)>=0)c=s;}
+  if(!c)c=fromBrowser();
+  code=c||"en";
+ }catch(e){code="en";} // a broken lookup speaks English, never nothing
+})();
+function raw(k){
+ var t=PAGE[code]?PAGE[code][k]:null; if(t!=null)return t;
+ t=COMMON[code]?COMMON[code][k]:null; if(t!=null)return t;
+ t=PAGE.en[k]; if(t!=null)return t;
+ t=COMMON.en[k]; return t==null?null:t;
+}
+var hooks=[];
+var API={
+ version:"2026.11.22.2", codes:CODES.slice(), langs:LANGS,
+ lang:function(){return code},
+ browserLang:function(){return fromBrowser()},
+ t:function(k,v){var s;try{s=raw(k)}catch(e){code="en";try{s=raw(k)}catch(e2){s=null}}
+  if(s==null)s=k;var o=v||{};for(var p in o)s=s.split("{"+p+"}").join(String(o[p]));return s},
+ flag:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][3];return ""},
+ name:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][2];return c},
+ add:function(tab){for(var c in tab){if(!PAGE[c])continue;for(var k in tab[c])PAGE[c][k]=tab[c][k];}
+  try{API.apply()}catch(e){}},
+ /* read the tables (the developer harness edits texts through these) */
+ keys:function(c){var out=[],seen={};try{var src=[PAGE[c],COMMON[c],PAGE.en,COMMON.en];
+  for(var i=0;i<src.length;i++)for(var k in src[i])if(!seen[k]){seen[k]=1;out.push(k)}out.sort();}catch(e){}
+  return out},
+ table:function(){var o={};try{for(var i=0;i<CODES.length;i++){var c=CODES[i],m={},s=[COMMON[c],PAGE[c],COMMON.en,PAGE.en];
+  for(var j=0;j<s.length;j++)for(var k in s[j])if(m[k]==null&&s[j][k]!=null)m[k]=s[j][k];o[c]=m;}}catch(e){}
+  return o},
+ setKey:function(c,k,v){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;
+  try{(PAGE[c]=PAGE[c]||{})[k]=String(v);}catch(e){return;}
+  try{API.apply()}catch(e){}
+  for(var i=0;i<hooks.length;i++)try{hooks[i](code)}catch(e){}},
+ onChange:function(f){hooks.push(f)},
+ set:function(c){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;code=c;lset(c);
+  try{API.apply()}catch(e){}for(var i=0;i<hooks.length;i++)try{hooks[i](c)}catch(e){}},
+ apply:function(root){
+  if(document.documentElement)document.documentElement.lang=code;
+  var r=root||document;
+  var set=function(e,attr,put){var v=raw(e.getAttribute(attr));if(v!=null)put(e,v);};
+  var all=[];
+  if(r.nodeType===1)all.push(r);
+  if(r.querySelectorAll)all=all.concat([].slice.call(r.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]")));
+  for(var i=0;i<all.length;i++){var e=all[i];
+   try{
+    if(e.hasAttribute("data-t"))set(e,"data-t",function(n,v){n.textContent=v});
+    if(e.hasAttribute("data-ph"))set(e,"data-ph",function(n,v){n.placeholder=v});
+    if(e.hasAttribute("data-tip"))set(e,"data-tip",function(n,v){n.title=v});
+    if(e.hasAttribute("data-aria"))set(e,"data-aria",function(n,v){n.setAttribute("aria-label",v)});
+    if(e.hasAttribute("data-alt"))set(e,"data-alt",function(n,v){n.alt=v});
+   }catch(e2){} // one odd node never aborts the pass
+  }
+  if(pill){try{pill.innerHTML=API.flag(code)+"<span>"+API.name(code)+"</span>";pill.title=API.t("langTitle");}catch(e){}}
+ },
+ mount:function(sel){hostSel=sel;ensurePill();},
+};
+/* ---------------- language button + picker overlay ---------------- */
+var hostSel=null,pill=null,ov=null;
+var CSS=".tlbtn{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(20,24,22,.72);flex:0 0 auto;align-self:center;"
+ +"border:1px solid #3a463f;border-radius:6px;color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:1px;"
+ +"cursor:pointer;line-height:1;width:auto;max-width:100%}.tlbtn:hover,.tlbtn:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}"
+ +".tlbtn svg{width:22px;height:15px;border:1px solid #2e3a34;border-radius:2px;display:block}"
+ +".tlfix{position:fixed;left:12px;bottom:12px;z-index:2147483000}"
+ +".tlov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;"
+ +"background:rgba(4,7,6,.86);padding:16px}.tlov[hidden]{display:none}"
+ +".tlpanel{max-width:660px;width:100%;background:#141816;border:1px solid #3a463f;border-radius:12px;"
+ +"padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.6);color:#c9d2cb;font:inherit;text-align:center}"
+ +".tlpanel h2{margin:0 0 6px;font-size:20px;letter-spacing:4px;color:#ffd76a}"
+ +".tlpanel p{margin:0 0 16px;font-size:12px;line-height:1.6;color:#8a948e}"
+ +".tlgrid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}"
+ +".tlb{width:132px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;"
+ +"background:rgba(20,24,22,.7);border:1px solid #3a463f;border-radius:8px;cursor:pointer;color:#c9d2cb;font:inherit}"
+ +".tlb:hover,.tlb:focus{border-color:#ffd76a;color:#f4e9c8;outline:none;box-shadow:0 0 14px rgba(255,215,106,.18)}"
+ +".tlb svg{width:50px;height:34px;border:1px solid #2e3a34;border-radius:4px;display:block}"
+ +".tlb b{font-size:13px;color:#f4e9c8}.tlb span{font-size:10px;letter-spacing:1px;color:#8a948e}"
+ +".tlx{margin-top:16px;padding:7px 20px;background:none;border:1px solid #3a463f;border-radius:6px;"
+ +"color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:2px;cursor:pointer}"
+ +".tlx:hover,.tlx:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}";
+function style(){if(document.getElementById("tlcss"))return;var s=document.createElement("style");s.id="tlcss";s.textContent=CSS;document.head.appendChild(s);}
+function ensurePill(){
+ if(pill)return;
+ var host=hostSel?document.querySelector(hostSel):null;
+ if(!host&&document.readyState==="loading")return; // retried at DOMContentLoaded
+ style();
+ pill=document.createElement("button");
+ pill.type="button";pill.className="tlbtn";pill.setAttribute("aria-haspopup","dialog");
+ if(!host){pill.className="tlbtn tlfix";document.body.appendChild(pill);}
+ else host.insertBefore(pill,host.firstChild);
+ pill.onclick=openOv;
+ API.apply();
+}
+function openOv(){
+ if(!ov){
+  ov=document.createElement("div");ov.className="tlov";ov.hidden=true;
+  var p=document.createElement("div");p.className="tlpanel";
+  var h=document.createElement("h2");h.setAttribute("data-t","langTitle");p.appendChild(h);
+  var np=document.createElement("p");np.setAttribute("data-t","langNote");p.appendChild(np);
+  var g=document.createElement("div");g.className="tlgrid";
+  for(var i=0;i<LANGS.length;i++){
+   var b=document.createElement("button");b.type="button";b.className="tlb";b.dataset.lang=LANGS[i][0];
+   b.innerHTML=LANGS[i][3]+"<b>"+LANGS[i][1]+"</b><span>"+LANGS[i][2]+"</span>";g.appendChild(b);
+  }
+  p.appendChild(g);
+  var x=document.createElement("button");x.type="button";x.className="tlx";x.setAttribute("data-t","close");p.appendChild(x);
+  ov.appendChild(p);document.body.appendChild(ov);
+  g.onclick=function(e){var b=e.target;while(b&&b!==g&&!b.dataset.lang)b=b.parentNode;if(b&&b.dataset.lang){API.set(b.dataset.lang);closeOv();}};
+  x.onclick=closeOv;
+  ov.onclick=function(e){if(e.target===ov)closeOv();};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ov&&!ov.hidden)closeOv();});
+ }
+ API.apply(ov);
+ ov.hidden=false;
+}
+function closeOv(){if(ov)ov.hidden=true;}
+function boot(){
+ try{ensurePill();API.apply();}
+ catch(e){code="en";try{ensurePill();API.apply();}catch(e2){}} // rule 0: English on any kit fault
+}
+/* keep freshly added nodes translated without the page calling apply() */
+new MutationObserver(function(ms){
+ if(!pill)return;
+ try{
+  for(var i=0;i<ms.length;i++){var n=ms[i].addedNodes;
+   for(var j=0;j<n.length;j++){var e=n[j];
+    if(e.nodeType!==1)continue;
+    if(e.matches&&e.matches("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]"))API.apply(e);
+    else if(e.querySelectorAll&&e.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]").length)API.apply(e);
+   }}
+ }catch(e){}
+}).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+window.TLI18N=API;
+})();
+</script>
+<script>
+/* If i18n.js is missing or only half-loaded, the game still runs: this stub
+   keeps the same API, pins English, and serves the en table this page registers
+   below via add(). */
+if(!window.TLI18N||typeof window.TLI18N.add!=="function"||typeof window.TLI18N.t!=="function"||typeof window.TLI18N.apply!=="function"||typeof window.TLI18N.mount!=="function"){(function(){var T={en:{}};window.TLI18N={version:"en-fallback",codes:["en"],langs:[["en","EN","English",""]],
+add:function(tab){for(var c in tab){T[c]=Object.assign(T[c]||{},tab[c]);}},
+t:function(k,v){var s=(T.en&&T.en[k]!=null)?T.en[k]:k,o=v||{};for(var p in o)s=String(s).split("{"+p+"}").join(String(o[p]));return s},
+flag:function(){return "";},name:function(c){return c;},lang:function(){return "en";},
+set:function(){},onChange:function(){},apply:function(){},mount:function(){}};})();}
+</script>
+<script>
+TLI18N.add({
+en:{
+ // --- title screen
+ playAgain:"PLAY AGAIN",
+ tagline:"THREE-STEP THROW: DRAG TO PLACE THE BALL • DRAG TO AIM • FLICK UP TO THROW: TRAVEL + SPEED = POWER, LEAN = HOOK",
+ m10:"10 PINS", m100:"100 PINS • WIDE LANE",
+ graphics:"GRAPHICS", graphicsTip:"graphics quality: profiles, automatic, or manual",
+ gotIt:"GOT IT", done:"DONE",
+ skip:"SKIP",
+ replayHint:"REPLAY • SKIP TO PLAY THE NEXT BALL",
+ // --- graphics menu
+ profile:"PROFILE", gAuto:"AUTO", gBest:"BEST", gHigh:"HIGH", gMedium:"MEDIUM", gLow:"LOW", gCustom:"CUSTOM",
+ autoNote:"AUTO lowers quality only while the game stays under ~40 fps for several seconds, and restores it as soon as frames are fast again — the line above always says what it picked. Every other profile is FIXED: nothing changes by itself.",
+ resolution:"RESOLUTION",
+ rsFull:"FULL — native pixels (100%)", rsHigh:"HIGH — 90%", rsMed:"MEDIUM — 80%", rsLow:"LOW — 70%", rsSlow:"SLOW — 60%", rsMin:"MINIMUM — 50% (fastest)",
+ shadows:"SHADOWS",
+ shAll:"ALL SIX LAMPS — full projected shadows", shThree:"FOUL + MID + RACK LAMPS", shOne:"SINGLE MAIN LAMP",
+ shLowres:"LOW-RES PROJECTION (blurred)", shContact:"CONTACT SHADOWS ONLY", shNone:"NONE",
+ gfxNote:"The menus are editable only in CUSTOM. A profile sets them for you (shown selected, locked); changing a menu switches to CUSTOM, so what you see is always what is used.",
+ // --- how to play
+ rulesTitle:"THE RULES — CLASSIC 10-PIN",
+ kTouch:"CONTROLS — TOUCH / MOUSE", kKbd:"CONTROLS — KEYBOARD",
+ ctrlPara:"<b>1. PLACE:</b> drag left / right to set where the ball starts, then tap to lock.\n<b>2. AIM:</b> drag to set the shot angle, tap to lock.\n<b>3. THROW:</b> flick UP toward the pins — the flick's travel and speed set the power,\nand leaning left / right as you release puts hook on the ball.",
+ kbdPara:"←→ (or A / D) steps the ball through PLACE → AIM → THROW, ENTER or SPACE locks a step.\nOn the throw step, <b>hold SPACE</b> to charge power (a longer hold is a harder hit) and release to throw;\n←→ while holding adds spin. Tab reaches the on-screen buttons, Space or Enter presses them.",
+ rulesPara:"Ten frames; each frame gets up to two balls, three in the 10th if your first two go well.\nClear all ten with the first ball = <b>STRIKE</b>: it scores 10 plus a bonus of whatever your next two balls knock down.\nClear the rest with the second ball = <b>SPARE</b>: 10 plus the next ball as bonus.\nPins left standing after two balls count as themselves. A gutter ball scores nothing and the pins are swept clear between balls.\nHighest total after ten frames wins; 300 is the perfect game.",
+ modeNote:"100-pin mode spreads a full ten-row rack across a wide lane for chaos; the score sheet stays on the classic 10-pin scale.",
+ // --- HUD and toasts
+ noWebGL:"WebGL not supported",
+ statusFmt:"FRAME {f}/10 • THROW {t} • {m}", pin10:"10 PIN", pin100:"100 PIN WIDE",
+ strikeToast:"STRIKE!", spareToast:"SPARE!", gutterToast:"GUTTER BLANK", noHitToast:"NO HIT", downFmt:"{n} DOWN",
+ nextFrameBtn:"NEXT FRAME", throw2Btn:"THROW 2", throw3Btn:"THROW 3",
+ hint1:"STEP 1/3 • DRAG SIDEWAYS: place the ball • TAP or ENTER to lock",
+ hint2:"STEP 2/3 • DRAG SIDEWAYS: aim the shot • TAP or ENTER to lock",
+ hint3:"STEP 3/3 • FLICK UP: travel + speed = power • lean left / right = spin • PC: ←→ spin, hold SPACE for power",
+ step2Toast:"STEP 2: AIM THE SHOT", step3Toast:"STEP 3: FLICK TO THROW",
+ flickHint:"FLICK UP: TRAVEL + SPEED", holdHint:"HOLD SPACE LONGER = MORE POWER",
+ letsgoMsg:"LET’S BOWL",
+ // --- end screen
+ perfectGame:"PERFECT GAME!", bowlingLegend:"BOWLING LEGEND",
+ finalFmt:"FINAL SCORE {s} • STRIKES: {n} • RANK: {r}",
+ rankRookie:"ROOKIE", rankPerfect:"PERFECT SEASON", rankCyborg:"CYBORG", rankTourPro:"TOUR PRO",
+ rankPro:"PRO", rankSpectator:"SPECTATOR-SLAYER", rankHustler:"HUSTLER", rankRegular:"REGULAR",
+ // --- graphics live line
+ liveAuto:"AUTO is using right now: ", liveFixed:"FIXED settings: ",
+ liveFmt:"{w}×{h}px ({p}% scale), shadows: {s}.",
+ shq0:"all six lamps", shq1:"foul, mid & rack lamps", shq2:"single main lamp", shq3:"low-res projection", shq4:"contact shadows", shq5:"none"
+},
+es:{
+ playAgain:"VUELVE A JUGAR",
+ tagline:"LANZAMIENTO EN 3 PASOS: ARRASTRA PARA COLOCAR LA BOLA • ARRASTRA PARA APUNTAR • DESLIZA HACIA ARRIBA PARA LANZAR: RECORRIDO + VELOCIDAD = POTENCIA, INCLINAR = EFECTO",
+ m10:"10 BOLOS", m100:"100 BOLOS • PISTA ANCHA",
+ graphics:"GRÁFICOS", graphicsTip:"calidad gráfica: perfiles, automático o manual",
+ gotIt:"ENTENDIDO", done:"HECHO",
+ skip:"SALTAR",
+ replayHint:"REPETICIÓN • SALTA PARA JUGAR LA SIGUIENTE BOLA",
+ profile:"PERFIL", gAuto:"AUTO", gBest:"MEJOR", gHigh:"ALTA", gMedium:"MEDIA", gLow:"BAJA", gCustom:"PERSONALIZADO",
+ autoNote:"AUTO baja la calidad solo mientras el juego se mantiene por debajo de ~40 fps durante varios segundos, y la recupera en cuanto los cuadros vuelven a ser rápidos: la línea de arriba siempre dice qué eligió. Los demás perfiles son FIJOS: nada cambia por sí solo.",
+ resolution:"RESOLUCIÓN",
+ rsFull:"COMPLETA — píxeles nativos (100%)", rsHigh:"ALTA — 90%", rsMed:"MEDIA — 80%", rsLow:"BAJA — 70%", rsSlow:"LENTA — 60%", rsMin:"MÍNIMA — 50% (la más rápida)",
+ shadows:"SOMBRAS",
+ shAll:"LAS SEIS LÁMPARAS — sombras proyectadas completas", shThree:"LÁMPARAS DE FOUL + MEDIA + BOLERA", shOne:"UNA SOLA LÁMPARA PRINCIPAL",
+ shLowres:"PROYECCIÓN DE BAJA RESOLUCIÓN (difusa)", shContact:"SOLO SOMBRAS DE CONTACTO", shNone:"NINGUNA",
+ gfxNote:"Los menús solo se editan en PERSONALIZADO. Un perfil los define por ti (aparecen seleccionados y bloqueados); cambiar un menú pasa a PERSONALIZADO, así que lo que ves es siempre lo que se usa.",
+ rulesTitle:"LAS REGLAS — CLÁSICO DE 10 BOLOS",
+ kTouch:"CONTROLES — TÁCTIL / RATÓN", kKbd:"CONTROLES — TECLADO",
+ ctrlPara:"<b>1. COLOCAR:</b> arrastra a izquierda / derecha para decidir dónde sale la bola y toca para fijar.\n<b>2. APUNTAR:</b> arrastra para fijar el ángulo del lanzamiento y toca para fijar.\n<b>3. LANZAR:</b> desliza HACIA ARRIBA hacia los bolos — el recorrido y la velocidad del gesto ponen la potencia,\ny inclinar a izquierda / derecha al soltar le da efecto a la bola.",
+ kbdPara:"←→ (o A / D) mueven la bola por COLOCAR → APUNTAR → LANZAR, ENTER o ESPACIO fija un paso.\nEn el paso de lanzamiento, <b>mantén ESPACIO</b> para cargar la potencia (más tiempo, golpe más fuerte) y suelta para lanzar;\n←→ mientras lo mantienes añade efecto. Tab llega a los botones de la pantalla y Espacio o Enter los pulsa.",
+ rulesPara:"Diez frames; cada frame tiene hasta dos bolas, tres en el décimo si los dos primeros salen bien.\nTirar los diez con la primera bola = <b>STRIKE</b>: suma 10 más una bonificación de lo que derriben tus dos siguientes bolas.\nTirar el resto con la segunda = <b>SPARE</b>: 10 más la bola siguiente como bonificación.\nLos bolos que quedan tras dos bolas cuentan por sí mismos. Una bola al canal no suma y los bolos se barren entre bolas.\nGana el total más alto tras diez frames; 300 es el juego perfecto.",
+ modeNote:"El modo de 100 bolos reparte un rack completo de diez filas por una pista ancha para el caos; la hoja de puntuación sigue la escala clásica de 10 bolos.",
+ noWebGL:"WebGL no disponible",
+ statusFmt:"FRAME {f}/10 • LANZAMIENTO {t} • {m}", pin10:"10 BOLOS", pin100:"100 BOLOS ANCHO",
+ strikeToast:"STRIKE!", spareToast:"SPARE!", gutterToast:"CANAL: NADA", noHitToast:"SIN BOLOS", downFmt:"{n} DERIBADOS",
+ nextFrameBtn:"SIGUIENTE FRAME", throw2Btn:"LANZAMIENTO 2", throw3Btn:"LANZAMIENTO 3",
+ hint1:"PASO 1/3 • ARRASTRA EN LATERAL: coloca la bola • TOCA o ENTER para fijar",
+ hint2:"PASO 2/3 • ARRASTRA EN LATERAL: apunta el lanzamiento • TOCA o ENTER para fijar",
+ hint3:"PASO 3/3 • DESLIZA HACIA ARRIBA: recorrido + velocidad = potencia • inclinar izq / der = efecto • PC: ←→ efecto, mantén ESPACIO para potencia",
+ step2Toast:"PASO 2: APUNTA EL LANZAMIENTO", step3Toast:"PASO 3: DESLIZA PARA LANZAR",
+ flickHint:"DESLIZA ARRIBA: RECORRIDO + VELOCIDAD", holdHint:"MANTÉN ESPACIO MÁS TIEMPO = MÁS POTENCIA",
+ letsgoMsg:"¡A BOLEAR!",
+ perfectGame:"¡JUEGO PERFECTO!", bowlingLegend:"LEYENDA DE LOS BOLOS",
+ finalFmt:"PUNTUACIÓN FINAL {s} • STRIKES: {n} • RANGO: {r}",
+ rankRookie:"NOVATO", rankPerfect:"TEMPORADA PERFECTA", rankCyborg:"CIBORG", rankTourPro:"PRO DEL TOUR",
+ rankPro:"PRO", rankSpectator:"MATAPÚBLICO", rankHustler:"ESTAFADOR", rankRegular:"REGULAR",
+ liveAuto:"AUTO está usando ahora: ", liveFixed:"AJUSTES FIJOS: ",
+ liveFmt:"{w}×{h}px ({p}% escala), sombras: {s}.",
+ shq0:"las seis lámparas", shq1:"foul, media y bolera", shq2:"una sola lámpara principal", shq3:"proyección de baja resolución", shq4:"sombras de contacto", shq5:"ninguna"
+},
+pt:{
+ playAgain:"JOGAR DE NOVO",
+ tagline:"LANÇAMENTO EM 3 PASSOS: ARRASTE PARA COLOCAR A BOLA • ARRASTE PARA MIRAR • DESLIZE PARA CIMA PARA LANÇAR: TRAJETO + VELOCIDADE = POTÊNCIA, INCLINAÇÃO = CURVA",
+ m10:"10 PINOS", m100:"100 PINOS • PISTA LARGA",
+ graphics:"GRÁFICOS", graphicsTip:"qualidade gráfica: perfis, automático ou manual",
+ gotIt:"ENTENDI", done:"FEITO",
+ skip:"PULAR",
+ replayHint:"REPLAY • PULE PARA JOGAR A PRÓXIMA BOLADA",
+ profile:"PERFIL", gAuto:"AUTO", gBest:"MELHOR", gHigh:"ALTA", gMedium:"MÉDIA", gLow:"BAIXA", gCustom:"PERSONALIZADO",
+ autoNote:"AUTO só reduz a qualidade enquanto o jogo fica abaixo de ~40 fps por vários segundos, e restaura assim que os quadros voltam a ser rápidos: a linha acima sempre mostra o que foi escolhido. Todos os outros perfis são FIXOS: nada muda sozinho.",
+ resolution:"RESOLUÇÃO",
+ rsFull:"COMPLETA — pixels nativos (100%)", rsHigh:"ALTA — 90%", rsMed:"MÉDIA — 80%", rsLow:"BAIXA — 70%", rsSlow:"LENTA — 60%", rsMin:"MÍNIMA — 50% (mais rápida)",
+ shadows:"SOMBRAS",
+ shAll:"AS SEIS LÂMPADAS — sombras projetadas completas", shThree:"LÂMPADAS DE FOUL + MEIA + RACK", shOne:"UMA LÂMPADA PRINCIPAL SÓ",
+ shLowres:"PROJEÇÃO EM BAIXA RESOLUÇÃO (borrada)", shContact:"SÓ SOMBRAS DE CONTATO", shNone:"NENHUMA",
+ gfxNote:"Os menus só ficam editáveis em PERSONALIZADO. Um perfil define tudo por você (aparece selecionado e travado); mexer num menu muda para PERSONALIZADO, então o que você vê é sempre o que está sendo usado.",
+ rulesTitle:"AS REGRAS — CLÁSSICO DE 10 PINOS",
+ kTouch:"CONTROLES — TOQUE / MOUSE", kKbd:"CONTROLES — TECLADO",
+ ctrlPara:"<b>1. COLOCAR:</b> arraste para a esquerda / direita para definir onde a bola começa e toque para travar.\n<b>2. MIRAR:</b> arraste para definir o ângulo do lançamento e toque para travar.\n<b>3. LANÇAR:</b> deslize PARA CIMA na direção dos pinos — o trajeto e a velocidade do gesto definem a potência,\ne inclinar para a esquerda / direita ao soltar dá curva na bola.",
+ kbdPara:"←→ (ou A / D) passam a bola por COLOCAR → MIRAR → LANÇAR, ENTER ou ESPAÇO trava um passo.\nNo passo do lançamento, <b>segure ESPAÇO</b> para carregar a potência (segurar mais = pancada mais forte) e solte para lançar;\n←→ enquanto segura adiciona curva. Tab alcança os botões na tela e Espaço ou Enter os aciona.",
+ rulesPara:"Dez frames; cada frame tem até duas bolas, três no décimo se as duas primeiras forem bem.\nDerrubar os dez com a primeira bola = <b>STRIKE</b>: vale 10 mais bônus do que as suas próximas duas bolas derrubarem.\nDerrubar o resto com a segunda = <b>SPARE</b>: 10 mais a bola seguinte como bônus.\nOs pinos que restam depois de duas bolas valem por si. Bola no buraco não faz ponto e os pinos são varridos entre bolas.\nVence a maior soma depois de dez frames; 300 é o jogo perfeito.",
+ modeNote:"O modo de 100 pinos espalha um rack completo de dez fileiras numa pista larga para o caos; a tabela de pontuação continua na escala clássica de 10 pinos.",
+ noWebGL:"WebGL não suportado",
+ statusFmt:"FRAME {f}/10 • LANÇAMENTO {t} • {m}", pin10:"10 PINOS", pin100:"100 PINOS LARGO",
+ strikeToast:"STRIKE!", spareToast:"SPARE!", gutterToast:"BURACO: NADA", noHitToast:"SEM PINOS", downFmt:"{n} DERRUBADOS",
+ nextFrameBtn:"PRÓXIMO FRAME", throw2Btn:"LANÇAR 2", throw3Btn:"LANÇAR 3",
+ hint1:"PASSO 1/3 • ARRASTE PARA O LADO: coloque a bola • TOQUE ou ENTER para travar",
+ hint2:"PASSO 2/3 • ARRASTE PARA O LADO: mire o lançamento • TOQUE ou ENTER para travar",
+ hint3:"PASSO 3/3 • DESLIZE PARA CIMA: trajeto + velocidade = potência • incline esq / dir = curva • PC: ←→ curva, segure ESPAÇO para potência",
+ step2Toast:"PASSO 2: MIRAR O LANÇAMENTO", step3Toast:"PASSO 3: DESLIZE PARA LANÇAR",
+ flickHint:"DESLIZE PARA CIMA: TRAJETO + VELOCIDADE", holdHint:"SEGURE ESPAÇO MAIS TEMPO = MAIS POTÊNCIA",
+ letsgoMsg:"VAMOS BOLAR!",
+ perfectGame:"JOGO PERFEITO!", bowlingLegend:"LENDA DO BOWLING",
+ finalFmt:"PONTUAÇÃO FINAL {s} • STRIKES: {n} • RANK: {r}",
+ rankRookie:"NOVATO", rankPerfect:"TEMPORADA PERFEITA", rankCyborg:"CIBORGE", rankTourPro:"PRO DO TOUR",
+ rankPro:"PRO", rankSpectator:"MATAPÚBLICO", rankHustler:"APOSTADOR", rankRegular:"COMUM",
+ liveAuto:"AUTO está usando agora: ", liveFixed:"AJUSTES FIXOS: ",
+ liveFmt:"{w}×{h}px ({p}% escala), sombras: {s}.",
+ shq0:"as seis lâmpadas", shq1:"foul, meia e rack", shq2:"uma lâmpada principal só", shq3:"projeção em baixa resolução", shq4:"sombras de contato", shq5:"nenhuma"
+},
+ru:{
+ playAgain:"ИГРАТЬ СНОВА",
+ tagline:"БРОСОК В 3 ШАГА: ПЕРЕТАЩИ, ЧТОБЫ ПОСТАВИТЬ ШАР • ПЕРЕТАЩИ, ЧТОБЫ НАВЕСТИСЬ • СДВИНЬ ВВЕРХ, ЧТОБЫ БРОСИТЬ: ДЛИНА + СКОРОСТЬ = СИЛА, НАКЛОН = КРЮК",
+ m10:"10 КЕГЛЕЙ", m100:"100 КЕГЛЕЙ • ШИРОКАЯ ДОРОЖКА",
+ graphics:"ГРАФИКА", graphicsTip:"качество графики: профили, автоматически или вручную",
+ gotIt:"ПОНЯЛ", done:"ГОТОВО",
+ skip:"ПРОПУСТИТЬ",
+ replayHint:"ПОВТОР • ПРОПУСТИТЕ, ЧТОБЫ СЫГРАТЬ СЛЕДУЮЩИЙ ВЫБРОС",
+ profile:"ПРОФИЛЬ", gAuto:"АВТО", gBest:"РЕКОРД", gHigh:"ВЕРХ", gMedium:"СРЕД", gLow:"НИЗ", gCustom:"СВОЙ",
+ autoNote:"АВТО снижает качество только пока игра держит меньше ~40 fps несколько секунд и возвращает его, как только кадры снова быстрые: строка выше всегда показывает выбранное. Все остальные профили ФИКСИРОВАНЫ: ничего не меняется само.",
+ resolution:"РАЗРЕШЕНИЕ",
+ rsFull:"ПОЛНОЕ — нативные пиксели (100%)", rsHigh:"ВЫСОКОЕ — 90%", rsMed:"СРЕДНЕЕ — 80%", rsLow:"НИЗКОЕ — 70%", rsSlow:"МЕДЛЕННО — 60%", rsMin:"МИНИМУМ — 50% (быстрее всего)",
+ shadows:"ТЕНИ",
+ shAll:"ВСЕ ШЕСТЬ ЛАМП — полные проекционные тени", shThree:"ЛАМПЫ ФОЛА + СРЕДНЯЯ + С КЕГЛЯМИ", shOne:"ОДНА ГЛАВНАЯ ЛАМПА",
+ shLowres:"ПРОЕКЦИЯ В НИЗКОМ РАЗРЕШЕНИИ (размытая)", shContact:"ТОЛЬКО ТЕНИ КОНТАКТА", shNone:"НЕТ",
+ gfxNote:"Меню редактируются только в СВОЙ. Профиль задаёт их за тебя (показан выбранным и заблокированным): изменение меню переключает на СВОЙ, так что видно ровно то, что используется.",
+ rulesTitle:"ПРАВИЛА — КЛАССИКА НА 10 КЕГЛЕЙ",
+ kTouch:"УПРАВЛЕНИЕ — ТАЧ / МЫШЬ", kKbd:"УПРАВЛЕНИЕ — КЛАВИАТУРА",
+ ctrlPara:"<b>1. ПОСТАВИТЬ:</b> тащи влево / вправо, чтобы задать старт шара, и коснись, чтобы зафиксировать.\n<b>2. НАВЕСТИСЬ:</b> тащи, чтобы задать угол броска, и коснись, чтобы зафиксировать.\n<b>3. БРОСИТЬ:</b> сдвинь ВВЕРХ по направлению к кеглям — длина и скорость жеста задают силу,\nа наклон влево / вправо при отпускании даёт крюк.",
+ kbdPara:"←→ (или A / D) переводят шар по ПОСТАВИТЬ → НАВЕСТИСЬ → БРОСИТЬ, ENTER или ПРОБЕЛ фиксирует шаг.\nНа шаге броска <b>держи ПРОБЕЛ</b>, чтобы копить силу (дольше держишь — сильнее удар), и отпусти, чтобы бросить;\n←→ во время удержания добавляют вращение. Tab доходит до кнопок на экране, Пробел или Enter нажимает их.",
+ rulesPara:"Десять фреймов; в каждом до двух бросков, в десятом три, если первые два удачны.\nСбить все десять первым броском = <b>СТРАЙК</b>: 10 плюс бонус за то, что собьют следующие два броска.\nСбить остатки вторым броском = <b>СПАРК</b>: 10 плюс следующий бросок как бонус.\nКегли, оставшиеся после двух бросков, считаются как есть. Шар в жёлоб не даёт очков, кегли убирают между бросками.\nПобеждает бо́льшая сумма после десяти фреймов; 300 — идеальная игра.",
+ modeNote:"Режим на 100 кеглей раскладывает полный десятирядный rack по широкой дорожке ради хаоса; таблица счёта остаётся в классической шкале на 10 кеглей.",
+ noWebGL:"WebGL не поддерживается",
+ statusFmt:"ФРЕЙМ {f}/10 • БРОСОК {t} • {m}", pin10:"10 КЕГЛЕЙ", pin100:"100 КЕГЛЕЙ, ШИРОКО",
+ strikeToast:"СТРАЙК!", spareToast:"СПАРК!", gutterToast:"ЖЕЛОБ: НОЛЬ", noHitToast:"МИМО", downFmt:"{n} СБИТО",
+ nextFrameBtn:"СЛЕДУЮЩИЙ ФРЕЙМ", throw2Btn:"БРОСОК 2", throw3Btn:"БРОСОК 3",
+ hint1:"ШАГ 1/3 • ТАЩИ ВБОК: поставь шар • ТАП или ENTER зафиксировать",
+ hint2:"ШАГ 2/3 • ТАЩИ ВБОК: наведись на бросок • ТАП или ENTER зафиксировать",
+ hint3:"ШАГ 3/3 • СДВИНЬ ВВЕРХ: длина + скорость = сила • наклон влево / вправо = вращение • ПК: ←→ вращение, держи ПРОБЕЛ для силы",
+ step2Toast:"ШАГ 2: НАВЕДИСЬ НА БРОСОК", step3Toast:"ШАГ 3: СДВИНЬ, ЧТОБЫ БРОСИТЬ",
+ flickHint:"СДВИНЬ ВВЕРХ: ДЛИНА + СКОРОСТЬ", holdHint:"ДЕРЖИ ПРОБЕЛ ДОЛЬШЕ = БОЛЬШЕ СИЛЫ",
+ letsgoMsg:"БОУЛИМ!",
+ perfectGame:"ИДЕАЛЬНАЯ ИГРА!", bowlingLegend:"ЛЕГЕНДА БОУЛИНГА",
+ finalFmt:"ИТОГ {s} • СТРАЙКИ: {n} • РАЗРЯД: {r}",
+ rankRookie:"НОВИЧОК", rankPerfect:"ИДЕАЛЬНЫЙ СЕЗОН", rankCyborg:"КИБОРГ", rankTourPro:"ТУР-ПРО",
+ rankPro:"ПРО", rankSpectator:"ГРОМИЛА ЗРИТЕЛЕЙ", rankHustler:"ШАРАГАН", rankRegular:"ОБЫЧНЫЙ",
+ liveAuto:"АВТО сейчас использует: ", liveFixed:"ФИКСОВАННЫЕ НАСТРОЙКИ: ",
+ liveFmt:"{w}×{h}px ({p}% масштаб), тени: {s}.",
+ shq0:"все шесть ламп", shq1:"фол, средняя и с кеглями", shq2:"одна главная лампа", shq3:"проекция в низком разрешении", shq4:"тени контакта", shq5:"нет"
+},
+zh:{
+ playAgain:"再玩一次",
+ tagline:"三段式投球：拖动放球 • 拖动瞄准 • 向上滑动投球：行程 + 速度 = 力量，倾斜 = 弧线",
+ m10:"10 瓶", m100:"100 瓶 • 宽球道",
+ graphics:"画质", graphicsTip:"画质：档位、自动或手动",
+ gotIt:"知道了", done:"完成",
+ skip:"跳过",
+ replayHint:"重播 • 跳过即可投下一球",
+ profile:"档位", gAuto:"自动", gBest:"最高", gHigh:"高", gMedium:"中", gLow:"低", gCustom:"自定义",
+ autoNote:"自动档只在游戏连续几秒低于约 40 fps 时降低画质，帧速一恢复就立刻还原；上面那行永远显示它当前选了什么。其它档位都是固定的：不会自己变。",
+ resolution:"分辨率",
+ rsFull:"满 — 原生像素 (100%)", rsHigh:"高 — 90%", rsMed:"中 — 80%", rsLow:"低 — 70%", rsSlow:"慢 — 60%", rsMin:"最低 — 50%（最快）",
+ shadows:"阴影",
+ shAll:"全部六盏灯 — 完整投影阴影", shThree:"犯规区 + 中段 + 瓶架灯", shOne:"仅一盏主灯",
+ shLowres:"低分辨率投影（模糊）", shContact:"仅接触阴影", shNone:"无",
+ gfxNote:"菜单只在自定义档可编辑。选档位会替你设好（显示为选中并锁定）；改动任一菜单就切到自定义，所以你看到的就是实际在用的。",
+ rulesTitle:"规则 — 经典 10 瓶",
+ kTouch:"操作 — 触屏 / 鼠标", kKbd:"操作 — 键盘",
+ ctrlPara:"<b>1. 放球：</b>左右拖动设定球的起始位置，点一下锁定。\n<b>2. 瞄准：</b>拖动设定出手角度，点一下锁定。\n<b>3. 投球：</b>朝瓶向上滑动 — 滑动的行程和速度决定力量，\n松手时向左 / 右倾斜就给球加上弧线。",
+ kbdPara:"←→（或 A / D）依次切换 放球 → 瞄准 → 投球，ENTER 或 空格 锁定当前步骤。\n投球步骤中，<b>按住空格</b>蓄力（按得越久出手越重），松开即投球；\n按住时 ←→ 增加旋转。Tab 可走到屏幕按钮，空格或 Enter 按下它们。",
+ rulesPara:"共 10 局；每局最多两球，第 10 局前两球投得好就有第三球。\n第一球清空全部十瓶 = <b>全中</b>：得 10 分，外加接下来两球撞倒的瓶数作奖励。\n第二球清空剩下的 = <b>补中</b>：得 10 分，外加下一球作奖励。\n两球后还立着的瓶按实际瓶数计分。洗墙球不得分，两球之间瓶阵会重新摆好。\n10 局后总分最高者胜；300 分是完美局。",
+ modeNote:"100 瓶模式把完整十排瓶阵铺开在宽球道上玩混乱；计分表仍按经典 10 瓶制。",
+ noWebGL:"不支持 WebGL",
+ statusFmt:"第 {f}/10 局 • 第 {t} 球 • {m}", pin10:"10 瓶", pin100:"100 瓶宽道",
+ strikeToast:"全中！", spareToast:"补中！", gutterToast:"洗墙空球", noHitToast:"没撞倒", downFmt:"撞倒 {n}",
+ nextFrameBtn:"下一局", throw2Btn:"投第 2 球", throw3Btn:"投第 3 球",
+ hint1:"步骤 1/3 • 左右拖动：放球 • 点击或 ENTER 锁定",
+ hint2:"步骤 2/3 • 左右拖动：瞄准 • 点击或 ENTER 锁定",
+ hint3:"步骤 3/3 • 向上滑动：行程 + 速度 = 力量 • 向左 / 右倾斜 = 旋转 • 电脑：←→ 旋转，按住空格蓄力",
+ step2Toast:"步骤 2：瞄准出手", step3Toast:"步骤 3：滑动投球",
+ flickHint:"向上滑动：行程 + 速度", holdHint:"空格按得更久 = 力量更大",
+ letsgoMsg:"开打！",
+ perfectGame:"完美局！", bowlingLegend:"保龄球传奇",
+ finalFmt:"总分 {s} • 全中：{n} • 称号：{r}",
+ rankRookie:"新手", rankPerfect:"完美赛季", rankCyborg:"改造人", rankTourPro:"巡回职业",
+ rankPro:"职业", rankSpectator:"观众杀手", rankHustler:"赌客", rankRegular:"常客",
+ liveAuto:"自动档当前使用：", liveFixed:"固定设置：",
+ liveFmt:"{w}×{h}px（{p}% 缩放），阴影：{s}。",
+ shq0:"全部六盏灯", shq1:"犯规区、中段和瓶架灯", shq2:"仅一盏主灯", shq3:"低分辨率投影", shq4:"接触阴影", shq5:"无"
+}
+});
+TLI18N.mount("#scr");
+</script>
 <script>
 "use strict";
+/* Developer hooks. dbg/bowling100.js (loaded only by ?debug=) replaces these
+   with the real frame scrubber, free camera and physics overlay; with no
+   harness the defaults below are inert and the game runs exactly as before. */
+const DB=window.DBHOOKS={on:false,live:false,draw:null,loop:null,camMove:null,camUpdate:null,
+ throwStart:null,throwEnd:null,seek:null,applyUI:null};
 const C=document.getElementById('c');
 const G=C.getContext('webgl',{antialias:true,alpha:false})||C.getContext('experimental-webgl');
-if(!G){document.body.innerHTML='<h2 style="color:#fff;text-align:center;margin-top:40vh">WebGL not supported</h2>';throw 0;}
+if(!G){document.body.innerHTML='<h2 style="color:#fff;text-align:center;margin-top:40vh">'+TLI18N.t("noWebGL")+'</h2>';throw 0;}
 // DPR is capped, and RS drops the render resolution further when the frame
 // budget cannot hold: a phone at devicePixelRatio 2 paints ~1.7M px before
 // any physics runs. Graphics is NEVER decided secretly anymore: the title
@@ -894,7 +1355,7 @@ function updateSheet(){
 }
 function statusHUD(){
  // during aim throwN is the count of COMPLETED throws: label the ball being lined up
- $('status').textContent=`FRAME ${min(frame+1,10)}/10 \u2022 THROW ${phase==='roll'?max(1,throwN):max(1,min(3,throwN+1))} \u2022 ${PC===10?'10 PIN':'100 PIN WIDE'}`;
+ $('status').textContent=TLI18N.t("statusFmt",{f:min(frame+1,10),t:phase==='roll'?max(1,throwN):max(1,min(3,throwN+1)),m:PC===10?TLI18N.t("pin10"):TLI18N.t("pin100")});
  $('info').textContent=stepHint();
 }
 function msg(t,ms){
@@ -1386,7 +1847,7 @@ function startThrow(keepPins){
  rec=[];di=0;pend=null;
  recStop();
  if(RP){repAudStop();RP=null;$('skipbtn').style.display='none'}
- $('dbgbtn').style.display='none';
+ if(DB.throwStart)DB.throwStart();
  $('btn').style.display='none';
  unfocus(); // in the aim phase SPACE throws the ball - it must not also press a button
  statusHUD();
@@ -1425,22 +1886,22 @@ function endThrow(){
  f.t.push(PC===10?knocked:strike?10:spare?10-f.t[f.t.length-1]:min(9,Math.floor(knocked*10/PC)));
  if(strike)f.s=(f.s||0)+1; // count strikes thrown, incl. 10th-frame bonus balls
  updateSheet();
- if(strike){msg('STRIKE!',1900);sStrike();sparks(0,0.4,RACKZ,24)}
- else if(knocked===0)msg(ball.gutter?'GUTTER BLANK':'NO HIT',1300);
- else if(spare){msg('SPARE!',1600);sSpare();sparks(0,0.3,RACKZ,12)}
- else msg(knocked+' DOWN',1300);
+ if(strike){msg(TLI18N.t("strikeToast"),1900);sStrike();sparks(0,0.4,RACKZ,24)}
+ else if(knocked===0)msg(ball.gutter?TLI18N.t("gutterToast"):TLI18N.t("noHitToast"),1300);
+ else if(spare){msg(TLI18N.t("spareToast"),1600);sSpare();sparks(0,0.3,RACKZ,12)}
+ else msg(TLI18N.t("downFmt",{n:knocked}),1300);
  // decide continuation
- let btn='NEXT FRAME',next='frame';
+ let btnKey="nextFrameBtn",next='frame';
  if(frame<9){
   if(f.t[0]===10)next='frame';
-  else if(f.t.length===1){btn='THROW 2';next='throw2'}
+  else if(f.t.length===1){btnKey="throw2Btn";next='throw2'}
   else next='frame';
  }else{
   const t=f.t;
-  if(t.length===1&&t[0]===10){btn='THROW 2';next='throw2';f.reset=true}
-  else if(t.length===1){btn='THROW 2';next='throw2'} // 10th frame without a first-throw strike: normal 2nd throw
+  if(t.length===1&&t[0]===10){btnKey="throw2Btn";next='throw2';f.reset=true}
+  else if(t.length===1){btnKey="throw2Btn";next='throw2'} // 10th frame without a first-throw strike: normal 2nd throw
   else if(t.length===2&&(t[0]===10||t[0]+t[1]===10)){
-   btn='THROW 3';next='throw3';
+   btnKey="throw3Btn";next='throw3';
    f.reset=(t[0]===10&&t[1]===10)||t[0]+t[1]===10&&t[0]!==10;
   }
   else next='over';
@@ -1448,7 +1909,7 @@ function endThrow(){
  // the main camera has done its job; the pile is shown again in slow motion
  // from cameras above the rack before the next-ball button appears. Every
  // throw is recorded (rec), so every throw gets a replay.
- pend={btn,next};
+ pend={btnKey,next};
  if(rec.length>60)startReplay(strike||spare||knocked>=4);
  else finishThrow();
 }
@@ -1460,11 +1921,11 @@ function finishThrow(){
   showEnd();
  }else{
   const b=$('btn');
-  b.textContent=pend.btn;b.style.display='block';
+  b.textContent=TLI18N.t(pend.btnKey);b.style.display='block';
   b.dataset.next=pend.next;
   focusEl(b);
  }
- if(rec.length)$('dbgbtn').style.display='block';
+ if(DB.throwEnd&&rec.length)DB.throwEnd();
  statusHUD();
 }
 function nextAction(){
@@ -1477,17 +1938,23 @@ function nextAction(){
  }else{frame++;throwN=0;newFrame();}
  updateSheet();
 }
+function rankKey(total){
+ if(total>=280)return "rankPerfect";if(total>=250)return "rankCyborg";
+ if(total>=220)return "rankTourPro";if(total>=200)return "rankPro";
+ if(total>=180)return "rankSpectator";if(total>=150)return "rankHustler";
+ if(total>=120)return "rankRegular";return "rankRookie";
+}
+let lastEnd={total:0,strikes:0};
+function paintEnd(){
+ const total=lastEnd.total,strikes=lastEnd.strikes;
+ $('endT').textContent=total===300?TLI18N.t("perfectGame"):(total>=200?TLI18N.t("bowlingLegend"):TLI18N.t("gameOver"));
+ $('endP').textContent=TLI18N.t("finalFmt",{s:total,n:strikes,r:TLI18N.t(rankKey(total))});
+}
 function showEnd(){
  phase='over';
  const {total}=scoreTotal();
  const strikes=fr.reduce((a,f)=>a+(f.s||0),0);
- let rank='ROOKIE';
- if(total>=280)rank='PERFECT SEASON';else if(total>=250)rank='CYBORG';
- else if(total>=220)rank='TOUR PRO';else if(total>=200)rank='PRO';
- else if(total>=180)rank='SPECTATOR-SLAYER';else if(total>=150)rank='HUSTLER';
- else if(total>=120)rank='REGULAR';
- $('endT').textContent=total===300?'PERFECT GAME!':(total>=200?'BOWLING LEGEND':'GAME OVER');
- $('endP').textContent=`FINAL SCORE ${total} \u2022 ${strikes} STRIKE${strikes===1?'':'S'} \u2022 RANK: ${rank}`;
+ lastEnd={total,strikes};paintEnd();
  $('end').classList.add('on');
  focusEl($('again'));
  updateSheet();
@@ -1726,7 +2193,7 @@ function render(){
   diagonal LEFT flick with the curve-left dotted line, then mirrored right.
   The demo dotted lines run the SAME integrator as the real throw (only the
   demo's spin/power differ), so what is shown is what that flick does. */
- if(phase==='aim'&&!dbgOn&&ball&&!touched){
+ if(phase==='aim'&&!DB.on&&ball&&!touched){
   const NEO=[0.25,0.75,1.0],uT=uTimeVal;
   // screen fit: half-frame extent (metres) at the ball's distance along each
   // screen axis. Each guide gets its own scale from its own worst-case shape
@@ -1972,7 +2439,7 @@ function render(){
   const by=ball.drop?ball.y:BALL_R;
   draw(M_SPH,m4mul(m4t(ball.x,by,ball.z),m4mul(ball.rot,m4s(BALL_R,BALL_R,BALL_R))),COL.ball,3,0.8,0);
  }
- if(dbgOn)drawDebug();
+ if((DB.on||DB.live)&&DB.draw)DB.draw();
  for(const q of parts){const s=0.02+0.02*min(1,q.life*2);draw(M_BOX,m4mul(m4t(q.x,q.y,q.z),m4s(s,s,s)),[1.0,0.8,0.3],0,0,0.9);}
 }
 /* ---------- audio ---------- */
@@ -2213,14 +2680,12 @@ const FLIK={TRAV0:60,TRAV1:240,SPD0:350,SPD1:1800, // vertical px + px/s -> powe
 // and predict() replays it, so the dotted line cannot lie.
 function shotVel(){const v=4.6+power*4.4;return[sin(aim)*v,-cos(aim)*v,v]}
 function stepHint(){
- return ['STEP 1/3 \u2022 DRAG SIDEWAYS: place the ball \u2022 TAP or ENTER to lock',
-  'STEP 2/3 \u2022 DRAG SIDEWAYS: aim the shot \u2022 TAP or ENTER to lock',
-  'STEP 3/3 \u2022 FLICK UP: travel + speed = power \u2022 lean left / right = spin \u2022 PC: \u2190\u2192 spin, hold SPACE for power'][astep];
+ return TLI18N.t(["hint1","hint2","hint3"][astep]);
 }
 function advanceStep(){touched=false;
  if(astep>=2)return;
  astep++;pred.length=0;power=0;spin=0;
- msg(astep===1?'STEP 2: AIM THE SHOT':'STEP 3: FLICK TO THROW',900);
+ msg(astep===1?TLI18N.t("step2Toast"):TLI18N.t("step3Toast"),900);
  statusHUD();
 }
 // flick analysis (STEP 3), measured from the press point: vertical travel +
@@ -2276,7 +2741,7 @@ function predict(){
 // release, short, barely any travel) locks it in. STEP 3: the press-to-
 // release gesture IS the flick - throwBall runs the numbers analyzeFlick set.
 addEventListener('pointerdown',e=>{
- if(phase!=='aim'||dbgOn||e.target!==C)return;
+ if(phase!=='aim'||DB.on||e.target!==C)return;
  e.preventDefault();audioInit();
  if(astep<2){const now=performance.now();
   gest={mode:'adj',x:e.clientX,x0:e.clientX,pos0:startX,ang0:aim,S:0,t0:now,
@@ -2312,7 +2777,7 @@ addEventListener('pointerup',e=>{
   // long drag: the value is set and stays - the next tap confirms it
  }else{
   analyzeFlick(g.pts);
-  if(power<FLIK.MINP){power=0;spin=0;pred.length=0;msg('FLICK UP: TRAVEL + SPEED',1000);return}
+  if(power<FLIK.MINP){power=0;spin=0;pred.length=0;msg(TLI18N.t("flickHint"),1000);return}
   throwBall();
  }
 });
@@ -2326,7 +2791,7 @@ addEventListener('pointercancel',()=>{
 // ←/→ set the spin, holding SPACE ramps the power exactly like travel +
 // speed do. ESC drops back to step 1 with everything cleared.
 addEventListener('keydown',e=>{
- if(dbgOn||phase!=='aim')return;
+ if(DB.on||phase!=='aim')return;
  const L=e.code==='ArrowLeft'||e.code==='KeyA',R=e.code==='ArrowRight'||e.code==='KeyD',
   ENT=e.code==='Enter',SPC=e.code==='Space';
  if(L||R){
@@ -2353,11 +2818,11 @@ function releaseHold(){
  if(!chg)return;
  const hold=performance.now()-chg.t0;chg=null;
  power=clamp((hold-FLIK.CHRG0)/(FLIK.CHRG1-FLIK.CHRG0),0,1);
- if(power<FLIK.MINP){power=0;pred.length=0;msg('HOLD SPACE LONGER = MORE POWER',1000);return}
+ if(power<FLIK.MINP){power=0;pred.length=0;msg(TLI18N.t("holdHint"),1000);return}
  throwBall();
 }
 addEventListener('keyup',e=>{
- if(dbgOn||phase!=='aim'||!chg)return;
+ if(DB.on||phase!=='aim'||!chg)return;
  if(e.code!=='Space')return;
  releaseHold();
 });
@@ -2366,7 +2831,7 @@ addEventListener('keyup',e=>{
 // roll scalar is gone - orientation is the matrix), the rotation-only m4 at
 // 9-24, then 12 floats per pin from PBOFF on
 const PBOFF=25;
-let rec=[],di=0,dbgOn=false,dbPlay=false,dbAcc=0,throwSnap='';
+let rec=[],di=0,throwSnap='';
 function recPush(){
  if(rec.length>=2400)return;
  const a=new Float32Array(PBOFF+12*pins.length);
@@ -2377,7 +2842,7 @@ function recPush(){
   a[o]=p.x;a[o+1]=p.y||0;a[o+2]=p.z;a[o+3]=p.th;a[o+4]=p.dir;a[o+5]=p.down?1:0;
   a[o+6]=p.drop;a[o+7]=p.dead?1:0;a[o+8]=p.vx;a[o+9]=p.vz;a[o+10]=p.om;a[o+11]=p.vy||0}
  rec.push(a);
- $('dscrub').max=rec.length-1;
+ const sc=$('dscrub');if(sc)sc.max=rec.length-1;
 }
 function recApply(i){
  di=clamp(i|0,0,rec.length-1);const a=rec[di];
@@ -2393,120 +2858,13 @@ function recApply(i){
   p.drop=a[o+6];p.dead=!!a[o+7];p.vx=a[o+8];p.vz=a[o+9];p.om=a[o+10];p.vy=a[o+11]||0;
   p.yf=p.drop>0?(p.z>4.5?0:-0.10):0;p.ah=0}
  parts=[];
- $('dscrub').value=di;
- $('dtxt').textContent='f '+di+'/'+(rec.length-1)+'  t='+(di/120).toFixed(3)+'s\nball '+(a[6]).toFixed(2)+' m/s   down '+(PC-pinsStanding());
- if(dbgOn)dbFollow();
+ const sc=$('dscrub');if(sc)sc.value=di;
+ if(DB.applyUI)DB.applyUI(di);
 }
-/* free camera: drag=orbit, wheel=zoom, WASD=pan, Q/E=up-down.
-   in step mode the pivot TRACKS the ball (see dbFollow): tx/ty/tz are the
-   pivot, dbOff is the user's pan offset from the followed ball. */
-const dbCam={yaw:0,pitch:0.3,dist:2.5,tx:0,ty:0.3,tz:-18.3};
-let dbOff={x:0,y:0,z:0},dbk={},dbDrag=null;
-// keep the stepped ball at the orbit pivot: dragging orbits AROUND the ball.
-// Once the ball drops off the deck (pit mouth, gutter sink) or dies it leaves
-// the frame on its own: the camera then HOLDS its last pivot instead of diving
-// after the ball into the pit.
-function dbFollow(){const b=ball;if(!dbgOn||b.drop||b.dead)return;
- dbCam.tx=b.x+dbOff.x;dbCam.ty=0.2+dbOff.y;dbCam.tz=b.z+dbOff.z;}
-function dbEnter(){
- if(!rec.length)return;
- if(phase==='replay'){repAudStop();RP=null;$('skipbtn').style.display='none'}
- dbgOn=true;dbPlay=false;dbAcc=0;dbOff={x:0,y:0,z:0};
- const dx=camX-lkX,dy=camY-lkY,dz=camZ-lkZ;
- dbCam.dist=max(0.6,sqrt(dx*dx+dy*dy+dz*dz));
- dbCam.yaw=Math.atan2(dx,dz);
- dbCam.pitch=Math.asin(clamp(dy/dbCam.dist,-0.99,0.99));
- $('dbgbtn').style.display='none';$('dbar').style.display='flex';
- // manual step mode ALWAYS starts at frame 0 (the release): the cinematic
- // replay, the scrubber and a previous dbExit all park di at the throw's END,
- // so resuming at di showed a settled pile with no throw left to step.
- // recApply then puts the orbit pivot ON the ball (dbFollow) and every
- // further step, scrub and play-frame keeps it there until the ball leaves
- // the deck.
- recApply(0);
- copyThrow();
-}
-function dbExit(){
- dbgOn=false;dbPlay=false;$('dbar').style.display='none';
- recApply(rec.length-1); // ALWAYS continue from the throw's FINAL frame: if the
- // scrub sat mid-throw, that mid-flight ball/pin state must never become the
- // live state - THROW 2 has to continue from where the throw actually ended
- if(phase==='replay'&&!RP)finishThrow(); // the slow-motion sequence was taken over
- if(rec.length)$('dbgbtn').style.display='block';
-}
-function dbgStep(n){dbPlay=false;$('dbp').classList.remove('on');recApply(di+n)}
-/* copy the throw's full initial state (params, ball, every pin, physics constants)
- so a throw can be re-simulated 1:1 from the pasted JSON */
-async function copyThrow(){
- if(!throwSnap){msg('NO THROW RECORDED',900);return false}
- let ok=false;
- try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(throwSnap);ok=true}}catch(e){}
- if(!ok){
-  const ta=document.createElement('textarea');ta.value=throwSnap;ta.style.cssText='position:fixed;left:-2000px;top:0';
-  document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy')}catch(e){}ta.remove();
- }
- msg(ok?'THROW COPIED':'COPY BLOCKED: window.DBG.throw()',1100);
- return ok;
-}
-function dbCamMove(dt){
- const f=dt*(dbCam.dist*1.5+0.6);
- const sy=sin(dbCam.yaw),cy=cos(dbCam.yaw);
- // pans move the OFFSET from the followed ball: dbFollow re-derives tx/ty/tz
- // from ball+dbOff every step, so writing the pivot directly would be erased
- // on the next frame.
- if(dbk.KeyW||dbk.ArrowUp){dbOff.x+=sy*f;dbOff.z+=cy*f}
- if(dbk.KeyS||dbk.ArrowDown){dbOff.x-=sy*f;dbOff.z-=cy*f}
- if(dbk.KeyD){dbOff.x+=cy*f;dbOff.z-=sy*f}
- if(dbk.KeyA){dbOff.x-=cy*f;dbOff.z+=sy*f}
- if(dbk.KeyE)dbOff.y+=f;
- if(dbk.KeyQ)dbOff.y-=f;
-}
-function dbCamUpdate(){
- const cp=cos(dbCam.pitch);
- PV=m4mul(m4persp(55*PI/180,ASP,0.05,300),m4look(
-  [dbCam.tx+dbCam.dist*sin(dbCam.yaw)*cp,dbCam.ty+dbCam.dist*sin(dbCam.pitch),dbCam.tz+dbCam.dist*cos(dbCam.yaw)*cp],
-  [dbCam.tx,dbCam.ty,dbCam.tz],[0,1,0]));
-}
-// free camera on touch too: one finger orbits, TWO fingers pinch to zoom (same
-// 0.15..40m travel as the wheel); while a pinch is live orbit pauses, so
-// zooming never spins the view. A lifted finger hands the remaining one back
-// to orbit without a jump.
-const dbPtr=new Map();let dbPinch=0;
-function dbPinchD(){const a=[...dbPtr.values()],
- dx=a[0][0]-a[1][0],dy=a[0][1]-a[1][1];return sqrt(dx*dx+dy*dy)||1}
-addEventListener('pointerdown',e=>{if(!dbgOn||e.target!==C)return;e.preventDefault();
- dbPtr.set(e.pointerId,[e.clientX,e.clientY]);
- if(dbPtr.size===2){dbPinch=dbPinchD();dbDrag=null}
- else dbDrag={x:e.clientX,y:e.clientY}});
-addEventListener('pointermove',e=>{if(!dbPtr.has(e.pointerId))return;
- dbPtr.set(e.pointerId,[e.clientX,e.clientY]);
- if(dbPtr.size>=2){const d=dbPinchD();
-  if(dbPinch)dbCam.dist=clamp(dbCam.dist*dbPinch/d,0.15,40);dbPinch=d;return}
- if(!dbDrag)return;dbCam.yaw+=(e.clientX-dbDrag.x)*0.006;
- dbCam.pitch=clamp(dbCam.pitch+(e.clientY-dbDrag.y)*0.006,-1.5,1.5);dbDrag={x:e.clientX,y:e.clientY}});
-function dbLift(e){dbPtr.delete(e.pointerId);dbPinch=0;
- if(dbPtr.size){const p=[...dbPtr.values()][0];dbDrag={x:p[0],y:p[1]}}else dbDrag=null}
-addEventListener('pointerup',dbLift);addEventListener('pointercancel',dbLift);
-addEventListener('wheel',e=>{if(!dbgOn)return;e.preventDefault();
- dbCam.dist=clamp(dbCam.dist*Math.exp(e.deltaY*0.0012),0.15,40)},{passive:false});
-addEventListener('keydown',e=>{
- if(!dbgOn)return;
- if(e.code==='KeyV'||e.code==='Escape'){dbExit();return}
- if(e.code==='ArrowRight'||e.code==='Period'){e.preventDefault();dbgStep(e.shiftKey?10:1)}
- else if(e.code==='ArrowLeft'||e.code==='Comma'){e.preventDefault();dbgStep(e.shiftKey?-10:-1)}
- else if(e.code==='Home')dbgStep(-di);
- else if(e.code==='End')dbgStep(rec.length-1-di);
- else if(e.code==='Space'){dbPlay=!dbPlay;$('dbp').classList.toggle('on',dbPlay);e.preventDefault()}
- if('WASDQE'.includes(e.key.toUpperCase())||['ArrowUp','ArrowDown'].includes(e.code))dbk[e.code]=true;
-});
-addEventListener('keyup',e=>{dbk[e.code]=false});
-$('dbb').addEventListener('click',()=>dbgStep(-1));
-$('dbf').addEventListener('click',()=>dbgStep(1));
-$('dbp').addEventListener('click',()=>{dbPlay=!dbPlay;$('dbp').classList.toggle('on',dbPlay)});
-$('dbo').addEventListener('click',dbExit);
-$('dbc').addEventListener('click',copyThrow);
-$('dscrub').addEventListener('input',e=>{dbPlay=false;$('dbp').classList.remove('on');recApply(+e.target.value)});
-$('dbgbtn').addEventListener('click',dbEnter);
+/* The frame scrubber, the free debug camera, the velocity overlay and COPY
+   THROW that used to live here now live in dbg/bowling100.js (loaded by
+   ?debug=). The page keeps only the frame recorder rec/recPush/recApply, which
+   the cinematic replay needs too, and reaches the tools through DB hooks. */
 /* ---------- cinematic replay: real-speed approach, slow motion on contact ---------- */
 // Reuses the physics frame recorder: once the main follow camera has done its
 // job (endThrow), the throw runs again from cameras above the rack WITH SOUND:
@@ -2704,7 +3062,7 @@ function startReplay(good){
  phase='replay';
  RP={cams,ci:0,i0:s0,end:e0,cur:s0,c0:c0,acc:0,wait:0,aud:null};
  $('skipbtn').style.display='block';
- $('info').textContent='REPLAY \u2022 SKIP TO PLAY THE NEXT BALL';
+ $('info').textContent=TLI18N.t("replayHint");
  focusEl($('skipbtn'));
  repAudStart(s0);
 }
@@ -2730,30 +3088,12 @@ function repCam(){
 }
 $('skipbtn').addEventListener('click',()=>{audioInit();repEndAll()});
 addEventListener('keydown',e=>{
- if(dbgOn||phase!=='replay')return;
+ if(DB.on||phase!=='replay')return;
  const a=document.activeElement;
  if(a&&a.id==='skipbtn'&&(e.code==='Space'||e.code==='Enter'))return; // native press
  if(e.code==='Space'||e.code==='Enter'||e.code==='Escape'||e.code==='KeyB'||e.code==='Backspace'){
   e.preventDefault();repEndAll()}
 });
-function drawDebug(){
- // velocity vectors: red = pin slide, cyan = ball motion, amber = tip-over direction
- for(const p of pins){
-  if(p.dead)continue;
-  const s=sqrt(p.vx*p.vx+p.vz*p.vz);
-  if(s>0.12){const ang=Math.atan2(p.vz,p.vx),len=min(0.9,s*0.12),
-   lf=p.th>0.02?0.0605*sin(min(p.th,PI/2)):0;
-   draw(M_BOX,m4mul(m4mul(m4t(p.x,(p.y||0)+lf+0.03,p.z),m4ry(-ang)),m4s(len,0.008,0.008)),[1,0.25,0.25],6,0,0)}
-  if(p.om>0.05&&p.th>0.02&&p.th<PI/2-0.02){const len=min(0.9,p.om*0.12);
-   draw(M_BOX,m4mul(m4mul(m4t(p.x,0.04,p.z),m4ry(-p.dir)),m4s(len,0.008,0.008)),[1,0.6,0.1],6,0,0)}
- }
- if(ball&&!ball.dead){const s=sqrt(ball.vx*ball.vx+ball.vz*ball.vz);
-  if(s>0.15){const ang=Math.atan2(ball.vz,ball.vx);
-   draw(M_BOX,m4mul(m4mul(m4t(ball.x,BALL_R+0.03,ball.z),m4ry(-ang)),m4s(min(0.9,s*0.12),0.01,0.01)),[0.3,0.9,1],6,0,0)}}
-}
-window.DBG={on:dbEnter,off:dbExit,step:dbgStep,seek:recApply,n:()=>rec.length,
- play:v=>{dbPlay=!!v},pause:()=>{dbPlay=false},cam:dbCam,get frames(){return rec},active:()=>dbgOn,
- throw:()=>throwSnap,copy:copyThrow};
 /* ---------- main loop ---------- */
 const DT=1/120;
 let last=performance.now(),acc=0,ftEma=-1,qualWin=0,qualGood=0,qualBad=0;
@@ -2767,7 +3107,7 @@ function gamepadKeys(){
   if(g&&g.buttons&&g.buttons[0]&&g.buttons[0].pressed)hit=true}
  if(hit!==gpPrev){
   if(hit){
-   if(phase==='aim'&&!dbgOn){audioInit();
+   if(phase==='aim'&&!DB.on){audioInit();
     if(astep<2)advanceStep();
     else if(!chg)chg={t0:performance.now()}}
   }else{
@@ -2809,7 +3149,7 @@ function loop(now){
  // pushes inside one already-late frame, compounding the hitch. At a steady
  // 120Hz the cap never engages; when it does, sim time simply dilates a little
  // instead of the game stuttering harder.
- if(!dbgOn){let _cu=0;while(acc>=DT&&_cu++<6){
+ if(!DB.on){let _cu=0;while(acc>=DT&&_cu++<6){
   acc-=DT;
   if(phase==='aim'&&chg)power=clamp((performance.now()-chg.t0-FLIK.CHRG0)/(FLIK.CHRG1-FLIK.CHRG0),0,1);
   else if(phase==='roll'){
@@ -2823,17 +3163,13 @@ function loop(now){
    if(ball.drop&&!ball.dead){stepBall(ball,DT);recPush()}
   }
   stepParts(DT);
- }}else if(dbPlay){
-  dbAcc+=dt*120;const n=dbAcc|0;
-  if(n){dbAcc-=n;recApply(di+n);
-   if(di>=rec.length-1){dbPlay=false;$('dbp').classList.remove('on')}}
- }
- if(!dbgOn){
+ }}else if(DB.loop)DB.loop(dt);
+ if(!DB.on){
   if(phase==='replay')replayStep(dt);
   if(phase==='aim'&&chg)predict(); // dots follow the hold-ramp live
  }
  gamepadKeys();
- if(dbgOn){dbCamMove(dt);dbCamUpdate()}
+ if(DB.on&&DB.camMove){DB.camMove(dt);DB.camUpdate()}
  else if(phase==='replay')repCam();
  else camUpdate(dt);
  render();
@@ -2843,7 +3179,7 @@ function resetGame(){
  fr=blankFrames();frame=0;throwN=0;
  $('end').classList.remove('on');
  startThrow(false);updateSheet();
- msg('LET\u2019S BOWL',1500);
+ msg(TLI18N.t("letsgoMsg"),1500);
 }
 $('btn').addEventListener('click',()=>{audioInit();nextAction()});
 $('again').addEventListener('click',()=>{audioInit();resetGame()});
@@ -2853,7 +3189,7 @@ function setMuted(v){
  muted=v;
  try{localStorage.setItem('bowl32snd',v?'off':'on')}catch(e){}
  if(AC)(v?AC.suspend():AC.resume()).catch(()=>{});
- $('sbtn').textContent='SOUND: '+(v?'OFF':'ON');
+ $('sbtnTxt').textContent=TLI18N.t("sound")+": "+(v?TLI18N.t("off"):TLI18N.t("on"));
 }
 function modeUI(){
  $('m10').classList.toggle('on',PC===10);
@@ -2872,17 +3208,17 @@ $('help').addEventListener('click',e=>{if(e.target.id==='help')$('helpx').click(
    decision used to be hidden. Profiles fix both knobs; AUTO hands them to the
    loop's watchdog; CUSTOM edits them directly. Everything persisted. ---------- */
 let gfxTimer=0;
-const SHQLAB=['all six lamps','foul, mid & rack lamps','single main lamp','low-res projection','contact shadows','none'];
 function gfxUI(){
  for(const b of $('oprof').children)b.classList.toggle('on',b.dataset.p===gfx.p);
  $('orsel').disabled=$('oshqsel').disabled=gfx.p!=='custom';
  $('orsel').value=String(gfx.rs);$('oshqsel').value=String(gfx.shq);
  gfxLive()}
+function shqName(q){return q===0?TLI18N.t("shq0"):q===1?TLI18N.t("shq1"):q===2?TLI18N.t("shq2"):q===3?TLI18N.t("shq3"):q===4?TLI18N.t("shq4"):TLI18N.t("shq5")}
 function gfxLive(){
  if(gfx.p==='auto'){$('orsel').value=String(RS);$('oshqsel').value=String(SHQ)}
  const sc=gfx.p==='auto'?RS:gfx.rs,sq=gfx.p==='auto'?SHQ:gfx.shq;
- $('olive').textContent=(gfx.p==='auto'?'AUTO is using right now: ':'FIXED settings: ')+
-  W+'\u00d7'+H+'px ('+Math.round(sc*100)+'% scale), shadows: '+SHQLAB[sq]+'.'}
+ $('olive').textContent=(gfx.p==='auto'?TLI18N.t("liveAuto"):TLI18N.t("liveFixed"))+
+  TLI18N.t("liveFmt",{w:W,h:H,p:Math.round(sc*100),s:shqName(sq)})}
 $('optbtn').addEventListener('click',()=>{audioInit();$('opts').classList.add('on');
  gfxUI();gfxTimer=setInterval(gfxLive,1000);focusEl($('optsx'))});
 $('optsx').addEventListener('click',()=>{$('opts').classList.remove('on');
@@ -2900,7 +3236,22 @@ try{muted=localStorage.getItem('bowl32snd')==='off';
  if(localStorage.getItem('bowl32mode')==='100')setMode(true)}catch(e){}
 applyGfx(); // a remembered profile takes effect BEFORE the first frame
 newRack();updateSheet();modeUI();
-$('sbtn').textContent='SOUND: '+(muted?'OFF':'ON');
+$('sbtnTxt').textContent=TLI18N.t("sound")+": "+(muted?TLI18N.t("off"):TLI18N.t("on"));
+function uiLang(){
+ var p;
+ if((p=$('ctrlPara')))p.innerHTML=TLI18N.t("ctrlPara");
+ if((p=$('kbdPara')))p.innerHTML=TLI18N.t("kbdPara");
+ if((p=$('rulesPara')))p.innerHTML=TLI18N.t("rulesPara");
+ $('sbtnTxt').textContent=TLI18N.t("sound")+": "+(muted?TLI18N.t("off"):TLI18N.t("on"));
+ $('info').textContent=stepHint();
+ if(phase!=='menu')statusHUD();
+ if(pend&&phase==='done')$('btn').textContent=TLI18N.t(pend.btnKey);
+ if($('end').classList.contains('on'))paintEnd();
+ gfxLive();
+ if(DB.on&&rec.length&&DB.seek)DB.seek(di);
+}
+uiLang();
+TLI18N.onChange(uiLang);
 $('scr').classList.add('on');
 focusEl($('play'));
 requestAnimationFrame(loop);
@@ -2942,5 +3293,234 @@ else seen(cur);
 }).catch(function () {});
 })();
 </script>
+<script>
+/* Developer harness. ?debug=dbg/bowling100.js loads the shared engine dbg/_harness.js
+   and then that script, which registers the live panel: state, elements,
+   layout per screen mode, translation texts, balance, cheats, JSON export,
+   and the frame scrubber / free camera / velocity overlay tools.
+   No parameter, or a missing script: nothing loads and the page behaves
+   exactly as it does without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
+</script>
+<!-- inlined fs.js — the source of truth is fs.js: edit that file and re-inline this block -->
+<script>
+/* fs.js — the one fullscreen control every page shares.
+
+   Two jobs:
+
+   1. A toggle button. `TLFS.mount("#opts", {cls:"btn"})` puts it inside a menu or
+      title panel using that page's own button class; `TLFS.mount()` alone floats a
+      small icon button in the bottom-right corner; `{icon:true}` swaps the word for
+      a ⤢ glyph and moves it into `aria-label` for narrow hosts. The wording is the
+      shared translation key `fullscreen` / `exitFullscreen` — from the i18n kit, from
+      a page table published through `TLFS_LABEL(key)`, or English as the floor — and
+      a change of `<html lang>` repaints it. Where the Fullscreen API is missing the
+      button hides itself instead of lying.
+
+   2. Re-fit on every usable-area change. Entering or leaving fullscreen, an
+      orientation flip, and a mobile browser bar hiding or showing all change the
+      area the game has to fill — and the bar case does not always fire a plain
+      `resize`. This file listens to `fullscreenchange` (all vendor spellings) and
+      to `visualViewport.resize`, then re-applies `<html data-fs>` and dispatches
+      `resize` (plus `orientationchange`) once per frame, so the page's own layout
+      code runs. `TLFS.refitOnly()` gives a page that already has its own
+      fullscreen button just that wiring, without a second button.
+
+   Nothing here reads game state, and a page that never calls mount/refitOnly gets
+   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+(function () {
+  if (window.TLFS) return;
+  var de = document.documentElement;
+  var REQ = de.requestFullscreen || de.webkitRequestFullscreen ||
+    de.msRequestFullscreen || de.mozRequestFullScreen;
+  var EX = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.msExitFullscreen || document.mozCancelFullScreen;
+  var blocked = !REQ || !EX || de.fullscreenEnabled === false;
+  var ICON = "\u2922"; /* narrow hosts (side stripes, icon bars) get the glyph plus a
+                          translated aria-label instead of the word */
+  var btns = [], cbs = [], queued = false, styleDone = false;
+
+  function isFull() {
+    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
+      de.msFullscreenElement || de.mozFullScreenElement);
+  }
+  function kit() {
+    var k = window.TLI18N;
+    return (k && typeof k.t === "function") ? k : null;
+  }
+  /* A missing key makes t() hand back the key name — that is not a label.
+     Pages that keep their own translation table (billiards, tilt, oilstorm) publish
+     TLFS_LABEL(key) instead of the kit; they win over the kit, English is the floor. */
+  function label() {
+    var want = isFull() ? "exitFullscreen" : "fullscreen";
+    var L = window.TLFS_LABEL;
+    if (typeof L === "function") {
+      try { var v = L(want); if (v && v !== want) return String(v) } catch (e) {}
+    }
+    var k = kit(), t = null;
+    if (k) { try { t = k.t(want) } catch (e) { t = null } }
+    if (!t || t === want) t = isFull() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+    return t;
+  }
+  function cssOnce() {
+    if (styleDone) return;
+    styleDone = true;
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlfs-float:hover{border-color:#ffd76a;color:#ffd76a}" +
+      ".tlfs-float[hidden]{display:none}";
+    document.head.appendChild(st);
+  }
+  function paint() {
+    var txt = label();
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      b.textContent = b.__tlfsIcon ? ICON : txt;
+      b.setAttribute("aria-label", txt);
+      b.setAttribute("aria-pressed", isFull() ? "true" : "false");
+    }
+  }
+  /* One pass per frame: fullscreenchange and visualViewport.resize often arrive
+     together, and dispatching resize from inside a resize listener would loop. */
+  function refit() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint();
+      for (var i = 0; i < cbs.length; i++) { try { cbs[i](isFull()) } catch (e) {} }
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("orientationchange"));
+    });
+  }
+  function toggle() {
+    if (blocked) return false;
+    var was = isFull();
+    try {
+      if (was) EX.call(document);
+      else { var p = REQ.call(de); if (p && p.catch) p.catch(function () {}) }
+    } catch (e) {}
+    /* the change event may never come (sandboxed frames, denied requests, some
+       headless shells that grant then silently drop): repaint the state we can
+       read twice, late enough to catch a transition nobody announced. */
+    setTimeout(refit, 220);
+    setTimeout(refit, 700);
+    return !was;
+  }
+
+  de.setAttribute("data-fs", "off");
+  ["fullscreenchange", "webkitfullscreenchange", "MSFullscreenChange", "mozfullscreenchange"]
+    .forEach(function (t) { document.addEventListener(t, refit, false) });
+  ["fullscreenerror", "webkitfullscreenerror"].forEach(function (t) {
+    document.addEventListener(t, function () { de.setAttribute("data-fs", "off"); paint() }, false)
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", refit, false);
+    window.visualViewport.addEventListener("scroll", function () {
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint(); /* an exit the browser never announced must still clear the label */
+    }, false);
+  }
+  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
+  }, false);
+  /* A language switch changes <html lang>: repaint from whatever table the page
+     uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
+     drive their toggle state off that attribute, and taking it would corrupt them. */
+  new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
+
+  window.TLFS = {
+    version: "2026.11.23.3",
+    supported: !blocked,
+    isFull: isFull,
+    label: label,
+    paint: paint,
+    toggle: toggle,
+    onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
+    /* just the size/orientation wiring, for a page with its own fullscreen button */
+    refitOnly: function () { paint(); return true },
+    /* put the button in `sel` (or float it when the selector matches nothing).
+       opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
+       puts the translated word in aria-label, for narrow hosts. */
+    mount: function (sel, opts) {
+      cssOnce();
+      var o = opts || {};
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = o.cls || "tlfs-float";
+      b.id = o.id || "tlfsBtn";
+      b.__tlfsIcon = !!o.icon;
+      if (o.float !== false && !o.cls) b.classList.add("tlfs-float");
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", label());
+      if (o.ariaLabel) b.setAttribute("data-aria", o.ariaLabel);
+      b.textContent = o.icon ? ICON : label();
+      /* a menu that starts the game on any tap (defender binds pointerdown on the
+         whole title screen) must not fire when the fullscreen button is pressed */
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("touchstart", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle() });
+      var host = sel ? document.querySelector(sel) : null;
+      if (host) {
+        if (o.prepend && host.firstChild) host.insertBefore(b, host.firstChild);
+        else host.appendChild(b);
+      } else {
+        b.classList.add("tlfs-float");
+        document.body.appendChild(b);
+      }
+      if (blocked) b.style.display = "none";
+      btns.push(b);
+      paint();
+      return b;
+    },
+    /* wire a button the page already has in its markup (keeps its own look) */
+    attach: function (el) {
+      cssOnce();
+      if (!el) return null;
+      if (blocked) { el.style.display = "none"; return el }
+      el.addEventListener("click", function (e) { e.preventDefault(); toggle() });
+      btns.push(el);
+      paint();
+      return el;
+    },
+    /* a rebuilt panel drops its children: re-add every button the page mounted */
+    reassert: function () {
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i];
+        if (!b.isConnected && b.__tlfsHost) {
+          var h = document.querySelector(b.__tlfsHost);
+          if (h) h.appendChild(b);
+        }
+      }
+      paint();
+      return btns.length
+    }
+  };
+  /* remember where each button was mounted so a panel rebuild can put it back */
+  var mount0 = window.TLFS.mount;
+  window.TLFS.mount = function (sel, opts) {
+    var b = mount0(sel, opts);
+    if (b) b.__tlfsHost = sel || "body";
+    return b;
+  };
+  var k = kit();
+  if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
+})();
+</script>
+<script>TLFS.mount("#opts .card",{cls:"close"});</script>
 </body>
 </html>

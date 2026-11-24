@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0a0d08">
 <title>IRON VANGUARD — Resource Editor</title>
-<meta name="version" content="2026.11.20.2">
+<meta name="version" content="2026.11.23.2">
 <style>
 :root{--amber:#ffb000;--amber2:#ffd75e;--olive:#6a7d3f;--olive-d:#2c3519;--steel:#9fb4c7;--red:#ff5040;--cyan:#7fd4ff;--grn:#7dffb0;--ink:#0a0d08;--panel:#161c11;--line:#4a5530}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -94,23 +94,23 @@ legend{font-family:"Courier New",monospace;font-weight:700;letter-spacing:.12em;
 <div class="hazard"></div>
 <div class="wrap hbar">
   <div>
-    <h1 class="hst">IRON VANGUARD — Resource Editor</h1>
-    <div class="sub hst">TANK BATTALION '90 · SPRITES · PALETTES · BALANCE · STRINGS</div>
+    <h1 class="hst">IRON VANGUARD — <span data-t="edTitle">Resource Editor</span></h1>
+    <div class="sub hst"><span data-t="edSub">TANK BATTALION '90 · SPRITES · PALETTES · BALANCE · STRINGS</span></div>
   </div>
   <div class="spacer"></div>
-  <button class="btn amber" id="btnCopyAll">⧉ Copy All Resources</button>
-  <button class="btn red" id="btnResetAll">↺ Reset To Defaults</button>
-  <a class="btn grn" id="btnHome" href="https://1nd1g0.github.io/">⌂ Home</a>
+  <button class="btn amber" id="btnCopyAll">⧉ <span data-t="copyAll">Copy All Resources</span></button>
+  <button class="btn red" id="btnResetAll">↺ <span data-t="resetAll">Reset To Defaults</span></button>
+  <a class="btn grn" id="btnHome" href="https://1nd1g0.github.io/">⌂ <span data-t="home">Home</span></a>
 </div>
 </header>
 
 <div class="wrap">
 
 <div class="gImport">
-  <h3 style="margin-top:0">Import from full game code</h3>
-  <div class="small" style="margin-bottom:6px">Paste the entire game HTML / script here and click Extract — <b>TANK_A, PAL, BAL, STR, SIZES</b> will all be loaded at once. Only paste code you trust (it is evaluated locally).</div>
-  <textarea id="fullSrc" rows="4" placeholder="Paste the full game file or its <script> contents here..."></textarea>
-  <div style="margin-top:6px"><button class="btn grn" id="btnExtract">▼ Extract Resources</button> <span id="extractStatus" class="small"></span></div>
+  <h3 style="margin-top:0"><span data-t="importFull">Import from full game code</span></h3>
+  <div class="small" style="margin-bottom:6px"><span data-t="noteFullA">Paste the entire game HTML / script here and click Extract —</span> <b>TANK_A, PAL, BAL, STR, SIZES</b> <span data-t="noteFullB">will all be loaded at once. Only paste code you trust (it is evaluated locally).</span></div>
+  <textarea id="fullSrc" rows="4" data-ph="phFull" placeholder="Paste the full game file or its &lt;script&gt; contents here..."></textarea>
+  <div style="margin-top:6px"><button class="btn grn" id="btnExtract">▼ <span data-t="extract">Extract Resources</span></button> <span id="extractStatus" class="small"></span></div>
 </div>
 
 <div class="tabs">
@@ -124,34 +124,34 @@ legend{font-family:"Courier New",monospace;font-weight:700;letter-spacing:.12em;
 <div class="tabpane on" id="pane-tank">
   <div class="cols">
     <div class="colMain">
-      <h2 class="hst">Pixel Editor — TANK_A</h2>
+      <h2 class="hst"><span data-t="pixelEd">Pixel Editor</span> — TANK_A</h2>
       <div class="toolbar">
-        <button class="tbtn on" data-tool="paint" title="Paint (B)">✎ Paint</button>
-        <button class="tbtn" data-tool="fill" title="Flood fill (F)">◧ Fill</button>
-        <button class="tbtn" data-tool="erase" title="Erase (E)">⌫ Erase</button>
-        <button class="tbtn" data-tool="pick" title="Eyedropper (I)">✚ Pick</button>
+        <button class="tbtn on" data-tool="paint" data-tip="tipPaint" title="Paint (B)">✎ <span data-t="tPaint">Paint</span></button>
+        <button class="tbtn" data-tool="fill" data-tip="tipFill" title="Flood fill (F)">◧ <span data-t="tFill">Fill</span></button>
+        <button class="tbtn" data-tool="erase" data-tip="tipErase" title="Erase (E)">⌫ <span data-t="tErase">Erase</span></button>
+        <button class="tbtn" data-tool="pick" data-tip="tipPick" title="Eyedropper (I)">✚ <span data-t="tPick">Pick</span></button>
         <span style="width:8px"></span>
-        <button class="tbtn on" id="btnMirror" title="Paint symmetrically">⇋ Mirror X</button>
-        <button class="tbtn" id="btnUndo" title="Ctrl+Z">⤺ Undo</button>
-        <button class="tbtn" id="btnClear">Clear</button>
+        <button class="tbtn on" id="btnMirror" data-tip="tipMirror" title="Paint symmetrically">⇋ <span data-t="tMirror">Mirror X</span></button>
+        <button class="tbtn" id="btnUndo" title="Ctrl+Z">⤺ <span data-t="tUndo">Undo</span></button>
+        <button class="tbtn" id="btnClear"><span data-t="clearBtn">Clear</span></button>
       </div>
       <div class="toolbar">
         <label class="tag">W</label><input type="number" id="szW" min="4" max="32" value="16">
         <label class="tag">H</label><input type="number" id="szH" min="4" max="32" value="16">
-        <button class="btn sm" id="btnResize">Apply Size</button>
+        <button class="btn sm" id="btnResize"><span data-t="applySize">Apply Size</span></button>
         <span style="width:14px"></span>
-        <label class="tag">Preview palette</label>
+        <label class="tag"><span data-t="palPreview">Preview palette</span></label>
         <select id="palSel"></select>
       </div>
       <div class="swl" id="swl"></div>
       <canvas id="gridCv" class="px"></canvas>
-      <div class="note">Left-drag paints · <b>right-click</b> erases · <b>Alt-click</b> picks a color. Characters map to palette letters (<span class="mono">k c l m h G x X</span>), “.” = transparent. Frame B (track animation) is auto-generated exactly like the game, and the 4 rotations are produced the same way <span class="mono">rotCW()</span> does it.</div>
-      <h3>Live preview (as rendered in game)</h3>
+      <div class="note" id="noteTank">Left-drag paints · <b>right-click</b> erases · <b>Alt-click</b> picks a color. Characters map to palette letters (<span class="mono">k c l m h G x X</span>), “.” = transparent. Frame B (track animation) is auto-generated exactly like the game, and the 4 rotations are produced the same way <span class="mono">rotCW()</span> does it.</div>
+      <h3><span data-t="livePrev">Live preview (as rendered in game)</span></h3>
       <div class="grid" id="sheet"></div>
       <div class="animrow">
         <canvas id="animCv" class="px" width="96" height="96"></canvas>
         <div>
-          <div class="small" style="margin-bottom:4px">Animation (frames A/B cycling) · facing:</div>
+          <div class="small" style="margin-bottom:4px"><span data-t="animLine">Animation (frames A/B cycling) · facing:</span></div>
           <div class="dirs">
             <button class="tbtn" data-dir="0">▲</button>
             <button class="tbtn" data-dir="1">▶</button>
@@ -162,12 +162,12 @@ legend{font-family:"Courier New",monospace;font-weight:700;letter-spacing:.12em;
       </div>
     </div>
     <div class="colSide">
-      <h3>Import — paste TANK_A from game code</h3>
-      <textarea id="tankIn" rows="9" placeholder='var TANK_A=[".......GG.......",...];'></textarea>
-      <div style="margin:6px 0"><button class="btn grn" id="btnTankLoad">▼ Load Into Editor</button></div>
-      <h3>Export — paste back into game</h3>
+      <h3><span data-t="impTank">Import — paste TANK_A from game code</span></h3>
+      <textarea id="tankIn" rows="9" data-ph="phTank" placeholder='var TANK_A=[".......GG.......",...];'></textarea>
+      <div style="margin:6px 0"><button class="btn grn" id="btnTankLoad">▼ <span data-t="loadIn">Load Into Editor</span></button></div>
+      <h3><span data-t="exportBox">Export — paste back into game</span></h3>
       <div class="codewrap">
-        <div class="btnrow"><button class="btn amber" data-copy="tankOut">⧉ Copy</button></div>
+        <div class="btnrow"><button class="btn amber" data-copy="tankOut">⧉ <span data-t="copyBtn">Copy</span></button></div>
         <textarea id="tankOut" rows="18" class="ro" readonly></textarea>
       </div>
     </div>
@@ -178,18 +178,18 @@ legend{font-family:"Courier New",monospace;font-weight:700;letter-spacing:.12em;
 <div class="tabpane" id="pane-pal">
   <div class="cols">
     <div class="colMain">
-      <h2 class="hst">Palette Editor — PAL</h2>
+      <h2 class="hst"><span data-t="palEd">Palette Editor</span> — PAL</h2>
       <div id="palList"></div>
-      <button class="btn" id="btnAddPal">+ Add Palette</button>
-      <div class="note">Each letter is a pixel channel used by the tank art: <b>k</b> dark track, <b>c</b> track highlight, <b>l</b> light edge, <b>m</b> main hull, <b>h</b> shadow, <b>G</b> barrel glow, <b>x</b> turret, <b>X</b> turret highlight. The mini tank on the right of each header previews that palette on the current sprite.</div>
+      <button class="btn" id="btnAddPal">+ <span data-t="addPal">Add Palette</span></button>
+      <div class="note" id="notePal">Each letter is a pixel channel used by the tank art: <b>k</b> dark track, <b>c</b> track highlight, <b>l</b> light edge, <b>m</b> main hull, <b>h</b> shadow, <b>G</b> barrel glow, <b>x</b> turret, <b>X</b> turret highlight. The mini tank on the right of each header previews that palette on the current sprite.</div>
     </div>
     <div class="colSide">
-      <h3>Import — paste PAL from game code</h3>
-      <textarea id="palIn" rows="9" placeholder="var PAL={player:{k:'#2a2620',...},...};"></textarea>
-      <div style="margin:6px 0"><button class="btn grn" id="btnPalLoad">▼ Load Into Editor</button></div>
-      <h3>Export — paste back into game</h3>
+      <h3><span data-t="impPal">Import — paste PAL from game code</span></h3>
+      <textarea id="palIn" rows="9" data-ph="phPal" placeholder="var PAL={player:{k:'#2a2620',...},...};"></textarea>
+      <div style="margin:6px 0"><button class="btn grn" id="btnPalLoad">▼ <span data-t="loadIn">Load Into Editor</span></button></div>
+      <h3><span data-t="exportBox">Export — paste back into game</span></h3>
       <div class="codewrap">
-        <div class="btnrow"><button class="btn amber" data-copy="palOut">⧉ Copy</button></div>
+        <div class="btnrow"><button class="btn amber" data-copy="palOut">⧉ <span data-t="copyBtn">Copy</span></button></div>
         <textarea id="palOut" rows="18" class="ro" readonly></textarea>
       </div>
     </div>
@@ -200,21 +200,21 @@ legend{font-family:"Courier New",monospace;font-weight:700;letter-spacing:.12em;
 <div class="tabpane" id="pane-bal">
   <div class="cols">
     <div class="colMain">
-      <h2 class="hst">Balance Editor — BAL &amp; SIZES</h2>
+      <h2 class="hst"><span data-t="balEd">Balance Editor</span> — BAL &amp; SIZES</h2>
       <div id="balFields"></div>
       <fieldset>
-        <legend>SIZES — battlefields</legend>
+        <legend><span data-t="sizesLegend">SIZES — battlefields</span></legend>
         <div id="sizesList"></div>
-        <button class="btn sm" id="btnAddSize">+ Add Size</button>
+        <button class="btn sm" id="btnAddSize">+ <span data-t="addSize">Add Size</span></button>
       </fieldset>
     </div>
     <div class="colSide">
-      <h3>Import — paste BAL / SIZES from game code</h3>
-      <textarea id="balIn" rows="9" placeholder="var BAL={ui:{hudReserve:142},...};  (may also contain var SIZES=...)"></textarea>
-      <div style="margin:6px 0"><button class="btn grn" id="btnBalLoad">▼ Load Into Editor</button></div>
-      <h3>Export — paste back into game</h3>
+      <h3><span data-t="impBal">Import — paste BAL / SIZES from game code</span></h3>
+      <textarea id="balIn" rows="9" data-ph="phBal" placeholder="var BAL={ui:{hudReserve:142},...};  (may also contain var SIZES=...)"></textarea>
+      <div style="margin:6px 0"><button class="btn grn" id="btnBalLoad">▼ <span data-t="loadIn">Load Into Editor</span></button></div>
+      <h3><span data-t="exportBox">Export — paste back into game</span></h3>
       <div class="codewrap">
-        <div class="btnrow"><button class="btn amber" data-copy="balOut">⧉ Copy</button></div>
+        <div class="btnrow"><button class="btn amber" data-copy="balOut">⧉ <span data-t="copyBtn">Copy</span></button></div>
         <textarea id="balOut" rows="18" class="ro" readonly></textarea>
       </div>
     </div>
@@ -225,34 +225,510 @@ legend{font-family:"Courier New",monospace;font-weight:700;letter-spacing:.12em;
 <div class="tabpane" id="pane-str">
   <div class="cols">
     <div class="colMain">
-      <h2 class="hst">String Editor — STR</h2>
+      <h2 class="hst"><span data-t="strEd">String Editor</span> — STR</h2>
       <div class="toolbar">
-        <input type="text" id="strFilter" placeholder="filter..." style="width:220px;text-transform:none">
-        <button class="btn sm" id="btnAddStr">+ Add Key</button>
+        <input type="text" id="strFilter" data-ph="phFilter" placeholder="filter..." style="width:220px;text-transform:none">
+        <button class="btn sm" id="btnAddStr">+ <span data-t="addKey">Add Key</span></button>
       </div>
       <div id="strList"></div>
-      <div class="note">Placeholders like <b>{1}</b> / <b>{2}</b> are filled by the game's <span class="mono">tx()</span> function — keep them in. HTML is allowed (help texts use <span class="mono">&lt;b&gt;</span>).</div>
+      <div class="note" id="noteStr">Placeholders like <b>{1}</b> / <b>{2}</b> are filled by the game's <span class="mono">tx()</span> function — keep them in. HTML is allowed (help texts use <span class="mono">&lt;b&gt;</span>).</div>
     </div>
     <div class="colSide">
-      <h3>Import — paste STR from game code</h3>
-      <textarea id="strIn" rows="9" placeholder="var STR={hiScore:'HI-SCORE {1}',...};"></textarea>
-      <div style="margin:6px 0"><button class="btn grn" id="btnStrLoad">▼ Load Into Editor</button></div>
-      <h3>Export — paste back into game</h3>
+      <h3><span data-t="impStr">Import — paste STR from game code</span></h3>
+      <textarea id="strIn" rows="9" data-ph="phStr" placeholder="var STR={hiScore:'HI-SCORE {1}',...};"></textarea>
+      <div style="margin:6px 0"><button class="btn grn" id="btnStrLoad">▼ <span data-t="loadIn">Load Into Editor</span></button></div>
+      <h3><span data-t="exportBox">Export — paste back into game</span></h3>
       <div class="codewrap">
-        <div class="btnrow"><button class="btn amber" data-copy="strOut">⧉ Copy</button></div>
+        <div class="btnrow"><button class="btn amber" data-copy="strOut">⧉ <span data-t="copyBtn">Copy</span></button></div>
         <textarea id="strOut" rows="18" class="ro" readonly></textarea>
       </div>
     </div>
   </div>
 </div>
 
-<div class="note" style="padding-bottom:20px">
+<div class="note" style="padding-bottom:20px" id="workNote">
   <b>Workflow:</b> copy a resource from the game source → paste it into the matching Import box (or use the full-file extractor at the top) → edit visually → press Copy on the Export box → replace the old declaration inside the game's <span class="mono">&lt;script&gt;</span> block. The Tank Sprite, Palettes and Balance tabs are linked: changing a palette instantly recolors the sprite editor.
 </div>
 </div>
 
 <div id="toast"></div>
+<div id="tlHost" style="position:fixed;left:14px;bottom:14px;z-index:120;display:flex"></div>
+<!-- inlined i18n.js — the source of truth is i18n.js: edit that file and re-inline this block -->
+<script>
+/* ============================================================================
+   i18n.js — shared language kit for every page of this site.
+   Language code decision tree (identical everywhere, in this order):
+     0. any technical problem with this kit -> English
+     1. URL ?language=xx      (a region suffix is fine: pt-BR, zh-CN)
+     2. localStorage['tll:lang']
+     3. the browser's language list (navigator.languages, then navigator.language)
+     4. English
+   A code outside CODES is dropped, not trusted, so the next level decides. Only
+   the picker button writes storage, so a ?language= link never overwrites the
+   visitor's saved choice.
 
+   Page usage
+     <script src="i18n.js"><\/script>            BEFORE the game script
+     <script>TLI18N.add({en:{k:"Text"},es:{...},pt:{...},ru:{...},zh:{...}})<\/script>
+     markup:  <b data-t="score">SCORE</b>  <button data-tip="help">?</button>
+              <input data-ph="name">  <i data-aria="pause">  <img data-alt="car">
+     js:      el.textContent=TLI18N.t("gameOver");
+              el.innerHTML="<b>"+TLI18N.t("best")+": "+n+"</b>";
+              ctx.fillText(TLI18N.t("paused"),x,y);
+     canvas / innerHTML redraws: TLI18N.onChange(()=>redrawAll());
+     pick a host for the language button: TLI18N.mount("#startPanel")
+       (omit it and the kit parks a pill in the lower-left corner)
+   Keys missing from a non-English table fall back to English, so a half
+   translated table still runs. Values for *Fmt keys carry {placeholders}.
+   ========================================================================= */
+(function(){
+"use strict";
+var KEY="tll:lang", CODES=["en","es","pt","ru","zh"];
+var LANGS=[ // code · name in its own language · that word for "language" · its flag
+ ['en','English','Language','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0,0 60,40M60,0 0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 60,40M60,0 0,40" stroke="#C8102E" stroke-width="3.2"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="13"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="8"/></svg>'],
+ ['es','Español','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#AA151B"/><path d="M0,10H60M0,30H60" stroke="#F1BF00" stroke-width="20"/>  </svg>'],
+ ['pt','Português','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="40" fill="#046A38"/><rect x="24" width="36" height="40" fill="#DA291C"/><circle cx="24" cy="20" r="7.5" fill="#FEDF00" stroke="#046A38" stroke-width="1.4"/><path d="M24,14.5 24,22.5M20.5,17.5H27.5" stroke="#DA291C" stroke-width="2.2" fill="none"/></svg>'],
+ ['ru','Русский','Язык','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.34" width="60" height="13.33" fill="#0039A6"/><rect y="26.67" width="60" height="13.33" fill="#D52B1E"/></svg>'],
+ ['zh','中文','语言','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#EE1C25"/><circle cx="10" cy="10" r="5.6" fill="#FFDC00"/><circle cx="21" cy="6" r="2.1" fill="#FFDC00"/><circle cx="26" cy="11.5" r="2.1" fill="#FFDC00"/><circle cx="26" cy="18.5" r="2.1" fill="#FFDC00"/><circle cx="21" cy="24" r="2.1" fill="#FFDC00"/></svg>']
+];
+/* ---- shared vocabulary: the same word means the same thing in every game.
+       Values carry no glyphs — pages keep their ⌂ ▶ ■ icons in the markup. ---- */
+var COMMON={
+en:{
+ paused:"PAUSED",pause:"PAUSE",resume:"RESUME",start:"START",play:"PLAY",home:"HOME",menu:"MENU",
+ options:"OPTIONS",settings:"SETTINGS",help:"HELP",howToPlay:"HOW TO PLAY",rules:"RULES",controls:"CONTROLS",
+ keys:"KEYS",gamepad:"GAMEPAD",mouse:"MOUSE",touch:"TOUCH",
+ sound:"SOUND",music:"MUSIC",sfx:"SOUND FX",on:"ON",off:"OFF",fullscreen:"FULLSCREEN",exitFullscreen:"EXIT FULLSCREEN",
+ difficulty:"DIFFICULTY",easy:"EASY",normal:"NORMAL",hard:"HARD",low:"LOW",high:"HIGH",
+ score:"SCORE",best:"BEST",hiScore:"HIGH SCORE",level:"LEVEL",lives:"LIVES",time:"TIME",
+ speed:"SPEED",round:"ROUND",wave:"WAVE",seed:"SEED",newSeed:"NEW SEED",
+ restart:"RESTART",retry:"RETRY",continue:"CONTINUE",tryAgain:"TRY AGAIN",nextLevel:"NEXT LEVEL",
+ gameOver:"GAME OVER",youWin:"YOU WIN",youLose:"GAME OVER",clear:"CLEARED",
+ fire:"FIRE",jump:"JUMP",back:"BACK",exit:"EXIT",close:"CLOSE",ok:"OK",cancel:"CANCEL",
+ loading:"LOADING",shots:"SHOTS",moves:"MOVES",power:"POWER",angle:"ANGLE",
+ langTitle:"LANGUAGE",langNote:"Choose your language — it is remembered, and it applies to this game and to the whole catalogue.",
+ langBack:"CHANGE LANGUAGE",players:"PLAYERS",player:"PLAYER",you:"YOU",cpu:"CPU",random:"RANDOM"},
+es:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INICIO",play:"JUGAR",home:"INICIO",menu:"MENÚ",
+ options:"OPCIONES",settings:"AJUSTES",help:"AYUDA",howToPlay:"CÓMO JUGAR",rules:"REGLAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"MANDO",mouse:"RATÓN",touch:"TÁCTIL",
+ sound:"SONIDO",music:"MÚSICA",sfx:"EFECTOS",on:"ACTIVO",off:"APAGADO",fullscreen:"PANTALLA COMPLETA",exitFullscreen:"SALIR DE PANTALLA COMPLETA",
+ difficulty:"DIFICULTAD",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAJO",high:"ALTO",
+ score:"PUNTOS",best:"RÉCORD",hiScore:"RÉCORD",level:"NIVEL",lives:"VIDAS",time:"TIEMPO",
+ speed:"VELOCIDAD",round:"RONDA",wave:"OLEADA",seed:"SEMILLA",newSeed:"NUEVA SEMILLA",
+ restart:"REINICIAR",retry:"REINTENTAR",continue:"CONTINUAR",tryAgain:"INTÉNTALO OTRA VEZ",nextLevel:"SIGUIENTE NIVEL",
+ gameOver:"FIN DEL JUEGO",youWin:"¡GANASTE!",youLose:"FIN DEL JUEGO",clear:"SUPERADO",
+ fire:"DISPARO",jump:"SALTAR",back:"ATRÁS",exit:"SALIR",close:"CERRAR",ok:"ACEPTAR",cancel:"CANCELAR",
+ loading:"CARGANDO",shots:"LANZAMIENTOS",moves:"MOVIMIENTOS",power:"FUERZA",angle:"ÁNGULO",
+ langTitle:"IDIOMA",langNote:"Elige tu idioma: se recuerda y se aplica a este juego y a todo el catálogo.",
+ langBack:"CAMBIAR IDIOMA",players:"JUGADORES",player:"JUGADOR",you:"TÚ",cpu:"CPU",random:"ALEATORIO"},
+pt:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INÍCIO",play:"JOGAR",home:"INÍCIO",menu:"MENU",
+ options:"OPÇÕES",settings:"CONFIGURAÇÕES",help:"AJUDA",howToPlay:"COMO JOGAR",rules:"REGRAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"CONTROLE",mouse:"MOUSE",touch:"TOQUE",
+ sound:"SOM",music:"MÚSICA",sfx:"EFEITOS",on:"LIGADO",off:"DESLIGADO",fullscreen:"TELA CHEIA",exitFullscreen:"SAIR DA TELA CHEIA",
+ difficulty:"DIFICULDADE",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAIXO",high:"ALTO",
+ score:"PONTOS",best:"RECORDE",hiScore:"RECORDE",level:"NÍVEL",lives:"VIDAS",time:"TEMPO",
+ speed:"VELOCIDADE",round:"RODADA",wave:"ONDA",seed:"SEMENTE",newSeed:"NOVA SEMENTE",
+ restart:"REINICIAR",retry:"TENTAR DE NOVO",continue:"CONTINUAR",tryAgain:"TENTE DE NOVO",nextLevel:"PRÓXIMO NÍVEL",
+ gameOver:"FIM DE JOGO",youWin:"VOCÊ VENCEU",youLose:"FIM DE JOGO",clear:"COMPLETO",
+ fire:"DISPARO",jump:"SALTAR",back:"VOLTAR",exit:"SAIR",close:"FECHAR",ok:"OK",cancel:"CANCELAR",
+ loading:"CARREGANDO",shots:"BATIDAS",moves:"JOGADAS",power:"FORÇA",angle:"ÂNGULO",
+ langTitle:"IDIOMA",langNote:"Escolha seu idioma: ele é lembrado e vale para este jogo e para todo o catálogo.",
+ langBack:"MUDAR IDIOMA",players:"JOGADORES",player:"JOGADOR",you:"VOCÊ",cpu:"CPU",random:"ALEATÓRIO"},
+ru:{
+ paused:"ПАУЗА",pause:"ПАУЗА",resume:"ПРОДОЛЖИТЬ",start:"СТАРТ",play:"ИГРАТЬ",home:"ДОМОЙ",menu:"МЕНЮ",
+ options:"НАСТРОЙКИ",settings:"НАСТРОЙКИ",help:"ПОМОЩЬ",howToPlay:"КАК ИГРАТЬ",rules:"ПРАВИЛА",controls:"УПРАВЛЕНИЕ",
+ keys:"КЛАВИШИ",gamepad:"ГЕЙМПАД",mouse:"МЫШЬ",touch:"СЕНСОР",
+ sound:"ЗВУК",music:"МУЗЫКА",sfx:"ЗВУКИ",on:"ВКЛ",off:"ВЫКЛ",fullscreen:"НА ВЕСЬ ЭКРАН",exitFullscreen:"ВЫЙТИ С ЭКРАНА",
+ difficulty:"СЛОЖНОСТЬ",easy:"ЛЕГКО",normal:"НОРМА",hard:"СЛОЖНО",low:"НИЗ",high:"ВЕРХ",
+ score:"СЧЁТ",best:"РЕКОРД",hiScore:"РЕКОРД",level:"УРОВЕНЬ",lives:"ЖИЗНИ",time:"ВРЕМЯ",
+ speed:"СКОРОСТЬ",round:"РАУНД",wave:"ВОЛНА",seed:"КОД УРОВНЯ",newSeed:"НОВЫЙ КОД",
+ restart:"ЗАНОВО",retry:"ЕЩЁ РАЗ",continue:"ПРОДОЛЖИТЬ",tryAgain:"ПОПРОБУЙ ЕЩЁ",nextLevel:"СЛЕДУЮЩИЙ УРОВЕНЬ",
+ gameOver:"КОНЕЦ",youWin:"ПОБЕДА",youLose:"КОНЕЦ",clear:"УРОВЕНЬ ПРОЙДЕН",
+ fire:"ОГОНЬ",jump:"ПРЫЖОК",back:"НАЗАД",exit:"ВЫХОД",close:"ЗАКРЫТЬ",ok:"ОК",cancel:"ОТМЕНА",
+ loading:"ЗАГРУЗКА",shots:"УДАРЫ",moves:"ХОДЫ",power:"СИЛА",angle:"УГОЛ",
+ langTitle:"ЯЗЫК",langNote:"Выберите язык — он запоминается и действует для этой игры и для всего каталога.",
+ langBack:"СМЕНИТЬ ЯЗЫК",players:"ИГРОКИ",player:"ИГРОК",you:"ВЫ",cpu:"БОТ",random:"СЛУЧАЙНО"},
+zh:{
+ paused:"暂停",pause:"暂停",resume:"继续",start:"开始",play:"开始游戏",home:"主页",menu:"菜单",
+ options:"选项",settings:"设置",help:"帮助",howToPlay:"怎么玩",rules:"规则",controls:"操作",
+ keys:"按键",gamepad:"手柄",mouse:"鼠标",touch:"触摸",
+ sound:"声音",music:"音乐",sfx:"音效",on:"开",off:"关",fullscreen:"全屏",exitFullscreen:"退出全屏",
+ difficulty:"难度",easy:"简单",normal:"普通",hard:"困难",low:"低",high:"高",
+ score:"得分",best:"最高分",hiScore:"最高分",level:"关卡",lives:"生命",time:"时间",
+ speed:"速度",round:"回合",wave:"波次",seed:"种子",newSeed:"新种子",
+ restart:"重新开始",retry:"重试",continue:"继续",tryAgain:"再试一次",nextLevel:"下一关",
+ gameOver:"游戏结束",youWin:"胜利",youLose:"游戏结束",clear:"过关",
+ fire:"射击",jump:"跳跃",back:"返回",exit:"退出",close:"关闭",ok:"确定",cancel:"取消",
+ loading:"加载中",shots:"击球",moves:"步数",power:"力量",angle:"角度",
+ langTitle:"语言",langNote:"选择语言：会被记住，并用于这个游戏和整个游戏目录。",
+ langBack:"更换语言",players:"玩家",player:"玩家",you:"你",cpu:"电脑",random:"随机"}
+};
+var PAGE={en:{},es:{},pt:{},ru:{},zh:{}};
+function lget(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+function lset(v){try{localStorage.setItem(KEY,v)}catch(e){}}
+var code=null;
+/* A browser language list -> a supported code, or null when it says nothing
+   usable. "pt-BR", "ru_RU", "zh-CN" all match on their 2-letter base. */
+function fromBrowser(){
+ try{
+  var list=null;
+  if(navigator&&Array.isArray(navigator.languages)&&navigator.languages.length)list=navigator.languages;
+  else if(navigator)list=[navigator.language||navigator.userLanguage||""];
+  for(var i=0;i<(list||[]).length;i++){
+   var c=String(list[i]||"").toLowerCase().slice(0,2);
+   if(CODES.indexOf(c)>=0)return c;
+  }
+ }catch(e){}
+ return null;
+}
+(function(){
+ try{
+  var c=null,m=/[?&]language=([a-zA-Z]{2,3})/.exec(location.search||"");
+  if(m)c=m[1].toLowerCase().slice(0,2);           // ?language=pt-BR counts as pt
+  if(c&&CODES.indexOf(c)<0)c=null;
+  if(!c){var s=(lget()||"").toLowerCase().slice(0,2);if(CODES.indexOf(s)>=0)c=s;}
+  if(!c)c=fromBrowser();
+  code=c||"en";
+ }catch(e){code="en";} // a broken lookup speaks English, never nothing
+})();
+function raw(k){
+ var t=PAGE[code]?PAGE[code][k]:null; if(t!=null)return t;
+ t=COMMON[code]?COMMON[code][k]:null; if(t!=null)return t;
+ t=PAGE.en[k]; if(t!=null)return t;
+ t=COMMON.en[k]; return t==null?null:t;
+}
+var hooks=[];
+var API={
+ version:"2026.11.22.2", codes:CODES.slice(), langs:LANGS,
+ lang:function(){return code},
+ browserLang:function(){return fromBrowser()},
+ t:function(k,v){var s;try{s=raw(k)}catch(e){code="en";try{s=raw(k)}catch(e2){s=null}}
+  if(s==null)s=k;var o=v||{};for(var p in o)s=s.split("{"+p+"}").join(String(o[p]));return s},
+ flag:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][3];return ""},
+ name:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][2];return c},
+ add:function(tab){for(var c in tab){if(!PAGE[c])continue;for(var k in tab[c])PAGE[c][k]=tab[c][k];}
+  try{API.apply()}catch(e){}},
+ /* read the tables (the developer harness edits texts through these) */
+ keys:function(c){var out=[],seen={};try{var src=[PAGE[c],COMMON[c],PAGE.en,COMMON.en];
+  for(var i=0;i<src.length;i++)for(var k in src[i])if(!seen[k]){seen[k]=1;out.push(k)}out.sort();}catch(e){}
+  return out},
+ table:function(){var o={};try{for(var i=0;i<CODES.length;i++){var c=CODES[i],m={},s=[COMMON[c],PAGE[c],COMMON.en,PAGE.en];
+  for(var j=0;j<s.length;j++)for(var k in s[j])if(m[k]==null&&s[j][k]!=null)m[k]=s[j][k];o[c]=m;}}catch(e){}
+  return o},
+ setKey:function(c,k,v){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;
+  try{(PAGE[c]=PAGE[c]||{})[k]=String(v);}catch(e){return;}
+  try{API.apply()}catch(e){}
+  for(var i=0;i<hooks.length;i++)try{hooks[i](code)}catch(e){}},
+ onChange:function(f){hooks.push(f)},
+ set:function(c){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;code=c;lset(c);
+  try{API.apply()}catch(e){}for(var i=0;i<hooks.length;i++)try{hooks[i](c)}catch(e){}},
+ apply:function(root){
+  if(document.documentElement)document.documentElement.lang=code;
+  var r=root||document;
+  var set=function(e,attr,put){var v=raw(e.getAttribute(attr));if(v!=null)put(e,v);};
+  var all=[];
+  if(r.nodeType===1)all.push(r);
+  if(r.querySelectorAll)all=all.concat([].slice.call(r.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]")));
+  for(var i=0;i<all.length;i++){var e=all[i];
+   try{
+    if(e.hasAttribute("data-t"))set(e,"data-t",function(n,v){n.textContent=v});
+    if(e.hasAttribute("data-ph"))set(e,"data-ph",function(n,v){n.placeholder=v});
+    if(e.hasAttribute("data-tip"))set(e,"data-tip",function(n,v){n.title=v});
+    if(e.hasAttribute("data-aria"))set(e,"data-aria",function(n,v){n.setAttribute("aria-label",v)});
+    if(e.hasAttribute("data-alt"))set(e,"data-alt",function(n,v){n.alt=v});
+   }catch(e2){} // one odd node never aborts the pass
+  }
+  if(pill){try{pill.innerHTML=API.flag(code)+"<span>"+API.name(code)+"</span>";pill.title=API.t("langTitle");}catch(e){}}
+ },
+ mount:function(sel){hostSel=sel;ensurePill();},
+};
+/* ---------------- language button + picker overlay ---------------- */
+var hostSel=null,pill=null,ov=null;
+var CSS=".tlbtn{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(20,24,22,.72);flex:0 0 auto;align-self:center;"
+ +"border:1px solid #3a463f;border-radius:6px;color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:1px;"
+ +"cursor:pointer;line-height:1;width:auto;max-width:100%}.tlbtn:hover,.tlbtn:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}"
+ +".tlbtn svg{width:22px;height:15px;border:1px solid #2e3a34;border-radius:2px;display:block}"
+ +".tlfix{position:fixed;left:12px;bottom:12px;z-index:2147483000}"
+ +".tlov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;"
+ +"background:rgba(4,7,6,.86);padding:16px}.tlov[hidden]{display:none}"
+ +".tlpanel{max-width:660px;width:100%;background:#141816;border:1px solid #3a463f;border-radius:12px;"
+ +"padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.6);color:#c9d2cb;font:inherit;text-align:center}"
+ +".tlpanel h2{margin:0 0 6px;font-size:20px;letter-spacing:4px;color:#ffd76a}"
+ +".tlpanel p{margin:0 0 16px;font-size:12px;line-height:1.6;color:#8a948e}"
+ +".tlgrid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}"
+ +".tlb{width:132px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;"
+ +"background:rgba(20,24,22,.7);border:1px solid #3a463f;border-radius:8px;cursor:pointer;color:#c9d2cb;font:inherit}"
+ +".tlb:hover,.tlb:focus{border-color:#ffd76a;color:#f4e9c8;outline:none;box-shadow:0 0 14px rgba(255,215,106,.18)}"
+ +".tlb svg{width:50px;height:34px;border:1px solid #2e3a34;border-radius:4px;display:block}"
+ +".tlb b{font-size:13px;color:#f4e9c8}.tlb span{font-size:10px;letter-spacing:1px;color:#8a948e}"
+ +".tlx{margin-top:16px;padding:7px 20px;background:none;border:1px solid #3a463f;border-radius:6px;"
+ +"color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:2px;cursor:pointer}"
+ +".tlx:hover,.tlx:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}";
+function style(){if(document.getElementById("tlcss"))return;var s=document.createElement("style");s.id="tlcss";s.textContent=CSS;document.head.appendChild(s);}
+function ensurePill(){
+ if(pill)return;
+ var host=hostSel?document.querySelector(hostSel):null;
+ if(!host&&document.readyState==="loading")return; // retried at DOMContentLoaded
+ style();
+ pill=document.createElement("button");
+ pill.type="button";pill.className="tlbtn";pill.setAttribute("aria-haspopup","dialog");
+ if(!host){pill.className="tlbtn tlfix";document.body.appendChild(pill);}
+ else host.insertBefore(pill,host.firstChild);
+ pill.onclick=openOv;
+ API.apply();
+}
+function openOv(){
+ if(!ov){
+  ov=document.createElement("div");ov.className="tlov";ov.hidden=true;
+  var p=document.createElement("div");p.className="tlpanel";
+  var h=document.createElement("h2");h.setAttribute("data-t","langTitle");p.appendChild(h);
+  var np=document.createElement("p");np.setAttribute("data-t","langNote");p.appendChild(np);
+  var g=document.createElement("div");g.className="tlgrid";
+  for(var i=0;i<LANGS.length;i++){
+   var b=document.createElement("button");b.type="button";b.className="tlb";b.dataset.lang=LANGS[i][0];
+   b.innerHTML=LANGS[i][3]+"<b>"+LANGS[i][1]+"</b><span>"+LANGS[i][2]+"</span>";g.appendChild(b);
+  }
+  p.appendChild(g);
+  var x=document.createElement("button");x.type="button";x.className="tlx";x.setAttribute("data-t","close");p.appendChild(x);
+  ov.appendChild(p);document.body.appendChild(ov);
+  g.onclick=function(e){var b=e.target;while(b&&b!==g&&!b.dataset.lang)b=b.parentNode;if(b&&b.dataset.lang){API.set(b.dataset.lang);closeOv();}};
+  x.onclick=closeOv;
+  ov.onclick=function(e){if(e.target===ov)closeOv();};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ov&&!ov.hidden)closeOv();});
+ }
+ API.apply(ov);
+ ov.hidden=false;
+}
+function closeOv(){if(ov)ov.hidden=true;}
+function boot(){
+ try{ensurePill();API.apply();}
+ catch(e){code="en";try{ensurePill();API.apply();}catch(e2){}} // rule 0: English on any kit fault
+}
+/* keep freshly added nodes translated without the page calling apply() */
+new MutationObserver(function(ms){
+ if(!pill)return;
+ try{
+  for(var i=0;i<ms.length;i++){var n=ms[i].addedNodes;
+   for(var j=0;j<n.length;j++){var e=n[j];
+    if(e.nodeType!==1)continue;
+    if(e.matches&&e.matches("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]"))API.apply(e);
+    else if(e.querySelectorAll&&e.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]").length)API.apply(e);
+   }}
+ }catch(e){}
+}).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+window.TLI18N=API;
+})();
+</script>
+<script>
+/* If i18n.js is missing or only half-loaded, the game still runs: this stub
+   keeps the same API, pins English, and serves the en table this page registers
+   below via add(). */
+if(!window.TLI18N||typeof window.TLI18N.add!=="function"||typeof window.TLI18N.t!=="function"||typeof window.TLI18N.apply!=="function"||typeof window.TLI18N.mount!=="function"){(function(){var T={en:{}};window.TLI18N={version:"en-fallback",codes:["en"],langs:[["en","EN","English",""]],
+add:function(tab){for(var c in tab){T[c]=Object.assign(T[c]||{},tab[c]);}},
+t:function(k,v){var s=(T.en&&T.en[k]!=null)?T.en[k]:k,o=v||{};for(var p in o)s=String(s).split("{"+p+"}").join(String(o[p]));return s},
+flag:function(){return "";},name:function(c){return c;},lang:function(){return "en";},
+set:function(){},onChange:function(){},apply:function(){},mount:function(){}};})();}
+</script>
+<script>
+TLI18N.add({
+en:{
+ edTitle:"Resource Editor", edSub:"TANK BATTALION '90 · SPRITES · PALETTES · BALANCE · STRINGS",
+ copyAll:"Copy All Resources", resetAll:"Reset To Defaults", importFull:"Import from full game code",
+ noteFullA:"Paste the entire game HTML / script here and click Extract —",
+ noteFullB:"will all be loaded at once. Only paste code you trust (it is evaluated locally).",
+ phFull:"Paste the full game file or its <script> contents here...", extract:"Extract Resources",
+ tank:"Tank Sprite", pal:"Palettes", bal:"Balance", str:"Strings",
+ pixelEd:"Pixel Editor", tipPaint:"Paint (B)", tipFill:"Flood fill (F)", tipErase:"Erase (E)",
+ tipPick:"Eyedropper (I)", tipMirror:"Paint symmetrically",
+ tPaint:"Paint", tFill:"Fill", tErase:"Erase", tPick:"Pick", tMirror:"Mirror X", tUndo:"Undo",
+ clearBtn:"Clear", applySize:"Apply Size", palPreview:"Preview palette",
+ noteTank:"Left-drag paints · <b>right-click</b> erases · <b>Alt-click</b> picks a color. Characters map to palette letters (<span class=\"mono\">k c l m h G x X</span>), “.” = transparent. Frame B (track animation) is auto-generated exactly like the game, and the 4 rotations are produced the same way <span class=\"mono\">rotCW()</span> does it.",
+ livePrev:"Live preview (as rendered in game)", animLine:"Animation (frames A/B cycling) · facing:",
+ impTank:"Import — paste TANK_A from game code", phTank:"var TANK_A=[\".......GG.......\",...];",
+ loadIn:"Load Into Editor", exportBox:"Export — paste back into game", copyBtn:"Copy",
+ palEd:"Palette Editor", addPal:"Add Palette",
+ notePal:"Each letter is a pixel channel used by the tank art: <b>k</b> dark track, <b>c</b> track highlight, <b>l</b> light edge, <b>m</b> main hull, <b>h</b> shadow, <b>G</b> barrel glow, <b>x</b> turret, <b>X</b> turret highlight. The mini tank on the right of each header previews that palette on the current sprite.",
+ impPal:"Import — paste PAL from game code", phPal:"var PAL={player:{k:'#2a2620',...},...};",
+ balEd:"Balance Editor", sizesLegend:"SIZES — battlefields", addSize:"Add Size",
+ impBal:"Import — paste BAL / SIZES from game code", phBal:"var BAL={ui:{hudReserve:142},...};  (may also contain var SIZES=...)",
+ strEd:"String Editor", phFilter:"filter...", addKey:"Add Key",
+ noteStr:"Placeholders like <b>{1}</b> / <b>{2}</b> are filled by the game's <span class=\"mono\">tx()</span> function — keep them in. HTML is allowed (help texts use <span class=\"mono\">&lt;b&gt;</span>).",
+ impStr:"Import — paste STR from game code", phStr:"var STR={hiScore:'HI-SCORE {1}',...};",
+ workNote:"<b>Workflow:</b> copy a resource from the game source → paste it into the matching Import box (or use the full-file extractor at the top) → edit visually → press Copy on the Export box → replace the old declaration inside the game's <span class=\"mono\">&lt;script&gt;</span> block. The Tank Sprite, Palettes and Balance tabs are linked: changing a palette instantly recolors the sprite editor.",
+ copiedLbl:"✓ COPIED", copiedTo:"Copied to clipboard", copyFail:"Copy failed — select the text manually",
+ nothingUndo:"Nothing to undo", pickedFmt:"Picked “{c}”", frameFmt:"FRAME {f} · DIR {d}", delBtn:"Delete",
+ delVarFmt:"Delete {n}[{i}]?", delPalFmt:"Delete palette “{n}”?", palExistsFmt:"Palette “{n}” already exists",
+ useAlnum:"Use letters/digits only", palNamePrompt:"New palette name (letters/digits):",
+ invalidName:"Invalid name", alreadyExists:"Already exists", invalidOrDup:"Invalid or duplicate key",
+ delSizeFmt:"Delete size “{n}”?", sizeKeyPrompt:"Size key (e.g. XXL):", delStrFmt:"Delete string “{k}”?",
+ strKeyPrompt:"New string key:", keyExists:"Key exists", loadedFmt:"{n} loaded",
+ importFailFmt:"⚠ {n} import failed: {e}", balLoaded:"BAL / SIZES loaded", balFail:"⚠ Balance import failed: {e}",
+ pasteFirst:"Paste the game code first", notFound:"not found", extractionDone:"Extraction finished",
+ resetDone:"All resources reset to game defaults", resetConfirm:"Reset ALL resources to the original game values?",
+ transparent:"transparent", removeEl:"remove element", addEl:"add element", addVariant:"Add Variant"
+},
+es:{
+ edTitle:"Editor de recursos", edSub:"BATALLÓN DE TANQUES '90 · SPRITES · PALETAS · BALANCE · TEXTOS",
+ copyAll:"Copiar todos los recursos", resetAll:"Volver a valores por defecto", importFull:"Importar desde el código completo del juego",
+ noteFullA:"Pega aquí el HTML / script completo del juego y pulsa Extraer —",
+ noteFullB:"se cargará todo de una vez. Pega solo código de confianza (se evalúa en local).",
+ phFull:"Pega el archivo completo del juego o su contenido <script> aquí...", extract:"Extraer recursos",
+ tank:"Sprite del tanque", pal:"Paletas", bal:"Balance", str:"Textos",
+ pixelEd:"Editor de píxeles", tipPaint:"Pintar (B)", tipFill:"Rellenar (F)", tipErase:"Borrar (E)",
+ tipPick:"Cuentagotas (I)", tipMirror:"Pintar en espejo",
+ tPaint:"Pintar", tFill:"Rellenar", tErase:"Borrar", tPick:"Coger", tMirror:"Espejo X", tUndo:"Deshacer",
+ clearBtn:"Limpiar", applySize:"Aplicar tamaño", palPreview:"Paleta de vista previa",
+ noteTank:"Arrastrar con el botón izquierdo pinta · <b>clic derecho</b> borra · <b>Alt-clic</b> coge un color. Los caracteres se corresponden con las letras de la paleta (<span class=\"mono\">k c l m h G x X</span>), “.” = transparente. El cuadro B (animación de orugas) se genera exactamente como en el juego, y las 4 rotaciones se obtienen igual que <span class=\"mono\">rotCW()</span>.",
+ livePrev:"Vista previa en vivo (como se ve en el juego)", animLine:"Animación (cuadros A/B) · dirección:",
+ impTank:"Importar — pega TANK_A del código del juego", phTank:"var TANK_A=[\".......GG.......\",...];",
+ loadIn:"Cargar en el editor", exportBox:"Exportar — pega de vuelta en el juego", copyBtn:"Copiar",
+ palEd:"Editor de paletas", addPal:"+ Añadir paleta",
+ notePal:"Cada letra es un canal de píxel del arte del tanque: <b>k</b> oruga oscura, <b>c</b> brillo de oruga, <b>l</b> borde claro, <b>m</b> casco principal, <b>h</b> sombra, <b>G</b> brillo del cañón, <b>x</b> torreta, <b>X</b> brillo de torreta. El tanque en miniatura a la derecha de cada título previsualiza esa paleta en el sprite actual.",
+ impPal:"Importar — pega PAL del código del juego", phPal:"var PAL={player:{k:'#2a2620',...},...};",
+ balEd:"Editor de balance", sizesLegend:"SIZES — campos de batalla", addSize:"+ Añadir tamaño",
+ impBal:"Importar — pega BAL / SIZES del código del juego", phBal:"var BAL={ui:{hudReserve:142},...};  (puede contener también var SIZES=...)",
+ strEd:"Editor de textos", phFilter:"filtro...", addKey:"+ Añadir clave",
+ noteStr:"Los marcadores como <b>{1}</b> / <b>{2}</b> los rellena la función <span class=\"mono\">tx()</span> del juego — mantenlos. Se permite HTML (los textos de ayuda usan <span class=\"mono\">&lt;b&gt;</span>).",
+ impStr:"Importar — pega STR del código del juego", phStr:"var STR={hiScore:'PUNTOS {1}',...};",
+ workNote:"<b>Flujo:</b> copia un recurso del código del juego → pégalo en el cuadro Importar correspondiente (o usa el extractor de archivo completo arriba) → edita visualmente → pulsa Copiar en el cuadro Exportar → sustituye la declaración antigua en el bloque <span class=\"mono\">&lt;script&gt;</span> del juego. Las pestañas Sprite, Paletas y Balance están ligadas: cambiar una paleta recolorea el editor de sprites al instante.",
+ copiedLbl:"✓ COPIADO", copiedTo:"Copiado al portapapeles", copyFail:"No se pudo copiar — selecciona el texto a mano",
+ nothingUndo:"Nada que deshacer", pickedFmt:"Escogido “{c}”", frameFmt:"CUADRO {f} · DIR {d}", delBtn:"Borrar",
+ delVarFmt:"¿Borrar {n}[{i}]?", delPalFmt:"¿Borrar la paleta “{n}”?", palExistsFmt:"La paleta “{n}” ya existe",
+ useAlnum:"Usa solo letras/dígitos", palNamePrompt:"Nombre de la nueva paleta (letras/dígitos):",
+ invalidName:"Nombre no válido", alreadyExists:"Ya existe", invalidOrDup:"Clave no válida o duplicada",
+ delSizeFmt:"¿Borrar el tamaño “{n}”?", sizeKeyPrompt:"Clave de tamaño (p. ej. XXL):", delStrFmt:"¿Borrar el texto “{k}”?",
+ strKeyPrompt:"Nueva clave de texto:", keyExists:"La clave ya existe", loadedFmt:"{n} cargado",
+ importFailFmt:"⚠ Falló la importación de {n}: {e}", balLoaded:"BAL / SIZES cargados", balFail:"⚠ Falló la importación del balance: {e}",
+ pasteFirst:"Primero pega el código del juego", notFound:"no encontrado", extractionDone:"Extracción terminada",
+ resetDone:"Todos los recursos vuelven a los valores del juego", resetConfirm:"¿Restaurar TODOS los recursos a los valores originales del juego?",
+ transparent:"transparente", removeEl:"quitar elemento", addEl:"añadir elemento", addVariant:"+ Añadir variante"
+},
+pt:{
+ edTitle:"Editor de recursos", edSub:"BATALHÃO DE TANQUES '90 · SPRITES · PALETAS · BALANCEIO · TEXTOS",
+ copyAll:"Copiar todos os recursos", resetAll:"Voltar aos padrões", importFull:"Importar do código completo do jogo",
+ noteFullA:"Cole aqui o HTML / script completo do jogo e clique Extrair —",
+ noteFullB:"tudo será carregado de uma vez. Cole apenas código confiável (é avaliado localmente).",
+ phFull:"Cole o arquivo completo do jogo ou o conteúdo <script> aqui...", extract:"Extrair recursos",
+ tank:"Sprite do tanque", pal:"Paletas", bal:"Balanceio", str:"Textos",
+ pixelEd:"Editor de pixels", tipPaint:"Pintar (B)", tipFill:"Preencher (F)", tipErase:"Apagar (E)",
+ tipPick:"Conta-gotas (I)", tipMirror:"Pintar espelhado",
+ tPaint:"Pintar", tFill:"Preencher", tErase:"Apagar", tPick:"Colher", tMirror:"Espelho X", tUndo:"Desfazer",
+ clearBtn:"Limpar", applySize:"Aplicar tamanho", palPreview:"Paleta de prévia",
+ noteTank:"Arrastar com o botão esquerdo pinta · <b>clique direito</b> apaga · <b>Alt-clique</b> colhe a cor. Os caracteres correspondem às letras da paleta (<span class=\"mono\">k c l m h G x X</span>), “.” = transparente. O quadro B (animação da esteira) é gerado exatamente como no jogo, e as 4 rotações saem como <span class=\"mono\">rotCW()</span> faz.",
+ livePrev:"Prévia ao vivo (como aparece no jogo)", animLine:"Animação (quadros A/B) · direção:",
+ impTank:"Importar — cole TANK_A do código do jogo", phTank:"var TANK_A=[\".......GG.......\",...];",
+ loadIn:"Carregar no editor", exportBox:"Exportar — cole de volta no jogo", copyBtn:"Copiar",
+ palEd:"Editor de paletas", addPal:"+ Adicionar paleta",
+ notePal:"Cada letra é um canal de pixel da arte do tanque: <b>k</b> esteira escura, <b>c</b> brilho da esteira, <b>l</b> borda clara, <b>m</b> casco principal, <b>h</b> sombra, <b>G</b> brilho do cano, <b>x</b> torre, <b>X</b> brilho da torre. O tanque miniado à direita de cada título pré-visualiza a paleta no sprite atual.",
+ impPal:"Importar — cole PAL do código do jogo", phPal:"var PAL={player:{k:'#2a2620',...},...};",
+ balEd:"Editor de balanceio", sizesLegend:"SIZES — campos de batalha", addSize:"+ Adicionar tamanho",
+ impBal:"Importar — cole BAL / SIZES do código do jogo", phBal:"var BAL={ui:{hudReserve:142},...};  (pode conter também var SIZES=...)",
+ strEd:"Editor de textos", phFilter:"filtro...", addKey:"+ Adicionar chave",
+ noteStr:"Marcadores como <b>{1}</b> / <b>{2}</b> são preenchidos pela função <span class=\"mono\">tx()</span> do jogo — mantenha-os. HTML é permitido (textos de ajuda usam <span class=\"mono\">&lt;b&gt;</span>).",
+ impStr:"Importar — cole STR do código do jogo", phStr:"var STR={hiScore:'PONTOS {1}',...};",
+ workNote:"<b>Fluxo:</b> copie um recurso do código do jogo → cole na caixa Importar correspondente (ou use o extrator de arquivo completo no topo) → edite visualmente → aperte Copiar na caixa Exportar → substitua a declaração antiga no bloco <span class=\"mono\">&lt;script&gt;</span> do jogo. As abas Sprite, Paletas e Balanceio são ligadas: mudar uma paleta recolore o editor de sprites na hora.",
+ copiedLbl:"✓ COPIADO", copiedTo:"Copiado para a área de transferência", copyFail:"Cópia falhou — selecione o texto manualmente",
+ nothingUndo:"Nada para desfazer", pickedFmt:"Colhido “{c}”", frameFmt:"QUADRO {f} · DIR {d}", delBtn:"Apagar",
+ delVarFmt:"Apagar {n}[{i}]?", delPalFmt:"Apagar a paleta “{n}”?", palExistsFmt:"A paleta “{n}” já existe",
+ useAlnum:"Use apenas letras/dígitos", palNamePrompt:"Nome da nova paleta (letras/dígitos):",
+ invalidName:"Nome inválido", alreadyExists:"Já existe", invalidOrDup:"Chave inválida ou duplicada",
+ delSizeFmt:"Apagar o tamanho “{n}”?", sizeKeyPrompt:"Chave do tamanho (ex. XXL):", delStrFmt:"Apagar o texto “{k}”?",
+ strKeyPrompt:"Nova chave de texto:", keyExists:"A chave já existe", loadedFmt:"{n} carregado",
+ importFailFmt:"⚠ Falha ao importar {n}: {e}", balLoaded:"BAL / SIZES carregados", balFail:"⚠ Falha ao importar o balanceio: {e}",
+ pasteFirst:"Cole primeiro o código do jogo", notFound:"não encontrado", extractionDone:"Extração concluída",
+ resetDone:"Todos os recursos voltaram aos padrões do jogo", resetConfirm:"Restaurar TODOS os recursos aos valores originais do jogo?",
+ transparent:"transparente", removeEl:"remover elemento", addEl:"adicionar elemento", addVariant:"+ Adicionar variante"
+},
+ru:{
+ edTitle:"Редактор ресурсов", edSub:"ТАНКОВЫЙ БАТАЛЬОН '90 · СПРАЙТЫ · ПАЛИТРЫ · БАЛАНС · СТРОКИ",
+ copyAll:"Скопировать все ресурсы", resetAll:"Сбросить к исходным", importFull:"Импорт из полного кода игры",
+ noteFullA:"Вставьте сюда весь HTML / скрипт игры и нажмите Извлечь —",
+ noteFullB:"загрузится всё сразу. Вставляйте только доверенный код (он выполняется локально).",
+ phFull:"Вставьте полный файл игры или его содержимое <script> сюда...", extract:"Извлечь ресурсы",
+ tank:"Спрайт танка", pal:"Палитры", bal:"Баланс", str:"Строки",
+ pixelEd:"Пиксельный редактор", tipPaint:"Рисовать (B)", tipFill:"Заливка (F)", tipErase:"Стереть (E)",
+ tipPick:"Пипетка (I)", tipMirror:"Рисовать симметрично",
+ tPaint:"Рисовать", tFill:"Заливка", tErase:"Стереть", tPick:"Забор", tMirror:"Зеркало X", tUndo:"Отменить",
+ clearBtn:"Очистить", applySize:"Применить размер", palPreview:"Палитра предпросмотра",
+ noteTank:"Левая кнопка рисует · <b>правая кнопка</b> стирает · <b>Alt-клик</b> берёт цвет. Символы соответствуют буквам палитры (<span class=\"mono\">k c l m h G x X</span>), “.” = прозрачный. Кадр B (анимация гусениц) генерируется ровно как в игре, а 4 поворота — так же, как <span class=\"mono\">rotCW()</span>.",
+ livePrev:"Живой предпросмотр (как в игре)", animLine:"Анимация (кадры A/B) · направление:",
+ impTank:"Импорт — вставьте TANK_A из кода игры", phTank:"var TANK_A=[\".......GG.......\",...];",
+ loadIn:"Загрузить в редактор", exportBox:"Экспорт — вставьте обратно в игру", copyBtn:"Копировать",
+ palEd:"Редактор палитр", addPal:"+ Добавить палитру",
+ notePal:"Каждая буква — канал пикселя в арте танка: <b>k</b> тёмная гусеница, <b>c</b> блик гусеницы, <b>l</b> светлая кромка, <b>m</b> основной корпус, <b>h</b> тень, <b>G</b> свечение ствола, <b>x</b> башня, <b>X</b> блик башни. Мини-танок справа от каждого заголовка показывает палитру на текущем спрайте.",
+ impPal:"Импорт — вставьте PAL из кода игры", phPal:"var PAL={player:{k:'#2a2620',...},...};",
+ balEd:"Редактор баланса", sizesLegend:"SIZES — поля боя", addSize:"+ Добавить размер",
+ impBal:"Импорт — вставьте BAL / SIZES из кода игры", phBal:"var BAL={ui:{hudReserve:142},...};  (может содержать и var SIZES=...)",
+ strEd:"Редактор строк", phFilter:"фильтр...", addKey:"+ Добавить ключ",
+ noteStr:"Заполнители вида <b>{1}</b> / <b>{2}</b> подставляет функция <span class=\"mono\">tx()</span> игры — сохраняйте их. HTML разрешён (тексты помощи используют <span class=\"mono\">&lt;b&gt;</span>).",
+ impStr:"Импорт — вставьте STR из кода игры", phStr:"var STR={hiScore:'РЕКОРД {1}',...};",
+ workNote:"<b>Порядок:</b> скопируйте ресурс из кода игры → вставьте в соответствующее поле Import (или используйте извлечение полного файла сверху) → отредактируйте визуально → нажмите Копировать в поле Export → замените старое объявление в блоке <span class=\"mono\">&lt;script&gt;</span> игры. Вкладки Спрайт, Палитры и Баланс связаны: смена палитры сразу перекрашивает редактор спрайтов.",
+ copiedLbl:"✓ СКОПИРОВАНО", copiedTo:"Скопировано в буфер обмена", copyFail:"Не удалось скопировать — выделите текст вручную",
+ nothingUndo:"Нечего отменять", pickedFmt:"Взято “{c}”", frameFmt:"КАДР {f} · НАПР {d}", delBtn:"Удалить",
+ delVarFmt:"Удалить {n}[{i}]?", delPalFmt:"Удалить палитру “{n}”?", palExistsFmt:"Палитра “{n}” уже существует",
+ useAlnum:"Только буквы/цифры", palNamePrompt:"Имя новой палитры (буквы/цифры):",
+ invalidName:"Неверное имя", alreadyExists:"Уже существует", invalidOrDup:"Неверный или повторный ключ",
+ delSizeFmt:"Удалить размер “{n}”?", sizeKeyPrompt:"Ключ размера (напр. XXL):", delStrFmt:"Удалить строку “{k}”?",
+ strKeyPrompt:"Новый ключ строки:", keyExists:"Ключ уже есть", loadedFmt:"{n} загружено",
+ importFailFmt:"⚠ Сбой импорта {n}: {e}", balLoaded:"BAL / SIZES загружены", balFail:"⚠ Сбой импорта баланса: {e}",
+ pasteFirst:"Сначала вставьте код игры", notFound:"не найдено", extractionDone:"Извлечение завершено",
+ resetDone:"Все ресурсы сброшены к значениям игры", resetConfirm:"Сбросить ВСЕ ресурсы к исходным значениям игры?",
+ transparent:"прозрачный", removeEl:"убрать элемент", addEl:"добавить элемент", addVariant:"+ Добавить вариант"
+},
+zh:{
+ edTitle:"资源编辑器", edSub:"坦克营 '90 · 精灵 · 调色板 · 数值 · 文本",
+ copyAll:"复制全部资源", resetAll:"恢复默认值", importFull:"从完整游戏代码导入",
+ noteFullA:"把整个游戏 HTML / 脚本粘贴到这里，点击提取 —",
+ noteFullB:"会一次性全部载入。只粘贴你信任的代码（在本地执行）。",
+ phFull:"在此粘贴完整游戏文件或其 <script> 内容...", extract:"提取资源",
+ tank:"坦克精灵", pal:"调色板", bal:"数值", str:"文本",
+ pixelEd:"像素编辑器", tipPaint:"绘制 (B)", tipFill:"填充 (F)", tipErase:"擦除 (E)",
+ tipPick:"取色器 (I)", tipMirror:"对称绘制",
+ tPaint:"绘制", tFill:"填充", tErase:"擦除", tPick:"取色", tMirror:"X 镜像", tUndo:"撤销",
+ clearBtn:"清空", applySize:"应用尺寸", palPreview:"预览调色板",
+ noteTank:"左键拖动绘制 · <b>右键</b>擦除 · <b>Alt-点击</b>取色。字符对应调色板字母（<span class=\"mono\">k c l m h G x X</span>），“.” = 透明。B 帧（履带动画）按游戏同样的方式自动生成，4 个旋转方向也与 <span class=\"mono\">rotCW()</span> 相同。",
+ livePrev:"实时预览（与游戏内一致）", animLine:"动画（A/B 帧循环）· 朝向：",
+ impTank:"导入 — 粘贴游戏代码中的 TANK_A", phTank:"var TANK_A=[\".......GG.......\",...];",
+ loadIn:"载入编辑器", exportBox:"导出 — 粘贴回游戏", copyBtn:"复制",
+ palEd:"调色板编辑器", addPal:"+ 添加调色板",
+ notePal:"每个字母是坦克美术的一个像素通道：<b>k</b> 深色履带，<b>c</b> 履带高光，<b>l</b> 亮边，<b>m</b> 主体装甲，<b>h</b> 阴影，<b>G</b> 炮管光，<b>x</b> 炮塔，<b>X</b> 炮塔高光。每个标题右侧的小坦克用该调色板预览当前精灵。",
+ impPal:"导入 — 粘贴游戏代码中的 PAL", phPal:"var PAL={player:{k:'#2a2620',...},...};",
+ balEd:"数值编辑器", sizesLegend:"SIZES — 战场尺寸", addSize:"+ 添加尺寸",
+ impBal:"导入 — 粘贴游戏代码中的 BAL / SIZES", phBal:"var BAL={ui:{hudReserve:142},...};  （也可包含 var SIZES=...）",
+ strEd:"文本编辑器", phFilter:"筛选...", addKey:"+ 添加键",
+ noteStr:"<b>{1}</b> / <b>{2}</b> 这类占位符由游戏的 <span class=\"mono\">tx()</span> 函数填充 — 请保留。允许 HTML（帮助文本用 <span class=\"mono\">&lt;b&gt;</span>）。",
+ impStr:"导入 — 粘贴游戏代码中的 STR", phStr:"var STR={hiScore:'最高分 {1}',...};",
+ workNote:"<b>流程：</b>从游戏源码复制一个资源 → 粘贴到对应的导入框（或用顶部整文件提取器）→ 可视化编辑 → 点导出框的复制 → 替换游戏 <span class=\"mono\">&lt;script&gt;</span> 块里的旧声明。精灵、调色板、数值三个标签页联动：改调色板会立刻重绘精灵编辑器。",
+ copiedLbl:"✓ 已复制", copiedTo:"已复制到剪贴板", copyFail:"复制失败 — 请手动选择文本",
+ nothingUndo:"没有可撤销的操作", pickedFmt:"已取“{c}”", frameFmt:"帧 {f} · 方向 {d}", delBtn:"删除",
+ delVarFmt:"删除 {n}[{i}]？", delPalFmt:"删除调色板“{n}”？", palExistsFmt:"调色板“{n}”已存在",
+ useAlnum:"只能用字母/数字", palNamePrompt:"新调色板名称（字母/数字）：",
+ invalidName:"名称无效", alreadyExists:"已存在", invalidOrDup:"键无效或重复",
+ delSizeFmt:"删除尺寸“{n}”？", sizeKeyPrompt:"尺寸键（如 XXL）：", delStrFmt:"删除文本“{k}”？",
+ strKeyPrompt:"新文本键：", keyExists:"键已存在", loadedFmt:"{n} 已载入",
+ importFailFmt:"⚠ {n} 导入失败：{e}", balLoaded:"BAL / SIZES 已载入", balFail:"⚠ 数值导入失败：{e}",
+ pasteFirst:"请先粘贴游戏代码", notFound:"未找到", extractionDone:"提取完成",
+ resetDone:"全部资源已恢复为游戏默认值", resetConfirm:"把所有资源恢复到游戏的原始值？",
+ transparent:"透明", removeEl:"移除元素", addEl:"添加元素", addVariant:"+ 添加变体"
+}
+});
+TLI18N.mount("#tlHost");
+function uiNotes(){
+  if(window.__tlRebuild)window.__tlRebuild();
+  document.getElementById('noteTank').innerHTML=TLI18N.t('noteTank');
+  document.getElementById('notePal').innerHTML=TLI18N.t('notePal');
+  document.getElementById('noteStr').innerHTML=TLI18N.t('noteStr');
+  document.getElementById('workNote').innerHTML=TLI18N.t('workNote');
+  document.querySelectorAll('#sheet .lbl').forEach(function(l){
+    l.textContent=TLI18N.t('frameFmt',{f:l.dataset.f,d:l.dataset.d});
+  });
+}
+TLI18N.onChange(uiNotes);
+uiNotes();
+</script>
 <script>
 (function(){'use strict';
 var $=function(id){return document.getElementById(id);};
@@ -273,8 +749,8 @@ var ALLOWED=/^\.?[kclmhGxX]*$/;
 var toastT=null;
 function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
 function copyText(txt,btn){
-  function done(){if(btn){var o=btn.textContent;btn.textContent='✓ COPIED';setTimeout(function(){btn.textContent=o;},1200);}toast('Copied to clipboard');}
-  function fallback(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){toast('Copy failed — select the text manually');}document.body.removeChild(ta);}
+  function done(){if(btn){var o=btn.textContent;btn.textContent=TLI18N.t('copiedLbl');setTimeout(function(){btn.textContent=o;},1200);}toast(TLI18N.t('copiedTo'));}
+  function fallback(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){toast(TLI18N.t('copyFail'));}document.body.removeChild(ta);}
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(fallback);}else fallback();
 }
 function isIdent(s){return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(s);}
@@ -426,7 +902,7 @@ function buildSwatches(){
   });
   var e=document.createElement('div');
   e.className='sw checker'+(selChar==='.'?' on':'');
-  e.textContent='.';e.title='transparent';
+  e.textContent='.';e.title=TLI18N.t('transparent');
   e.addEventListener('click',function(){selChar='.';setTool('paint');buildSwatches();});
   w.appendChild(e);
 }
@@ -442,7 +918,7 @@ function pushUndo(){
   if(undoStack.length>80)undoStack.shift();
 }
 function undo(){
-  if(!undoStack.length){toast('Nothing to undo');return;}
+  if(!undoStack.length){toast(TLI18N.t('nothingUndo'));return;}
   MODEL.tank=JSON.parse(undoStack.pop());
   $('szW').value=gridW();$('szH').value=gridH();
   sizeGridCanvas();drawGrid();renderPreviews();regenExports();
@@ -509,7 +985,7 @@ function floodFill(x,y,ch){
 function pickAt(x,y){
   if(x<0||y<0||x>=gridW()||y>=gridH())return;
   selChar=MODEL.tank[y][x];
-  setTool('paint');buildSwatches();toast('Picked “'+selChar+'”');
+  setTool('paint');buildSwatches();toast(TLI18N.t('pickedFmt',{c:selChar}));
 }
 function cellFromEvent(e){
   var r=gridCv.getBoundingClientRect();
@@ -544,7 +1020,7 @@ function buildSheet(){
   ['A','B'].forEach(function(fr){
     for(var d=0;d<4;d++){
       var cell=document.createElement('div');cell.className='cellp';
-      var l=document.createElement('div');l.className='lbl';l.textContent='FRAME '+fr+' · DIR '+d;
+      var l=document.createElement('div');l.className='lbl';l.dataset.f=fr;l.dataset.d=d;l.textContent=TLI18N.t('frameFmt',{f:fr,d:d});
       var cv=document.createElement('canvas');cv.width=64;cv.height=64;
       cell.appendChild(l);cell.appendChild(cv);sh.appendChild(cell);
       sheetCvs.push({cv:cv,frame:fr==='B'?1:0,dir:d});
@@ -612,7 +1088,7 @@ function palBlock(title,palObj,opts){
   head.appendChild(mini);palMinis.push({cv:mini,pal:palObj});
   var spacer=document.createElement('span');spacer.style.flex='1';head.appendChild(spacer);
   if(opts.onDelete){
-    var del=document.createElement('button');del.className='btn sm red';del.textContent='✕ Delete';
+    var del=document.createElement('button');del.className='btn sm red';del.textContent='✕ '+TLI18N.t('delBtn');
     del.addEventListener('click',opts.onDelete);head.appendChild(del);
   }
   box.appendChild(head);
@@ -639,17 +1115,17 @@ function buildPalTab(){
       var lg=document.createElement('legend');lg.textContent=name+' — '+val.length+' variants';grp.appendChild(lg);
       val.forEach(function(sp,ix){
         grp.appendChild(palBlock(name+' ['+ix+']',sp,{onDelete:function(){
-          if(!confirm('Delete '+name+'['+ix+']?'))return;
+          if(!confirm(TLI18N.t('delVarFmt',{n:name,i:ix})))return;
           val.splice(ix,1);buildPalTab();buildPalSelect();refreshAllPreviews();regenExports();
         }}));
       });
-      var add=document.createElement('button');add.className='btn sm';add.textContent='+ Add Variant';
+      var add=document.createElement('button');add.className='btn sm';add.textContent=TLI18N.t('addVariant');
       add.addEventListener('click',function(){val.push(clone(val[val.length-1]||MODEL.pal.player||{}));buildPalTab();buildPalSelect();refreshAllPreviews();regenExports();});
       grp.appendChild(add);
       wrap.appendChild(grp);
     }else{
       wrap.appendChild(palBlock(name,val,{renamable:true,onDelete:function(){
-        if(!confirm('Delete palette “'+name+'”?'))return;
+        if(!confirm(TLI18N.t('delPalFmt',{n:name})))return;
         delete MODEL.pal[name];buildPalTab();buildPalSelect();refreshAllPreviews();regenExports();
       }}));
     }
@@ -659,17 +1135,17 @@ function buildPalTab(){
 function renamePalette(oldN,newN){
   newN=newN.trim();
   if(!newN||newN===oldN){buildPalTab();return;}
-  if(MODEL.pal[newN]!==undefined){toast('Palette “'+newN+'” already exists');buildPalTab();return;}
-  if(!isIdent(newN)){toast('Use letters/digits only');buildPalTab();return;}
+  if(MODEL.pal[newN]!==undefined){toast(TLI18N.t('palExistsFmt',{n:newN}));buildPalTab();return;}
+  if(!isIdent(newN)){toast(TLI18N.t('useAlnum'));buildPalTab();return;}
   var np={};
   Object.entries(MODEL.pal).forEach(function(kv){np[kv[0]===oldN?newN:kv[0]]=kv[1];});
   MODEL.pal=np;buildPalTab();buildPalSelect();refreshAllPreviews();regenExports();
 }
 $('btnAddPal').addEventListener('click',function(){
-  var n=prompt('New palette name (letters/digits):','custom');
+  var n=prompt(TLI18N.t('palNamePrompt'),'custom');
   if(!n)return;n=n.trim();
-  if(!isIdent(n)){toast('Invalid name');return;}
-  if(MODEL.pal[n]!==undefined){toast('Already exists');return;}
+  if(!isIdent(n)){toast(TLI18N.t('invalidName'));return;}
+  if(MODEL.pal[n]!==undefined){toast(TLI18N.t('alreadyExists'));return;}
   MODEL.pal[n]=clone(MODEL.pal.player||{k:'#000000',c:'#555555',l:'#ffffff',m:'#999999',h:'#333333',G:'#ffff00',x:'#777777',X:'#bbbbbb'});
   buildPalTab();buildPalSelect();refreshAllPreviews();regenExports();
 });
@@ -690,11 +1166,11 @@ function renderValue(parent,val,apply){
     val.forEach(function(v,i){
       var ae=document.createElement('span');ae.className='arrEl';
       ae.appendChild(numInput(v,function(n){val[i]=n;}));
-      var rm=document.createElement('button');rm.className='btn sm red';rm.textContent='–';rm.title='remove element';
+      var rm=document.createElement('button');rm.className='btn sm red';rm.textContent='–';rm.title=TLI18N.t('removeEl');
       rm.addEventListener('click',function(){val.splice(i,1);buildBalTab();regenExports();});
       ae.appendChild(rm);row.appendChild(ae);
     });
-    var add=document.createElement('button');add.className='btn sm';add.textContent='+';add.title='add element';
+    var add=document.createElement('button');add.className='btn sm';add.textContent='+';add.title=TLI18N.t('addEl');
     add.addEventListener('click',function(){val.push(0);buildBalTab();regenExports();});
     row.appendChild(add);parent.appendChild(row);return;
   }
@@ -723,7 +1199,7 @@ function buildBalTab(){
     nm.addEventListener('change',function(){
       var nk=nm.value.trim();
       if(!nk||nk===key){buildBalTab();return;}
-      if(MODEL.sizes[nk]!==undefined||!isIdent(nk)){toast('Invalid or duplicate key');buildBalTab();return;}
+      if(MODEL.sizes[nk]!==undefined||!isIdent(nk)){toast(TLI18N.t('invalidOrDup'));buildBalTab();return;}
       var ns={};Object.entries(MODEL.sizes).forEach(function(e2){ns[e2[0]===key?nk:e2[0]]=e2[1];});
       MODEL.sizes=ns;buildBalTab();regenExports();
     });
@@ -734,16 +1210,16 @@ function buildBalTab(){
     var lh=document.createElement('label');lh.textContent='H';lh.style.width='20px';
     r.appendChild(lw);r.appendChild(w);r.appendChild(lh);r.appendChild(h);
     var rm=document.createElement('button');rm.className='btn sm red';rm.textContent='✕';
-    rm.addEventListener('click',function(){if(confirm('Delete size “'+key+'”?')){delete MODEL.sizes[key];buildBalTab();regenExports();}});
+    rm.addEventListener('click',function(){if(confirm(TLI18N.t('delSizeFmt',{n:key}))){delete MODEL.sizes[key];buildBalTab();regenExports();}});
     var sp=document.createElement('span');sp.style.flex='1';
     r.appendChild(sp);r.appendChild(rm);
     sl.appendChild(r);
   });
 }
 $('btnAddSize').addEventListener('click',function(){
-  var k=prompt('Size key (e.g. XXL):','XXL');
+  var k=prompt(TLI18N.t('sizeKeyPrompt'),'XXL');
   if(!k)return;k=k.trim();
-  if(!isIdent(k)||MODEL.sizes[k]!==undefined){toast('Invalid or duplicate key');return;}
+  if(!isIdent(k)||MODEL.sizes[k]!==undefined){toast(TLI18N.t('invalidOrDup'));return;}
   MODEL.sizes[k]=[40,28];buildBalTab();regenExports();
 });
 
@@ -765,16 +1241,16 @@ function renderStrList(){
       regenExports();
     });
     var rm=document.createElement('button');rm.className='btn sm red';rm.textContent='✕';
-    rm.addEventListener('click',function(){if(confirm('Delete string “'+k+'”?')){delete MODEL.str[k];renderStrList();regenExports();}});
+    rm.addEventListener('click',function(){if(confirm(TLI18N.t('delStrFmt',{k:k}))){delete MODEL.str[k];renderStrList();regenExports();}});
     r.appendChild(key);r.appendChild(inp);r.appendChild(rm);
     list.appendChild(r);
   });
 }
 $('strFilter').addEventListener('input',renderStrList);
 $('btnAddStr').addEventListener('click',function(){
-  var k=prompt('New string key:','myText');
+  var k=prompt(TLI18N.t('strKeyPrompt'),'myText');
   if(!k)return;k=k.trim();
-  if(MODEL.str[k]!==undefined){toast('Key exists');return;}
+  if(MODEL.str[k]!==undefined){toast(TLI18N.t('keyExists'));return;}
   MODEL.str[k]='';renderStrList();regenExports();
 });
 
@@ -828,8 +1304,8 @@ function loadSizes(v){
   MODEL.sizes=v;buildBalTab();regenExports();
 }
 function tryImport(text,loader,name){
-  try{var v=parseText(text);loader(v);toast(name+' loaded');return true;}
-  catch(e){toast('⚠ '+name+' import failed: '+e.message);return false;}
+  try{var v=parseText(text);loader(v);toast(TLI18N.t('loadedFmt',{n:name}));return true;}
+  catch(e){toast(TLI18N.t('importFailFmt',{n:name,e:e.message}));return false;}
 }
 $('btnTankLoad').addEventListener('click',function(){tryImport($('tankIn').value,loadTank,'TANK_A');});
 $('btnPalLoad').addEventListener('click',function(){tryImport($('palIn').value,loadPal,'PAL');});
@@ -842,22 +1318,22 @@ $('btnBalLoad').addEventListener('click',function(){
     var s=findVar(t,'SIZES');
     if(s){loadSizes(parseText(s));ok=true;}
     if(!ok)tryImport(t,loadBal,'BAL');
-    else toast('BAL / SIZES loaded');
-  }catch(e){toast('⚠ Balance import failed: '+e.message);}
+    else toast(TLI18N.t('balLoaded'));
+  }catch(e){toast(TLI18N.t('balFail',{e:e.message}));}
 });
 $('btnExtract').addEventListener('click',function(){
   var src=$('fullSrc').value;
-  if(!src.trim()){toast('Paste the game code first');return;}
+  if(!src.trim()){toast(TLI18N.t('pasteFirst'));return;}
   var res=[];
   function go(name,fn){
     var t=findVar(src,name);
-    if(!t){res.push(name+': not found');return;}
+    if(!t){res.push(name+': '+TLI18N.t('notFound'));return;}
     try{fn(parseText(t));res.push(name+': OK');}
     catch(e){res.push(name+': ERROR');}
   }
   go('TANK_A',loadTank);go('PAL',loadPal);go('BAL',loadBal);go('STR',loadStr);go('SIZES',loadSizes);
   $('extractStatus').textContent=res.join(' · ');
-  toast('Extraction finished');
+  toast(TLI18N.t('extractionDone'));
 });
 
 /* ================= RESET ================= */
@@ -865,9 +1341,9 @@ function resetAll(){
   MODEL.tank=DEF_TANK.map(function(r){return r.split('');});
   MODEL.pal=clone(DEF_PAL);MODEL.bal=clone(DEF_BAL);MODEL.str=clone(DEF_STR);MODEL.sizes=clone(DEF_SIZES);
   undoStack.length=0;
-  initAll();toast('All resources reset to game defaults');
+  initAll();toast(TLI18N.t('resetDone'));
 }
-$('btnResetAll').addEventListener('click',function(){if(confirm('Reset ALL resources to the original game values?'))resetAll();});
+$('btnResetAll').addEventListener('click',function(){if(confirm(TLI18N.t('resetConfirm')))resetAll();});
 
 /* ================= KEYBOARD ================= */
 addEventListener('keydown',function(e){
@@ -884,6 +1360,7 @@ addEventListener('keydown',function(e){
 });
 
 /* ================= INIT ================= */
+window.__tlRebuild=function(){buildSheet();buildPalTab();buildPalSelect();buildSwatches();buildBalTab();renderStrList();};
 function initAll(){
   buildSheet();buildPalSelect();buildSwatches();
   sizeGridCanvas();drawGrid();
@@ -892,6 +1369,30 @@ function initAll(){
   $('szW').value=gridW();$('szH').value=gridH();
 }
 initAll();
+
+/* Developer harness bridge (?debug=dbg/tanks_editor.js): names only, no logic,
+   no listeners. Editor behaviour is identical with and without the parameter. */
+window.TLHOOK = {
+  MODEL: MODEL, DEF_BAL: DEF_BAL, DEF_PAL: DEF_PAL, DEF_SIZES: DEF_SIZES, DEF_STR: DEF_STR,
+  get CELL() { return CELL }, set CELL(v) { CELL = v; if (typeof sizeGridCanvas === "function") sizeGridCanvas(); if (typeof drawGrid === "function") drawGrid() },
+  get tool() { return tool }, set tool(v) { tool = v },
+  get selChar() { return selChar }, set selChar(v) { selChar = v },
+  get mirror() { return mirror }, set mirror(v) { mirror = !!v },
+  get painting() { return painting },
+  get undoStack() { return undoStack },
+  get animFrame() { return animFrame }, set animFrame(v) { animFrame = v },
+  get previewDir() { return previewDir }, set previewDir(v) { previewDir = v },
+  get sheetCvs() { return sheetCvs },
+  gridW: gridW, gridH: gridH, setCell: setCell, cellFromEvent: cellFromEvent, setTool: setTool,
+  pushUndo: pushUndo, undo: undo, drawGrid: drawGrid, sizeGridCanvas: sizeGridCanvas, buildSheet: buildSheet,
+  buildPalTab: buildPalTab, buildPalSelect: buildPalSelect, buildSwatches: buildSwatches, buildBalTab: buildBalTab,
+  renderPreviews: renderPreviews, drawPalMinis: drawPalMinis, renderValue: renderValue,
+  get drawAnim() { return drawAnim }, set drawAnim(f) { drawAnim = f },
+  renderStrList: renderStrList, regenExports: regenExports, parseText: parseText,
+  loadTank: loadTank, loadPal: loadPal, loadBal: loadBal, loadStr: loadStr, loadSizes: loadSizes,
+  tryImport: tryImport, resetAll: resetAll, toast: toast,
+  rebuild: function () { if (typeof window.__tlRebuild === "function") window.__tlRebuild() }
+};
 })();
 </script>
 <script>
@@ -931,5 +1432,232 @@ else seen(cur);
 }).catch(function () {});
 })();
 </script>
+<script>
+/* Developer harness. ?debug=dbg/tanks_editor.js loads the shared engine dbg/_harness.js
+   then that script: live panel with state, elements, layout per screen mode,
+   texts, balance, cheats, JSON export. No parameter or missing script = the
+   page behaves exactly as without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
+</script>
+<!-- inlined fs.js — the source of truth is fs.js: edit that file and re-inline this block -->
+<script>
+/* fs.js — the one fullscreen control every page shares.
+
+   Two jobs:
+
+   1. A toggle button. `TLFS.mount("#opts", {cls:"btn"})` puts it inside a menu or
+      title panel using that page's own button class; `TLFS.mount()` alone floats a
+      small icon button in the bottom-right corner; `{icon:true}` swaps the word for
+      a ⤢ glyph and moves it into `aria-label` for narrow hosts. The wording is the
+      shared translation key `fullscreen` / `exitFullscreen` — from the i18n kit, from
+      a page table published through `TLFS_LABEL(key)`, or English as the floor — and
+      a change of `<html lang>` repaints it. Where the Fullscreen API is missing the
+      button hides itself instead of lying.
+
+   2. Re-fit on every usable-area change. Entering or leaving fullscreen, an
+      orientation flip, and a mobile browser bar hiding or showing all change the
+      area the game has to fill — and the bar case does not always fire a plain
+      `resize`. This file listens to `fullscreenchange` (all vendor spellings) and
+      to `visualViewport.resize`, then re-applies `<html data-fs>` and dispatches
+      `resize` (plus `orientationchange`) once per frame, so the page's own layout
+      code runs. `TLFS.refitOnly()` gives a page that already has its own
+      fullscreen button just that wiring, without a second button.
+
+   Nothing here reads game state, and a page that never calls mount/refitOnly gets
+   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+(function () {
+  if (window.TLFS) return;
+  var de = document.documentElement;
+  var REQ = de.requestFullscreen || de.webkitRequestFullscreen ||
+    de.msRequestFullscreen || de.mozRequestFullScreen;
+  var EX = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.msExitFullscreen || document.mozCancelFullScreen;
+  var blocked = !REQ || !EX || de.fullscreenEnabled === false;
+  var ICON = "\u2922"; /* narrow hosts (side stripes, icon bars) get the glyph plus a
+                          translated aria-label instead of the word */
+  var btns = [], cbs = [], queued = false, styleDone = false;
+
+  function isFull() {
+    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
+      de.msFullscreenElement || de.mozFullScreenElement);
+  }
+  function kit() {
+    var k = window.TLI18N;
+    return (k && typeof k.t === "function") ? k : null;
+  }
+  /* A missing key makes t() hand back the key name — that is not a label.
+     Pages that keep their own translation table (billiards, tilt, oilstorm) publish
+     TLFS_LABEL(key) instead of the kit; they win over the kit, English is the floor. */
+  function label() {
+    var want = isFull() ? "exitFullscreen" : "fullscreen";
+    var L = window.TLFS_LABEL;
+    if (typeof L === "function") {
+      try { var v = L(want); if (v && v !== want) return String(v) } catch (e) {}
+    }
+    var k = kit(), t = null;
+    if (k) { try { t = k.t(want) } catch (e) { t = null } }
+    if (!t || t === want) t = isFull() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+    return t;
+  }
+  function cssOnce() {
+    if (styleDone) return;
+    styleDone = true;
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlfs-float:hover{border-color:#ffd76a;color:#ffd76a}" +
+      ".tlfs-float[hidden]{display:none}";
+    document.head.appendChild(st);
+  }
+  function paint() {
+    var txt = label();
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      b.textContent = b.__tlfsIcon ? ICON : txt;
+      b.setAttribute("aria-label", txt);
+      b.setAttribute("aria-pressed", isFull() ? "true" : "false");
+    }
+  }
+  /* One pass per frame: fullscreenchange and visualViewport.resize often arrive
+     together, and dispatching resize from inside a resize listener would loop. */
+  function refit() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint();
+      for (var i = 0; i < cbs.length; i++) { try { cbs[i](isFull()) } catch (e) {} }
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("orientationchange"));
+    });
+  }
+  function toggle() {
+    if (blocked) return false;
+    var was = isFull();
+    try {
+      if (was) EX.call(document);
+      else { var p = REQ.call(de); if (p && p.catch) p.catch(function () {}) }
+    } catch (e) {}
+    /* the change event may never come (sandboxed frames, denied requests, some
+       headless shells that grant then silently drop): repaint the state we can
+       read twice, late enough to catch a transition nobody announced. */
+    setTimeout(refit, 220);
+    setTimeout(refit, 700);
+    return !was;
+  }
+
+  de.setAttribute("data-fs", "off");
+  ["fullscreenchange", "webkitfullscreenchange", "MSFullscreenChange", "mozfullscreenchange"]
+    .forEach(function (t) { document.addEventListener(t, refit, false) });
+  ["fullscreenerror", "webkitfullscreenerror"].forEach(function (t) {
+    document.addEventListener(t, function () { de.setAttribute("data-fs", "off"); paint() }, false)
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", refit, false);
+    window.visualViewport.addEventListener("scroll", function () {
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint(); /* an exit the browser never announced must still clear the label */
+    }, false);
+  }
+  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
+  }, false);
+  /* A language switch changes <html lang>: repaint from whatever table the page
+     uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
+     drive their toggle state off that attribute, and taking it would corrupt them. */
+  new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
+
+  window.TLFS = {
+    version: "2026.11.23.3",
+    supported: !blocked,
+    isFull: isFull,
+    label: label,
+    paint: paint,
+    toggle: toggle,
+    onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
+    /* just the size/orientation wiring, for a page with its own fullscreen button */
+    refitOnly: function () { paint(); return true },
+    /* put the button in `sel` (or float it when the selector matches nothing).
+       opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
+       puts the translated word in aria-label, for narrow hosts. */
+    mount: function (sel, opts) {
+      cssOnce();
+      var o = opts || {};
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = o.cls || "tlfs-float";
+      b.id = o.id || "tlfsBtn";
+      b.__tlfsIcon = !!o.icon;
+      if (o.float !== false && !o.cls) b.classList.add("tlfs-float");
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", label());
+      if (o.ariaLabel) b.setAttribute("data-aria", o.ariaLabel);
+      b.textContent = o.icon ? ICON : label();
+      /* a menu that starts the game on any tap (defender binds pointerdown on the
+         whole title screen) must not fire when the fullscreen button is pressed */
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("touchstart", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle() });
+      var host = sel ? document.querySelector(sel) : null;
+      if (host) {
+        if (o.prepend && host.firstChild) host.insertBefore(b, host.firstChild);
+        else host.appendChild(b);
+      } else {
+        b.classList.add("tlfs-float");
+        document.body.appendChild(b);
+      }
+      if (blocked) b.style.display = "none";
+      btns.push(b);
+      paint();
+      return b;
+    },
+    /* wire a button the page already has in its markup (keeps its own look) */
+    attach: function (el) {
+      cssOnce();
+      if (!el) return null;
+      if (blocked) { el.style.display = "none"; return el }
+      el.addEventListener("click", function (e) { e.preventDefault(); toggle() });
+      btns.push(el);
+      paint();
+      return el;
+    },
+    /* a rebuilt panel drops its children: re-add every button the page mounted */
+    reassert: function () {
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i];
+        if (!b.isConnected && b.__tlfsHost) {
+          var h = document.querySelector(b.__tlfsHost);
+          if (h) h.appendChild(b);
+        }
+      }
+      paint();
+      return btns.length
+    }
+  };
+  /* remember where each button was mounted so a panel rebuild can put it back */
+  var mount0 = window.TLFS.mount;
+  window.TLFS.mount = function (sel, opts) {
+    var b = mount0(sel, opts);
+    if (b) b.__tlfsHost = sel || "body";
+    return b;
+  };
+  var k = kit();
+  if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
+})();
+</script>
+<script>TLFS.mount("#tlHost",{cls:"btn"});</script>
 </body>
 </html>

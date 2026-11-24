@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#070919">
 <title>BULLET Heaven — procedural bullet heaven</title>
-<meta name="version" content="2026.11.07.1">
+<meta name="version" content="2026.11.24.1">
 <link rel="icon" href="data:,">
 <style>
 :root{
@@ -127,115 +127,723 @@ body.left-controls #btnBomb{right:auto;left:max(68px,6.8em);}
 <body>
 <div id="frame">
   <canvas id="game" width="480" height="720"></canvas>
-  <button id="btnPause" aria-label="pause">II</button>
-  <div id="btnFocus" class="tbtn" aria-label="focus">FOCUS</div>
-  <div id="btnBomb" class="tbtn" aria-label="bomb">BOMB</div>
+  <button id="btnPause" data-aria="pause">II</button>
+  <div id="btnFocus" class="tbtn" data-t="focus_word" data-aria="focus_word">FOCUS</div>
+  <div id="btnBomb" class="tbtn" data-t="bomb_word" data-aria="bomb_word">BOMB</div>
 
   <div class="ovl" id="ovTitle">
     <div class="panel">
       <div class="kanji">弾幕天国</div>
-      <div class="eyebrow">PROCEDURAL BULLET HEAVEN · ENDLESS NIGHT</div>
+      <div class="eyebrow" data-t="eyebrow_title">PROCEDURAL BULLET HEAVEN · ENDLESS NIGHT</div>
       <h1>BULLET<em>Heaven</em></h1>
       <p class="flavor">Fly a shrine-craft into a night that is never the same twice. Waves, foes and spell
         cards are woven from your seed — graze the storm, gather boons, and outlive the dawn.</p>
-      <div class="row"><span class="lbl">DIFFICULTY</span>
-        <button class="chip" data-d="easy">EASY<small>★</small></button>
-        <button class="chip on" data-d="normal">NORMAL<small>★★</small></button>
-        <button class="chip" data-d="hard">HARD<small>★★★★</small></button>
-        <button class="chip" data-d="lunatic">LUNATIC<small>★★★★★</small></button>
+      <div class="row"><span class="lbl" data-t="difficulty">DIFFICULTY</span>
+        <button class="chip" data-d="easy"><span data-t="easy">EASY</span><small>★</small></button>
+        <button class="chip on" data-d="normal"><span data-t="normal">NORMAL</span><small>★★</small></button>
+        <button class="chip" data-d="hard"><span data-t="hard">HARD</span><small>★★★★</small></button>
+        <button class="chip" data-d="lunatic"><span data-t="lunatic">LUNATIC</span><small>★★★★★</small></button>
       </div>
-      <div class="row"><span class="lbl">SEED</span><span class="seed" id="seedVal">——————</span>
-        <button id="seedNew" title="new seed">↻ NEW</button></div>
-      <div class="row" style="gap:.4em"><span class="lbl">PASSWORD</span>
-        <button id="btnPwSave">Save</button>
-        <button id="btnPwLoad">Load</button>
+      <div class="row"><span class="lbl" data-t="seed">SEED</span><span class="seed" id="seedVal">——————</span>
+        <button id="seedNew" data-tip="newSeed" title="new seed">↻ <span data-t="word_new">NEW</span></button></div>
+      <div class="row" style="gap:.4em"><span class="lbl" data-t="password">PASSWORD</span>
+        <button id="btnPwSave" data-t="word_save">Save</button>
+        <button id="btnPwLoad" data-t="word_load">Load</button>
       </div>
       <div id="pwBox" class="pw hide"></div>
       <div class="row" style="justify-content:center;gap:1em;margin-top:0.7em">
-        <button class="btn big" id="btnStart">Begin the Night</button>
+        <button class="btn big" id="btnStart" data-t="begin_night">Begin the Night</button>
       </div>
       <div class="row" style="justify-content:center;gap:1em;margin-top:0.3em">
-        <a href="https://1nd1g0.github.io/" class="btn ghost" id="btnHome">Home</a>
-        <button class="btn ghost" id="btnFullscreenTitle">Fullscreen</button>
+        <a href="https://1nd1g0.github.io/" class="btn ghost" id="btnHome" data-t="home">Home</a>
+        <button class="btn ghost" id="btnFullscreenTitle" data-t="fullscreen">Fullscreen</button>
       </div>
       <div class="ctls">
-        <div><h4>KEYBOARD</h4><p><b>WASD / Arrows</b> move · <b>Z / Space</b> shoot<br>
-          <b>Shift</b> focus (slow + hitbox) · <b>X</b> bomb<br>
-          <b>P / Esc</b> pause · <b>T</b> autofire · <b>M</b> sound</p></div>
-        <div><h4>TOUCH / MOUSE</h4><p>Drag anywhere (even outside the frame) to fly.<br>
-          Hold <b>FOCUS</b> to slow down, tap <b>BOMB</b> to erase the sky.</p></div>
-        <div><h4>GAMEPAD</h4><p><b>Stick / D-pad</b> move · <b>A</b> shoot · <b>B</b> bomb<br>
-          <b>LB / LT</b> focus · <b>Start</b> pause</p></div>
-        <div><h4>SAVING</h4><p>Pause → <b>Save Progress</b> writes a password to this browser.<br>
-          Load it anytime from the title screen.</p></div>
+        <div><h4 data-t="head_keyboard">KEYBOARD</h4><p><b>WASD / Arrows</b> <span data-t="act_move">move</span> · <b>Z / Space</b> <span data-t="act_shoot">shoot</span><br>
+          <b>Shift</b> <span data-t="kb_focus">focus (slow + hitbox)</span> · <b>X</b> <span data-t="act_bomb">bomb</span><br>
+          <b>P / Esc</b> <span data-t="act_pause">pause</span> · <b>T</b> <span data-t="kb_autofire">autofire</span> · <b>M</b> <span data-t="kb_sound">sound</span></p></div>
+        <div><h4 data-t="head_touch">TOUCH / MOUSE</h4><p><span data-t="touch_drag">Drag anywhere (even outside the frame) to fly.</span><br>
+          <span data-t="touch_hold">Hold</span> <b data-t="focus_word">FOCUS</b> <span data-t="touch_mid">to slow down, tap</span> <b data-t="bomb_word">BOMB</b> <span data-t="touch_end">to erase the sky.</span></p></div>
+        <div><h4 data-t="head_gamepad">GAMEPAD</h4><p><b>Stick / D-pad</b> <span data-t="act_move">move</span> · <b>A</b> <span data-t="act_shoot">shoot</span> · <b>B</b> <span data-t="act_bomb">bomb</span><br>
+          <b>LB / LT</b> <span data-t="gp_focus">focus</span> · <b>Start</b> <span data-t="act_pause">pause</span></p></div>
+        <div><h4 data-t="head_saving">SAVING</h4><p><span data-t="save_arrow">Pause →</span> <b data-t="save_progress">Save Progress</b> <span data-t="save_pwd1">writes a password to this browser.</span><br>
+          <span data-t="save_pwd2">Load it anytime from the title screen.</span></p></div>
       </div>
-      <div class="hiline">BEST SCORE <b id="hiTitle">0</b> · runs fully offline · your heart is 2½ pixels wide</div>
+      <div class="hiline"><span data-t="best_score">BEST SCORE</span> <b id="hiTitle">0</b> · <span data-t="flavor_foot">runs fully offline · your heart is 2½ pixels wide</span></div>
     </div>
   </div>
 
   <div class="ovl hide" id="ovUpgrade">
     <div class="panel">
-      <div class="eyebrow">THE NIGHT OFFERS</div>
-      <h2>Choose a <span>Boon</span></h2>
-      <div class="sub" id="upgSub">one blessing, freely given</div>
+      <div class="eyebrow" data-t="eyebrow_upgrade">THE NIGHT OFFERS</div>
+      <h2><span data-t="choose_a">Choose a</span> <span data-t="boon_head">Boon</span></h2>
+      <div class="sub" id="upgSub" data-t="upg_sub_default">one blessing, freely given</div>
       <div id="cards"></div>
-      <div class="hint">PRESS 1 · 2 · 3 — OR TAP — OR GAMEPAD A / X / Y</div>
+      <div class="hint" data-t="upg_hint">PRESS 1 · 2 · 3 — OR TAP — OR GAMEPAD A / X / Y</div>
     </div>
   </div>
 
   <div class="ovl hide" id="ovPause">
     <div class="panel" style="text-align:center">
-      <div class="eyebrow">THE STORM HOLDS ITS BREATH</div>
-      <h2>Paused</h2>
+      <div class="eyebrow" data-t="eyebrow_pause">THE STORM HOLDS ITS BREATH</div>
+      <h2 data-t="paused">Paused</h2>
       <div class="row" style="justify-content:center;gap:.5em">
-        <button class="btn" id="btnResume">Resume</button>
-        <button class="btn ghost" id="btnRestart">Restart Seed</button>
+        <button class="btn" id="btnResume" data-t="resume">Resume</button>
+        <button class="btn ghost" id="btnRestart" data-t="restart_seed">Restart Seed</button>
       </div>
       <div class="row" style="justify-content:center;gap:.5em;margin-top:.3em">
         <button class="btn ghost" id="btnMusic">Music: ON</button>
         <button class="btn ghost" id="btnSfx">Sound: ON</button>
       </div>
       <div class="row" style="justify-content:center;gap:.5em;margin-top:.3em">
-        <button class="btn ghost" id="btnRegenSeed">Regen Seed</button>
+        <button class="btn ghost" id="btnRegenSeed" data-t="regen_seed">Regen Seed</button>
         <button class="btn ghost" id="btnLeftCtrls">Controls: LEFT</button>
       </div>
       <div class="row" style="justify-content:center;gap:.5em;margin-top:.3em">
-        <button class="btn ghost" id="btnSavePause">💾 Save Progress</button>
-        <button class="btn ghost" id="btnFullscreen">Fullscreen</button>
-        <button class="btn ghost" id="btnQuit">Title</button>
+        <button class="btn ghost" id="btnSavePause">💾 <span data-t="save_progress">Save Progress</span></button>
+        <button class="btn ghost" id="btnFullscreen" data-t="fullscreen">Fullscreen</button>
+        <button class="btn ghost" id="btnQuit" data-t="title_btn">Title</button>
       </div>
       <div id="pwPauseBox" class="pw hide"></div>
-      <div class="hint" id="pauseInfo">RESUME — unpause · M — sound · P / ESC also resume</div>
+      <div class="hint" id="pauseInfo" data-t="pause_hint">RESUME — unpause · M — sound · P / ESC also resume</div>
     </div>
   </div>
 
   <div class="ovl hide" id="ovOver">
     <div class="panel">
-      <div class="eyebrow">THE STORM PREVAILS</div>
-      <h2>The Night <span>Ends</span></h2>
-      <div id="newRec" class="newrec hide">✦ a new best score ✦</div>
+      <div class="eyebrow" data-t="eyebrow_over">THE STORM PREVAILS</div>
+      <h2><span data-t="night_over_a">The Night</span> <span data-t="night_over_b">Ends</span></h2>
+      <div id="newRec" class="newrec hide" data-t="new_rec">✦ a new best score ✦</div>
       <dl class="stats">
-        <dt>SCORE</dt><dd class="gold" id="stScore">0</dd>
-        <dt>BEST</dt><dd id="stBest">0</dd>
-        <dt>WAVE REACHED</dt><dd id="stWave">0</dd>
-        <dt>GRAZE</dt><dd id="stGraze">0</dd>
-        <dt>PEAK MULTI</dt><dd id="stMulti">×1.00</dd>
-        <dt>BOONS GATHERED</dt><dd id="stBoons">0</dd>
-        <dt>TIME FLOWN</dt><dd id="stTime">0:00</dd>
-        <dt>SEED</dt><dd class="gold" id="stSeed">——</dd>
+        <dt data-t="score">SCORE</dt><dd class="gold" id="stScore">0</dd>
+        <dt data-t="best">BEST</dt><dd id="stBest">0</dd>
+        <dt data-t="stat_wave">WAVE REACHED</dt><dd id="stWave">0</dd>
+        <dt data-t="stat_graze">GRAZE</dt><dd id="stGraze">0</dd>
+        <dt data-t="stat_multi">PEAK MULTI</dt><dd id="stMulti">×1.00</dd>
+        <dt data-t="stat_boons">BOONS GATHERED</dt><dd id="stBoons">0</dd>
+        <dt data-t="stat_time">TIME FLOWN</dt><dd id="stTime">0:00</dd>
+        <dt data-t="seed">SEED</dt><dd class="gold" id="stSeed">——</dd>
       </dl>
       <div class="row" style="justify-content:center;gap:.5em">
         <button class="btn warn" id="btnContinue">Continue (-3000)</button>
       </div>
       <div class="row" style="justify-content:center;gap:.5em">
-        <button class="btn" id="btnRetry">Retry this Seed</button>
-        <button class="btn ghost" id="btnNew">New Seed</button>
-        <button class="btn ghost" id="btnQuit2">Title</button>
+        <button class="btn" id="btnRetry" data-t="retry_seed">Retry this Seed</button>
+        <button class="btn ghost" id="btnNew" data-t="new_seed_btn">New Seed</button>
+        <button class="btn ghost" id="btnQuit2" data-t="title_btn">Title</button>
       </div>
     </div>
   </div>
 </div>
 
+<!-- inlined i18n.js — the source of truth is i18n.js: edit that file and re-inline this block -->
+<script>
+/* ============================================================================
+   i18n.js — shared language kit for every page of this site.
+   Language code decision tree (identical everywhere, in this order):
+     0. any technical problem with this kit -> English
+     1. URL ?language=xx      (a region suffix is fine: pt-BR, zh-CN)
+     2. localStorage['tll:lang']
+     3. the browser's language list (navigator.languages, then navigator.language)
+     4. English
+   A code outside CODES is dropped, not trusted, so the next level decides. Only
+   the picker button writes storage, so a ?language= link never overwrites the
+   visitor's saved choice.
+
+   Page usage
+     <script src="i18n.js"><\/script>            BEFORE the game script
+     <script>TLI18N.add({en:{k:"Text"},es:{...},pt:{...},ru:{...},zh:{...}})<\/script>
+     markup:  <b data-t="score">SCORE</b>  <button data-tip="help">?</button>
+              <input data-ph="name">  <i data-aria="pause">  <img data-alt="car">
+     js:      el.textContent=TLI18N.t("gameOver");
+              el.innerHTML="<b>"+TLI18N.t("best")+": "+n+"</b>";
+              ctx.fillText(TLI18N.t("paused"),x,y);
+     canvas / innerHTML redraws: TLI18N.onChange(()=>redrawAll());
+     pick a host for the language button: TLI18N.mount("#startPanel")
+       (omit it and the kit parks a pill in the lower-left corner)
+   Keys missing from a non-English table fall back to English, so a half
+   translated table still runs. Values for *Fmt keys carry {placeholders}.
+   ========================================================================= */
+(function(){
+"use strict";
+var KEY="tll:lang", CODES=["en","es","pt","ru","zh"];
+var LANGS=[ // code · name in its own language · that word for "language" · its flag
+ ['en','English','Language','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0,0 60,40M60,0 0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 60,40M60,0 0,40" stroke="#C8102E" stroke-width="3.2"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="13"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="8"/></svg>'],
+ ['es','Español','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#AA151B"/><path d="M0,10H60M0,30H60" stroke="#F1BF00" stroke-width="20"/>  </svg>'],
+ ['pt','Português','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="40" fill="#046A38"/><rect x="24" width="36" height="40" fill="#DA291C"/><circle cx="24" cy="20" r="7.5" fill="#FEDF00" stroke="#046A38" stroke-width="1.4"/><path d="M24,14.5 24,22.5M20.5,17.5H27.5" stroke="#DA291C" stroke-width="2.2" fill="none"/></svg>'],
+ ['ru','Русский','Язык','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.34" width="60" height="13.33" fill="#0039A6"/><rect y="26.67" width="60" height="13.33" fill="#D52B1E"/></svg>'],
+ ['zh','中文','语言','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#EE1C25"/><circle cx="10" cy="10" r="5.6" fill="#FFDC00"/><circle cx="21" cy="6" r="2.1" fill="#FFDC00"/><circle cx="26" cy="11.5" r="2.1" fill="#FFDC00"/><circle cx="26" cy="18.5" r="2.1" fill="#FFDC00"/><circle cx="21" cy="24" r="2.1" fill="#FFDC00"/></svg>']
+];
+/* ---- shared vocabulary: the same word means the same thing in every game.
+       Values carry no glyphs — pages keep their ⌂ ▶ ■ icons in the markup. ---- */
+var COMMON={
+en:{
+ paused:"PAUSED",pause:"PAUSE",resume:"RESUME",start:"START",play:"PLAY",home:"HOME",menu:"MENU",
+ options:"OPTIONS",settings:"SETTINGS",help:"HELP",howToPlay:"HOW TO PLAY",rules:"RULES",controls:"CONTROLS",
+ keys:"KEYS",gamepad:"GAMEPAD",mouse:"MOUSE",touch:"TOUCH",
+ sound:"SOUND",music:"MUSIC",sfx:"SOUND FX",on:"ON",off:"OFF",fullscreen:"FULLSCREEN",exitFullscreen:"EXIT FULLSCREEN",
+ difficulty:"DIFFICULTY",easy:"EASY",normal:"NORMAL",hard:"HARD",low:"LOW",high:"HIGH",
+ score:"SCORE",best:"BEST",hiScore:"HIGH SCORE",level:"LEVEL",lives:"LIVES",time:"TIME",
+ speed:"SPEED",round:"ROUND",wave:"WAVE",seed:"SEED",newSeed:"NEW SEED",
+ restart:"RESTART",retry:"RETRY",continue:"CONTINUE",tryAgain:"TRY AGAIN",nextLevel:"NEXT LEVEL",
+ gameOver:"GAME OVER",youWin:"YOU WIN",youLose:"GAME OVER",clear:"CLEARED",
+ fire:"FIRE",jump:"JUMP",back:"BACK",exit:"EXIT",close:"CLOSE",ok:"OK",cancel:"CANCEL",
+ loading:"LOADING",shots:"SHOTS",moves:"MOVES",power:"POWER",angle:"ANGLE",
+ langTitle:"LANGUAGE",langNote:"Choose your language — it is remembered, and it applies to this game and to the whole catalogue.",
+ langBack:"CHANGE LANGUAGE",players:"PLAYERS",player:"PLAYER",you:"YOU",cpu:"CPU",random:"RANDOM"},
+es:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INICIO",play:"JUGAR",home:"INICIO",menu:"MENÚ",
+ options:"OPCIONES",settings:"AJUSTES",help:"AYUDA",howToPlay:"CÓMO JUGAR",rules:"REGLAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"MANDO",mouse:"RATÓN",touch:"TÁCTIL",
+ sound:"SONIDO",music:"MÚSICA",sfx:"EFECTOS",on:"ACTIVO",off:"APAGADO",fullscreen:"PANTALLA COMPLETA",exitFullscreen:"SALIR DE PANTALLA COMPLETA",
+ difficulty:"DIFICULTAD",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAJO",high:"ALTO",
+ score:"PUNTOS",best:"RÉCORD",hiScore:"RÉCORD",level:"NIVEL",lives:"VIDAS",time:"TIEMPO",
+ speed:"VELOCIDAD",round:"RONDA",wave:"OLEADA",seed:"SEMILLA",newSeed:"NUEVA SEMILLA",
+ restart:"REINICIAR",retry:"REINTENTAR",continue:"CONTINUAR",tryAgain:"INTÉNTALO OTRA VEZ",nextLevel:"SIGUIENTE NIVEL",
+ gameOver:"FIN DEL JUEGO",youWin:"¡GANASTE!",youLose:"FIN DEL JUEGO",clear:"SUPERADO",
+ fire:"DISPARO",jump:"SALTAR",back:"ATRÁS",exit:"SALIR",close:"CERRAR",ok:"ACEPTAR",cancel:"CANCELAR",
+ loading:"CARGANDO",shots:"LANZAMIENTOS",moves:"MOVIMIENTOS",power:"FUERZA",angle:"ÁNGULO",
+ langTitle:"IDIOMA",langNote:"Elige tu idioma: se recuerda y se aplica a este juego y a todo el catálogo.",
+ langBack:"CAMBIAR IDIOMA",players:"JUGADORES",player:"JUGADOR",you:"TÚ",cpu:"CPU",random:"ALEATORIO"},
+pt:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INÍCIO",play:"JOGAR",home:"INÍCIO",menu:"MENU",
+ options:"OPÇÕES",settings:"CONFIGURAÇÕES",help:"AJUDA",howToPlay:"COMO JOGAR",rules:"REGRAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"CONTROLE",mouse:"MOUSE",touch:"TOQUE",
+ sound:"SOM",music:"MÚSICA",sfx:"EFEITOS",on:"LIGADO",off:"DESLIGADO",fullscreen:"TELA CHEIA",exitFullscreen:"SAIR DA TELA CHEIA",
+ difficulty:"DIFICULDADE",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAIXO",high:"ALTO",
+ score:"PONTOS",best:"RECORDE",hiScore:"RECORDE",level:"NÍVEL",lives:"VIDAS",time:"TEMPO",
+ speed:"VELOCIDADE",round:"RODADA",wave:"ONDA",seed:"SEMENTE",newSeed:"NOVA SEMENTE",
+ restart:"REINICIAR",retry:"TENTAR DE NOVO",continue:"CONTINUAR",tryAgain:"TENTE DE NOVO",nextLevel:"PRÓXIMO NÍVEL",
+ gameOver:"FIM DE JOGO",youWin:"VOCÊ VENCEU",youLose:"FIM DE JOGO",clear:"COMPLETO",
+ fire:"DISPARO",jump:"SALTAR",back:"VOLTAR",exit:"SAIR",close:"FECHAR",ok:"OK",cancel:"CANCELAR",
+ loading:"CARREGANDO",shots:"BATIDAS",moves:"JOGADAS",power:"FORÇA",angle:"ÂNGULO",
+ langTitle:"IDIOMA",langNote:"Escolha seu idioma: ele é lembrado e vale para este jogo e para todo o catálogo.",
+ langBack:"MUDAR IDIOMA",players:"JOGADORES",player:"JOGADOR",you:"VOCÊ",cpu:"CPU",random:"ALEATÓRIO"},
+ru:{
+ paused:"ПАУЗА",pause:"ПАУЗА",resume:"ПРОДОЛЖИТЬ",start:"СТАРТ",play:"ИГРАТЬ",home:"ДОМОЙ",menu:"МЕНЮ",
+ options:"НАСТРОЙКИ",settings:"НАСТРОЙКИ",help:"ПОМОЩЬ",howToPlay:"КАК ИГРАТЬ",rules:"ПРАВИЛА",controls:"УПРАВЛЕНИЕ",
+ keys:"КЛАВИШИ",gamepad:"ГЕЙМПАД",mouse:"МЫШЬ",touch:"СЕНСОР",
+ sound:"ЗВУК",music:"МУЗЫКА",sfx:"ЗВУКИ",on:"ВКЛ",off:"ВЫКЛ",fullscreen:"НА ВЕСЬ ЭКРАН",exitFullscreen:"ВЫЙТИ С ЭКРАНА",
+ difficulty:"СЛОЖНОСТЬ",easy:"ЛЕГКО",normal:"НОРМА",hard:"СЛОЖНО",low:"НИЗ",high:"ВЕРХ",
+ score:"СЧЁТ",best:"РЕКОРД",hiScore:"РЕКОРД",level:"УРОВЕНЬ",lives:"ЖИЗНИ",time:"ВРЕМЯ",
+ speed:"СКОРОСТЬ",round:"РАУНД",wave:"ВОЛНА",seed:"КОД УРОВНЯ",newSeed:"НОВЫЙ КОД",
+ restart:"ЗАНОВО",retry:"ЕЩЁ РАЗ",continue:"ПРОДОЛЖИТЬ",tryAgain:"ПОПРОБУЙ ЕЩЁ",nextLevel:"СЛЕДУЮЩИЙ УРОВЕНЬ",
+ gameOver:"КОНЕЦ",youWin:"ПОБЕДА",youLose:"КОНЕЦ",clear:"УРОВЕНЬ ПРОЙДЕН",
+ fire:"ОГОНЬ",jump:"ПРЫЖОК",back:"НАЗАД",exit:"ВЫХОД",close:"ЗАКРЫТЬ",ok:"ОК",cancel:"ОТМЕНА",
+ loading:"ЗАГРУЗКА",shots:"УДАРЫ",moves:"ХОДЫ",power:"СИЛА",angle:"УГОЛ",
+ langTitle:"ЯЗЫК",langNote:"Выберите язык — он запоминается и действует для этой игры и для всего каталога.",
+ langBack:"СМЕНИТЬ ЯЗЫК",players:"ИГРОКИ",player:"ИГРОК",you:"ВЫ",cpu:"БОТ",random:"СЛУЧАЙНО"},
+zh:{
+ paused:"暂停",pause:"暂停",resume:"继续",start:"开始",play:"开始游戏",home:"主页",menu:"菜单",
+ options:"选项",settings:"设置",help:"帮助",howToPlay:"怎么玩",rules:"规则",controls:"操作",
+ keys:"按键",gamepad:"手柄",mouse:"鼠标",touch:"触摸",
+ sound:"声音",music:"音乐",sfx:"音效",on:"开",off:"关",fullscreen:"全屏",exitFullscreen:"退出全屏",
+ difficulty:"难度",easy:"简单",normal:"普通",hard:"困难",low:"低",high:"高",
+ score:"得分",best:"最高分",hiScore:"最高分",level:"关卡",lives:"生命",time:"时间",
+ speed:"速度",round:"回合",wave:"波次",seed:"种子",newSeed:"新种子",
+ restart:"重新开始",retry:"重试",continue:"继续",tryAgain:"再试一次",nextLevel:"下一关",
+ gameOver:"游戏结束",youWin:"胜利",youLose:"游戏结束",clear:"过关",
+ fire:"射击",jump:"跳跃",back:"返回",exit:"退出",close:"关闭",ok:"确定",cancel:"取消",
+ loading:"加载中",shots:"击球",moves:"步数",power:"力量",angle:"角度",
+ langTitle:"语言",langNote:"选择语言：会被记住，并用于这个游戏和整个游戏目录。",
+ langBack:"更换语言",players:"玩家",player:"玩家",you:"你",cpu:"电脑",random:"随机"}
+};
+var PAGE={en:{},es:{},pt:{},ru:{},zh:{}};
+function lget(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+function lset(v){try{localStorage.setItem(KEY,v)}catch(e){}}
+var code=null;
+/* A browser language list -> a supported code, or null when it says nothing
+   usable. "pt-BR", "ru_RU", "zh-CN" all match on their 2-letter base. */
+function fromBrowser(){
+ try{
+  var list=null;
+  if(navigator&&Array.isArray(navigator.languages)&&navigator.languages.length)list=navigator.languages;
+  else if(navigator)list=[navigator.language||navigator.userLanguage||""];
+  for(var i=0;i<(list||[]).length;i++){
+   var c=String(list[i]||"").toLowerCase().slice(0,2);
+   if(CODES.indexOf(c)>=0)return c;
+  }
+ }catch(e){}
+ return null;
+}
+(function(){
+ try{
+  var c=null,m=/[?&]language=([a-zA-Z]{2,3})/.exec(location.search||"");
+  if(m)c=m[1].toLowerCase().slice(0,2);           // ?language=pt-BR counts as pt
+  if(c&&CODES.indexOf(c)<0)c=null;
+  if(!c){var s=(lget()||"").toLowerCase().slice(0,2);if(CODES.indexOf(s)>=0)c=s;}
+  if(!c)c=fromBrowser();
+  code=c||"en";
+ }catch(e){code="en";} // a broken lookup speaks English, never nothing
+})();
+function raw(k){
+ var t=PAGE[code]?PAGE[code][k]:null; if(t!=null)return t;
+ t=COMMON[code]?COMMON[code][k]:null; if(t!=null)return t;
+ t=PAGE.en[k]; if(t!=null)return t;
+ t=COMMON.en[k]; return t==null?null:t;
+}
+var hooks=[];
+var API={
+ version:"2026.11.22.2", codes:CODES.slice(), langs:LANGS,
+ lang:function(){return code},
+ browserLang:function(){return fromBrowser()},
+ t:function(k,v){var s;try{s=raw(k)}catch(e){code="en";try{s=raw(k)}catch(e2){s=null}}
+  if(s==null)s=k;var o=v||{};for(var p in o)s=s.split("{"+p+"}").join(String(o[p]));return s},
+ flag:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][3];return ""},
+ name:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][2];return c},
+ add:function(tab){for(var c in tab){if(!PAGE[c])continue;for(var k in tab[c])PAGE[c][k]=tab[c][k];}
+  try{API.apply()}catch(e){}},
+ /* read the tables (the developer harness edits texts through these) */
+ keys:function(c){var out=[],seen={};try{var src=[PAGE[c],COMMON[c],PAGE.en,COMMON.en];
+  for(var i=0;i<src.length;i++)for(var k in src[i])if(!seen[k]){seen[k]=1;out.push(k)}out.sort();}catch(e){}
+  return out},
+ table:function(){var o={};try{for(var i=0;i<CODES.length;i++){var c=CODES[i],m={},s=[COMMON[c],PAGE[c],COMMON.en,PAGE.en];
+  for(var j=0;j<s.length;j++)for(var k in s[j])if(m[k]==null&&s[j][k]!=null)m[k]=s[j][k];o[c]=m;}}catch(e){}
+  return o},
+ setKey:function(c,k,v){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;
+  try{(PAGE[c]=PAGE[c]||{})[k]=String(v);}catch(e){return;}
+  try{API.apply()}catch(e){}
+  for(var i=0;i<hooks.length;i++)try{hooks[i](code)}catch(e){}},
+ onChange:function(f){hooks.push(f)},
+ set:function(c){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;code=c;lset(c);
+  try{API.apply()}catch(e){}for(var i=0;i<hooks.length;i++)try{hooks[i](c)}catch(e){}},
+ apply:function(root){
+  if(document.documentElement)document.documentElement.lang=code;
+  var r=root||document;
+  var set=function(e,attr,put){var v=raw(e.getAttribute(attr));if(v!=null)put(e,v);};
+  var all=[];
+  if(r.nodeType===1)all.push(r);
+  if(r.querySelectorAll)all=all.concat([].slice.call(r.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]")));
+  for(var i=0;i<all.length;i++){var e=all[i];
+   try{
+    if(e.hasAttribute("data-t"))set(e,"data-t",function(n,v){n.textContent=v});
+    if(e.hasAttribute("data-ph"))set(e,"data-ph",function(n,v){n.placeholder=v});
+    if(e.hasAttribute("data-tip"))set(e,"data-tip",function(n,v){n.title=v});
+    if(e.hasAttribute("data-aria"))set(e,"data-aria",function(n,v){n.setAttribute("aria-label",v)});
+    if(e.hasAttribute("data-alt"))set(e,"data-alt",function(n,v){n.alt=v});
+   }catch(e2){} // one odd node never aborts the pass
+  }
+  if(pill){try{pill.innerHTML=API.flag(code)+"<span>"+API.name(code)+"</span>";pill.title=API.t("langTitle");}catch(e){}}
+ },
+ mount:function(sel){hostSel=sel;ensurePill();},
+};
+/* ---------------- language button + picker overlay ---------------- */
+var hostSel=null,pill=null,ov=null;
+var CSS=".tlbtn{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(20,24,22,.72);flex:0 0 auto;align-self:center;"
+ +"border:1px solid #3a463f;border-radius:6px;color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:1px;"
+ +"cursor:pointer;line-height:1;width:auto;max-width:100%}.tlbtn:hover,.tlbtn:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}"
+ +".tlbtn svg{width:22px;height:15px;border:1px solid #2e3a34;border-radius:2px;display:block}"
+ +".tlfix{position:fixed;left:12px;bottom:12px;z-index:2147483000}"
+ +".tlov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;"
+ +"background:rgba(4,7,6,.86);padding:16px}.tlov[hidden]{display:none}"
+ +".tlpanel{max-width:660px;width:100%;background:#141816;border:1px solid #3a463f;border-radius:12px;"
+ +"padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.6);color:#c9d2cb;font:inherit;text-align:center}"
+ +".tlpanel h2{margin:0 0 6px;font-size:20px;letter-spacing:4px;color:#ffd76a}"
+ +".tlpanel p{margin:0 0 16px;font-size:12px;line-height:1.6;color:#8a948e}"
+ +".tlgrid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}"
+ +".tlb{width:132px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;"
+ +"background:rgba(20,24,22,.7);border:1px solid #3a463f;border-radius:8px;cursor:pointer;color:#c9d2cb;font:inherit}"
+ +".tlb:hover,.tlb:focus{border-color:#ffd76a;color:#f4e9c8;outline:none;box-shadow:0 0 14px rgba(255,215,106,.18)}"
+ +".tlb svg{width:50px;height:34px;border:1px solid #2e3a34;border-radius:4px;display:block}"
+ +".tlb b{font-size:13px;color:#f4e9c8}.tlb span{font-size:10px;letter-spacing:1px;color:#8a948e}"
+ +".tlx{margin-top:16px;padding:7px 20px;background:none;border:1px solid #3a463f;border-radius:6px;"
+ +"color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:2px;cursor:pointer}"
+ +".tlx:hover,.tlx:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}";
+function style(){if(document.getElementById("tlcss"))return;var s=document.createElement("style");s.id="tlcss";s.textContent=CSS;document.head.appendChild(s);}
+function ensurePill(){
+ if(pill)return;
+ var host=hostSel?document.querySelector(hostSel):null;
+ if(!host&&document.readyState==="loading")return; // retried at DOMContentLoaded
+ style();
+ pill=document.createElement("button");
+ pill.type="button";pill.className="tlbtn";pill.setAttribute("aria-haspopup","dialog");
+ if(!host){pill.className="tlbtn tlfix";document.body.appendChild(pill);}
+ else host.insertBefore(pill,host.firstChild);
+ pill.onclick=openOv;
+ API.apply();
+}
+function openOv(){
+ if(!ov){
+  ov=document.createElement("div");ov.className="tlov";ov.hidden=true;
+  var p=document.createElement("div");p.className="tlpanel";
+  var h=document.createElement("h2");h.setAttribute("data-t","langTitle");p.appendChild(h);
+  var np=document.createElement("p");np.setAttribute("data-t","langNote");p.appendChild(np);
+  var g=document.createElement("div");g.className="tlgrid";
+  for(var i=0;i<LANGS.length;i++){
+   var b=document.createElement("button");b.type="button";b.className="tlb";b.dataset.lang=LANGS[i][0];
+   b.innerHTML=LANGS[i][3]+"<b>"+LANGS[i][1]+"</b><span>"+LANGS[i][2]+"</span>";g.appendChild(b);
+  }
+  p.appendChild(g);
+  var x=document.createElement("button");x.type="button";x.className="tlx";x.setAttribute("data-t","close");p.appendChild(x);
+  ov.appendChild(p);document.body.appendChild(ov);
+  g.onclick=function(e){var b=e.target;while(b&&b!==g&&!b.dataset.lang)b=b.parentNode;if(b&&b.dataset.lang){API.set(b.dataset.lang);closeOv();}};
+  x.onclick=closeOv;
+  ov.onclick=function(e){if(e.target===ov)closeOv();};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ov&&!ov.hidden)closeOv();});
+ }
+ API.apply(ov);
+ ov.hidden=false;
+}
+function closeOv(){if(ov)ov.hidden=true;}
+function boot(){
+ try{ensurePill();API.apply();}
+ catch(e){code="en";try{ensurePill();API.apply();}catch(e2){}} // rule 0: English on any kit fault
+}
+/* keep freshly added nodes translated without the page calling apply() */
+new MutationObserver(function(ms){
+ if(!pill)return;
+ try{
+  for(var i=0;i<ms.length;i++){var n=ms[i].addedNodes;
+   for(var j=0;j<n.length;j++){var e=n[j];
+    if(e.nodeType!==1)continue;
+    if(e.matches&&e.matches("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]"))API.apply(e);
+    else if(e.querySelectorAll&&e.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]").length)API.apply(e);
+   }}
+ }catch(e){}
+}).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+window.TLI18N=API;
+})();
+</script>
+<script>
+/* If i18n.js is missing or only half-loaded, the game still runs: this stub
+   keeps the same API, pins English, and serves the en table this page registers
+   below via add(). */
+if(!window.TLI18N||typeof window.TLI18N.add!=="function"||typeof window.TLI18N.t!=="function"||typeof window.TLI18N.apply!=="function"||typeof window.TLI18N.mount!=="function"){(function(){var T={en:{}};window.TLI18N={version:"en-fallback",codes:["en"],langs:[["en","EN","English",""]],
+add:function(tab){for(var c in tab){T[c]=Object.assign(T[c]||{},tab[c]);}},
+t:function(k,v){var s=(T.en&&T.en[k]!=null)?T.en[k]:k,o=v||{};for(var p in o)s=String(s).split("{"+p+"}").join(String(o[p]));return s},
+flag:function(){return "";},name:function(c){return c;},lang:function(){return "en";},
+set:function(){},onChange:function(){},apply:function(){},mount:function(){}};})();}
+</script>
+<script>
+/* Page table. Key names use underscores only: a dotted key would collide with
+   this page's own hoisted `T` (spell template) and `D` (difficulty) tables. */
+TLI18N.add({
+en:{
+ // --- title panel ---
+ eyebrow_title:"PROCEDURAL BULLET HEAVEN · ENDLESS NIGHT",
+ flavor:"Fly a shrine-craft into a night that is never the same twice. Waves, foes and spell cards are woven from your seed — graze the storm, gather boons, and outlive the dawn.",
+ password:"PASSWORD",word_save:"Save",word_load:"Load",word_new:"NEW",begin_night:"Begin the Night",
+ head_keyboard:"KEYBOARD",act_move:"move",act_shoot:"shoot",act_bomb:"bomb",act_pause:"pause",kb_focus:"focus (slow + hitbox)",kb_autofire:"autofire",kb_sound:"sound",
+ head_touch:"TOUCH / MOUSE",touch_drag:"Drag anywhere (even outside the frame) to fly.",touch_hold:"Hold",touch_mid:"to slow down, tap",touch_end:"to erase the sky.",
+ focus_word:"FOCUS",bomb_word:"BOMB",gp_focus:"focus",head_gamepad:"GAMEPAD",
+ head_saving:"SAVING",save_arrow:"Pause →",save_pwd1:"writes a password to this browser.",save_pwd2:"Load it anytime from the title screen.",save_progress:"Save Progress",
+ best_score:"BEST SCORE",flavor_foot:"runs fully offline · your heart is 2½ pixels wide",lunatic:"LUNATIC",
+ // --- boon panel ---
+ eyebrow_upgrade:"THE NIGHT OFFERS",choose_a:"Choose a",boon_head:"Boon",upg_sub_default:"one blessing, freely given",upg_hint:"PRESS 1 · 2 · 3 — OR TAP — OR GAMEPAD A / X / Y",upg_sub_waveFmt:"wave {n} weathered",
+ // --- pause panel ---
+ eyebrow_pause:"THE STORM HOLDS ITS BREATH",restart_seed:"Restart Seed",music_btnFmt:"Music: {s}",sound_btnFmt:"Sound: {s}",regen_seed:"Regen Seed",ctrl_btnFmt:"Controls: {s}",ctrl_left:"LEFT",ctrl_right:"RIGHT",pause_hint:"RESUME — unpause · M — sound · P / ESC also resume",
+ // --- game over panel ---
+ eyebrow_over:"THE STORM PREVAILS",night_over_a:"The Night",night_over_b:"Ends",new_rec:"a new best score",
+ stat_wave:"WAVE REACHED",stat_graze:"GRAZE",stat_multi:"PEAK MULTI",stat_boons:"BOONS GATHERED",stat_time:"TIME FLOWN",
+ cont_btnFmt:"Continue (-{cost}) [{n}/{max}]",retry_seed:"Retry this Seed",title_btn:"Title",new_seed_btn:"New Seed",
+ // --- canvas HUD ---
+ hud_hi:"HI SCORE",hud_score:"SCORE",hud_life:"LIFE",hud_waveFmt:"WAVE {n}",hud_grazeFmt:"GRAZE {n}",hud_multiFmt:"MULTI ×{m}",hud_powerFmt:"POWER {n}",hud_max:"MAX",
+ hud_berserkFmt:"BERSERK {n}s",hud_freezeFmt:"FREEZE {n}s",hud_magnetFmt:"MAGNET {n}s",hud_contFmt:"CONTINUES ×{n}",
+ hud_bossFmt:"WAVE {n} — BOSS",hud_spellcard:"SPELL CARD",hud_scoreLostFmt:"-{n} SCORE",
+ // --- canvas banners and floaters ---
+ toast_spellgotFmt:"SPELL CAPTURED +{n}",toast_dispersed:"dispersed…",toast_foeout:"FOE DISPERSED",toast_skybreathe:"the sky exhales",
+ toast_boonFmt:"BOON · {n}",toast_noboons:"+5000 · no boons remain",toast_wardbreak:"WARD BREAKS",toast_wardback:"WARD RESTORED",
+ toast_lastwish:"LAST WISH ACTIVATED",toast_berserkend:"BERSERK ENDS · BOMB +1",toast_bomb1:"BOMB +1",toast_life1:"LIFE +1",
+ toast_autofireFmt:"AUTOFIRE {s}",toast_gpconn:"GAMEPAD CONNECTED",toast_gpad:"plug in and fly",
+ toast_waveclear:"WAVE CLEAR",toast_deepen:"the storm deepens",toast_nightstart:"THE NIGHT BEGINS",toast_seedFmt:"seed {n}",
+ toast_loaded:"LOADED",toast_loadedFmt:"wave {n} resumes",toast_dawn:"the dawn waits",
+ toast_resume:"RESUME",toast_upgraded:"UPGRADE",toast_focused:"FOCUSED",toast_freezed:"FREEZE",toast_magnet:"MAGNET",
+ // --- password save / load ---
+ pw_storedFmt:"Stored password: {pw}",pw_nosave:"No saved run yet — save from the pause menu while playing.",
+ pw_savedFmt:"Saved: {pw}",pw_saved:"Saved",pw_paste:"Paste password:",pw_bad:"Invalid password",
+ // --- boons ---
+ upg_pow:"Scarlet Power",upgd_pow:"All shots deal +25% damage.",
+ upg_spread:"Petal Spread",upgd_spread:"Your volley fans wider.",
+ upg_focus:"Piercing Focus",upgd_focus:"Focus shot +35% damage, tighter stream.",
+ upg_homing:"Will-o-Wisps",upgd_homing:"+1 homing charm per volley.",
+ upg_drone:"Spirit Orb",upgd_drone:"An orbiting orb fires beside you.",
+ upg_rear:"Warden Sigil",upgd_rear:"Fire behind you (Lv2: diagonals too).",
+ upg_side:"Cross Ward",upgd_side:"Talismans fly left and right.",
+ upg_graze:"Comet Tail",upgd_graze:"+40% graze radius; grazing feeds power.",
+ upg_magnet:"Lodestone Charm",upgd_magnet:"Pull items from much farther.",
+ upg_speed:"Swift Step",upgd_speed:"+12% flight speed.",
+ upg_bomb:"Extra Bomb",upgd_bomb:"+1 bomb, immediately.",
+ upg_life:"Extra Life",upgd_life:"+1 life.",
+ upg_shield:"Paper Ward",upgd_shield:"Blocks one hit, then recharges.",
+ upg_fortune:"Fortune's Favor",upgd_fortune:"Richer drops, faster score multi.",
+ upg_pierce:"Rending Talisman",upgd_pierce:"Shots pierce +1 enemy.",
+ upg_slow:"Time Drip",upgd_slow:"Focus slows nearby enemy bullets.",
+ upg_split:"Split Shot",upgd_split:"Main bullets split into 2 on impact.",
+ upg_reflect:"Mirror Charm",upgd_reflect:"Nearby bullets reflect as friendly shots.",
+ upg_crit:"Lucky Star",upgd_crit:"8% chance of 3x damage per shot.",
+ upg_collect:"Paper Crane",upgd_collect:"All items auto-fly toward you at wave clear.",
+ upg_deathBomb:"Last Wish",upgd_deathBomb:"On death, auto-detonate a bomb (once).",
+ upg_combo:"Chain Master",upgd_combo:"+15% score multiplier per graze chain.",
+ upg_extraCont:"Second Wind",upgd_extraCont:"+1 Continue available at death.",
+ upg_charge:"Gale Charge",upgd_charge:"Double-tap direction: dash with invuln frames.",
+ upg_slowmo:"Time's Pause",upgd_slowmo:"Focus slows everything briefly when triggered.",
+ upg_ascPow:"Ascending Power",upgd_ascPow:"Permanent +15% damage, infinite.",
+ upg_ascGraze:"Graze Mastery",upgd_ascGraze:"+10% graze radius, infinite.",
+ upg_ascFort:"Fortune's Ascent",upgd_ascFort:"+8% score multiplier gain, infinite.",
+ upg_ascSpeed:"Swifter Wings",upgd_ascSpeed:"+5% speed, infinite.",
+ upg_tempBerserk:"Berserk Surge",upgd_tempBerserk:"2x damage for 15s, then +1 bomb.",
+ upg_tempTime:"Frozen Moment",upgd_tempTime:"All bullets freeze 8s, +500 score.",
+ upg_tempMagnet:"Vacuum Seal",upgd_tempMagnet:"Pull all items for 10s, +2000 score.",
+ upg_metaScore:"Score Overflow",upgd_metaScore:"Instant +10000 score.",
+ upg_metaPower:"Power Surge",upgd_metaPower:"+50 power instantly.",
+ upg_metaGrace:"Grace Period",upgd_metaGrace:"+2 invulnerability seconds.",
+ upg_metaReroll:"Fate's Reroll",upgd_metaReroll:"Reroll boons next time, +1000 score."
+},
+es:{
+ eyebrow_title:"BULLET HEAVEN · OLEADAS ALEATORIAS · NOCHE SIN FIN",
+ flavor:"Pilota una nave de santuario en una noche que nunca se repite. Oleadas, enemigas y cartas de hechizo se tejen desde tu semilla: roza la tormenta, acumula bendiciones y sobrevive al amanecer.",
+ password:"CONTRASEÑA",word_save:"Guardar",word_load:"Cargar",word_new:"NUEVA",begin_night:"Comenzar la noche",
+ head_keyboard:"TECLADO",act_move:"mover",act_shoot:"disparar",act_bomb:"bomba",act_pause:"pausa",kb_focus:"foco (lento + caja de golpe)",kb_autofire:"autodisparo",kb_sound:"sonido",
+ head_touch:"TÁCTIL / RATÓN",touch_drag:"Arrastra en cualquier parte (incluso fuera del marco) para volar.",touch_hold:"Mantén",touch_mid:"para frenar; toca",touch_end:"para borrar el cielo.",
+ focus_word:"FOCO",bomb_word:"BOMBA",gp_focus:"foco",head_gamepad:"MANDO",
+ head_saving:"GUARDADO",save_arrow:"Pausa →",save_pwd1:"escribe una contraseña en este navegador.",save_pwd2:"Cárgala cuando quieras desde la pantalla de título.",save_progress:"Guardar avance",
+ best_score:"RÉCORD",flavor_foot:"funciona sin conexión · tu corazón mide 2½ píxeles",lunatic:"LUNÁTICO",
+ eyebrow_upgrade:"LA NOCHE OFRECE",choose_a:"Elige una",boon_head:"bendición",upg_sub_default:"una bendición, dada gratis",upg_hint:"PULSA 1 · 2 · 3 — O TOCA — O MANDO A / X / Y",upg_sub_waveFmt:"oleada {n} superada",
+ eyebrow_pause:"LA TORMENTA CONTIENE EL ALIENTO",restart_seed:"Reiniciar con esta semilla",music_btnFmt:"Música: {s}",sound_btnFmt:"Sonido: {s}",regen_seed:"Semilla nueva",ctrl_btnFmt:"Controles: {s}",ctrl_left:"IZQ.",ctrl_right:"DER.",pause_hint:"REANUDAR — quitar pausa · M — sonido · P / ESC también reanuda",
+ eyebrow_over:"LA TORMENTA SE IMPONE",night_over_a:"La Noche",night_over_b:"termina",new_rec:"nuevo récord",
+ stat_wave:"OLEADA ALCANZADA",stat_graze:"ROCES",stat_multi:"MULT. MÁXIMA",stat_boons:"BENDICIONES RECOGIDAS",stat_time:"TIEMPO EN VUELO",
+ cont_btnFmt:"Continuar (-{cost}) [{n}/{max}]",retry_seed:"Reintentar esta semilla",title_btn:"TÍTULO",new_seed_btn:"Nueva semilla",
+ hud_hi:"PUNT. MAX.",hud_score:"PUNTOS",hud_life:"VIDA",hud_waveFmt:"OLEADA {n}",hud_grazeFmt:"ROCES {n}",hud_multiFmt:"MULT ×{m}",hud_powerFmt:"PODER {n}",hud_max:"MÁX",
+ hud_berserkFmt:"BERSERK {n}s",hud_freezeFmt:"CONGELADO {n}s",hud_magnetFmt:"IMÁN {n}s",hud_contFmt:"CONTINUACIONES ×{n}",
+ hud_bossFmt:"OLEADA {n} — JEFA",hud_spellcard:"CARTA DE HECHIZO",hud_scoreLostFmt:"-{n} PUNTOS",
+ toast_spellgotFmt:"CARTA CAPTURADA +{n}",toast_dispersed:"dispersada…",toast_foeout:"ENEMIGA DISIPADA",toast_skybreathe:"el cielo exhala",
+ toast_boonFmt:"BENDICIÓN · {n}",toast_noboons:"+5000 · no quedan bendiciones",toast_wardbreak:"SE ROMPE EL AMULETO",toast_wardback:"AMULETO RESTAURADO",
+ toast_lastwish:"ÚLTIMO DESEO ACTIVADO",toast_berserkend:"BERSERK TERMINA · BOMBA +1",toast_bomb1:"BOMBA +1",toast_life1:"VIDA +1",
+ toast_autofireFmt:"AUTODISPARO {s}",toast_gpconn:"MANDO CONECTADO",toast_gpad:"conecta y vuela",
+ toast_waveclear:"OLEADA SUPERADA",toast_deepen:"la tormenta se intensifica",toast_nightstart:"LA NOCHE COMIENZA",toast_seedFmt:"semilla {n}",
+ toast_loaded:"CARGADO",toast_loadedFmt:"la oleada {n} continúa",toast_dawn:"el amanecer espera",
+ toast_resume:"REANUDAR",toast_upgraded:"MEJORA",toast_focused:"ENFOQUE",toast_freezed:"CONGELAR",toast_magnet:"IMÁN",
+ pw_storedFmt:"Contraseña guardada: {pw}",pw_nosave:"Aún no hay partida guardada — guarda desde el menú de pausa mientras juegas.",
+ pw_savedFmt:"Guardado: {pw}",pw_saved:"Guardado",pw_paste:"Pega la contraseña:",pw_bad:"Contraseña no válida",
+ upg_pow:"Poder escarlata",upgd_pow:"Todos los disparos hacen +25% de daño.",
+ upg_spread:"Abanico de pétalos",upgd_spread:"Tu descarga se abre más.",
+ upg_focus:"Foco perforante",upgd_focus:"Disparo enfocado +35% de daño, chorro más cerrado.",
+ upg_homing:"Fuegos fatuos",upgd_homing:"+1 amuleto teledirigido por descarga.",
+ upg_drone:"Orbe espiritual",upgd_drone:"Un orbe orbitante dispara a tu lado.",
+ upg_rear:"Sigilo guardián",upgd_rear:"Dispara hacia atrás (Nv2: también en diagonal).",
+ upg_side:"Amuleto en cruz",upgd_side:"Los talismanes vuelan a los lados.",
+ upg_graze:"Cola de cometa",upgd_graze:"+40% radio de roce; rozar da poder.",
+ upg_magnet:"Talismán imán",upgd_magnet:"Atrae objetos desde mucho más lejos.",
+ upg_speed:"Paso veloz",upgd_speed:"+12% de velocidad de vuelo.",
+ upg_bomb:"Bomba extra",upgd_bomb:"+1 bomba, al instante.",
+ upg_life:"Vida extra",upgd_life:"+1 vida.",
+ upg_shield:"Amuleto de papel",upgd_shield:"Bloquea un golpe y se recarga.",
+ upg_fortune:"Favor de la fortuna",upgd_fortune:"Botín más rico, multiplicador más rápido.",
+ upg_pierce:"Talismán desgarrador",upgd_pierce:"Los disparos atraviesan +1 enemiga.",
+ upg_slow:"Goteo de tiempo",upgd_slow:"El foco frena las balas cercanas.",
+ upg_split:"Disparo dividido",upgd_split:"Las balas principales se dividen en 2 al impactar.",
+ upg_reflect:"Talismán espejo",upgd_reflect:"Las balas cercanas se reflejan como disparos aliados.",
+ upg_crit:"Estrella de la suerte",upgd_crit:"8% de probabilidad de daño x3 por disparo.",
+ upg_collect:"Grulla de papel",upgd_collect:"Al superar la oleada, todos los objetos vuelan hacia ti.",
+ upg_deathBomb:"Último deseo",upgd_deathBomb:"Al morir, detona una bomba automáticamente (una vez).",
+ upg_combo:"Maestro de cadenas",upgd_combo:"+15% de multiplicador por cadena de roces.",
+ upg_extraCont:"Segundo aliento",upgd_extraCont:"+1 continuación disponible al morir.",
+ upg_charge:"Carga de vendaval",upgd_charge:"Doble toque en una dirección: impulso con invulnerabilidad.",
+ upg_slowmo:"Tregua del tiempo",upgd_slowmo:"Al activar el foco todo se frena un instante.",
+ upg_ascPow:"Poder ascendente",upgd_ascPow:"+15% de daño permanente, sin límite.",
+ upg_ascGraze:"Maestría del roce",upgd_ascGraze:"+10% de radio de roce, sin límite.",
+ upg_ascFort:"Ascenso de la fortuna",upgd_ascFort:"+8% de ganancia de multiplicador, sin límite.",
+ upg_ascSpeed:"Alas más veloces",upgd_ascSpeed:"+5% de velocidad, sin límite.",
+ upg_tempBerserk:"Arrebato berserk",upgd_tempBerserk:"Daño x2 durante 15s, luego +1 bomba.",
+ upg_tempTime:"Momento helado",upgd_tempTime:"Todas las balas se congelan 8s, +500 puntos.",
+ upg_tempMagnet:"Sello de vacío",upgd_tempMagnet:"Atrae todo durante 10s, +2000 puntos.",
+ upg_metaScore:"Desbordamiento de puntos",upgd_metaScore:"+10000 puntos al instante.",
+ upg_metaPower:"Afluencia de poder",upgd_metaPower:"+50 de poder al instante.",
+ upg_metaGrace:"Periodo de gracia",upgd_metaGrace:"+2 segundos de invulnerabilidad.",
+ upg_metaReroll:"Vuelta de destino",upgd_metaReroll:"Renueva las bendiciones la próxima vez, +1000 puntos."
+},
+pt:{
+ eyebrow_title:"BULLET HEAVEN · ONDAS ALEATÓRIAS · NOITE SEM FIM",
+ flavor:"Pilote uma nave de santuário em uma noite que nunca se repete. Ondas, inimigas e cartas de feitiço são tecidas a partir da sua semente: rogue a tempestade, reúna bênçãos e sobreviva à aurora.",
+ password:"SENHA",word_save:"Salvar",word_load:"Carregar",word_new:"NOVA",begin_night:"Começar a noite",
+ head_keyboard:"TECLADO",act_move:"mover",act_shoot:"atirar",act_bomb:"bomba",act_pause:"pausa",kb_focus:"foco (lento + caixa de hit)",kb_autofire:"tiro automático",kb_sound:"som",
+ head_touch:"TOQUE / MOUSE",touch_drag:"Arraste em qualquer lugar (até fora da moldura) para voar.",touch_hold:"Segure",touch_mid:"para desacelerar; toque",touch_end:"para apagar o céu.",
+ focus_word:"FOCO",bomb_word:"BOMBA",gp_focus:"foco",head_gamepad:"CONTROLE",
+ head_saving:"SALVAMENTO",save_arrow:"Pausa →",save_pwd1:"grava uma senha neste navegador.",save_pwd2:"Carregue-a quando quiser pela tela de título.",save_progress:"Salvar progresso",
+ best_score:"RECORDE",flavor_foot:"funciona offline · seu coração tem 2½ pixels",lunatic:"LUNÁTICO",
+ eyebrow_upgrade:"A NOITE OFERECE",choose_a:"Escolha uma",boon_head:"bênção",upg_sub_default:"uma bênção, dada de graça",upg_hint:"APERTE 1 · 2 · 3 — OU TOQUE — OU CONTROLE A / X / Y",upg_sub_waveFmt:"onda {n} superada",
+ eyebrow_pause:"A TEMPESTADE PRENDE A RESPIRAÇÃO",restart_seed:"Reiniciar com esta semente",music_btnFmt:"Música: {s}",sound_btnFmt:"Som: {s}",regen_seed:"Nova semente",ctrl_btnFmt:"Controles: {s}",ctrl_left:"ESQ.",ctrl_right:"DIR.",pause_hint:"RETOMAR — despausar · M — som · P / ESC também retoma",
+ eyebrow_over:"A TEMPESTADE VENCE",night_over_a:"A Noite",night_over_b:"termina",new_rec:"novo recorde",
+ stat_wave:"ONDA ALCANÇADA",stat_graze:"ROÇADAS",stat_multi:"MULT. MÁXIMA",stat_boons:"BÊNÇÃOS RECOLHIDAS",stat_time:"TEMPO EM VOO",
+ cont_btnFmt:"Continuar (-{cost}) [{n}/{max}]",retry_seed:"Tentar de novo esta semente",title_btn:"TÍTULO",new_seed_btn:"Nova semente",
+ hud_hi:"REC. MAX.",hud_score:"PONTOS",hud_life:"VIDA",hud_waveFmt:"ONDA {n}",hud_grazeFmt:"ROÇADAS {n}",hud_multiFmt:"MULT ×{m}",hud_powerFmt:"PODER {n}",hud_max:"MÁX",
+ hud_berserkFmt:"BERSERK {n}s",hud_freezeFmt:"CONGELADO {n}s",hud_magnetFmt:"ÍMÃ {n}s",hud_contFmt:"CONTINUAÇÕES ×{n}",
+ hud_bossFmt:"ONDA {n} — CHEFE",hud_spellcard:"CARTA DE FEITIÇO",hud_scoreLostFmt:"-{n} PONTOS",
+ toast_spellgotFmt:"CARTA CAPTURADA +{n}",toast_dispersed:"dispersada…",toast_foeout:"INIMIGA DISPERSSA",toast_skybreathe:"o céu exala",
+ toast_boonFmt:"BÊNÇÃO · {n}",toast_noboons:"+5000 · não restam bênçãos",toast_wardbreak:"O TALISMÃ QUEBROU",toast_wardback:"TALISMÃ RESTAURADO",
+ toast_lastwish:"ÚLTIMO DESEJO ATIVADO",toast_berserkend:"BERSERK ACABOU · BOMBA +1",toast_bomb1:"BOMBA +1",toast_life1:"VIDA +1",
+ toast_autofireFmt:"TIRO AUTOMÁTICO {s}",toast_gpconn:"CONTROLE CONECTADO",toast_gpad:"conecte e voe",
+ toast_waveclear:"ONDA COMPLETA",toast_deepen:"a tempestade se intensifica",toast_nightstart:"A NOITE COMEÇA",toast_seedFmt:"semente {n}",
+ toast_loaded:"CARREGADO",toast_loadedFmt:"a onda {n} continua",toast_dawn:"a aurora espera",
+ toast_resume:"RETOMAR",toast_upgraded:"MELHORIA",toast_focused:"FOCO",toast_freezed:"CONGELAR",toast_magnet:"ÍMÃ",
+ pw_storedFmt:"Senha gravada: {pw}",pw_nosave:"Ainda não há partida salva — salve pelo menu de pausa enquanto joga.",
+ pw_savedFmt:"Salvo: {pw}",pw_saved:"Salvo",pw_paste:"Cole a senha:",pw_bad:"Senha inválida",
+ upg_pow:"Poder escarlate",upgd_pow:"Todos os tiros causam +25% de dano.",
+ upg_spread:"Leque de pétalas",upgd_spread:"Sua descarga se abre mais.",
+ upg_focus:"Foco perfurante",upgd_focus:"Tiro focado +35% de dano, jato mais fechado.",
+ upg_homing:"Fogo-fátuo",upgd_homing:"+1 amuleto guiado por descarga.",
+ upg_drone:"Orbe espiritual",upgd_drone:"Um orbe orbital dispara ao seu lado.",
+ upg_rear:"Sigilo guardião",upgd_rear:"Atira para trás (Nv2: também na diagonal).",
+ upg_side:"Talismã em cruz",upgd_side:"Talismãs voam para os lados.",
+ upg_graze:"Cauda de cometa",upgd_graze:"+40% de raio de roçada; roçar dá poder.",
+ upg_magnet:"Talismã ímã",upgd_magnet:"Atrai itens de muito mais longe.",
+ upg_speed:"Passo veloz",upgd_speed:"+12% de velocidade de voo.",
+ upg_bomb:"Bomba extra",upgd_bomb:"+1 bomba, na hora.",
+ upg_life:"Vida extra",upgd_life:"+1 vida.",
+ upg_shield:"Talismã de papel",upgd_shield:"Bloqueia um golpe e recarrega.",
+ upg_fortune:"Favor da fortuna",upgd_fortune:"Itens mais ricos, multiplicador mais rápido.",
+ upg_pierce:"Talismã dilacerante",upgd_pierce:"Os tiros atravessam +1 inimiga.",
+ upg_slow:"Gotejar de tempo",upgd_slow:"O foco desacelera as balas próximas.",
+ upg_split:"Tiro dividido",upgd_split:"As balas principais se dividem em 2 ao atingir.",
+ upg_reflect:"Talismã espelho",upgd_reflect:"Balas próximas refletem como tiros aliados.",
+ upg_crit:"Estrela da sorte",upgd_crit:"8% de chance de dano x3 por tiro.",
+ upg_collect:"Grou de papel",upgd_collect:"Ao completar a onda, todos os itens voam até você.",
+ upg_deathBomb:"Último desejo",upgd_deathBomb:"Ao morrer, detona uma bomba automaticamente (uma vez).",
+ upg_combo:"Mestre das correntes",upgd_combo:"+15% de multiplicador por cadeia de roçadas.",
+ upg_extraCont:"Segundo fôlego",upgd_extraCont:"+1 continua disponível ao morrer.",
+ upg_charge:"Investida de vendaval",upgd_charge:"Toque duplo na direção: arrancada invulnerável.",
+ upg_slowmo:"Pausa do tempo",upgd_slowmo:"Ao ativar o foco, tudo desacelera por um instante.",
+ upg_ascPow:"Poder ascendente",upgd_ascPow:"+15% de dano permanente, sem limite.",
+ upg_ascGraze:"Maestria da roçada",upgd_ascGraze:"+10% de raio de roçada, sem limite.",
+ upg_ascFort:"Ascensão da fortuna",upgd_ascFort:"+8% de ganho de multiplicador, sem limite.",
+ upg_ascSpeed:"Asas mais velozes",upgd_ascSpeed:"+5% de velocidade, sem limite.",
+ upg_tempBerserk:"Ímpeto berserk",upgd_tempBerserk:"Dano x2 por 15s, depois +1 bomba.",
+ upg_tempTime:"Momento gelado",upgd_tempTime:"Todas as balas congelam 8s, +500 pontos.",
+ upg_tempMagnet:"Selo do vácuo",upgd_tempMagnet:"Atrai tudo por 10s, +2000 pontos.",
+ upg_metaScore:"Transbordo de pontos",upgd_metaScore:"+10000 pontos na hora.",
+ upg_metaPower:"Afluência de poder",upgd_metaPower:"+50 de poder na hora.",
+ upg_metaGrace:"Período de graça",upgd_metaGrace:"+2 segundos de invulnerabilidade.",
+ upg_metaReroll:"Virada do destino",upgd_metaReroll:"Sorteia outras bênçãos da próxima vez, +1000 pontos."
+},
+ru:{
+ eyebrow_title:"BULLET HEAVEN · СЛУЧАЙНЫЕ ВОЛНЫ · БЕСКОНЕЧНАЯ НОЧЬ",
+ flavor:"Веди корабль святилища в ночь, что никогда не повторяется. Волны, враги и карты заклинаний сотканы из твоего зерна — скользи среди бури, собирай благословения и переживи рассвет.",
+ password:"ПАРОЛЬ",word_save:"Сохранить",word_load:"Загрузить",word_new:"НОВОЕ",begin_night:"Начать ночь",
+ head_keyboard:"КЛАВИАТУРА",act_move:"движение",act_shoot:"стрельба",act_bomb:"бомба",act_pause:"пауза",kb_focus:"фокус (медл. + хитбокс)",kb_autofire:"автоогонь",kb_sound:"звук",
+ head_touch:"СЕНСОР / МЫШЬ",touch_drag:"Ведите в любом месте (даже за рамкой), чтобы лететь.",touch_hold:"Держите",touch_mid:"для замедления, нажмите",touch_end:"чтобы стереть небо.",
+ focus_word:"ФОКУС",bomb_word:"БОМБА",gp_focus:"фокус",head_gamepad:"ГЕЙМПАД",
+ head_saving:"СОХРАНЕНИЕ",save_arrow:"Пауза →",save_pwd1:"сохраняет пароль в этом браузере.",save_pwd2:"Загрузите его в любой момент на титульном экране.",save_progress:"Сохранить прогресс",
+ best_score:"РЕКОРД",flavor_foot:"работает офлайн · твоя точка уязвимости — 2½ пикселя",lunatic:"ЛУНАТИК",
+ eyebrow_upgrade:"НОЧЬ ПРЕДЛАГАЕТ",choose_a:"Выбери",boon_head:"благословение",upg_sub_default:"одно благословение, даром",upg_hint:"НАЖМИ 1 · 2 · 3 — ИЛИ КАСИСЬ — ИЛИ ГЕЙМПАД A / X / Y",upg_sub_waveFmt:"волна {n} пережита",
+ eyebrow_pause:"БУРЯ ЗАТАИЛА ДЫХАНИЕ",restart_seed:"Заново: тот же код уровня",music_btnFmt:"Музыка: {s}",sound_btnFmt:"Звук: {s}",regen_seed:"Другой код уровня",ctrl_btnFmt:"Управление: {s}",ctrl_left:"ЛЕВО",ctrl_right:"ПРАВО",pause_hint:"ПРОДОЛЖИТЬ — снять паузу · M — звук · P / ESC тоже снимает",
+ eyebrow_over:"БУРЯ ОДОЛЕЛА",night_over_a:"Ночь",night_over_b:"завершается",new_rec:"новый рекорд",
+ stat_wave:"ВОЛНА ДОСЯГНУТА",stat_graze:"КАСАНИЕ",stat_multi:"МАКС. МНОЖИТЕЛЬ",stat_boons:"СОБРАННЫЕ БЛАГОСЛОВЛЕНИЯ",stat_time:"ВРЕМЯ В ПОЛЁТЕ",
+ cont_btnFmt:"Продолжить (-{cost}) [{n}/{max}]",retry_seed:"Повторить этот код уровня",title_btn:"ГЛАВНЫЙ ЭКРАН",new_seed_btn:"Новый код уровня",
+ hud_hi:"РЕКОРД",hud_score:"СЧЁТ",hud_life:"ЖИЗНЬ",hud_waveFmt:"ВОЛНА {n}",hud_grazeFmt:"ГРАЗЫ {n}",hud_multiFmt:"МНОЖ ×{m}",hud_powerFmt:"МОЩЬ {n}",hud_max:"МАКС",
+ hud_berserkFmt:"ЯРОСТЬ {n}с",hud_freezeFmt:"ЗАМОРОЗКА {n}с",hud_magnetFmt:"МАГНИТ {n}с",hud_contFmt:"ПРОДОЛЖЕНИЙ ×{n}",
+ hud_bossFmt:"ВОЛНА {n} — БОСС",hud_spellcard:"КАРТА ЗАКЛИНАНИЙ",hud_scoreLostFmt:"-{n} ОЧКОВ",
+ toast_spellgotFmt:"КАРТА ЗАХВАЧЕНА +{n}",toast_dispersed:"рассеяно…",toast_foeout:"ВРАГ РАССЕЯН",toast_skybreathe:"небо выдыхает",
+ toast_boonFmt:"БЛАГОСЛОВЛЕНИЕ · {n}",toast_noboons:"+5000 · благословений не осталось",toast_wardbreak:"АМУЛЕТ РАЗБИТ",toast_wardback:"АМУЛЕТ ВОССТАНОВЛЕН",
+ toast_lastwish:"ПОСЛЕДНЕЕ ЖЕЛАНИЕ ИСПОЛНЕНО",toast_berserkend:"ЯРОСТЬ СПАЛА · БОМБА +1",toast_bomb1:"БОМБА +1",toast_life1:"ЖИЗНЬ +1",
+ toast_autofireFmt:"АВТОГОНЬ {s}",toast_gpconn:"ГЕЙМПАД ПОДКЛЮЧЁН",toast_gpad:"подключай и лети",
+ toast_waveclear:"ВОЛНА ПРОЙДЕНА",toast_deepen:"буря усиливается",toast_nightstart:"НОЧЬ НАЧИНАЕТСЯ",toast_seedFmt:"код {n}",
+ toast_loaded:"ЗАГРУЖЕНО",toast_loadedFmt:"волна {n} продолжается",toast_dawn:"рассвет подождёт",
+ toast_resume:"ПРОДОЛЖИТЬ",toast_upgraded:"УЛУЧШЕНИЕ",toast_focused:"ФОКУС",toast_freezed:"ЗАМОРОЗКА",toast_magnet:"МАГНИТ",
+ pw_storedFmt:"Сохранённый пароль: {pw}",pw_nosave:"Сохранений пока нет — сохраните из меню паузы во время игры.",
+ pw_savedFmt:"Сохранено: {pw}",pw_saved:"Сохранено",pw_paste:"Вставьте пароль:",pw_bad:"Неверный пароль",
+ upg_pow:"Алая мощь",upgd_pow:"Все снаряды наносят +25% урона.",
+ upg_spread:"Веер лепестков",upgd_spread:"Веер выстрелов становится шире.",
+ upg_focus:"Пронзающий фокус",upgd_focus:"Выстрел в фокусе: +35% урона, плотнее поток.",
+ upg_homing:"Блуждающие огни",upgd_homing:"+1 самонаводящийся амулет за залп.",
+ upg_drone:"Сфера духов",upgd_drone:"Спутница стреляет рядом с тобой.",
+ upg_rear:"Печать хранителя",upgd_rear:"Стреляет назад (ур.2: и по диагоналям).",
+ upg_side:"Крест-оберег",upgd_side:"Талисманы летят влево и вправо.",
+ upg_graze:"Хвост кометы",upgd_graze:"+40% радиус прохода; гразы дают мощь.",
+ upg_magnet:"Магнитный талисман",upgd_magnet:"Притягивает предметы издалека.",
+ upg_speed:"Быстрый шаг",upgd_speed:"+12% к скорости полёта.",
+ upg_bomb:"Лишняя бомба",upgd_bomb:"+1 бомба сразу.",
+ upg_life:"Лишняя жизнь",upgd_life:"+1 жизнь.",
+ upg_shield:"Бумажный оберег",upgd_shield:"Блокирует удар, затем восстанавливается.",
+ upg_fortune:"Милость фортуны",upgd_fortune:"Больше предметов, множитель растёт быстрее.",
+ upg_pierce:"Разрывающий талисман",upgd_pierce:"Снаряды пробивают +1 врага.",
+ upg_slow:"Капли времени",upgd_slow:"В фокусе вражеские пули рядом замедляются.",
+ upg_split:"Раздвоенный выстрел",upgd_split:"Основные пули делятся на 2 при попадании.",
+ upg_reflect:"Зеркальный талисман",upgd_reflect:"Пули рядом отражаются в твои выстрелы.",
+ upg_crit:"Счастливая звезда",upgd_crit:"8% шанс тройного урона за выстрел.",
+ upg_collect:"Бумажный журавлик",upgd_collect:"После волны все предметы летят к тебе.",
+ upg_deathBomb:"Последнее желание",upgd_deathBomb:"При гибели сама взрывает бомбу (один раз).",
+ upg_combo:"Мастер цепочек",upgd_combo:"+15% множителя за цепочку гразов.",
+ upg_extraCont:"Второе дыхание",upgd_extraCont:"+1 продолжение после гибели.",
+ upg_charge:"Рывок шквала",upgd_charge:"Двойное нажатие направления: рывок с неуязвимостью.",
+ upg_slowmo:"Остановка времени",upgd_slowmo:"При фокусе всё на миг замедляется.",
+ upg_ascPow:"Восходящая мощь",upgd_ascPow:"Навсегда +15% урона, без предела.",
+ upg_ascGraze:"Мастер проходов",upgd_ascGraze:"+10% радиус прохода, без предела.",
+ upg_ascFort:"Восхождение фортуны",upgd_ascFort:"+8% к приросту множителя, без предела.",
+ upg_ascSpeed:"Крылья ветра",upgd_ascSpeed:"+5% скорости, без предела.",
+ upg_tempBerserk:"Прилив ярости",upgd_tempBerserk:"2x урона на 15с, затем +1 бомба.",
+ upg_tempTime:"Миг стужи",upgd_tempTime:"Все пули застывают на 8с, +500 очков.",
+ upg_tempMagnet:"Печать пустоты",upgd_tempMagnet:"Собирает все предметы 10с, +2000 очков.",
+ upg_metaScore:"Перелив счёта",upgd_metaScore:"Сразу +10000 очков.",
+ upg_metaPower:"Всплеск мощи",upgd_metaPower:"Сразу +50 мощи.",
+ upg_metaGrace:"Период милости",upgd_metaGrace:"+2 секунды неуязвимости.",
+ upg_metaReroll:"Бросок судьбы",upgd_metaReroll:"Новый выбор благ в следующий раз, +1000 очков."
+},
+zh:{
+ eyebrow_title:"BULLET HEAVEN随机弹幕·无尽长夜",
+ flavor:"驾驶神社小舟，飞入一个永不重复的夜晚。波次、敌人与符卡都由你的种子织成——擦过弹雨，收集祝佑，活过黎明。",
+ password:"密码",word_save:"保存",word_load:"读取",word_new:"新",begin_night:"开始长夜",
+ head_keyboard:"键盘",act_move:"移动",act_shoot:"射击",act_bomb:"炸弹",act_pause:"暂停",kb_focus:"聚焦（减速＋判定）",kb_autofire:"自动射击",kb_sound:"声音",
+ head_touch:"触摸/鼠标",touch_drag:"在任意位置拖动（画面外也行）即可飞行。",touch_hold:"按住",touch_mid:"减速，轻点",touch_end:"清空全屏弹幕。",
+ focus_word:"聚焦",bomb_word:"炸弹",gp_focus:"聚焦",head_gamepad:"手柄",
+ head_saving:"存档",save_arrow:"暂停 →",save_pwd1:"会把密码写入本浏览器。",save_pwd2:"随时可在标题界面读取它。",save_progress:"保存进度",
+ best_score:"最高分",flavor_foot:"完全离线运行·你的判定点只有2½像素宽",lunatic:"狂暴",
+ eyebrow_upgrade:"长夜的馈赠",choose_a:"选择一项",boon_head:"祝佑",upg_sub_default:"一份祝福，无偿相赠",upg_hint:"按1·2·3 — 或轻点 — 或手柄 A / X / Y",upg_sub_waveFmt:"已挺过第{n}波",
+ eyebrow_pause:"暴风雨屏住呼吸",restart_seed:"重开这颗种子",music_btnFmt:"音乐：{s}",sound_btnFmt:"声音：{s}",regen_seed:"换一颗种子",ctrl_btnFmt:"按键位置：{s}",ctrl_left:"左侧",ctrl_right:"右侧",pause_hint:"继续—解除暂停 · M—声音 · P / ESC 也能继续",
+ eyebrow_over:"暴风雨得胜",night_over_a:"长夜",night_over_b:"落幕",new_rec:"新的最高分",
+ stat_wave:"到达波次",stat_graze:"擦弹",stat_multi:"最高倍率",stat_boons:"收集的祝佑",stat_time:"飞行时长",
+ cont_btnFmt:"继续（-{cost}）[{n}/{max}]",retry_seed:"重试这颗种子",title_btn:"标题",new_seed_btn:"新种子",
+ hud_hi:"最高分",hud_score:"得分",hud_life:"生命",hud_waveFmt:"第{n}波",hud_grazeFmt:"擦弹{n}",hud_multiFmt:"倍率×{m}",hud_powerFmt:"火力{n}",hud_max:"满",
+ hud_berserkFmt:"狂暴{n}秒",hud_freezeFmt:"冻结{n}秒",hud_magnetFmt:"磁吸{n}秒",hud_contFmt:"续关×{n}",
+ hud_bossFmt:"第{n}波—BOSS",hud_spellcard:"符卡",hud_scoreLostFmt:"-{n}得分",
+ toast_spellgotFmt:"符卡捕获 +{n}",toast_dispersed:"已消散…",toast_foeout:"敌人消散",toast_skybreathe:"天空呼出一口气",
+ toast_boonFmt:"祝佑 · {n}",toast_noboons:"+5000 · 已无祝佑可取",toast_wardbreak:"护符破碎",toast_wardback:"护符恢复",
+ toast_lastwish:"最后愿望发动",toast_berserkend:"狂暴结束 · 炸弹+1",toast_bomb1:"炸弹+1",toast_life1:"生命+1",
+ toast_autofireFmt:"自动射击{s}",toast_gpconn:"手柄已连接",toast_gpad:"接上手柄起飞",
+ toast_waveclear:"波次通过",toast_deepen:"暴风雨更加猛烈",toast_nightstart:"长夜开始",toast_seedFmt:"种子 {n}",
+ toast_loaded:"已读取",toast_loadedFmt:"从第{n}波继续",toast_dawn:"黎明仍在等待",
+ toast_resume:"继续",toast_upgraded:"强化",toast_focused:"聚焦",toast_freezed:"冻结",toast_magnet:"磁吸",
+ pw_storedFmt:"已存的密码：{pw}",pw_nosave:"还没有存档——请在游玩时从暂停菜单保存。",
+ pw_savedFmt:"已保存：{pw}",pw_saved:"已保存",pw_paste:"粘贴密码：",pw_bad:"密码无效",
+ upg_pow:"绯红火力",upgd_pow:"所有射击伤害+25%。",
+ upg_spread:"花瓣扇形",upgd_spread:"弹幕扇面更宽。",
+ upg_focus:"贯穿聚焦",upgd_focus:"聚焦射击伤害+35%，弹流更密。",
+ upg_homing:"鬼火",upgd_homing:"每轮弹幕+1个追踪符。",
+ upg_drone:"精灵宝珠",upgd_drone:"环绕的宝珠在你身旁开火。",
+ upg_rear:"守护符印",upgd_rear:"向后射击（2级：也含斜向）。",
+ upg_side:"十字护符",upgd_side:"符咒向左右飞去。",
+ upg_graze:"彗星尾迹",upgd_graze:"擦弹半径+40%；擦弹补充火力。",
+ upg_magnet:"磁石护符",upgd_magnet:"大幅增加拾取距离。",
+ upg_speed:"疾步",upgd_speed:"飞行速度+12%。",
+ upg_bomb:"额外炸弹",upgd_bomb:"立即+1炸弹。",
+ upg_life:"额外生命",upgd_life:"+1生命。",
+ upg_shield:"纸护符",upgd_shield:"挡下一次攻击，随后充能。",
+ upg_fortune:"幸运垂青",upgd_fortune:"掉落更丰，倍率涨得更快。",
+ upg_pierce:"撕裂符咒",upgd_pierce:"射击穿透+1个敌人。",
+ upg_slow:"时间滴落",upgd_slow:"聚焦时减慢附近敌弹。",
+ upg_split:"分裂弹",upgd_split:"主弹命中时一分为二。",
+ upg_reflect:"明镜护符",upgd_reflect:"附近敌弹反射为我方子弹。",
+ upg_crit:"幸运星",upgd_crit:"每次射击8%概率造成3倍伤害。",
+ upg_collect:"纸鹤",upgd_collect:"波次结束时所有道具自动飞向你了。",
+ upg_deathBomb:"最后愿望",upgd_deathBomb:"死亡时自动引爆炸弹（一次）。",
+ upg_combo:"连锁大师",upgd_combo:"每段擦弹连锁倍率+15%。",
+ upg_extraCont:"第二口气",upgd_extraCont:"死亡时多1次续关机会。",
+ upg_charge:"疾风突进",upgd_charge:"双击方向键：带无敌帧的冲刺。",
+ upg_slowmo:"时间停顿",upgd_slowmo:"触发聚焦时全体短暂减慢。",
+ upg_ascPow:"上升火力",upgd_ascPow:"永久伤害+15%，无上限。",
+ upg_ascGraze:"擦弹精通",upgd_ascGraze:"擦弹半径+10%，无上限。",
+ upg_ascFort:"幸运上升",upgd_ascFort:"倍率增益+8%，无上限。",
+ upg_ascSpeed:"疾翼",upgd_ascSpeed:"速度+5%，无上限。",
+ upg_tempBerserk:"狂暴涌动",upgd_tempBerserk:"15秒内伤害翻倍，随后+1炸弹。",
+ upg_tempTime:"凝冻一瞬",upgd_tempTime:"全部弹雨冻结8秒，+500分。",
+ upg_tempMagnet:"真空之印",upgd_tempMagnet:"10秒内吸取全部道具，+2000分。",
+ upg_metaScore:"分数溢出",upgd_metaScore:"立即+10000分。",
+ upg_metaPower:"火力涌动",upgd_metaPower:"立即+50火力。",
+ upg_metaGrace:"宽恕时段",upgd_metaGrace:"无敌时间+2秒。",
+ upg_metaReroll:"命运重掷",upgd_metaReroll:"下次重掷祝佑，+1000分。"
+},
+});
+</script>
 <script>
 'use strict';
 const TAU=Math.PI*2, W=480, H=720, HITR=2.5;
@@ -939,7 +1547,7 @@ function resetRun(seed,diff){
   musicOn=musicEnabled;bossMusic=false;
   if(AC){mNext=AC.currentTime+.1;}
   state='play';document.body.classList.add('playing');
-  hideAll();banner('THE NIGHT BEGINS','seed '+seed,2.4);
+  hideAll();banner(TLI18N.t('toast_nightstart'),TLI18N.t('toast_seedFmt',{n:seed}),2.4);
 }
 function hideAll(){['ovTitle','ovUpgrade','ovPause','ovOver'].forEach(i=>$(i).classList.add('hide'))}
 
@@ -1203,7 +1811,7 @@ function buildBoss(w){
 }
 function startBoss(){
   boss=buildBoss(wave);
-  banner('WAVE '+wave+' — BOSS',boss.name+' · '+boss.persona,3,'#ff5470');
+  banner(TLI18N.t('hud_bossFmt',{n:wave}),boss.name+' · '+boss.persona,3,'#ff5470');
   sfx.warn();bossMusic=true;
 }
 function startSpell(i){
@@ -1211,17 +1819,17 @@ function startSpell(i){
   const sp=b.spells[i];sp.t=0;b.hp=sp.hp;b.vulnT=1.1;
   sp.init(b,sp.parms);
   clearBulletsToSparkle();
-  banner(sp.nm,'SPELL CARD',2.6,'#f2c14e');
+  banner(sp.nm,TLI18N.t('hud_spellcard'),2.6,'#f2c14e');
   sfx.spell();
 }
 function endSpell(captured){
   const b=boss;
   if(captured){
     const bonus=Math.round((8000+wave*1200)*mult);score+=bonus;
-    floatText(b.x,b.y+40,'SPELL CAPTURED  +'+bonus,'#f2c14e');
+    floatText(b.x,b.y+40,TLI18N.t('toast_spellgotFmt',{n:bonus}),'#f2c14e');
     for(let k=0;k<4;k++)itAdd(b.x+(Math.random()-.5)*70,b.y,'pt');
     for(let k=0;k<3;k++)itAdd(b.x+(Math.random()-.5)*70,b.y,'P');
-  }else floatText(b.x,b.y+40,'dispersed…','#8b93c0');
+  }else floatText(b.x,b.y+40,TLI18N.t('toast_dispersed'),'#8b93c0');
   b.beams=null;b.beamState='';clearBulletsToSparkle();
   if(b.i+1<b.spells.length){b.ph='trans';b.tt=1.15;}
   else{b.ph='die';b.tt=0;timeScale=.4;}
@@ -1233,7 +1841,7 @@ function finishBoss(){
   itAdd(b.x,b.y,'crate',0,-120);
   score+=Math.round(20000*mult);
   explosion(b.x,b.y,3,'255,220,160');sfx.boom(true);
-  banner('FOE DISPERSED','the sky exhales',2.6);
+  banner(TLI18N.t('toast_foeout'),TLI18N.t('toast_skybreathe'),2.6);
   boss=null;bossMusic=false;interT=2.2;
 }
 
@@ -1284,23 +1892,26 @@ function applyUpgrade(u){
     case 'metaReroll':score+=1000;break;
   }
   sfx.upg();
-  floatText(P.x,P.y-30,'BOON · '+u.n,u.c);
+  floatText(P.x,P.y-30,TLI18N.t('toast_boonFmt',{n:TLI18N.t('upg_'+u.id)}),u.c);
 }
-function showChoice(sub){
-  choices=rollChoices();
-  if(!choices.length){score+=5000;floatText(P.x,P.y-30,'+5000 · no boons remain','#f2c14e');interT=1;return}
-  $('upgSub').textContent=sub||'one blessing, freely given';
+function renderCards(){
   const box=$('cards');box.innerHTML='';
   choices.forEach((u,i)=>{
     const lvl=upLvl(u.id);
     const d=document.createElement('div');d.className='card';
     const maxStr=u.max===99?'∞':u.max;
     d.innerHTML='<span class="key">'+(i+1)+'</span><span class="glyph" style="color:'+u.c+'">'+u.g+'</span>'
-      +'<div class="nm">'+u.n+'</div><div class="ds">'+u.d+'</div>'
+      +'<div class="nm">'+TLI18N.t('upg_'+u.id)+'</div><div class="ds">'+TLI18N.t('upgd_'+u.id)+'</div>'
       +'<div class="pips">'+'●'.repeat(Math.min(5,lvl))+(lvl>5?' +'+(lvl-5):'')+'○'.repeat(Math.min(5,Math.max(0,maxStr-lvl)))+'</div>';
     d.addEventListener('pointerdown',ev=>{ev.preventDefault();pickChoice(i)});
     box.appendChild(d);
   });
+}
+function showChoice(sub){
+  choices=rollChoices();
+  if(!choices.length){score+=5000;floatText(P.x,P.y-30,TLI18N.t('toast_noboons'),'#f2c14e');interT=1;return}
+  $('upgSub').textContent=sub||TLI18N.t('upg_sub_default');
+  renderCards();
   state='upgrade';$('ovUpgrade').classList.remove('hide');
 }
 function pickChoice(i){
@@ -1326,7 +1937,7 @@ function hitPlayer(){
   if(P.inv>0||P.invB>0||P.dead>0||state!=='play')return;
   if(P.shield>0&&P.shReady){
     P.shReady=false;P.shT=(P.shield>1?26:40);P.inv=1.2;
-    explosion(P.x,P.y,1,'140,220,255');sfx.hit();floatText(P.x,P.y-24,'WARD BREAKS','#6ee7ff');
+    explosion(P.x,P.y,1,'140,220,255');sfx.hit();floatText(P.x,P.y-24,TLI18N.t('toast_wardbreak'),'#6ee7ff');
     for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];
       const dx=b.x-P.x,dy=b.y-P.y;if(dx*dx+dy*dy<110*110){pAdd(b.x,b.y,0,-40,.4,3,'140,220,255');bullets.splice(i,1);}}
     return;
@@ -1343,7 +1954,7 @@ function hitPlayer(){
       P.lives = 0;
       P.inv = 2.5;
       P.dead = 0;
-      floatText(P.x,P.y-40,'LAST WISH ACTIVATED','#ff4444');
+      floatText(P.x,P.y-40,TLI18N.t('toast_lastwish'),'#ff4444');
       return;
     }
     state='dying';setTimeout(gameOver,900);
@@ -1449,7 +2060,7 @@ function playerFire(dt){
 function updatePlay(dt){
   runTime+=dt;waveT+=dt;
   if(P.berserkT>0){P.berserkT-=dt;
-    if(P.berserkT<=0){P.dmgMul/=2;P.bombs++;floatText(P.x,P.y-26,'BERSERK ENDS · BOMB +1','#ff8a5c');}}
+    if(P.berserkT<=0){P.dmgMul/=2;P.bombs++;floatText(P.x,P.y-26,TLI18N.t('toast_berserkend'),'#ff8a5c');}}
   if(P.tempTimeT>0)P.tempTimeT-=dt;
   if(P.tempMagnetT>0)P.tempMagnetT-=dt;
   if(P.dashT>0){
@@ -1476,7 +2087,7 @@ function updatePlay(dt){
     if(keys.KeyZ||keys.Space||autoFire||touchMove||gpFire)playerFire(dt);
   }
   P.inv-=dt;P.invB-=dt;P.drA+=dt*1.7;
-  if(P.shield>0&&!P.shReady){P.shT-=dt;if(P.shT<=0){P.shReady=true;floatText(P.x,P.y-26,'WARD RESTORED','#6ee7ff')}}
+  if(P.shield>0&&!P.shReady){P.shT-=dt;if(P.shT<=0){P.shReady=true;floatText(P.x,P.y-26,TLI18N.t('toast_wardback'),'#6ee7ff')}}
   if(bombT>0)bombT-=dt;
   for(let i=shots.length-1;i>=0;i--){
     const s=shots[i];s.t+=dt;
@@ -1641,9 +2252,9 @@ function updatePlay(dt){
       else if(it.type==='pt'){const v=Math.round((900+300*mult)*(1+.35*P.fort+.08*P.ascFort));score+=v;
         mult=Math.min(9.99,mult+.012*(1+.4*P.fort+.08*P.ascFort));if(mult>maxMult)maxMult=mult;sfx.item();}
       else if(it.type==='bf'){bombFrag++;sfx.item();
-        if(bombFrag>=5){bombFrag=0;P.bombs++;floatText(P.x,P.y-26,'BOMB +1','#ff8a5c')}}
-      else if(it.type==='lf'){P.lives++;sfx.item();floatText(P.x,P.y-26,'LIFE +1','#ff5470')}
-      else if(it.type==='bmb'){P.bombs++;sfx.item();floatText(P.x,P.y-26,'BOMB +1','#ff8a5c')}
+        if(bombFrag>=5){bombFrag=0;P.bombs++;floatText(P.x,P.y-26,TLI18N.t('toast_bomb1'),'#ff8a5c')}}
+      else if(it.type==='lf'){P.lives++;sfx.item();floatText(P.x,P.y-26,TLI18N.t('toast_life1'),'#ff5470')}
+      else if(it.type==='bmb'){P.bombs++;sfx.item();floatText(P.x,P.y-26,TLI18N.t('toast_bomb1'),'#ff8a5c')}
       else if(it.type==='crate'){randomBoon();}
       continue;}
     if(it.y>H+30){items.splice(i,1);ipool.push(it)}
@@ -1656,7 +2267,7 @@ function updatePlay(dt){
   if(interT>0){interT-=dt;if(interT<=0&&state==='play')nextWave()}
   else if(state==='play'&&!boss&&spawnQ.length===0&&enemies.length===0&&waveT>waveDur+.6){
     const bonus=Math.round((1000+wave*400)*mult);score+=bonus;
-    banner('WAVE CLEAR','+'+bonus,2);
+    banner(TLI18N.t('toast_waveclear'),'+'+bonus,2);
     if(P.collect>0){
       for(const it of items){
         const dx=P.x-it.x, dy=P.y-it.y;
@@ -1665,13 +2276,13 @@ function updatePlay(dt){
     }
     waveT=0;waveDur=0;
     genMusicForWave(wave+1, rngw());
-    showChoice('wave '+wave+' weathered');
+    showChoice(TLI18N.t('upg_sub_waveFmt',{n:wave}));
   }
 }
 function nextWave(){
   wave++;
   if(wave%3===0)startBoss();
-  else{genWave(wave);banner('WAVE '+wave,'the storm deepens',2)}
+  else{genWave(wave);banner(TLI18N.t('hud_waveFmt',{n:wave}),TLI18N.t('toast_deepen'),2)}
 }
 
 const CONTINUE_COST = 3000;
@@ -1698,7 +2309,7 @@ function gameOver(){
   $('hiTitle').textContent=fmt(hiscore);
   const cost = continueCost();
   const maxCont = 1 + P.extraCont;
-  $('btnContinue').textContent = 'Continue (-'+cost+') ['+continueCount+'/'+maxCont+']';
+  $('btnContinue').textContent = TLI18N.t('cont_btnFmt',{cost:cost,n:continueCount,max:maxCont});
   $('btnContinue').disabled = score < cost || continueCount >= maxCont;
 }
 
@@ -1935,8 +2546,8 @@ function renderHUD(dt){
   
   ctx.font = `${FS_SM}px Consolas,monospace`;
   ctx.fillStyle='rgba(232,228,216,.6)';
-  ctx.fillText('LIFE',12,20);
-  ctx.fillText('BOMB',12,40);
+  ctx.fillText(TLI18N.t('hud_life'),12,20);
+  ctx.fillText(TLI18N.t('bomb_word'),12,40);
   
   ctx.font = `${FS}px Georgia,serif`;
   ctx.fillStyle='#ff5470';
@@ -1957,7 +2568,7 @@ function renderHUD(dt){
   }
   ctx.font=`bold ${FS_SM}px Consolas,monospace`;
   ctx.fillStyle='rgba(242,193,78,.9)';
-  ctx.fillText('WAVE '+wave,12,58);
+  ctx.fillText(TLI18N.t('hud_waveFmt',{n:wave}),12,58);
   const leftEnd = 46 + 4*icSp + FS + 18;
   
   const panelW=Math.round(FS*6.1+16);
@@ -1968,8 +2579,8 @@ function renderHUD(dt){
   ctx.fillStyle='rgba(242,193,78,.5)';ctx.fillRect(px0-6,8,2,panelH);
   ctx.font=`${FS_SM}px Consolas,monospace`;
   ctx.fillStyle='#8b93c0';
-  ctx.fillText('HI SCORE',px0,rHi);
-  ctx.fillText('SCORE',px0,rSc);
+  ctx.fillText(TLI18N.t('hud_hi'),px0,rHi);
+  ctx.fillText(TLI18N.t('hud_score'),px0,rSc);
   ctx.font=`${0.85*FS}px Consolas,monospace`;
   ctx.fillStyle='#e8e4d8';
   ctx.fillText(fmt(hiscore),px0,rHiN);
@@ -1978,9 +2589,9 @@ function renderHUD(dt){
   ctx.fillText(fmt(score),px0,rScN);
   ctx.font=`${FS_SM}px Consolas,monospace`;
   ctx.fillStyle='#8b93c0';
-  ctx.fillText('GRAZE '+graze,px0,rGr);
+  ctx.fillText(TLI18N.t('hud_grazeFmt',{n:graze}),px0,rGr);
   ctx.fillStyle=mult>3?'#ff5470':mult>1.5?'#f2c14e':'#aab3d8';
-  ctx.fillText('MULTI ×'+mult.toFixed(2),px0,rMu);
+  ctx.fillText(TLI18N.t('hud_multiFmt',{m:mult.toFixed(2)}),px0,rMu);
   
   if(boss&&boss.ph!=='enter'){
     const zoneL=Math.max(132, leftEnd+6);
@@ -2023,12 +2634,12 @@ function renderHUD(dt){
   ctx.fillStyle=power>=100?'#ff5470':'#f2c14e';ctx.fillRect(12,H-24,130*power/100,8);
   ctx.font=`${FS_SM}px Consolas,monospace`;
   ctx.fillStyle='#e8e4d8';
-  const powStr='POWER '+(power|0)+(power>=100?' MAX':'');
+  const powStr=TLI18N.t('hud_powerFmt',{n:power|0})+(power>=100?' '+TLI18N.t('hud_max'):'');
   ctx.fillText(powStr,148,H-15);
   let nx=148+ctx.measureText(powStr).width+10;
   if(focusing()){
-    ctx.fillStyle='#6ee7ff';ctx.fillText('FOCUS',nx,H-15);
-    nx+=ctx.measureText('FOCUS').width+10;
+    ctx.fillStyle='#6ee7ff';ctx.fillText(TLI18N.t('focus_word'),nx,H-15);
+    nx+=ctx.measureText(TLI18N.t('focus_word')).width+10;
   }
   if(bombFrag>0){
     ctx.fillStyle='#f2c14e';
@@ -2037,10 +2648,10 @@ function renderHUD(dt){
   }
   
   let by=H-40;
-  if(P.berserkT>0){ctx.fillStyle='#ff4444';ctx.fillText('BERSERK '+Math.ceil(P.berserkT)+'s',10,by);by-=14;}
-  if(P.tempTimeT>0){ctx.fillStyle='#66ccff';ctx.fillText('FREEZE '+Math.ceil(P.tempTimeT)+'s',10,by);by-=14;}
-  if(P.tempMagnetT>0){ctx.fillStyle='#ffaa00';ctx.fillText('MAGNET '+Math.ceil(P.tempMagnetT)+'s',10,by);by-=14;}
-  if(continueCount>0){ctx.fillStyle='#88ffaa';ctx.fillText('CONTINUES ×'+continueCount,10,by);}
+  if(P.berserkT>0){ctx.fillStyle='#ff4444';ctx.fillText(TLI18N.t('hud_berserkFmt',{n:Math.ceil(P.berserkT)}),10,by);by-=14;}
+  if(P.tempTimeT>0){ctx.fillStyle='#66ccff';ctx.fillText(TLI18N.t('hud_freezeFmt',{n:Math.ceil(P.tempTimeT)}),10,by);by-=14;}
+  if(P.tempMagnetT>0){ctx.fillStyle='#ffaa00';ctx.fillText(TLI18N.t('hud_magnetFmt',{n:Math.ceil(P.tempMagnetT)}),10,by);by-=14;}
+  if(continueCount>0){ctx.fillStyle='#88ffaa';ctx.fillText(TLI18N.t('hud_contFmt',{n:continueCount}),10,by);}
   
   if(bn){
     if(state==='play'||state==='dying')bn.t+=dt;
@@ -2071,7 +2682,7 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyM'){
     sfxEnabled = !sfxEnabled;
     if(sfxG) sfxG.gain.value = sfxEnabled ? 0.9 : 0;
-    if($('btnSfx')) $('btnSfx').textContent = 'Sound: ' + (sfxEnabled ? 'ON' : 'OFF');
+    if($('btnSfx')) $('btnSfx').textContent = TLI18N.t('sound_btnFmt',{s:sfxEnabled?TLI18N.t('on'):TLI18N.t('off')});
   }
   if(state==='title'){
     if(e.code==='Enter')$('btnStart').click();
@@ -2087,7 +2698,7 @@ addEventListener('keydown',e=>{
   }
   if(state==='play'){
     if(e.code==='KeyX')doBomb();
-    if(e.code==='KeyT'){autoFire=!autoFire;floatText(P.x,P.y-30,'AUTOFIRE '+(autoFire?'ON':'OFF'),'#6ee7ff')}
+    if(e.code==='KeyT'){autoFire=!autoFire;floatText(P.x,P.y-30,TLI18N.t('toast_autofireFmt',{s:autoFire?TLI18N.t('on'):TLI18N.t('off')}),'#6ee7ff')}
     if(e.code==='KeyP'||e.code==='Escape')pauseGame();
     if(P.charge>0 && P.dashT<=0){
       const now = performance.now();
@@ -2170,8 +2781,8 @@ $('btnPause').addEventListener('click',e=>{e.stopPropagation();if(state==='play'
 const gpState={moveX:0,moveY:0,prev:{}};
 addEventListener('gamepadconnected',()=>{
   audioInit();
-  if(state==='play') floatText(P.x, P.y-60, 'GAMEPAD CONNECTED', '#6ee7ff');
-  else if(state==='title') banner('GAMEPAD CONNECTED','plug in and fly',2,'#6ee7ff');
+  if(state==='play') floatText(P.x, P.y-60, TLI18N.t('toast_gpconn'), '#6ee7ff');
+  else if(state==='title') banner(TLI18N.t('toast_gpconn'),TLI18N.t('toast_gpad'),2,'#6ee7ff');
 });
 function pollGamepad(){
   gpFocus=false; gpFire=false; gpState.moveX=0; gpState.moveY=0;
@@ -2247,8 +2858,8 @@ $('btnContinue').addEventListener('click',()=>{
   document.body.classList.add('playing');
   hideAll();
   if(AC){ mNext = AC.currentTime + .1; }
-  banner('CONTINUE','the dawn waits', 2);
-  floatText(P.x, P.y-40, '-'+cost+' SCORE', '#ff5470');
+  banner(TLI18N.t('resume'),TLI18N.t('toast_dawn'), 2);
+  floatText(P.x, P.y-40, TLI18N.t('hud_scoreLostFmt',{n:cost}), '#ff5470');
 });
 
 const toggleFullscreen = () => {
@@ -2265,13 +2876,15 @@ $('btnMusic').addEventListener('click', () => {
   musicEnabled = !musicEnabled;
   musicOn = musicEnabled;
   if(musG) musG.gain.value = musicEnabled ? 0.4 : 0;
-  $('btnMusic').textContent = 'Music: ' + (musicEnabled ? 'ON' : 'OFF');
+  $('btnMusic').textContent = TLI18N.t('music_btnFmt',{s:musicEnabled?TLI18N.t('on'):TLI18N.t('off')});
 });
 $('btnSfx').addEventListener('click', () => {
   sfxEnabled = !sfxEnabled;
   if(sfxG) sfxG.gain.value = sfxEnabled ? 0.9 : 0;
-  $('btnSfx').textContent = 'Sound: ' + (sfxEnabled ? 'ON' : 'OFF');
+  $('btnSfx').textContent = TLI18N.t('sound_btnFmt',{s:sfxEnabled?TLI18N.t('on'):TLI18N.t('off')});
 });
+$('btnMusic').textContent = TLI18N.t('music_btnFmt',{s:musicEnabled?TLI18N.t('on'):TLI18N.t('off')});
+$('btnSfx').textContent = TLI18N.t('sound_btnFmt',{s:sfxEnabled?TLI18N.t('on'):TLI18N.t('off')});
 $('btnRegenSeed').addEventListener('click', () => {
   seedTxt = newSeedStr();
   $('seedVal').textContent = seedTxt;
@@ -2282,7 +2895,7 @@ $('btnLeftCtrls').addEventListener('click', () => {
   leftControls = !leftControls;
   document.body.classList.toggle('left-controls', leftControls);
   try { localStorage.setItem('bh_left_ctls', leftControls ? '1' : '0'); } catch(e){}
-  $('btnLeftCtrls').textContent = 'Controls: ' + (leftControls ? 'LEFT' : 'RIGHT');
+  $('btnLeftCtrls').textContent = TLI18N.t('ctrl_btnFmt',{s:leftControls?TLI18N.t('ctrl_left'):TLI18N.t('ctrl_right')});
 });
 
 // =================== PASSWORD SAVE/LOAD ===================
@@ -2324,15 +2937,15 @@ function savePasswordFromTitle(){
     let pw=null;
     try{ pw=localStorage.getItem('bh_save'); }catch(e){}
     const box=$('pwBox');
-    if(pw){ box.textContent='Stored password: '+pw; box.classList.remove('hide'); }
-    else { box.textContent='No saved run yet — save from the pause menu while playing.'; box.classList.remove('hide'); }
+    if(pw){ box.textContent=TLI18N.t('pw_storedFmt',{pw:pw}); box.classList.remove('hide'); }
+    else { box.textContent=TLI18N.t('pw_nosave'); box.classList.remove('hide'); }
     return;
   }
   const pw = makePassword();
   if(!pw){ return; }
   persistSave(pw);
   const box = $('pwBox');
-  box.textContent = 'Saved: ' + pw;
+  box.textContent = TLI18N.t('pw_savedFmt',{pw:pw});
   box.classList.remove('hide');
 }
 
@@ -2344,20 +2957,20 @@ $('btnSavePause').addEventListener('click', () => {
   box.textContent = pw;
   box.classList.remove('hide');
   const btn = $('btnSavePause');
-  const old = btn.textContent;
-  btn.textContent = 'Saved ✓';
-  setTimeout(()=>{ btn.textContent = old; }, 1600);
+  const lab = btn.querySelector('[data-t]') || btn;
+  lab.textContent = TLI18N.t('pw_saved') + ' ✓';
+  setTimeout(()=>{ lab.textContent = TLI18N.t('save_progress'); }, 1600);
 });
 
 function loadPassword(){
   let pw = null;
   try{ pw = localStorage.getItem('bh_save'); }catch(e){}
   if(!pw){
-    pw = prompt('Paste password:');
+    pw = prompt(TLI18N.t('pw_paste'));
     if(!pw) return;
   }
   const data = parsePassword(pw);
-  if(!data){ alert('Invalid password'); return; }
+  if(!data){ alert(TLI18N.t('pw_bad')); return; }
   audioInit();if(AC&&AC.state==='suspended')AC.resume();
   seedTxt = data.s || newSeedStr();
   diffKey = data.df || 'normal';
@@ -2428,7 +3041,7 @@ function loadPassword(){
   hideAll();
   $('seedVal').textContent=seedTxt;
   $('hiTitle').textContent=fmt(hiscore);
-  banner('LOADED','wave '+savedW+' resumes', 2);
+  banner(TLI18N.t('toast_loaded'),TLI18N.t('toast_loadedFmt',{n:savedW}), 2);
   setDiff(diffKey);
 }
 $('btnPwSave').addEventListener('click', savePasswordFromTitle);
@@ -2443,7 +3056,16 @@ function toTitle(){state='title';document.body.classList.remove('playing');music
 
 buildSprites();buildBackground();buildStars();resize();
 $('seedVal').textContent=seedTxt;$('hiTitle').textContent=fmt(hiscore);
-if($('btnLeftCtrls')) $('btnLeftCtrls').textContent = 'Controls: ' + (leftControls ? 'LEFT' : 'RIGHT');
+if($('btnLeftCtrls')) $('btnLeftCtrls').textContent = TLI18N.t('ctrl_btnFmt',{s:leftControls?TLI18N.t('ctrl_left'):TLI18N.t('ctrl_right')});
+function tlResync(){
+  if($('btnSfx')) $('btnSfx').textContent = TLI18N.t('sound_btnFmt',{s:sfxEnabled?TLI18N.t('on'):TLI18N.t('off')});
+  if($('btnMusic')) $('btnMusic').textContent = TLI18N.t('music_btnFmt',{s:musicEnabled?TLI18N.t('on'):TLI18N.t('off')});
+  if($('btnLeftCtrls')) $('btnLeftCtrls').textContent = TLI18N.t('ctrl_btnFmt',{s:leftControls?TLI18N.t('ctrl_left'):TLI18N.t('ctrl_right')});
+  if(state==='upgrade') renderCards();
+}
+TLI18N.mount('#ovTitle .panel');
+TLI18N.onChange(tlResync);
+tlResync();
 
 let last=performance.now(),ftAcc=0,ftN=0,qCool=0,errN=0;
 function loop(ts){
@@ -2507,5 +3129,234 @@ else seen(cur);
 }).catch(function () {});
 })();
 </script>
+<script>
+/* Developer harness. ?debug=dbg/bullethell.js loads the shared engine dbg/_harness.js
+   then that script: live panel with state, elements, layout per screen mode,
+   texts, balance, cheats, JSON export. No parameter or missing script = the
+   page behaves exactly as without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
+</script>
+<!-- inlined fs.js — the source of truth is fs.js: edit that file and re-inline this block -->
+<script>
+/* fs.js — the one fullscreen control every page shares.
+
+   Two jobs:
+
+   1. A toggle button. `TLFS.mount("#opts", {cls:"btn"})` puts it inside a menu or
+      title panel using that page's own button class; `TLFS.mount()` alone floats a
+      small icon button in the bottom-right corner; `{icon:true}` swaps the word for
+      a ⤢ glyph and moves it into `aria-label` for narrow hosts. The wording is the
+      shared translation key `fullscreen` / `exitFullscreen` — from the i18n kit, from
+      a page table published through `TLFS_LABEL(key)`, or English as the floor — and
+      a change of `<html lang>` repaints it. Where the Fullscreen API is missing the
+      button hides itself instead of lying.
+
+   2. Re-fit on every usable-area change. Entering or leaving fullscreen, an
+      orientation flip, and a mobile browser bar hiding or showing all change the
+      area the game has to fill — and the bar case does not always fire a plain
+      `resize`. This file listens to `fullscreenchange` (all vendor spellings) and
+      to `visualViewport.resize`, then re-applies `<html data-fs>` and dispatches
+      `resize` (plus `orientationchange`) once per frame, so the page's own layout
+      code runs. `TLFS.refitOnly()` gives a page that already has its own
+      fullscreen button just that wiring, without a second button.
+
+   Nothing here reads game state, and a page that never calls mount/refitOnly gets
+   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+(function () {
+  if (window.TLFS) return;
+  var de = document.documentElement;
+  var REQ = de.requestFullscreen || de.webkitRequestFullscreen ||
+    de.msRequestFullscreen || de.mozRequestFullScreen;
+  var EX = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.msExitFullscreen || document.mozCancelFullScreen;
+  var blocked = !REQ || !EX || de.fullscreenEnabled === false;
+  var ICON = "\u2922"; /* narrow hosts (side stripes, icon bars) get the glyph plus a
+                          translated aria-label instead of the word */
+  var btns = [], cbs = [], queued = false, styleDone = false;
+
+  function isFull() {
+    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
+      de.msFullscreenElement || de.mozFullScreenElement);
+  }
+  function kit() {
+    var k = window.TLI18N;
+    return (k && typeof k.t === "function") ? k : null;
+  }
+  /* A missing key makes t() hand back the key name — that is not a label.
+     Pages that keep their own translation table (billiards, tilt, oilstorm) publish
+     TLFS_LABEL(key) instead of the kit; they win over the kit, English is the floor. */
+  function label() {
+    var want = isFull() ? "exitFullscreen" : "fullscreen";
+    var L = window.TLFS_LABEL;
+    if (typeof L === "function") {
+      try { var v = L(want); if (v && v !== want) return String(v) } catch (e) {}
+    }
+    var k = kit(), t = null;
+    if (k) { try { t = k.t(want) } catch (e) { t = null } }
+    if (!t || t === want) t = isFull() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+    return t;
+  }
+  function cssOnce() {
+    if (styleDone) return;
+    styleDone = true;
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlfs-float:hover{border-color:#ffd76a;color:#ffd76a}" +
+      ".tlfs-float[hidden]{display:none}";
+    document.head.appendChild(st);
+  }
+  function paint() {
+    var txt = label();
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      b.textContent = b.__tlfsIcon ? ICON : txt;
+      b.setAttribute("aria-label", txt);
+      b.setAttribute("aria-pressed", isFull() ? "true" : "false");
+    }
+  }
+  /* One pass per frame: fullscreenchange and visualViewport.resize often arrive
+     together, and dispatching resize from inside a resize listener would loop. */
+  function refit() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint();
+      for (var i = 0; i < cbs.length; i++) { try { cbs[i](isFull()) } catch (e) {} }
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("orientationchange"));
+    });
+  }
+  function toggle() {
+    if (blocked) return false;
+    var was = isFull();
+    try {
+      if (was) EX.call(document);
+      else { var p = REQ.call(de); if (p && p.catch) p.catch(function () {}) }
+    } catch (e) {}
+    /* the change event may never come (sandboxed frames, denied requests, some
+       headless shells that grant then silently drop): repaint the state we can
+       read twice, late enough to catch a transition nobody announced. */
+    setTimeout(refit, 220);
+    setTimeout(refit, 700);
+    return !was;
+  }
+
+  de.setAttribute("data-fs", "off");
+  ["fullscreenchange", "webkitfullscreenchange", "MSFullscreenChange", "mozfullscreenchange"]
+    .forEach(function (t) { document.addEventListener(t, refit, false) });
+  ["fullscreenerror", "webkitfullscreenerror"].forEach(function (t) {
+    document.addEventListener(t, function () { de.setAttribute("data-fs", "off"); paint() }, false)
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", refit, false);
+    window.visualViewport.addEventListener("scroll", function () {
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint(); /* an exit the browser never announced must still clear the label */
+    }, false);
+  }
+  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
+  }, false);
+  /* A language switch changes <html lang>: repaint from whatever table the page
+     uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
+     drive their toggle state off that attribute, and taking it would corrupt them. */
+  new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
+
+  window.TLFS = {
+    version: "2026.11.23.3",
+    supported: !blocked,
+    isFull: isFull,
+    label: label,
+    paint: paint,
+    toggle: toggle,
+    onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
+    /* just the size/orientation wiring, for a page with its own fullscreen button */
+    refitOnly: function () { paint(); return true },
+    /* put the button in `sel` (or float it when the selector matches nothing).
+       opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
+       puts the translated word in aria-label, for narrow hosts. */
+    mount: function (sel, opts) {
+      cssOnce();
+      var o = opts || {};
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = o.cls || "tlfs-float";
+      b.id = o.id || "tlfsBtn";
+      b.__tlfsIcon = !!o.icon;
+      if (o.float !== false && !o.cls) b.classList.add("tlfs-float");
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", label());
+      if (o.ariaLabel) b.setAttribute("data-aria", o.ariaLabel);
+      b.textContent = o.icon ? ICON : label();
+      /* a menu that starts the game on any tap (defender binds pointerdown on the
+         whole title screen) must not fire when the fullscreen button is pressed */
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("touchstart", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle() });
+      var host = sel ? document.querySelector(sel) : null;
+      if (host) {
+        if (o.prepend && host.firstChild) host.insertBefore(b, host.firstChild);
+        else host.appendChild(b);
+      } else {
+        b.classList.add("tlfs-float");
+        document.body.appendChild(b);
+      }
+      if (blocked) b.style.display = "none";
+      btns.push(b);
+      paint();
+      return b;
+    },
+    /* wire a button the page already has in its markup (keeps its own look) */
+    attach: function (el) {
+      cssOnce();
+      if (!el) return null;
+      if (blocked) { el.style.display = "none"; return el }
+      el.addEventListener("click", function (e) { e.preventDefault(); toggle() });
+      btns.push(el);
+      paint();
+      return el;
+    },
+    /* a rebuilt panel drops its children: re-add every button the page mounted */
+    reassert: function () {
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i];
+        if (!b.isConnected && b.__tlfsHost) {
+          var h = document.querySelector(b.__tlfsHost);
+          if (h) h.appendChild(b);
+        }
+      }
+      paint();
+      return btns.length
+    }
+  };
+  /* remember where each button was mounted so a panel rebuild can put it back */
+  var mount0 = window.TLFS.mount;
+  window.TLFS.mount = function (sel, opts) {
+    var b = mount0(sel, opts);
+    if (b) b.__tlfsHost = sel || "body";
+    return b;
+  };
+  var k = kit();
+  if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
+})();
+</script>
+<script>/* bullethell toggles fullscreen itself; keep the shared re-fit and label pair */
+TLFS.onChange(function(){var l=TLFS.label();["btnFullscreenTitle","btnFullscreen"].forEach(function(id){var b=document.getElementById(id);if(b)b.textContent=l});});
+TLFS.refitOnly();</script>
 </body>
 </html>

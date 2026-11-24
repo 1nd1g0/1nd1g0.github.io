@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#000">
 <title>ASTEROIDS // Deep Space Edition</title>
-<meta name="version" content="2026.11.07.1">
+<meta name="version" content="2026.11.24.2">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:#000}
@@ -30,18 +30,374 @@ body.touch .btn{display:flex}
  display:none;align-items:center;justify-content:center;font:bold 12px/1 system-ui,sans-serif;
  text-decoration:none;z-index:6;touch-action:manipulation}
 #bHome:active{background:rgba(80,180,255,.35);border-color:#fff}
+#tlHost{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:7;display:flex}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<a id="bHome" href="https://1nd1g0.github.io/">⌂ HOME</a>
+<a id="bHome" href="https://1nd1g0.github.io/">⌂ <span data-t="home">HOME</span></a>
 <div id="bL" class="btn">◀</div>
 <div id="bR" class="btn">▶</div>
 <div id="bT" class="btn">▲</div>
 <div id="bH" class="btn">HYP</div>
-<div id="bF" class="btn">FIRE</div>
+<div id="bF" class="btn" data-t="fire">FIRE</div>
 <div id="bP" class="btn sq">II</div>
 <div id="bM" class="btn sq">♪</div>
+<div id="tlHost"></div>
+<!-- inlined i18n.js — the source of truth is i18n.js: edit that file and re-inline this block -->
+<script>
+/* ============================================================================
+   i18n.js — shared language kit for every page of this site.
+   Language code decision tree (identical everywhere, in this order):
+     0. any technical problem with this kit -> English
+     1. URL ?language=xx      (a region suffix is fine: pt-BR, zh-CN)
+     2. localStorage['tll:lang']
+     3. the browser's language list (navigator.languages, then navigator.language)
+     4. English
+   A code outside CODES is dropped, not trusted, so the next level decides. Only
+   the picker button writes storage, so a ?language= link never overwrites the
+   visitor's saved choice.
+
+   Page usage
+     <script src="i18n.js"><\/script>            BEFORE the game script
+     <script>TLI18N.add({en:{k:"Text"},es:{...},pt:{...},ru:{...},zh:{...}})<\/script>
+     markup:  <b data-t="score">SCORE</b>  <button data-tip="help">?</button>
+              <input data-ph="name">  <i data-aria="pause">  <img data-alt="car">
+     js:      el.textContent=TLI18N.t("gameOver");
+              el.innerHTML="<b>"+TLI18N.t("best")+": "+n+"</b>";
+              ctx.fillText(TLI18N.t("paused"),x,y);
+     canvas / innerHTML redraws: TLI18N.onChange(()=>redrawAll());
+     pick a host for the language button: TLI18N.mount("#startPanel")
+       (omit it and the kit parks a pill in the lower-left corner)
+   Keys missing from a non-English table fall back to English, so a half
+   translated table still runs. Values for *Fmt keys carry {placeholders}.
+   ========================================================================= */
+(function(){
+"use strict";
+var KEY="tll:lang", CODES=["en","es","pt","ru","zh"];
+var LANGS=[ // code · name in its own language · that word for "language" · its flag
+ ['en','English','Language','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0,0 60,40M60,0 0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 60,40M60,0 0,40" stroke="#C8102E" stroke-width="3.2"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="13"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="8"/></svg>'],
+ ['es','Español','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#AA151B"/><path d="M0,10H60M0,30H60" stroke="#F1BF00" stroke-width="20"/>  </svg>'],
+ ['pt','Português','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="40" fill="#046A38"/><rect x="24" width="36" height="40" fill="#DA291C"/><circle cx="24" cy="20" r="7.5" fill="#FEDF00" stroke="#046A38" stroke-width="1.4"/><path d="M24,14.5 24,22.5M20.5,17.5H27.5" stroke="#DA291C" stroke-width="2.2" fill="none"/></svg>'],
+ ['ru','Русский','Язык','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.34" width="60" height="13.33" fill="#0039A6"/><rect y="26.67" width="60" height="13.33" fill="#D52B1E"/></svg>'],
+ ['zh','中文','语言','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#EE1C25"/><circle cx="10" cy="10" r="5.6" fill="#FFDC00"/><circle cx="21" cy="6" r="2.1" fill="#FFDC00"/><circle cx="26" cy="11.5" r="2.1" fill="#FFDC00"/><circle cx="26" cy="18.5" r="2.1" fill="#FFDC00"/><circle cx="21" cy="24" r="2.1" fill="#FFDC00"/></svg>']
+];
+/* ---- shared vocabulary: the same word means the same thing in every game.
+       Values carry no glyphs — pages keep their ⌂ ▶ ■ icons in the markup. ---- */
+var COMMON={
+en:{
+ paused:"PAUSED",pause:"PAUSE",resume:"RESUME",start:"START",play:"PLAY",home:"HOME",menu:"MENU",
+ options:"OPTIONS",settings:"SETTINGS",help:"HELP",howToPlay:"HOW TO PLAY",rules:"RULES",controls:"CONTROLS",
+ keys:"KEYS",gamepad:"GAMEPAD",mouse:"MOUSE",touch:"TOUCH",
+ sound:"SOUND",music:"MUSIC",sfx:"SOUND FX",on:"ON",off:"OFF",fullscreen:"FULLSCREEN",exitFullscreen:"EXIT FULLSCREEN",
+ difficulty:"DIFFICULTY",easy:"EASY",normal:"NORMAL",hard:"HARD",low:"LOW",high:"HIGH",
+ score:"SCORE",best:"BEST",hiScore:"HIGH SCORE",level:"LEVEL",lives:"LIVES",time:"TIME",
+ speed:"SPEED",round:"ROUND",wave:"WAVE",seed:"SEED",newSeed:"NEW SEED",
+ restart:"RESTART",retry:"RETRY",continue:"CONTINUE",tryAgain:"TRY AGAIN",nextLevel:"NEXT LEVEL",
+ gameOver:"GAME OVER",youWin:"YOU WIN",youLose:"GAME OVER",clear:"CLEARED",
+ fire:"FIRE",jump:"JUMP",back:"BACK",exit:"EXIT",close:"CLOSE",ok:"OK",cancel:"CANCEL",
+ loading:"LOADING",shots:"SHOTS",moves:"MOVES",power:"POWER",angle:"ANGLE",
+ langTitle:"LANGUAGE",langNote:"Choose your language — it is remembered, and it applies to this game and to the whole catalogue.",
+ langBack:"CHANGE LANGUAGE",players:"PLAYERS",player:"PLAYER",you:"YOU",cpu:"CPU",random:"RANDOM"},
+es:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INICIO",play:"JUGAR",home:"INICIO",menu:"MENÚ",
+ options:"OPCIONES",settings:"AJUSTES",help:"AYUDA",howToPlay:"CÓMO JUGAR",rules:"REGLAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"MANDO",mouse:"RATÓN",touch:"TÁCTIL",
+ sound:"SONIDO",music:"MÚSICA",sfx:"EFECTOS",on:"ACTIVO",off:"APAGADO",fullscreen:"PANTALLA COMPLETA",exitFullscreen:"SALIR DE PANTALLA COMPLETA",
+ difficulty:"DIFICULTAD",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAJO",high:"ALTO",
+ score:"PUNTOS",best:"RÉCORD",hiScore:"RÉCORD",level:"NIVEL",lives:"VIDAS",time:"TIEMPO",
+ speed:"VELOCIDAD",round:"RONDA",wave:"OLEADA",seed:"SEMILLA",newSeed:"NUEVA SEMILLA",
+ restart:"REINICIAR",retry:"REINTENTAR",continue:"CONTINUAR",tryAgain:"INTÉNTALO OTRA VEZ",nextLevel:"SIGUIENTE NIVEL",
+ gameOver:"FIN DEL JUEGO",youWin:"¡GANASTE!",youLose:"FIN DEL JUEGO",clear:"SUPERADO",
+ fire:"DISPARO",jump:"SALTAR",back:"ATRÁS",exit:"SALIR",close:"CERRAR",ok:"ACEPTAR",cancel:"CANCELAR",
+ loading:"CARGANDO",shots:"LANZAMIENTOS",moves:"MOVIMIENTOS",power:"FUERZA",angle:"ÁNGULO",
+ langTitle:"IDIOMA",langNote:"Elige tu idioma: se recuerda y se aplica a este juego y a todo el catálogo.",
+ langBack:"CAMBIAR IDIOMA",players:"JUGADORES",player:"JUGADOR",you:"TÚ",cpu:"CPU",random:"ALEATORIO"},
+pt:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INÍCIO",play:"JOGAR",home:"INÍCIO",menu:"MENU",
+ options:"OPÇÕES",settings:"CONFIGURAÇÕES",help:"AJUDA",howToPlay:"COMO JOGAR",rules:"REGRAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"CONTROLE",mouse:"MOUSE",touch:"TOQUE",
+ sound:"SOM",music:"MÚSICA",sfx:"EFEITOS",on:"LIGADO",off:"DESLIGADO",fullscreen:"TELA CHEIA",exitFullscreen:"SAIR DA TELA CHEIA",
+ difficulty:"DIFICULDADE",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAIXO",high:"ALTO",
+ score:"PONTOS",best:"RECORDE",hiScore:"RECORDE",level:"NÍVEL",lives:"VIDAS",time:"TEMPO",
+ speed:"VELOCIDADE",round:"RODADA",wave:"ONDA",seed:"SEMENTE",newSeed:"NOVA SEMENTE",
+ restart:"REINICIAR",retry:"TENTAR DE NOVO",continue:"CONTINUAR",tryAgain:"TENTE DE NOVO",nextLevel:"PRÓXIMO NÍVEL",
+ gameOver:"FIM DE JOGO",youWin:"VOCÊ VENCEU",youLose:"FIM DE JOGO",clear:"COMPLETO",
+ fire:"DISPARO",jump:"SALTAR",back:"VOLTAR",exit:"SAIR",close:"FECHAR",ok:"OK",cancel:"CANCELAR",
+ loading:"CARREGANDO",shots:"BATIDAS",moves:"JOGADAS",power:"FORÇA",angle:"ÂNGULO",
+ langTitle:"IDIOMA",langNote:"Escolha seu idioma: ele é lembrado e vale para este jogo e para todo o catálogo.",
+ langBack:"MUDAR IDIOMA",players:"JOGADORES",player:"JOGADOR",you:"VOCÊ",cpu:"CPU",random:"ALEATÓRIO"},
+ru:{
+ paused:"ПАУЗА",pause:"ПАУЗА",resume:"ПРОДОЛЖИТЬ",start:"СТАРТ",play:"ИГРАТЬ",home:"ДОМОЙ",menu:"МЕНЮ",
+ options:"НАСТРОЙКИ",settings:"НАСТРОЙКИ",help:"ПОМОЩЬ",howToPlay:"КАК ИГРАТЬ",rules:"ПРАВИЛА",controls:"УПРАВЛЕНИЕ",
+ keys:"КЛАВИШИ",gamepad:"ГЕЙМПАД",mouse:"МЫШЬ",touch:"СЕНСОР",
+ sound:"ЗВУК",music:"МУЗЫКА",sfx:"ЗВУКИ",on:"ВКЛ",off:"ВЫКЛ",fullscreen:"НА ВЕСЬ ЭКРАН",exitFullscreen:"ВЫЙТИ С ЭКРАНА",
+ difficulty:"СЛОЖНОСТЬ",easy:"ЛЕГКО",normal:"НОРМА",hard:"СЛОЖНО",low:"НИЗ",high:"ВЕРХ",
+ score:"СЧЁТ",best:"РЕКОРД",hiScore:"РЕКОРД",level:"УРОВЕНЬ",lives:"ЖИЗНИ",time:"ВРЕМЯ",
+ speed:"СКОРОСТЬ",round:"РАУНД",wave:"ВОЛНА",seed:"КОД УРОВНЯ",newSeed:"НОВЫЙ КОД",
+ restart:"ЗАНОВО",retry:"ЕЩЁ РАЗ",continue:"ПРОДОЛЖИТЬ",tryAgain:"ПОПРОБУЙ ЕЩЁ",nextLevel:"СЛЕДУЮЩИЙ УРОВЕНЬ",
+ gameOver:"КОНЕЦ",youWin:"ПОБЕДА",youLose:"КОНЕЦ",clear:"УРОВЕНЬ ПРОЙДЕН",
+ fire:"ОГОНЬ",jump:"ПРЫЖОК",back:"НАЗАД",exit:"ВЫХОД",close:"ЗАКРЫТЬ",ok:"ОК",cancel:"ОТМЕНА",
+ loading:"ЗАГРУЗКА",shots:"УДАРЫ",moves:"ХОДЫ",power:"СИЛА",angle:"УГОЛ",
+ langTitle:"ЯЗЫК",langNote:"Выберите язык — он запоминается и действует для этой игры и для всего каталога.",
+ langBack:"СМЕНИТЬ ЯЗЫК",players:"ИГРОКИ",player:"ИГРОК",you:"ВЫ",cpu:"БОТ",random:"СЛУЧАЙНО"},
+zh:{
+ paused:"暂停",pause:"暂停",resume:"继续",start:"开始",play:"开始游戏",home:"主页",menu:"菜单",
+ options:"选项",settings:"设置",help:"帮助",howToPlay:"怎么玩",rules:"规则",controls:"操作",
+ keys:"按键",gamepad:"手柄",mouse:"鼠标",touch:"触摸",
+ sound:"声音",music:"音乐",sfx:"音效",on:"开",off:"关",fullscreen:"全屏",exitFullscreen:"退出全屏",
+ difficulty:"难度",easy:"简单",normal:"普通",hard:"困难",low:"低",high:"高",
+ score:"得分",best:"最高分",hiScore:"最高分",level:"关卡",lives:"生命",time:"时间",
+ speed:"速度",round:"回合",wave:"波次",seed:"种子",newSeed:"新种子",
+ restart:"重新开始",retry:"重试",continue:"继续",tryAgain:"再试一次",nextLevel:"下一关",
+ gameOver:"游戏结束",youWin:"胜利",youLose:"游戏结束",clear:"过关",
+ fire:"射击",jump:"跳跃",back:"返回",exit:"退出",close:"关闭",ok:"确定",cancel:"取消",
+ loading:"加载中",shots:"击球",moves:"步数",power:"力量",angle:"角度",
+ langTitle:"语言",langNote:"选择语言：会被记住，并用于这个游戏和整个游戏目录。",
+ langBack:"更换语言",players:"玩家",player:"玩家",you:"你",cpu:"电脑",random:"随机"}
+};
+var PAGE={en:{},es:{},pt:{},ru:{},zh:{}};
+function lget(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+function lset(v){try{localStorage.setItem(KEY,v)}catch(e){}}
+var code=null;
+/* A browser language list -> a supported code, or null when it says nothing
+   usable. "pt-BR", "ru_RU", "zh-CN" all match on their 2-letter base. */
+function fromBrowser(){
+ try{
+  var list=null;
+  if(navigator&&Array.isArray(navigator.languages)&&navigator.languages.length)list=navigator.languages;
+  else if(navigator)list=[navigator.language||navigator.userLanguage||""];
+  for(var i=0;i<(list||[]).length;i++){
+   var c=String(list[i]||"").toLowerCase().slice(0,2);
+   if(CODES.indexOf(c)>=0)return c;
+  }
+ }catch(e){}
+ return null;
+}
+(function(){
+ try{
+  var c=null,m=/[?&]language=([a-zA-Z]{2,3})/.exec(location.search||"");
+  if(m)c=m[1].toLowerCase().slice(0,2);           // ?language=pt-BR counts as pt
+  if(c&&CODES.indexOf(c)<0)c=null;
+  if(!c){var s=(lget()||"").toLowerCase().slice(0,2);if(CODES.indexOf(s)>=0)c=s;}
+  if(!c)c=fromBrowser();
+  code=c||"en";
+ }catch(e){code="en";} // a broken lookup speaks English, never nothing
+})();
+function raw(k){
+ var t=PAGE[code]?PAGE[code][k]:null; if(t!=null)return t;
+ t=COMMON[code]?COMMON[code][k]:null; if(t!=null)return t;
+ t=PAGE.en[k]; if(t!=null)return t;
+ t=COMMON.en[k]; return t==null?null:t;
+}
+var hooks=[];
+var API={
+ version:"2026.11.22.2", codes:CODES.slice(), langs:LANGS,
+ lang:function(){return code},
+ browserLang:function(){return fromBrowser()},
+ t:function(k,v){var s;try{s=raw(k)}catch(e){code="en";try{s=raw(k)}catch(e2){s=null}}
+  if(s==null)s=k;var o=v||{};for(var p in o)s=s.split("{"+p+"}").join(String(o[p]));return s},
+ flag:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][3];return ""},
+ name:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][2];return c},
+ add:function(tab){for(var c in tab){if(!PAGE[c])continue;for(var k in tab[c])PAGE[c][k]=tab[c][k];}
+  try{API.apply()}catch(e){}},
+ /* read the tables (the developer harness edits texts through these) */
+ keys:function(c){var out=[],seen={};try{var src=[PAGE[c],COMMON[c],PAGE.en,COMMON.en];
+  for(var i=0;i<src.length;i++)for(var k in src[i])if(!seen[k]){seen[k]=1;out.push(k)}out.sort();}catch(e){}
+  return out},
+ table:function(){var o={};try{for(var i=0;i<CODES.length;i++){var c=CODES[i],m={},s=[COMMON[c],PAGE[c],COMMON.en,PAGE.en];
+  for(var j=0;j<s.length;j++)for(var k in s[j])if(m[k]==null&&s[j][k]!=null)m[k]=s[j][k];o[c]=m;}}catch(e){}
+  return o},
+ setKey:function(c,k,v){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;
+  try{(PAGE[c]=PAGE[c]||{})[k]=String(v);}catch(e){return;}
+  try{API.apply()}catch(e){}
+  for(var i=0;i<hooks.length;i++)try{hooks[i](code)}catch(e){}},
+ onChange:function(f){hooks.push(f)},
+ set:function(c){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;code=c;lset(c);
+  try{API.apply()}catch(e){}for(var i=0;i<hooks.length;i++)try{hooks[i](c)}catch(e){}},
+ apply:function(root){
+  if(document.documentElement)document.documentElement.lang=code;
+  var r=root||document;
+  var set=function(e,attr,put){var v=raw(e.getAttribute(attr));if(v!=null)put(e,v);};
+  var all=[];
+  if(r.nodeType===1)all.push(r);
+  if(r.querySelectorAll)all=all.concat([].slice.call(r.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]")));
+  for(var i=0;i<all.length;i++){var e=all[i];
+   try{
+    if(e.hasAttribute("data-t"))set(e,"data-t",function(n,v){n.textContent=v});
+    if(e.hasAttribute("data-ph"))set(e,"data-ph",function(n,v){n.placeholder=v});
+    if(e.hasAttribute("data-tip"))set(e,"data-tip",function(n,v){n.title=v});
+    if(e.hasAttribute("data-aria"))set(e,"data-aria",function(n,v){n.setAttribute("aria-label",v)});
+    if(e.hasAttribute("data-alt"))set(e,"data-alt",function(n,v){n.alt=v});
+   }catch(e2){} // one odd node never aborts the pass
+  }
+  if(pill){try{pill.innerHTML=API.flag(code)+"<span>"+API.name(code)+"</span>";pill.title=API.t("langTitle");}catch(e){}}
+ },
+ mount:function(sel){hostSel=sel;ensurePill();},
+};
+/* ---------------- language button + picker overlay ---------------- */
+var hostSel=null,pill=null,ov=null;
+var CSS=".tlbtn{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(20,24,22,.72);flex:0 0 auto;align-self:center;"
+ +"border:1px solid #3a463f;border-radius:6px;color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:1px;"
+ +"cursor:pointer;line-height:1;width:auto;max-width:100%}.tlbtn:hover,.tlbtn:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}"
+ +".tlbtn svg{width:22px;height:15px;border:1px solid #2e3a34;border-radius:2px;display:block}"
+ +".tlfix{position:fixed;left:12px;bottom:12px;z-index:2147483000}"
+ +".tlov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;"
+ +"background:rgba(4,7,6,.86);padding:16px}.tlov[hidden]{display:none}"
+ +".tlpanel{max-width:660px;width:100%;background:#141816;border:1px solid #3a463f;border-radius:12px;"
+ +"padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.6);color:#c9d2cb;font:inherit;text-align:center}"
+ +".tlpanel h2{margin:0 0 6px;font-size:20px;letter-spacing:4px;color:#ffd76a}"
+ +".tlpanel p{margin:0 0 16px;font-size:12px;line-height:1.6;color:#8a948e}"
+ +".tlgrid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}"
+ +".tlb{width:132px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;"
+ +"background:rgba(20,24,22,.7);border:1px solid #3a463f;border-radius:8px;cursor:pointer;color:#c9d2cb;font:inherit}"
+ +".tlb:hover,.tlb:focus{border-color:#ffd76a;color:#f4e9c8;outline:none;box-shadow:0 0 14px rgba(255,215,106,.18)}"
+ +".tlb svg{width:50px;height:34px;border:1px solid #2e3a34;border-radius:4px;display:block}"
+ +".tlb b{font-size:13px;color:#f4e9c8}.tlb span{font-size:10px;letter-spacing:1px;color:#8a948e}"
+ +".tlx{margin-top:16px;padding:7px 20px;background:none;border:1px solid #3a463f;border-radius:6px;"
+ +"color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:2px;cursor:pointer}"
+ +".tlx:hover,.tlx:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}";
+function style(){if(document.getElementById("tlcss"))return;var s=document.createElement("style");s.id="tlcss";s.textContent=CSS;document.head.appendChild(s);}
+function ensurePill(){
+ if(pill)return;
+ var host=hostSel?document.querySelector(hostSel):null;
+ if(!host&&document.readyState==="loading")return; // retried at DOMContentLoaded
+ style();
+ pill=document.createElement("button");
+ pill.type="button";pill.className="tlbtn";pill.setAttribute("aria-haspopup","dialog");
+ if(!host){pill.className="tlbtn tlfix";document.body.appendChild(pill);}
+ else host.insertBefore(pill,host.firstChild);
+ pill.onclick=openOv;
+ API.apply();
+}
+function openOv(){
+ if(!ov){
+  ov=document.createElement("div");ov.className="tlov";ov.hidden=true;
+  var p=document.createElement("div");p.className="tlpanel";
+  var h=document.createElement("h2");h.setAttribute("data-t","langTitle");p.appendChild(h);
+  var np=document.createElement("p");np.setAttribute("data-t","langNote");p.appendChild(np);
+  var g=document.createElement("div");g.className="tlgrid";
+  for(var i=0;i<LANGS.length;i++){
+   var b=document.createElement("button");b.type="button";b.className="tlb";b.dataset.lang=LANGS[i][0];
+   b.innerHTML=LANGS[i][3]+"<b>"+LANGS[i][1]+"</b><span>"+LANGS[i][2]+"</span>";g.appendChild(b);
+  }
+  p.appendChild(g);
+  var x=document.createElement("button");x.type="button";x.className="tlx";x.setAttribute("data-t","close");p.appendChild(x);
+  ov.appendChild(p);document.body.appendChild(ov);
+  g.onclick=function(e){var b=e.target;while(b&&b!==g&&!b.dataset.lang)b=b.parentNode;if(b&&b.dataset.lang){API.set(b.dataset.lang);closeOv();}};
+  x.onclick=closeOv;
+  ov.onclick=function(e){if(e.target===ov)closeOv();};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ov&&!ov.hidden)closeOv();});
+ }
+ API.apply(ov);
+ ov.hidden=false;
+}
+function closeOv(){if(ov)ov.hidden=true;}
+function boot(){
+ try{ensurePill();API.apply();}
+ catch(e){code="en";try{ensurePill();API.apply();}catch(e2){}} // rule 0: English on any kit fault
+}
+/* keep freshly added nodes translated without the page calling apply() */
+new MutationObserver(function(ms){
+ if(!pill)return;
+ try{
+  for(var i=0;i<ms.length;i++){var n=ms[i].addedNodes;
+   for(var j=0;j<n.length;j++){var e=n[j];
+    if(e.nodeType!==1)continue;
+    if(e.matches&&e.matches("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]"))API.apply(e);
+    else if(e.querySelectorAll&&e.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]").length)API.apply(e);
+   }}
+ }catch(e){}
+}).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+window.TLI18N=API;
+})();
+</script>
+<script>
+/* If i18n.js is missing or only half-loaded, the game still runs: this stub
+   keeps the same API, pins English, and serves the en table this page registers
+   below via add(). */
+if(!window.TLI18N||typeof window.TLI18N.add!=="function"||typeof window.TLI18N.t!=="function"||typeof window.TLI18N.apply!=="function"||typeof window.TLI18N.mount!=="function"){(function(){var T={en:{}};window.TLI18N={version:"en-fallback",codes:["en"],langs:[["en","EN","English",""]],
+add:function(tab){for(var c in tab){T[c]=Object.assign(T[c]||{},tab[c]);}},
+t:function(k,v){var s=(T.en&&T.en[k]!=null)?T.en[k]:k,o=v||{};for(var p in o)s=String(s).split("{"+p+"}").join(String(o[p]));return s},
+flag:function(){return "";},name:function(c){return c;},lang:function(){return "en";},
+set:function(){},onChange:function(){},apply:function(){},mount:function(){}};})();}
+</script>
+<script>
+TLI18N.add({
+en:{
+ subTitle:"D E E P   S P A C E   E D I T I O N",
+ keysLine:"KEYS: ← → ROTATE · ↑ THRUST · SPACE FIRE · H HYPERSPACE · P PAUSE · M MUTE",
+ touchLine:"TOUCH: ◀ ▶ ROTATE · ▲ THRUST · HOLD FIRE · HYP JUMP · ",
+ grabLine:"GRAB POWER-UPS · SHOOT SAUCERS · CHAIN KILLS FOR COMBO",
+ startTap:"TAP TO START", startKey:"CLICK OR PRESS ENTER TO START",
+ hiFmt:"HI {v}", lvFmt:"LV {v}", shieldWord:"SHIELD", comboFmt:"x{m} COMBO",
+ hiScoreFmt:"HIGH SCORE {v}", scoreFmt:"SCORE {v}", newHiFmt:"★ NEW HIGH SCORE ★",
+ reachedFmt:"REACHED LEVEL {v}", againTap:"TAP TO PLAY AGAIN", againKey:"PRESS ENTER TO PLAY AGAIN",
+ clearedFmt:"LEVEL {lv} CLEARED", bonusFmt:"BONUS +{v}", getReady:"GET READY...",
+ resumeKey:"P / ▶ BUTTON TO RESUME", fire:"FIRE",
+ pwTriple:"TRIPLE SHOT", pwSpread:"SPREAD SHOT", pwLaser:"PIERCE LASER", pwRapid:"RAPID FIRE",
+ pwShield:"SHIELD x3", pwLife:"EXTRA LIFE", pwBomb:"NOVA BOMB", pwX2:"DOUBLE SCORE"
+},
+es:{
+ subTitle:"E D I C I Ó N   D E L   E S P A C I O   P R O F U N D O",
+ keysLine:"TECLAS: ← → ROTAR · ↑ EMPUJE · ESPACIO DISPARAR · H HIPERESPACIO · P PAUSA · M SILENCIO",
+ touchLine:"TÁCTIL: ◀ ▶ ROTAR · ▲ EMPUJE · MANTÉN DISPARAR · HYP SALTO · ",
+ grabLine:"COGE MEJORAS · DESTRUZA DISCOS · ENCADENA BAJAS PARA COMBO",
+ startTap:"TOCA PARA EMPEZAR", startKey:"CLIC O PULSA ENTER PARA EMPEZAR",
+ hiFmt:"RÉCORD {v}", lvFmt:"NV {v}", shieldWord:"ESCUDO", comboFmt:"COMBO x{m}",
+ hiScoreFmt:"RÉCORD {v}", scoreFmt:"PUNTOS {v}", newHiFmt:"★ NUEVO RÉCORD ★",
+ reachedFmt:"LLEGASTE AL NIVEL {v}", againTap:"TOCA PARA JUGAR OTRA VEZ", againKey:"PULSA ENTER PARA JUGAR OTRA VEZ",
+ clearedFmt:"NIVEL {lv} SUPERADO", bonusFmt:"BONUS +{v}", getReady:"PREPÁRATE...",
+ resumeKey:"P / BOTÓN ▶ PARA CONTINUAR", fire:"DISPARAR",
+ pwTriple:"DISPARO TRIPLE", pwSpread:"DISPARO ABIERTO", pwLaser:"LÁSER PERFORANTE", pwRapid:"FUEGO RÁPIDO",
+ pwShield:"ESCUDO x3", pwLife:"VIDA EXTRA", pwBomb:"BOMBA NOVA", pwX2:"PUNTOS DOBLE"
+},
+pt:{
+ subTitle:"E D I Ç Ã O   D O   E S P A Ç O   P R O F U N D O",
+ keysLine:"TECLAS: ← → GIRAR · ↑ ACELERAR · ESPAÇO ATIRAR · H HIPERESPAÇO · P PAUSAR · M MUDO",
+ touchLine:"TOQUE: ◀ ▶ GIRAR · ↑ ACELERAR · SEGURE ATIRAR · HYP SALTO · ",
+ grabLine:"PEGUE POWER-UPS · ABATA DISCOS · EMENDE MORTES PARA COMBO",
+ startTap:"TOQUE PARA INICIAR", startKey:"CLIQUE OU PRESSIONE ENTER PARA INICIAR",
+ hiFmt:"REC {v}", lvFmt:"NV {v}", shieldWord:"ESCUDO", comboFmt:"COMBO x{m}",
+ hiScoreFmt:"RECORDE {v}", scoreFmt:"PONTOS {v}", newHiFmt:"★ NOVO RECORDE ★",
+ reachedFmt:"CHEGOU AO NÍVEL {v}", againTap:"TOQUE PARA JOGAR DE NOVO", againKey:"PRESSIONE ENTER PARA JOGAR DE NOVO",
+ clearedFmt:"NÍVEL {lv} LIMPO", bonusFmt:"BÔNUS +{v}", getReady:"PREPARE-SE...",
+ resumeKey:"P / BOTÃO ▶ PARA CONTINUAR", fire:"ATIRAR",
+ pwTriple:"TIRO TRIPLO", pwSpread:"TIRO ABERTO", pwLaser:"LASER PERFURANTE", pwRapid:"TIRO RÁPIDO",
+ pwShield:"ESCUDO x3", pwLife:"VIDA EXTRA", pwBomb:"BOMBA NOVA", pwX2:"PONTOS DOBROS"
+},
+ru:{
+ subTitle:"И З Д А Н И Е   Г Л У Б О К О С М О С А",
+ keysLine:"КЛАВИШИ: ← → ПОВОРОТ · ↑ ТЯГА · ПРОБЕЛ ОГОНЬ · H ГИПЕРПРЫЖОК · P ПАУЗА · M ТИШИНА",
+ touchLine:"ТАЧ: ◀ ▶ ПОВОРОТ · ↑ ТЯГА · ДЕРЖИ ОГОНЬ · HYP ПРЫЖОК · ",
+ grabLine:"ЛОВИ БОНУСЫ · СТРЕЛЯЙ ПО ТАРЕЛКАМ · ЦЕПЛЯЙ УБИЙСТВА ДЛЯ КОМБО",
+ startTap:"ТАКНИ, ЧТОБЫ НАЧАТЬ", startKey:"КЛИК ИЛИ ENTER, ЧТОБЫ НАЧАТЬ",
+ hiFmt:"РЕК {v}", lvFmt:"УР {v}", shieldWord:"ЩИТ", comboFmt:"КОМБО x{m}",
+ hiScoreFmt:"РЕКОРД {v}", scoreFmt:"СЧЁТ {v}", newHiFmt:"★ НОВЫЙ РЕКОРД ★",
+ reachedFmt:"ДОШЁЛ ДО УРОВНЯ {v}", againTap:"ТАКНИ, ЧТОБЫ СНОВА", againKey:"НАЖМИ ENTER, ЧТОБЫ СНОВА",
+ clearedFmt:"УРОВЕНЬ {lv} ПРОЙДЕН", bonusFmt:"БОНУС +{v}", getReady:"ГОТОВЬСЯ...",
+ resumeKey:"P / КНОПКА ▶ ПРОДОЛЖИТЬ", fire:"ОГОНЬ",
+ pwTriple:"ТРОЙНОЙ ВЫСТРЕЛ", pwSpread:"ВЕЕРНЫЙ ВЫСТРЕЛ", pwLaser:"ПРОБИВАЮЩИЙ ЛАЗЕР", pwRapid:"СКОРОСТРЕЛ",
+ pwShield:"ЩИТ x3", pwLife:"ДОП ЖИЗНЬ", pwBomb:"НОВА-БОМБА", pwX2:"ДВОЙНОЙ СЧЁТ"
+},
+zh:{
+ subTitle:"深 空 编 辑",
+ keysLine:"按键：← → 旋转 · ↑ 推进 · 空格 开火 · H 超空间 · P 暂停 · M 静音",
+ touchLine:"触屏：◀ ▶ 旋转 · ▲ 推进 · 按住开火 · HYP 跃迁 · ",
+ grabLine:"接强化道具 · 打飞碟 · 连击加分",
+ startTap:"点击开始", startKey:"点击或按 Enter 开始",
+ hiFmt:"最高 {v}", lvFmt:"关卡 {v}", shieldWord:"护盾", comboFmt:"连击 x{m}",
+ hiScoreFmt:"最高分 {v}", scoreFmt:"分数 {v}", newHiFmt:"★ 新纪录 ★",
+ reachedFmt:"到达关卡 {v}", againTap:"点击再玩一次", againKey:"按 Enter 再玩一次",
+ clearedFmt:"关卡 {lv} 通关", bonusFmt:"奖励 +{v}", getReady:"准备…",
+ resumeKey:"P / ▶ 按钮继续", fire:"开火",
+ pwTriple:"三发", pwSpread:"散射", pwLaser:"贯穿激光", pwRapid:"速射",
+ pwShield:"护盾 x3", pwLife:"额外命", pwBomb:"新星弹", pwX2:"双倍分"
+}
+});
+TLI18N.mount("#tlHost");
+</script>
 <script>
 'use strict';
 /* ---------- helpers ---------- */
@@ -80,7 +436,7 @@ function upParts(dt){for(let i=pcount-1;i>=0;i--){pl[i]-=dt;if(pl[i]<=0){const L
 
 /* ---------- powerups ---------- */
 const POW={triple:{c:'#ffb347',lab:'3'},spread:{c:'#59e0ff',lab:'S'},laser:{c:'#ff5df1',lab:'L'},rapid:{c:'#ffe95e',lab:'R'},shield:{c:'#6ea8ff',lab:'O'},life:{c:'#7dff8a',lab:'+'},bomb:{c:'#c48bff',lab:'B'},x2:{c:'#ffd700',lab:'2'}};
-const POWNAME={triple:'TRIPLE SHOT',spread:'SPREAD SHOT',laser:'PIERCE LASER',rapid:'RAPID FIRE',shield:'SHIELD x3',life:'EXTRA LIFE',bomb:'NOVA BOMB',x2:'DOUBLE SCORE'};
+const POWKEY={triple:"pwTriple",spread:"pwSpread",laser:"pwLaser",rapid:"pwRapid",shield:"pwShield",life:"pwLife",bomb:"pwBomb",x2:"pwX2"};
 const POWK=['triple','spread','laser','rapid','shield','life','bomb','x2'];
 function pickPow(){const w=[.16,.17,.16,.14,.14,.08,.08,.07];let r=Math.random(),i=0;for(;i<w.length-1;i++){if(r<w[i])break;r-=w[i];}return POWK[i];}
 function spawnPow(x,y){pows.push({x,y,vx:rnd(-14,14),vy:rnd(-14,14),t:11,type:pickPow(),ph:rnd(0,TAU)});}
@@ -153,7 +509,7 @@ function doBomb(){SND.bomb();flash=1;shake=16;
  for(let i=ufos.length-1;i>=0;i--)killUFO(i,true);
  eblts.length=0;}
 function applyPow(p){const t=p.type;SND.power();
- if(pops.length<24)pops.push({x:p.x,y:p.y,txt:POWNAME[t],t:1.5,col:POW[t].c});
+ if(pops.length<24)pops.push({x:p.x,y:p.y,txt:TLI18N.t(POWKEY[t]),t:1.5,col:POW[t].c});
  switch(t){case'triple':case'spread':case'laser':weapon=t;weaponT=12;break;
   case'rapid':rapidT=10;break;case'shield':shield=3;break;
   case'life':lives++;SND.oneUp();break;case'bomb':doBomb();break;case'x2':x2T=15;break;}}
@@ -317,17 +673,17 @@ function drawHUD(){ctx.textBaseline='alphabetic';
  ctx.textAlign='left';ctx.fillStyle='#eaf6ff';ctx.font='bold 18px monospace';
  ctx.fillText(String(score).padStart(6,'0'),14,26);
  ctx.textAlign='center';ctx.font='12px monospace';ctx.fillStyle='#8fa5ba';
- ctx.fillText('HI '+String(hi).padStart(6,'0'),W/2,22);
- ctx.textAlign='right';ctx.fillText('LV '+level,W-112,26);
+ ctx.fillText(TLI18N.t("hiFmt",{v:String(hi).padStart(6,'0')}),W/2,22);
+ ctx.textAlign='right';ctx.fillText(TLI18N.t("lvFmt",{v:level}),W-112,26);
  for(let i=0;i<Math.min(lives,6);i++)drawMiniShip(20+i*20,44);
  if(shield>0){ctx.textAlign='left';ctx.fillStyle='#6ea8ff';ctx.font='11px monospace';
-  ctx.fillText('SHIELD '+'|'.repeat(shield),14,62);}
+  ctx.fillText(TLI18N.t("shieldWord")+' '+'|'.repeat(shield),14,62);}
  if(mult>1){ctx.textAlign='center';ctx.fillStyle='#ffd700';ctx.font='bold 15px monospace';
-  ctx.fillText('x'+mult+' COMBO',W/2,46);}
+  ctx.fillText(TLI18N.t("comboFmt",{m:mult}),W/2,46);}
  let wt='',col='#fff';
- if(weapon!=='single'){wt=weapon.toUpperCase();col=POW[weapon].c;}
- if(rapidT>0)wt+=wt?'+RAPID':'RAPID';
- if(x2T>0)wt+=wt?'+2X':'2X';
+ if(weapon!=='single'){wt=TLI18N.t(POWKEY[weapon]);col=POW[weapon].c;}
+ if(rapidT>0)wt+=(wt?'+':'')+TLI18N.t("pwRapid");
+ if(x2T>0)wt+=(wt?'+':'')+TLI18N.t("pwX2");
  if(wt){ctx.textAlign='center';ctx.font='bold 12px monospace';ctx.fillStyle=col;
   ctx.fillText(wt,W/2,66);
   if(weapon!=='single')ctx.fillRect(W/2-36,70,72*clamp(weaponT/12,0,1),3);}}
@@ -345,8 +701,8 @@ function drawMenu(){
  const maxW=W-20;
  const reserve=touchUI?Math.min(205,H*.34):24;
  const availH=H-reserve-10;
- const keyStr='KEYS: \u2190 \u2192 ROTATE \u00b7 \u2191 THRUST \u00b7 SPACE FIRE \u00b7 H HYPERSPACE \u00b7 P PAUSE \u00b7 M MUTE';
- const touchStr=(touchUI?'TOUCH: \u25c0 \u25b6 ROTATE \u00b7 \u25b2 THRUST \u00b7 HOLD FIRE \u00b7 HYP JUMP \u00b7 ':'')+'GRAB POWER-UPS \u00b7 SHOOT SAUCERS \u00b7 CHAIN KILLS FOR COMBO';
+ const keyStr=TLI18N.t("keysLine");
+ const touchStr=(touchUI?TLI18N.t("touchLine"):'')+TLI18N.t("grabLine");
  const fBase=12;
  const l1=wrapText(keyStr,maxW,fBase+'px monospace');
  const l2=wrapText(touchStr,maxW,fBase+'px monospace');
@@ -362,10 +718,10 @@ function drawMenu(){
  ctx.textAlign='center';
  fitFont('ASTEROIDS',maxW,ts,'bold');ctx.fillStyle='#eaf6ff';
  ctx.fillText('ASTEROIDS',W/2,y+ts*.86);y+=ts+8*s;
- fitFont('D E E P   S P A C E   E D I T I O N',maxW,sub,'bold');ctx.fillStyle='#59e0ff';
- ctx.fillText('D E E P   S P A C E   E D I T I O N',W/2,y+sub);y+=sub+26*s;
+ fitFont(TLI18N.t("subTitle"),maxW,sub,'bold');ctx.fillStyle='#59e0ff';
+ ctx.fillText(TLI18N.t("subTitle"),W/2,y+sub);y+=sub+26*s;
  if(((stateT*1.5)|0)%2===0){ctx.font='bold '+pr+'px monospace';ctx.fillStyle='#7dff8a';
-  ctx.fillText(touchUI?'TAP TO START':'CLICK OR PRESS ENTER TO START',W/2,y+pr);}
+  ctx.fillText(touchUI?TLI18N.t("startTap"):TLI18N.t("startKey"),W/2,y+pr);}
  y+=pr+16*s;
  ctx.font=f+'px monospace';ctx.fillStyle='#9fb4c8';
  const all=l1.concat(l2);
@@ -383,28 +739,28 @@ function drawMenu(){
    ctx.strokeStyle=POW[k].c;ctx.lineWidth=1.5;
    ctx.beginPath();ctx.arc(cx+8,cy,7,0,TAU);ctx.stroke();
    ctx.fillStyle=POW[k].c;ctx.textAlign='center';ctx.fillText(POW[k].lab,cx+8,cy+.5);
-   ctx.fillStyle='#c8d2dc';ctx.textAlign='left';ctx.fillText(POWNAME[k],cx+20,cy+.5);}}
+   ctx.fillStyle='#c8d2dc';ctx.textAlign='left';ctx.fillText(TLI18N.t(POWKEY[k]),cx+20,cy+.5);}}
  ctx.textBaseline='alphabetic';
  y+=rows*rh+8;
  ctx.textAlign='center';ctx.font=Math.max(10,Math.round(12*s))+'px monospace';ctx.fillStyle='#8fa5ba';
- ctx.fillText('HIGH SCORE '+String(hi).padStart(6,'0'),W/2,y+12);}
+ ctx.fillText(TLI18N.t("hiScoreFmt",{v:String(hi).padStart(6,'0')}),W/2,y+12);}
 function drawOver(){ctx.fillStyle='rgba(1,3,10,.6)';ctx.fillRect(0,0,W,H);
  ctx.textAlign='center';
- fitFont('GAME OVER',W-24,40,'bold');ctx.fillStyle='#ff5252';ctx.fillText('GAME OVER',W/2,H*.34);
- ctx.font='18px monospace';ctx.fillStyle='#eaf6ff';ctx.fillText('SCORE '+score,W/2,H*.34+32);
- if(newHi){ctx.fillStyle='#ffd700';ctx.font='14px monospace';ctx.fillText('\u2605 NEW HIGH SCORE \u2605',W/2,H*.34+54);}
- ctx.fillStyle='#9fb4c8';ctx.font='13px monospace';ctx.fillText('REACHED LEVEL '+level,W/2,H*.34+76);
+ const go=TLI18N.t("gameOver");fitFont(go,W-24,40,'bold');ctx.fillStyle='#ff5252';ctx.fillText(go,W/2,H*.34);
+ ctx.font='18px monospace';ctx.fillStyle='#eaf6ff';ctx.fillText(TLI18N.t("scoreFmt",{v:score}),W/2,H*.34+32);
+ if(newHi){ctx.fillStyle='#ffd700';ctx.font='14px monospace';ctx.fillText(TLI18N.t("newHiFmt"),W/2,H*.34+54);}
+ ctx.fillStyle='#9fb4c8';ctx.font='13px monospace';ctx.fillText(TLI18N.t("reachedFmt",{v:level}),W/2,H*.34+76);
  if(overT>1&&((overT*1.4)|0)%2===0){ctx.fillStyle='#59e0ff';
-  ctx.fillText(touchUI?'TAP TO PLAY AGAIN':'PRESS ENTER TO PLAY AGAIN',W/2,H*.34+104);}}
+  ctx.fillText(touchUI?TLI18N.t("againTap"):TLI18N.t("againKey"),W/2,H*.34+104);}}
 function drawClear(){ctx.textAlign='center';ctx.fillStyle='#7dff8a';
- fitFont('LEVEL '+level+' CLEARED',W-24,28,'bold');ctx.fillText('LEVEL '+level+' CLEARED',W/2,H*.4);
- ctx.font='15px monospace';ctx.fillStyle='#eaf6ff';ctx.fillText('BONUS +'+clearBonus,W/2,H*.4+26);
- ctx.fillStyle='#9fb4c8';ctx.font='12px monospace';ctx.fillText('GET READY...',W/2,H*.4+48);}
+ const cl=TLI18N.t("clearedFmt",{lv:level});fitFont(cl,W-24,28,'bold');ctx.fillText(cl,W/2,H*.4);
+ ctx.font='15px monospace';ctx.fillStyle='#eaf6ff';ctx.fillText(TLI18N.t("bonusFmt",{v:clearBonus}),W/2,H*.4+26);
+ ctx.fillStyle='#9fb4c8';ctx.font='12px monospace';ctx.fillText(TLI18N.t("getReady"),W/2,H*.4+48);}
 function drawPaused(){ctx.fillStyle='rgba(0,2,10,.6)';ctx.fillRect(0,0,W,H);
  ctx.textAlign='center';ctx.fillStyle='#eaf6ff';ctx.font='bold 30px monospace';
- ctx.fillText('PAUSED',W/2,H/2-8);
+ ctx.fillText(TLI18N.t("paused"),W/2,H/2-8);
  ctx.font='12px monospace';ctx.fillStyle='#9fb4c8';
- ctx.fillText('P / \u25b6 BUTTON TO RESUME',W/2,H/2+18);}
+ ctx.fillText(TLI18N.t("resumeKey"),W/2,H/2+18);}
 /* home button visibility */
 const homeBtn=$('bHome');let homeShown=null;
 function setHome(v){if(homeShown!==v){homeShown=v;homeBtn.style.display=v?'flex':'none';}}
@@ -566,5 +922,235 @@ else seen(cur);
 }).catch(function () {});
 })();
 </script>
+<script>
+/* Developer harness. ?debug=dbg/asteroids.js loads the shared engine dbg/_harness.js
+   and then that script, which registers the live panel: state, elements,
+   layout per screen mode, translation texts, balance, cheats, JSON export.
+   No parameter, or a missing script: nothing loads and the page behaves
+   exactly as it does without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
+</script>
+<!-- inlined fs.js — the source of truth is fs.js: edit that file and re-inline this block -->
+<script>
+/* fs.js — the one fullscreen control every page shares.
+
+   Two jobs:
+
+   1. A toggle button. `TLFS.mount("#opts", {cls:"btn"})` puts it inside a menu or
+      title panel using that page's own button class; `TLFS.mount()` alone floats a
+      small icon button in the bottom-right corner; `{icon:true}` swaps the word for
+      a ⤢ glyph and moves it into `aria-label` for narrow hosts. The wording is the
+      shared translation key `fullscreen` / `exitFullscreen` — from the i18n kit, from
+      a page table published through `TLFS_LABEL(key)`, or English as the floor — and
+      a change of `<html lang>` repaints it. Where the Fullscreen API is missing the
+      button hides itself instead of lying.
+
+   2. Re-fit on every usable-area change. Entering or leaving fullscreen, an
+      orientation flip, and a mobile browser bar hiding or showing all change the
+      area the game has to fill — and the bar case does not always fire a plain
+      `resize`. This file listens to `fullscreenchange` (all vendor spellings) and
+      to `visualViewport.resize`, then re-applies `<html data-fs>` and dispatches
+      `resize` (plus `orientationchange`) once per frame, so the page's own layout
+      code runs. `TLFS.refitOnly()` gives a page that already has its own
+      fullscreen button just that wiring, without a second button.
+
+   Nothing here reads game state, and a page that never calls mount/refitOnly gets
+   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+(function () {
+  if (window.TLFS) return;
+  var de = document.documentElement;
+  var REQ = de.requestFullscreen || de.webkitRequestFullscreen ||
+    de.msRequestFullscreen || de.mozRequestFullScreen;
+  var EX = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.msExitFullscreen || document.mozCancelFullScreen;
+  var blocked = !REQ || !EX || de.fullscreenEnabled === false;
+  var ICON = "\u2922"; /* narrow hosts (side stripes, icon bars) get the glyph plus a
+                          translated aria-label instead of the word */
+  var btns = [], cbs = [], queued = false, styleDone = false;
+
+  function isFull() {
+    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
+      de.msFullscreenElement || de.mozFullScreenElement);
+  }
+  function kit() {
+    var k = window.TLI18N;
+    return (k && typeof k.t === "function") ? k : null;
+  }
+  /* A missing key makes t() hand back the key name — that is not a label.
+     Pages that keep their own translation table (billiards, tilt, oilstorm) publish
+     TLFS_LABEL(key) instead of the kit; they win over the kit, English is the floor. */
+  function label() {
+    var want = isFull() ? "exitFullscreen" : "fullscreen";
+    var L = window.TLFS_LABEL;
+    if (typeof L === "function") {
+      try { var v = L(want); if (v && v !== want) return String(v) } catch (e) {}
+    }
+    var k = kit(), t = null;
+    if (k) { try { t = k.t(want) } catch (e) { t = null } }
+    if (!t || t === want) t = isFull() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+    return t;
+  }
+  function cssOnce() {
+    if (styleDone) return;
+    styleDone = true;
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlfs-float:hover{border-color:#ffd76a;color:#ffd76a}" +
+      ".tlfs-float[hidden]{display:none}";
+    document.head.appendChild(st);
+  }
+  function paint() {
+    var txt = label();
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      b.textContent = b.__tlfsIcon ? ICON : txt;
+      b.setAttribute("aria-label", txt);
+      b.setAttribute("aria-pressed", isFull() ? "true" : "false");
+    }
+  }
+  /* One pass per frame: fullscreenchange and visualViewport.resize often arrive
+     together, and dispatching resize from inside a resize listener would loop. */
+  function refit() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint();
+      for (var i = 0; i < cbs.length; i++) { try { cbs[i](isFull()) } catch (e) {} }
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("orientationchange"));
+    });
+  }
+  function toggle() {
+    if (blocked) return false;
+    var was = isFull();
+    try {
+      if (was) EX.call(document);
+      else { var p = REQ.call(de); if (p && p.catch) p.catch(function () {}) }
+    } catch (e) {}
+    /* the change event may never come (sandboxed frames, denied requests, some
+       headless shells that grant then silently drop): repaint the state we can
+       read twice, late enough to catch a transition nobody announced. */
+    setTimeout(refit, 220);
+    setTimeout(refit, 700);
+    return !was;
+  }
+
+  de.setAttribute("data-fs", "off");
+  ["fullscreenchange", "webkitfullscreenchange", "MSFullscreenChange", "mozfullscreenchange"]
+    .forEach(function (t) { document.addEventListener(t, refit, false) });
+  ["fullscreenerror", "webkitfullscreenerror"].forEach(function (t) {
+    document.addEventListener(t, function () { de.setAttribute("data-fs", "off"); paint() }, false)
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", refit, false);
+    window.visualViewport.addEventListener("scroll", function () {
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint(); /* an exit the browser never announced must still clear the label */
+    }, false);
+  }
+  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
+  }, false);
+  /* A language switch changes <html lang>: repaint from whatever table the page
+     uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
+     drive their toggle state off that attribute, and taking it would corrupt them. */
+  new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
+
+  window.TLFS = {
+    version: "2026.11.23.3",
+    supported: !blocked,
+    isFull: isFull,
+    label: label,
+    paint: paint,
+    toggle: toggle,
+    onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
+    /* just the size/orientation wiring, for a page with its own fullscreen button */
+    refitOnly: function () { paint(); return true },
+    /* put the button in `sel` (or float it when the selector matches nothing).
+       opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
+       puts the translated word in aria-label, for narrow hosts. */
+    mount: function (sel, opts) {
+      cssOnce();
+      var o = opts || {};
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = o.cls || "tlfs-float";
+      b.id = o.id || "tlfsBtn";
+      b.__tlfsIcon = !!o.icon;
+      if (o.float !== false && !o.cls) b.classList.add("tlfs-float");
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", label());
+      if (o.ariaLabel) b.setAttribute("data-aria", o.ariaLabel);
+      b.textContent = o.icon ? ICON : label();
+      /* a menu that starts the game on any tap (defender binds pointerdown on the
+         whole title screen) must not fire when the fullscreen button is pressed */
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("touchstart", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle() });
+      var host = sel ? document.querySelector(sel) : null;
+      if (host) {
+        if (o.prepend && host.firstChild) host.insertBefore(b, host.firstChild);
+        else host.appendChild(b);
+      } else {
+        b.classList.add("tlfs-float");
+        document.body.appendChild(b);
+      }
+      if (blocked) b.style.display = "none";
+      btns.push(b);
+      paint();
+      return b;
+    },
+    /* wire a button the page already has in its markup (keeps its own look) */
+    attach: function (el) {
+      cssOnce();
+      if (!el) return null;
+      if (blocked) { el.style.display = "none"; return el }
+      el.addEventListener("click", function (e) { e.preventDefault(); toggle() });
+      btns.push(el);
+      paint();
+      return el;
+    },
+    /* a rebuilt panel drops its children: re-add every button the page mounted */
+    reassert: function () {
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i];
+        if (!b.isConnected && b.__tlfsHost) {
+          var h = document.querySelector(b.__tlfsHost);
+          if (h) h.appendChild(b);
+        }
+      }
+      paint();
+      return btns.length
+    }
+  };
+  /* remember where each button was mounted so a panel rebuild can put it back */
+  var mount0 = window.TLFS.mount;
+  window.TLFS.mount = function (sel, opts) {
+    var b = mount0(sel, opts);
+    if (b) b.__tlfsHost = sel || "body";
+    return b;
+  };
+  var k = kit();
+  if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
+})();
+</script>
+<script>/* beside the pause/mute squares — #tlHost belongs to the language pill */
+var tlfsAst=TLFS.mount(null,{cls:"btn sq",icon:true});
+tlfsAst.style.top="10px";tlfsAst.style.right="110px";tlfsAst.style.display="flex";</script>
 </body>
 </html>

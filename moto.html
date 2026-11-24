@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0b0b19">
 <title>Scooter Stunt Pro</title>
-<meta name="version" content="2026.11.12.3">
+<meta name="version" content="2026.11.24.1">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:"Courier New",Courier,monospace;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
@@ -54,109 +54,535 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font
 <canvas id="c"></canvas>
 
 <div id="titleScreen" class="screen">
-  <button class="btn btn-home" onclick="window.open('https://1nd1g0.github.io/','_blank')">HOME</button>
+  <button class="btn btn-home" onclick="window.open('https://1nd1g0.github.io/','_blank')" data-t="home">HOME</button>
   <div class="dialog">
     <div class="title">SCOOTER STUNT</div>
-    <div class="subtitle">REAR-WHEEL STUNT RIDER &bull; EVERY LEVEL WINNABLE</div>
+    <div class="subtitle" data-t="subtitle">REAR-WHEEL STUNT RIDER &bull; EVERY LEVEL WINNABLE</div>
 
-    <div class="rowLabel">DIFFICULTY (MORE SKILL, NEVER IMPOSSIBLE)</div>
-    <div class="optRow" aria-label="Difficulty">
-      <button class="btn optBtn selected" id="diffBtn0" onclick="setDifficulty(0)">EASY</button>
-      <button class="btn optBtn" id="diffBtn1" onclick="setDifficulty(1)">NORMAL</button>
-      <button class="btn optBtn" id="diffBtn2" onclick="setDifficulty(2)">HARD</button>
-      <button class="btn optBtn" id="diffBtn3" onclick="setDifficulty(3)">EXTREME</button>
+    <div class="rowLabel"><span data-t="difficulty">DIFFICULTY</span> <span data-t="diffHint">(MORE SKILL, NEVER IMPOSSIBLE)</span></div>
+    <div class="optRow" data-aria="difficulty" aria-label="Difficulty">
+      <button class="btn optBtn selected" id="diffBtn0" onclick="setDifficulty(0)" data-t="easy">EASY</button>
+      <button class="btn optBtn" id="diffBtn1" onclick="setDifficulty(1)" data-t="normal">NORMAL</button>
+      <button class="btn optBtn" id="diffBtn2" onclick="setDifficulty(2)" data-t="hard">HARD</button>
+      <button class="btn optBtn" id="diffBtn3" onclick="setDifficulty(3)" data-t="extreme">EXTREME</button>
     </div>
 
-    <div class="rowLabel">DRIVE</div>
-    <div class="optRow" aria-label="Drive mode">
-      <button class="btn optBtn selected" id="driveBtn0" onclick="setDriveMode(0)">REAR</button>
-      <button class="btn optBtn" id="driveBtn1" onclick="setDriveMode(1)">FRONT</button>
-      <button class="btn optBtn" id="driveBtn2" onclick="setDriveMode(2)">BOTH</button>
+    <div class="rowLabel" data-t="driveLbl">DRIVE</div>
+    <div class="optRow" data-aria="driveModeLbl" aria-label="Drive mode">
+      <button class="btn optBtn selected" id="driveBtn0" onclick="setDriveMode(0)" data-t="rear">REAR</button>
+      <button class="btn optBtn" id="driveBtn1" onclick="setDriveMode(1)" data-t="front">FRONT</button>
+      <button class="btn optBtn" id="driveBtn2" onclick="setDriveMode(2)" data-t="both">BOTH</button>
     </div>
 
-    <div class="rowLabel">AUDIO</div>
+    <div class="rowLabel" data-t="audio">AUDIO</div>
     <div class="optRow">
       <button class="btn optBtn selected" id="musicBtn" onclick="toggleMusic()">MUSIC ON</button>
     </div>
 
     <div class="btnGrid">
-      <button class="btn" id="titleNewBtn" onclick="startNewGame()">NEW GAME</button>
-      <button class="btn" onclick="loadFromStorage()">LOAD SAVE</button>
-      <button class="btn" onclick="saveToStorage()">SAVE GAME</button>
+      <button class="btn" id="titleNewBtn" onclick="startNewGame()" data-t="newGame">NEW GAME</button>
+      <button class="btn" onclick="loadFromStorage()" data-t="loadSave">LOAD SAVE</button>
+      <button class="btn" onclick="saveToStorage()" data-t="saveGame">SAVE GAME</button>
     </div>
 
     <div class="seed-box">
-      <div class="lab">WORLD SEED</div>
-      <input id="seedInput" maxlength="16" spellcheck="false" autocomplete="off" aria-label="World seed">
-      <button onclick="regenerateSeed()">RND</button>
-      <button onclick="applySeed()">USE</button>
+      <div class="lab" data-t="worldSeed">WORLD SEED</div>
+      <input id="seedInput" maxlength="16" spellcheck="false" autocomplete="off" data-aria="worldSeed" aria-label="World seed">
+      <button onclick="regenerateSeed()" data-t="rnd">RND</button>
+      <button onclick="applySeed()" data-t="use">USE</button>
     </div>
 
     <div class="info">
-      KEYS: W / Up = gas, S / Down = brake, A / Left = lean back, D / Right = lean forward. R = respawn at checkpoint.<br>
-      ENTER / SPACE activates focused menu button. ESC / P pauses. Audio starts after first tap/click.<br>
-      Deadly pits only appear as ramp jumps with a guaranteed run-up. Land on your wheels to survive falls.
-      Checkpoints always sit on safe ground before a jump. There is always a way to win.
+      <span data-t="info1">KEYS: W / Up = gas, S / Down = brake, A / Left = lean back, D / Right = lean forward. R = respawn at checkpoint.</span><br>
+      <span data-t="info2">ENTER / SPACE activates focused menu button. ESC / P pauses. Audio starts after first tap/click.</span><br>
+      <span data-t="info3">Deadly pits only appear as ramp jumps with a guaranteed run-up. Land on your wheels to survive falls. Checkpoints always sit on safe ground before a jump. There is always a way to win.</span>
     </div>
   </div>
 </div>
 
 <div id="pauseScreen" class="screen hidden">
   <div class="dialog">
-    <div class="title" style="font-size:26px">PAUSED</div>
-    <div class="rowLabel">DRIVE</div>
+    <div class="title" style="font-size:26px" data-t="paused">PAUSED</div>
+    <div class="rowLabel" data-t="driveLbl">DRIVE</div>
     <div class="optRow">
-      <button class="btn optBtn" id="pauseDriveBtn0" onclick="setDriveMode(0)">REAR</button>
-      <button class="btn optBtn" id="pauseDriveBtn1" onclick="setDriveMode(1)">FRONT</button>
-      <button class="btn optBtn" id="pauseDriveBtn2" onclick="setDriveMode(2)">BOTH</button>
+      <button class="btn optBtn" id="pauseDriveBtn0" onclick="setDriveMode(0)" data-t="rear">REAR</button>
+      <button class="btn optBtn" id="pauseDriveBtn1" onclick="setDriveMode(1)" data-t="front">FRONT</button>
+      <button class="btn optBtn" id="pauseDriveBtn2" onclick="setDriveMode(2)" data-t="both">BOTH</button>
     </div>
-    <div class="rowLabel">AUDIO</div>
+    <div class="rowLabel" data-t="audio">AUDIO</div>
     <div class="optRow">
       <button class="btn optBtn" id="pauseMusicBtn" onclick="toggleMusic()">MUSIC ON</button>
     </div>
     <div class="btnGrid">
-      <button class="btn" id="pauseResumeBtn" onclick="resumeGame()">RESUME</button>
-      <button class="btn" onclick="respawnAtCheckpoint()">RESPAWN (R)</button>
-      <button class="btn" onclick="restartLevel()">RESTART LEVEL</button>
-      <button class="btn" onclick="saveToStorage()">SAVE GAME</button>
-      <button class="btn" onclick="quitToTitle()">QUIT TO TITLE</button>
+      <button class="btn" id="pauseResumeBtn" onclick="resumeGame()" data-t="resume">RESUME</button>
+      <button class="btn" onclick="respawnAtCheckpoint()" data-t="respawnKey">RESPAWN (R)</button>
+      <button class="btn" onclick="restartLevel()" data-t="restartLevel">RESTART LEVEL</button>
+      <button class="btn" onclick="saveToStorage()" data-t="saveGame">SAVE GAME</button>
+      <button class="btn" onclick="quitToTitle()" data-t="quitTitle">QUIT TO TITLE</button>
     </div>
   </div>
 </div>
 
 <div id="overScreen" class="screen hidden">
   <div class="dialog">
-    <div class="title" id="overTitle" style="color:#ff3030;text-shadow:0 0 18px #f00">CRASHED</div>
-    <div class="stats">Distance: <span id="overDist">0</span><br>Score: <span id="overScore">0</span><br>Coins: <span id="overCoins">0</span></div>
+    <div class="title" id="overTitle" style="color:#ff3030;text-shadow:0 0 18px #f00" data-t="crashed">CRASHED</div>
+    <div class="stats"><span data-t="distLbl">Distance</span>: <span id="overDist">0</span><br><span data-t="scoreLbl">Score</span>: <span id="overScore">0</span><br><span data-t="coinsLbl">Coins</span>: <span id="overCoins">0</span></div>
     <div class="btnGrid">
-      <button class="btn" id="overRetryBtn" onclick="respawnAtCheckpoint()">RETRY CHECKPOINT</button>
-      <button class="btn" onclick="restartLevel()">RESTART LEVEL</button>
-      <button class="btn" onclick="quitToTitle()">QUIT</button>
+      <button class="btn" id="overRetryBtn" onclick="respawnAtCheckpoint()" data-t="retryCp">RETRY CHECKPOINT</button>
+      <button class="btn" onclick="restartLevel()" data-t="restartLevel">RESTART LEVEL</button>
+      <button class="btn" onclick="quitToTitle()" data-t="quit">QUIT</button>
     </div>
   </div>
 </div>
 
 <div id="winScreen" class="screen hidden">
   <div class="dialog">
-    <div class="title" style="color:#30ff90;text-shadow:0 0 18px #0f8">LEVEL COMPLETE</div>
+    <div class="title" style="color:#30ff90;text-shadow:0 0 18px #0f8" data-t="levelComplete">LEVEL COMPLETE</div>
     <div class="stats" id="winStats"></div>
     <div class="btnGrid">
-      <button class="btn" id="winNextBtn" onclick="nextLevel()">NEXT LEVEL</button>
-      <button class="btn" onclick="quitToTitle()">QUIT</button>
+      <button class="btn" id="winNextBtn" onclick="nextLevel()" data-t="nextLevel">NEXT LEVEL</button>
+      <button class="btn" onclick="quitToTitle()" data-t="quit">QUIT</button>
     </div>
   </div>
 </div>
 
-<button id="pauseBtn" onclick="pauseGame()" aria-label="Pause">II</button>
+<button id="pauseBtn" onclick="pauseGame()" data-aria="pause" aria-label="Pause">II</button>
 
 <div id="hud"><div id="hudDist">0 m</div><div id="hudSpeed">0 km/h</div><div id="hudCoins">Coins 0</div><div id="hudCp">CP 1/1</div></div>
 <div id="hudRight"><div id="hudLevel">Level 1</div><div id="hudScore">Score 0</div><div id="hudFlips">Flips 0</div><div id="hudCombo"></div><div id="hudDrive">REAR</div><div id="hudMusic">MUSIC ON</div><div id="hudPerf">Q1</div></div>
 
 <div id="touchControls">
-  <div class="pad"><div class="touch-zone" id="tLeft">LEAN<br>BACK</div><div class="touch-zone" id="tRight">LEAN<br>FWD</div></div>
-  <div class="pad"><div class="touch-zone" id="tGas">GAS</div><div class="touch-zone" id="tBrake">BRAKE</div></div>
+  <div class="pad"><div class="touch-zone" id="tLeft"><span data-t="lean">LEAN</span><br><span data-t="backWard">BACK</span></div><div class="touch-zone" id="tRight"><span data-t="lean">LEAN</span><br><span data-t="fwd">FWD</span></div></div>
+  <div class="pad"><div class="touch-zone" id="tGas"><span data-t="gas">GAS</span></div><div class="touch-zone" id="tBrake"><span data-t="brake">BRAKE</span></div></div>
 </div>
 
+<!-- inlined i18n.js — the source of truth is i18n.js: edit that file and re-inline this block -->
+<script>
+/* ============================================================================
+   i18n.js — shared language kit for every page of this site.
+   Language code decision tree (identical everywhere, in this order):
+     0. any technical problem with this kit -> English
+     1. URL ?language=xx      (a region suffix is fine: pt-BR, zh-CN)
+     2. localStorage['tll:lang']
+     3. the browser's language list (navigator.languages, then navigator.language)
+     4. English
+   A code outside CODES is dropped, not trusted, so the next level decides. Only
+   the picker button writes storage, so a ?language= link never overwrites the
+   visitor's saved choice.
+
+   Page usage
+     <script src="i18n.js"><\/script>            BEFORE the game script
+     <script>TLI18N.add({en:{k:"Text"},es:{...},pt:{...},ru:{...},zh:{...}})<\/script>
+     markup:  <b data-t="score">SCORE</b>  <button data-tip="help">?</button>
+              <input data-ph="name">  <i data-aria="pause">  <img data-alt="car">
+     js:      el.textContent=TLI18N.t("gameOver");
+              el.innerHTML="<b>"+TLI18N.t("best")+": "+n+"</b>";
+              ctx.fillText(TLI18N.t("paused"),x,y);
+     canvas / innerHTML redraws: TLI18N.onChange(()=>redrawAll());
+     pick a host for the language button: TLI18N.mount("#startPanel")
+       (omit it and the kit parks a pill in the lower-left corner)
+   Keys missing from a non-English table fall back to English, so a half
+   translated table still runs. Values for *Fmt keys carry {placeholders}.
+   ========================================================================= */
+(function(){
+"use strict";
+var KEY="tll:lang", CODES=["en","es","pt","ru","zh"];
+var LANGS=[ // code · name in its own language · that word for "language" · its flag
+ ['en','English','Language','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0,0 60,40M60,0 0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 60,40M60,0 0,40" stroke="#C8102E" stroke-width="3.2"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="13"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="8"/></svg>'],
+ ['es','Español','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#AA151B"/><path d="M0,10H60M0,30H60" stroke="#F1BF00" stroke-width="20"/>  </svg>'],
+ ['pt','Português','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="40" fill="#046A38"/><rect x="24" width="36" height="40" fill="#DA291C"/><circle cx="24" cy="20" r="7.5" fill="#FEDF00" stroke="#046A38" stroke-width="1.4"/><path d="M24,14.5 24,22.5M20.5,17.5H27.5" stroke="#DA291C" stroke-width="2.2" fill="none"/></svg>'],
+ ['ru','Русский','Язык','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.34" width="60" height="13.33" fill="#0039A6"/><rect y="26.67" width="60" height="13.33" fill="#D52B1E"/></svg>'],
+ ['zh','中文','语言','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#EE1C25"/><circle cx="10" cy="10" r="5.6" fill="#FFDC00"/><circle cx="21" cy="6" r="2.1" fill="#FFDC00"/><circle cx="26" cy="11.5" r="2.1" fill="#FFDC00"/><circle cx="26" cy="18.5" r="2.1" fill="#FFDC00"/><circle cx="21" cy="24" r="2.1" fill="#FFDC00"/></svg>']
+];
+/* ---- shared vocabulary: the same word means the same thing in every game.
+       Values carry no glyphs — pages keep their ⌂ ▶ ■ icons in the markup. ---- */
+var COMMON={
+en:{
+ paused:"PAUSED",pause:"PAUSE",resume:"RESUME",start:"START",play:"PLAY",home:"HOME",menu:"MENU",
+ options:"OPTIONS",settings:"SETTINGS",help:"HELP",howToPlay:"HOW TO PLAY",rules:"RULES",controls:"CONTROLS",
+ keys:"KEYS",gamepad:"GAMEPAD",mouse:"MOUSE",touch:"TOUCH",
+ sound:"SOUND",music:"MUSIC",sfx:"SOUND FX",on:"ON",off:"OFF",fullscreen:"FULLSCREEN",exitFullscreen:"EXIT FULLSCREEN",
+ difficulty:"DIFFICULTY",easy:"EASY",normal:"NORMAL",hard:"HARD",low:"LOW",high:"HIGH",
+ score:"SCORE",best:"BEST",hiScore:"HIGH SCORE",level:"LEVEL",lives:"LIVES",time:"TIME",
+ speed:"SPEED",round:"ROUND",wave:"WAVE",seed:"SEED",newSeed:"NEW SEED",
+ restart:"RESTART",retry:"RETRY",continue:"CONTINUE",tryAgain:"TRY AGAIN",nextLevel:"NEXT LEVEL",
+ gameOver:"GAME OVER",youWin:"YOU WIN",youLose:"GAME OVER",clear:"CLEARED",
+ fire:"FIRE",jump:"JUMP",back:"BACK",exit:"EXIT",close:"CLOSE",ok:"OK",cancel:"CANCEL",
+ loading:"LOADING",shots:"SHOTS",moves:"MOVES",power:"POWER",angle:"ANGLE",
+ langTitle:"LANGUAGE",langNote:"Choose your language — it is remembered, and it applies to this game and to the whole catalogue.",
+ langBack:"CHANGE LANGUAGE",players:"PLAYERS",player:"PLAYER",you:"YOU",cpu:"CPU",random:"RANDOM"},
+es:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INICIO",play:"JUGAR",home:"INICIO",menu:"MENÚ",
+ options:"OPCIONES",settings:"AJUSTES",help:"AYUDA",howToPlay:"CÓMO JUGAR",rules:"REGLAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"MANDO",mouse:"RATÓN",touch:"TÁCTIL",
+ sound:"SONIDO",music:"MÚSICA",sfx:"EFECTOS",on:"ACTIVO",off:"APAGADO",fullscreen:"PANTALLA COMPLETA",exitFullscreen:"SALIR DE PANTALLA COMPLETA",
+ difficulty:"DIFICULTAD",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAJO",high:"ALTO",
+ score:"PUNTOS",best:"RÉCORD",hiScore:"RÉCORD",level:"NIVEL",lives:"VIDAS",time:"TIEMPO",
+ speed:"VELOCIDAD",round:"RONDA",wave:"OLEADA",seed:"SEMILLA",newSeed:"NUEVA SEMILLA",
+ restart:"REINICIAR",retry:"REINTENTAR",continue:"CONTINUAR",tryAgain:"INTÉNTALO OTRA VEZ",nextLevel:"SIGUIENTE NIVEL",
+ gameOver:"FIN DEL JUEGO",youWin:"¡GANASTE!",youLose:"FIN DEL JUEGO",clear:"SUPERADO",
+ fire:"DISPARO",jump:"SALTAR",back:"ATRÁS",exit:"SALIR",close:"CERRAR",ok:"ACEPTAR",cancel:"CANCELAR",
+ loading:"CARGANDO",shots:"LANZAMIENTOS",moves:"MOVIMIENTOS",power:"FUERZA",angle:"ÁNGULO",
+ langTitle:"IDIOMA",langNote:"Elige tu idioma: se recuerda y se aplica a este juego y a todo el catálogo.",
+ langBack:"CAMBIAR IDIOMA",players:"JUGADORES",player:"JUGADOR",you:"TÚ",cpu:"CPU",random:"ALEATORIO"},
+pt:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INÍCIO",play:"JOGAR",home:"INÍCIO",menu:"MENU",
+ options:"OPÇÕES",settings:"CONFIGURAÇÕES",help:"AJUDA",howToPlay:"COMO JOGAR",rules:"REGRAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"CONTROLE",mouse:"MOUSE",touch:"TOQUE",
+ sound:"SOM",music:"MÚSICA",sfx:"EFEITOS",on:"LIGADO",off:"DESLIGADO",fullscreen:"TELA CHEIA",exitFullscreen:"SAIR DA TELA CHEIA",
+ difficulty:"DIFICULDADE",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAIXO",high:"ALTO",
+ score:"PONTOS",best:"RECORDE",hiScore:"RECORDE",level:"NÍVEL",lives:"VIDAS",time:"TEMPO",
+ speed:"VELOCIDADE",round:"RODADA",wave:"ONDA",seed:"SEMENTE",newSeed:"NOVA SEMENTE",
+ restart:"REINICIAR",retry:"TENTAR DE NOVO",continue:"CONTINUAR",tryAgain:"TENTE DE NOVO",nextLevel:"PRÓXIMO NÍVEL",
+ gameOver:"FIM DE JOGO",youWin:"VOCÊ VENCEU",youLose:"FIM DE JOGO",clear:"COMPLETO",
+ fire:"DISPARO",jump:"SALTAR",back:"VOLTAR",exit:"SAIR",close:"FECHAR",ok:"OK",cancel:"CANCELAR",
+ loading:"CARREGANDO",shots:"BATIDAS",moves:"JOGADAS",power:"FORÇA",angle:"ÂNGULO",
+ langTitle:"IDIOMA",langNote:"Escolha seu idioma: ele é lembrado e vale para este jogo e para todo o catálogo.",
+ langBack:"MUDAR IDIOMA",players:"JOGADORES",player:"JOGADOR",you:"VOCÊ",cpu:"CPU",random:"ALEATÓRIO"},
+ru:{
+ paused:"ПАУЗА",pause:"ПАУЗА",resume:"ПРОДОЛЖИТЬ",start:"СТАРТ",play:"ИГРАТЬ",home:"ДОМОЙ",menu:"МЕНЮ",
+ options:"НАСТРОЙКИ",settings:"НАСТРОЙКИ",help:"ПОМОЩЬ",howToPlay:"КАК ИГРАТЬ",rules:"ПРАВИЛА",controls:"УПРАВЛЕНИЕ",
+ keys:"КЛАВИШИ",gamepad:"ГЕЙМПАД",mouse:"МЫШЬ",touch:"СЕНСОР",
+ sound:"ЗВУК",music:"МУЗЫКА",sfx:"ЗВУКИ",on:"ВКЛ",off:"ВЫКЛ",fullscreen:"НА ВЕСЬ ЭКРАН",exitFullscreen:"ВЫЙТИ С ЭКРАНА",
+ difficulty:"СЛОЖНОСТЬ",easy:"ЛЕГКО",normal:"НОРМА",hard:"СЛОЖНО",low:"НИЗ",high:"ВЕРХ",
+ score:"СЧЁТ",best:"РЕКОРД",hiScore:"РЕКОРД",level:"УРОВЕНЬ",lives:"ЖИЗНИ",time:"ВРЕМЯ",
+ speed:"СКОРОСТЬ",round:"РАУНД",wave:"ВОЛНА",seed:"КОД УРОВНЯ",newSeed:"НОВЫЙ КОД",
+ restart:"ЗАНОВО",retry:"ЕЩЁ РАЗ",continue:"ПРОДОЛЖИТЬ",tryAgain:"ПОПРОБУЙ ЕЩЁ",nextLevel:"СЛЕДУЮЩИЙ УРОВЕНЬ",
+ gameOver:"КОНЕЦ",youWin:"ПОБЕДА",youLose:"КОНЕЦ",clear:"УРОВЕНЬ ПРОЙДЕН",
+ fire:"ОГОНЬ",jump:"ПРЫЖОК",back:"НАЗАД",exit:"ВЫХОД",close:"ЗАКРЫТЬ",ok:"ОК",cancel:"ОТМЕНА",
+ loading:"ЗАГРУЗКА",shots:"УДАРЫ",moves:"ХОДЫ",power:"СИЛА",angle:"УГОЛ",
+ langTitle:"ЯЗЫК",langNote:"Выберите язык — он запоминается и действует для этой игры и для всего каталога.",
+ langBack:"СМЕНИТЬ ЯЗЫК",players:"ИГРОКИ",player:"ИГРОК",you:"ВЫ",cpu:"БОТ",random:"СЛУЧАЙНО"},
+zh:{
+ paused:"暂停",pause:"暂停",resume:"继续",start:"开始",play:"开始游戏",home:"主页",menu:"菜单",
+ options:"选项",settings:"设置",help:"帮助",howToPlay:"怎么玩",rules:"规则",controls:"操作",
+ keys:"按键",gamepad:"手柄",mouse:"鼠标",touch:"触摸",
+ sound:"声音",music:"音乐",sfx:"音效",on:"开",off:"关",fullscreen:"全屏",exitFullscreen:"退出全屏",
+ difficulty:"难度",easy:"简单",normal:"普通",hard:"困难",low:"低",high:"高",
+ score:"得分",best:"最高分",hiScore:"最高分",level:"关卡",lives:"生命",time:"时间",
+ speed:"速度",round:"回合",wave:"波次",seed:"种子",newSeed:"新种子",
+ restart:"重新开始",retry:"重试",continue:"继续",tryAgain:"再试一次",nextLevel:"下一关",
+ gameOver:"游戏结束",youWin:"胜利",youLose:"游戏结束",clear:"过关",
+ fire:"射击",jump:"跳跃",back:"返回",exit:"退出",close:"关闭",ok:"确定",cancel:"取消",
+ loading:"加载中",shots:"击球",moves:"步数",power:"力量",angle:"角度",
+ langTitle:"语言",langNote:"选择语言：会被记住，并用于这个游戏和整个游戏目录。",
+ langBack:"更换语言",players:"玩家",player:"玩家",you:"你",cpu:"电脑",random:"随机"}
+};
+var PAGE={en:{},es:{},pt:{},ru:{},zh:{}};
+function lget(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+function lset(v){try{localStorage.setItem(KEY,v)}catch(e){}}
+var code=null;
+/* A browser language list -> a supported code, or null when it says nothing
+   usable. "pt-BR", "ru_RU", "zh-CN" all match on their 2-letter base. */
+function fromBrowser(){
+ try{
+  var list=null;
+  if(navigator&&Array.isArray(navigator.languages)&&navigator.languages.length)list=navigator.languages;
+  else if(navigator)list=[navigator.language||navigator.userLanguage||""];
+  for(var i=0;i<(list||[]).length;i++){
+   var c=String(list[i]||"").toLowerCase().slice(0,2);
+   if(CODES.indexOf(c)>=0)return c;
+  }
+ }catch(e){}
+ return null;
+}
+(function(){
+ try{
+  var c=null,m=/[?&]language=([a-zA-Z]{2,3})/.exec(location.search||"");
+  if(m)c=m[1].toLowerCase().slice(0,2);           // ?language=pt-BR counts as pt
+  if(c&&CODES.indexOf(c)<0)c=null;
+  if(!c){var s=(lget()||"").toLowerCase().slice(0,2);if(CODES.indexOf(s)>=0)c=s;}
+  if(!c)c=fromBrowser();
+  code=c||"en";
+ }catch(e){code="en";} // a broken lookup speaks English, never nothing
+})();
+function raw(k){
+ var t=PAGE[code]?PAGE[code][k]:null; if(t!=null)return t;
+ t=COMMON[code]?COMMON[code][k]:null; if(t!=null)return t;
+ t=PAGE.en[k]; if(t!=null)return t;
+ t=COMMON.en[k]; return t==null?null:t;
+}
+var hooks=[];
+var API={
+ version:"2026.11.22.2", codes:CODES.slice(), langs:LANGS,
+ lang:function(){return code},
+ browserLang:function(){return fromBrowser()},
+ t:function(k,v){var s;try{s=raw(k)}catch(e){code="en";try{s=raw(k)}catch(e2){s=null}}
+  if(s==null)s=k;var o=v||{};for(var p in o)s=s.split("{"+p+"}").join(String(o[p]));return s},
+ flag:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][3];return ""},
+ name:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][2];return c},
+ add:function(tab){for(var c in tab){if(!PAGE[c])continue;for(var k in tab[c])PAGE[c][k]=tab[c][k];}
+  try{API.apply()}catch(e){}},
+ /* read the tables (the developer harness edits texts through these) */
+ keys:function(c){var out=[],seen={};try{var src=[PAGE[c],COMMON[c],PAGE.en,COMMON.en];
+  for(var i=0;i<src.length;i++)for(var k in src[i])if(!seen[k]){seen[k]=1;out.push(k)}out.sort();}catch(e){}
+  return out},
+ table:function(){var o={};try{for(var i=0;i<CODES.length;i++){var c=CODES[i],m={},s=[COMMON[c],PAGE[c],COMMON.en,PAGE.en];
+  for(var j=0;j<s.length;j++)for(var k in s[j])if(m[k]==null&&s[j][k]!=null)m[k]=s[j][k];o[c]=m;}}catch(e){}
+  return o},
+ setKey:function(c,k,v){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;
+  try{(PAGE[c]=PAGE[c]||{})[k]=String(v);}catch(e){return;}
+  try{API.apply()}catch(e){}
+  for(var i=0;i<hooks.length;i++)try{hooks[i](code)}catch(e){}},
+ onChange:function(f){hooks.push(f)},
+ set:function(c){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;code=c;lset(c);
+  try{API.apply()}catch(e){}for(var i=0;i<hooks.length;i++)try{hooks[i](c)}catch(e){}},
+ apply:function(root){
+  if(document.documentElement)document.documentElement.lang=code;
+  var r=root||document;
+  var set=function(e,attr,put){var v=raw(e.getAttribute(attr));if(v!=null)put(e,v);};
+  var all=[];
+  if(r.nodeType===1)all.push(r);
+  if(r.querySelectorAll)all=all.concat([].slice.call(r.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]")));
+  for(var i=0;i<all.length;i++){var e=all[i];
+   try{
+    if(e.hasAttribute("data-t"))set(e,"data-t",function(n,v){n.textContent=v});
+    if(e.hasAttribute("data-ph"))set(e,"data-ph",function(n,v){n.placeholder=v});
+    if(e.hasAttribute("data-tip"))set(e,"data-tip",function(n,v){n.title=v});
+    if(e.hasAttribute("data-aria"))set(e,"data-aria",function(n,v){n.setAttribute("aria-label",v)});
+    if(e.hasAttribute("data-alt"))set(e,"data-alt",function(n,v){n.alt=v});
+   }catch(e2){} // one odd node never aborts the pass
+  }
+  if(pill){try{pill.innerHTML=API.flag(code)+"<span>"+API.name(code)+"</span>";pill.title=API.t("langTitle");}catch(e){}}
+ },
+ mount:function(sel){hostSel=sel;ensurePill();},
+};
+/* ---------------- language button + picker overlay ---------------- */
+var hostSel=null,pill=null,ov=null;
+var CSS=".tlbtn{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(20,24,22,.72);flex:0 0 auto;align-self:center;"
+ +"border:1px solid #3a463f;border-radius:6px;color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:1px;"
+ +"cursor:pointer;line-height:1;width:auto;max-width:100%}.tlbtn:hover,.tlbtn:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}"
+ +".tlbtn svg{width:22px;height:15px;border:1px solid #2e3a34;border-radius:2px;display:block}"
+ +".tlfix{position:fixed;left:12px;bottom:12px;z-index:2147483000}"
+ +".tlov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;"
+ +"background:rgba(4,7,6,.86);padding:16px}.tlov[hidden]{display:none}"
+ +".tlpanel{max-width:660px;width:100%;background:#141816;border:1px solid #3a463f;border-radius:12px;"
+ +"padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.6);color:#c9d2cb;font:inherit;text-align:center}"
+ +".tlpanel h2{margin:0 0 6px;font-size:20px;letter-spacing:4px;color:#ffd76a}"
+ +".tlpanel p{margin:0 0 16px;font-size:12px;line-height:1.6;color:#8a948e}"
+ +".tlgrid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}"
+ +".tlb{width:132px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;"
+ +"background:rgba(20,24,22,.7);border:1px solid #3a463f;border-radius:8px;cursor:pointer;color:#c9d2cb;font:inherit}"
+ +".tlb:hover,.tlb:focus{border-color:#ffd76a;color:#f4e9c8;outline:none;box-shadow:0 0 14px rgba(255,215,106,.18)}"
+ +".tlb svg{width:50px;height:34px;border:1px solid #2e3a34;border-radius:4px;display:block}"
+ +".tlb b{font-size:13px;color:#f4e9c8}.tlb span{font-size:10px;letter-spacing:1px;color:#8a948e}"
+ +".tlx{margin-top:16px;padding:7px 20px;background:none;border:1px solid #3a463f;border-radius:6px;"
+ +"color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:2px;cursor:pointer}"
+ +".tlx:hover,.tlx:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}";
+function style(){if(document.getElementById("tlcss"))return;var s=document.createElement("style");s.id="tlcss";s.textContent=CSS;document.head.appendChild(s);}
+function ensurePill(){
+ if(pill)return;
+ var host=hostSel?document.querySelector(hostSel):null;
+ if(!host&&document.readyState==="loading")return; // retried at DOMContentLoaded
+ style();
+ pill=document.createElement("button");
+ pill.type="button";pill.className="tlbtn";pill.setAttribute("aria-haspopup","dialog");
+ if(!host){pill.className="tlbtn tlfix";document.body.appendChild(pill);}
+ else host.insertBefore(pill,host.firstChild);
+ pill.onclick=openOv;
+ API.apply();
+}
+function openOv(){
+ if(!ov){
+  ov=document.createElement("div");ov.className="tlov";ov.hidden=true;
+  var p=document.createElement("div");p.className="tlpanel";
+  var h=document.createElement("h2");h.setAttribute("data-t","langTitle");p.appendChild(h);
+  var np=document.createElement("p");np.setAttribute("data-t","langNote");p.appendChild(np);
+  var g=document.createElement("div");g.className="tlgrid";
+  for(var i=0;i<LANGS.length;i++){
+   var b=document.createElement("button");b.type="button";b.className="tlb";b.dataset.lang=LANGS[i][0];
+   b.innerHTML=LANGS[i][3]+"<b>"+LANGS[i][1]+"</b><span>"+LANGS[i][2]+"</span>";g.appendChild(b);
+  }
+  p.appendChild(g);
+  var x=document.createElement("button");x.type="button";x.className="tlx";x.setAttribute("data-t","close");p.appendChild(x);
+  ov.appendChild(p);document.body.appendChild(ov);
+  g.onclick=function(e){var b=e.target;while(b&&b!==g&&!b.dataset.lang)b=b.parentNode;if(b&&b.dataset.lang){API.set(b.dataset.lang);closeOv();}};
+  x.onclick=closeOv;
+  ov.onclick=function(e){if(e.target===ov)closeOv();};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ov&&!ov.hidden)closeOv();});
+ }
+ API.apply(ov);
+ ov.hidden=false;
+}
+function closeOv(){if(ov)ov.hidden=true;}
+function boot(){
+ try{ensurePill();API.apply();}
+ catch(e){code="en";try{ensurePill();API.apply();}catch(e2){}} // rule 0: English on any kit fault
+}
+/* keep freshly added nodes translated without the page calling apply() */
+new MutationObserver(function(ms){
+ if(!pill)return;
+ try{
+  for(var i=0;i<ms.length;i++){var n=ms[i].addedNodes;
+   for(var j=0;j<n.length;j++){var e=n[j];
+    if(e.nodeType!==1)continue;
+    if(e.matches&&e.matches("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]"))API.apply(e);
+    else if(e.querySelectorAll&&e.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]").length)API.apply(e);
+   }}
+ }catch(e){}
+}).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+window.TLI18N=API;
+})();
+</script>
+<script>
+/* If i18n.js is missing or only half-loaded, the game still runs: this stub
+   keeps the same API, pins English, and serves the en table this page registers
+   below via add(). */
+if(!window.TLI18N||typeof window.TLI18N.add!=="function"||typeof window.TLI18N.t!=="function"||typeof window.TLI18N.apply!=="function"||typeof window.TLI18N.mount!=="function"){(function(){var T={en:{}};window.TLI18N={version:"en-fallback",codes:["en"],langs:[["en","EN","English",""]],
+add:function(tab){for(var c in tab){T[c]=Object.assign(T[c]||{},tab[c]);}},
+t:function(k,v){var s=(T.en&&T.en[k]!=null)?T.en[k]:k,o=v||{};for(var p in o)s=String(s).split("{"+p+"}").join(String(o[p]));return s},
+flag:function(){return "";},name:function(c){return c;},lang:function(){return "en";},
+set:function(){},onChange:function(){},apply:function(){},mount:function(){}};})();}
+</script>
+<script>
+TLI18N.add({
+en:{
+ // --- title panel
+ subtitle:"REAR-WHEEL STUNT RIDER • EVERY LEVEL WINNABLE",
+ diffHint:"(MORE SKILL, NEVER IMPOSSIBLE)",
+ extreme:"EXTREME",
+ driveLbl:"DRIVE",
+ driveModeLbl:"Drive mode",
+ rear:"REAR", front:"FRONT", both:"BOTH",
+ audio:"AUDIO",
+ newGame:"NEW GAME", loadSave:"LOAD SAVE", saveGame:"SAVE GAME",
+ worldSeed:"WORLD SEED", rnd:"RND", use:"USE",
+ info1:"KEYS: W / Up = gas, S / Down = brake, A / Left = lean back, D / Right = lean forward. R = respawn at checkpoint.",
+ info2:"ENTER / SPACE activates focused menu button. ESC / P pauses. Audio starts after first tap/click.",
+ info3:"Deadly pits only appear as ramp jumps with a guaranteed run-up. Land on your wheels to survive falls. Checkpoints always sit on safe ground before a jump. There is always a way to win.",
+ // --- pause / over / win buttons
+ respawnKey:"RESPAWN (R)", restartLevel:"RESTART LEVEL", quitTitle:"QUIT TO TITLE", quit:"QUIT",
+ retryCp:"RETRY CHECKPOINT", levelComplete:"LEVEL COMPLETE",
+ // --- touch pads
+ lean:"LEAN", backWard:"BACK", fwd:"FWD", gas:"GAS", brake:"BRAKE",
+ // --- HUD lines
+ hudDistFmt:"{d} m", hudSpeedFmt:"{v} km/h", hudCoinsFmt:"Coins {n}", hudCpFmt:"CP {a}/{b}",
+ hudLevelFmt:"Level {n} • {d}", hudScoreFmt:"Score {n}", hudFlipsFmt:"Flips {n}", hudComboFmt:"Combo x{n}",
+ distLbl:"Distance", scoreLbl:"Score", coinsLbl:"Coins",
+ // --- win screen stats
+ winDistFmt:"Distance: {d} m", winFlipsFmt:"Flips: {n}", winCoinsFmt:"Coins: {n}",
+ winCrashesFmt:"Crashes: {n}", winBonusFmt:"Level bonus: +{v}", winTotalFmt:"Total score: {v}",
+ // --- on-track popups
+ cpReached:"CHECKPOINT", cpFmt:"CHECKPOINT {a}/{b}", flipFmt:"{n}x FLIP x{m} +{p}",
+ recovered:"RECOVERED", seedSet:"SEED SET", saved:"SAVED",
+ // --- crash titles
+ crashed:"CRASHED", crashLanding:"BAD LANDING", crashFell:"FELL OFF", crashHead:"HEAD IMPACT",
+ deathLava:"LAVA!", deathDrowned:"DROWNED!", deathSpikes:"SPIKES!",
+ // --- alerts
+ alertSaveFail:"Could not save.", alertNoSave:"No saved game found.", alertBadSave:"Save invalid.", alertLoadFail:"Could not load save."
+},
+es:{
+ subtitle:"PILOTO DE TRUCOS EN RUEDA TRASERA • TODO NIVEL SE PUEDE PASAR",
+ diffHint:"(MÁS HABILIDAD, NUNCA IMPOSIBLE)",
+ extreme:"EXTREMO",
+ driveLbl:"TRACCIÓN",
+ driveModeLbl:"Modo de tracción",
+ rear:"TRASERA", front:"DELANTERA", both:"AMBAS",
+ audio:"AUDIO",
+ newGame:"NUEVA PARTIDA", loadSave:"CARGAR PARTIDA", saveGame:"GUARDAR PARTIDA",
+ worldSeed:"SEMENTE DEL MUNDO", rnd:"ALEAT", use:"USAR",
+ info1:"TECLAS: W / ↑ = gas, S / ↓ = freno, A / ← = inclinarse atrás, D / → = inclinarse adelante. R = reaparecer en el control.",
+ info2:"ENTER / SPACE activa el botón del menú enfocado. ESC / P pausa. El audio arranca tras el primer toque.",
+ info3:"Los pozos mortales solo aparecen como saltos con rampa y lanzamiento garantizado. Aterriza sobre las ruedas para sobrevivir a las caídas. Los puntos de control siempre están en suelo firme antes de un salto. Siempre hay una forma de ganar.",
+ respawnKey:"REAPARECER (R)", restartLevel:"REINICIAR NIVEL", quitTitle:"SALIR AL MENÚ", quit:"SALIR",
+ retryCp:"REINTENTAR DESDE EL CONTROL", levelComplete:"NIVEL SUPERADO",
+ lean:"INCLINAR", backWard:"ATRÁS", fwd:"ADELANTE", gas:"GAS", brake:"FRENO",
+ hudDistFmt:"{d} m", hudSpeedFmt:"{v} km/h", hudCoinsFmt:"Monedas {n}", hudCpFmt:"CP {a}/{b}",
+ hudLevelFmt:"Nivel {n} • {d}", hudScoreFmt:"Puntos {n}", hudFlipsFmt:"Vueltas {n}", hudComboFmt:"Combo x{n}",
+ distLbl:"Distancia", scoreLbl:"Puntos", coinsLbl:"Monedas",
+ winDistFmt:"Distancia: {d} m", winFlipsFmt:"Vueltas: {n}", winCoinsFmt:"Monedas: {n}",
+ winCrashesFmt:"Caídas: {n}", winBonusFmt:"Bonus de nivel: +{v}", winTotalFmt:"Puntuación total: {v}",
+ cpReached:"PUNTO DE CONTROL", cpFmt:"CONTROL {a}/{b}", flipFmt:"{n}x VOLTA x{m} +{p}",
+ recovered:"RECUPERADO", seedSet:"SEMENTE FIJADA", saved:"GUARDADO",
+ crashed:"ACCIDENTE", crashLanding:"MAL ATERRIZAJE", crashFell:"CAÍDA", crashHead:"GOLPE EN LA CABEZA",
+ deathLava:"LAVA!", deathDrowned:"AHOGADO!", deathSpikes:"PINCHOS!",
+ alertSaveFail:"No se pudo guardar.", alertNoSave:"No hay partida guardada.", alertBadSave:"Partida guardada no válida.", alertLoadFail:"No se pudo cargar la partida."
+},
+pt:{
+ subtitle:"ACROBATA NA RODA TRASEIRA • TODO NÍVEL DÁ PARA VENCER",
+ diffHint:"(MAIS HABILIDADE, NUNCA IMPOSSÍVEL)",
+ extreme:"EXTREMO",
+ driveLbl:"TRAÇÃO",
+ driveModeLbl:"Modo de tração",
+ rear:"TRASEIRA", front:"DIANTEIRA", both:"AMBAS",
+ audio:"ÁUDIO",
+ newGame:"NOVO JOGO", loadSave:"CARREGAR JOGO", saveGame:"SALVAR JOGO",
+ worldSeed:"SEMENTE DO MUNDO", rnd:"ALEAT", use:"USAR",
+ info1:"TECLAS: W / ↑ = acelerar, S / ↓ = frear, A / ← = inclinar para trás, D / → = inclinar para frente. R = renascer no posto.",
+ info2:"ENTER / SPACE ativa o botão do menu em foco. ESC / P pausa. O áudio começa após o primeiro toque.",
+ info3:"As valas mortais só aparecem como saltos com rampa e impulso garantido. Aterrisse sobre as rodas para sobreviver às quedas. Os postos de controle ficam sempre em chão firme antes de um salto. Sempre há um caminho para vencer.",
+ respawnKey:"RENASCER (R)", restartLevel:"REINICIAR NÍVEL", quitTitle:"SAIR PARA O MENU", quit:"SAIR",
+ retryCp:"TENTAR DESDE O CONTROLE", levelComplete:"NÍVEL COMPLETO",
+ lean:"INCLINAR", backWard:"TRÁS", fwd:"FRENTE", gas:"GAS", brake:"FREIO",
+ hudDistFmt:"{d} m", hudSpeedFmt:"{v} km/h", hudCoinsFmt:"Moedas {n}", hudCpFmt:"CP {a}/{b}",
+ hudLevelFmt:"Nível {n} • {d}", hudScoreFmt:"Pontos {n}", hudFlipsFmt:"Mortais {n}", hudComboFmt:"Combo x{n}",
+ distLbl:"Distância", scoreLbl:"Pontos", coinsLbl:"Moedas",
+ winDistFmt:"Distância: {d} m", winFlipsFmt:"Mortais: {n}", winCoinsFmt:"Moedas: {n}",
+ winCrashesFmt:"Quedas: {n}", winBonusFmt:"Bônus de nível: +{v}", winTotalFmt:"Pontuação total: {v}",
+ cpReached:"PONTO DE CONTROLE", cpFmt:"POSTO {a}/{b}", flipFmt:"{n}x MORTAL x{m} +{p}",
+ recovered:"RECUPERADO", seedSet:"SEMENTE DEFINIDA", saved:"SALVO",
+ crashed:"ACIDENTE", crashLanding:"ATERRISSAGEM RUIM", crashFell:"QUEDA", crashHead:"BATIDA NA CABEÇA",
+ deathLava:"LAVA!", deathDrowned:"AFOGADO!", deathSpikes:"ESPETOS!",
+ alertSaveFail:"Não foi possível salvar.", alertNoSave:"Nenhum jogo salvo encontrado.", alertBadSave:"Jogo salvo inválido.", alertLoadFail:"Não foi possível carregar o jogo."
+},
+ru:{
+ subtitle:"ТРИК-РАЙД НА ЗАДНЕМ КОЛЕСЕ • ЛЮБОЙ УРОВЕНЬ ПРОХОДИМ",
+ diffHint:"(БОЛЬШЕ МАСТЕРСТВА, НО НЕ НЕВОЗМОЖНОЕ)",
+ extreme:"ЭКСТРИМ",
+ driveLbl:"ПРИВОД",
+ driveModeLbl:"Режим привода",
+ rear:"ЗАД", front:"ПЕРЕД", both:"ПОЛНЫЙ",
+ audio:"ЗВУК",
+ newGame:"НОВАЯ ИГРА", loadSave:"ЗАГРУЗИТЬ", saveGame:"СОХРАНИТЬ",
+ worldSeed:"КОД МИРА", rnd:"СЛУЧ", use:"ПРИМЕНИТЬ",
+ info1:"КЛАВИШИ: W / ↑ = газ, S / ↓ = тормоз, A / ← = наклон назад, D / → = наклон вперёд. R = респавн на чекпойнте.",
+ info2:"ENTER / SPACE активирует выделенную кнопку меню. ESC / P — пауза. Звук включается после первого касания.",
+ info3:"Смертельные ямы — это только прыжки с трамплина с гарантированным разгоном. Приземляйтесь на колёса, чтобы пережить падения. Чекпойнты всегда стоят на надёжной земле перед прыжком. Путь к победе есть всегда.",
+ respawnKey:"РЕСПАВН (R)", restartLevel:"ПЕРЕЗАПУСТИТЬ", quitTitle:"В ГЛАВНОЕ МЕНЮ", quit:"ВЫХОД",
+ retryCp:"ПОВТОР С ЧЕКПОЙНТА", levelComplete:"УРОВЕНЬ ПРОЙДЕН",
+ lean:"НАКЛОН", backWard:"НАЗАД", fwd:"ВПЕРЁД", gas:"ГАЗ", brake:"ТОРМОЗ",
+ hudDistFmt:"{d} м", hudSpeedFmt:"{v} км/ч", hudCoinsFmt:"Монеты {n}", hudCpFmt:"ЧК {a}/{b}",
+ hudLevelFmt:"Уровень {n} • {d}", hudScoreFmt:"Счёт {n}", hudFlipsFmt:"Флипы {n}", hudComboFmt:"Комбо x{n}",
+ distLbl:"Дистанция", scoreLbl:"Счёт", coinsLbl:"Монеты",
+ winDistFmt:"Дистанция: {d} м", winFlipsFmt:"Флипы: {n}", winCoinsFmt:"Монеты: {n}",
+ winCrashesFmt:"Падения: {n}", winBonusFmt:"Бонус уровня: +{v}", winTotalFmt:"Всего очков: {v}",
+ cpReached:"ЧЕКПОЙНТ", cpFmt:"ЧЕКПОЙНТ {a}/{b}", flipFmt:"{n}x ФЛИП x{m} +{p}",
+ recovered:"ВОССТАНОВЛЕН", seedSet:"КОД УРОВНЯ ПРИНЯТ", saved:"СОХРАНЕНО",
+ crashed:"РАЗБИЛСЯ", crashLanding:"ПЛОХОЕ ПРИЗЕМЛЕНИЕ", crashFell:"ПАДЕНИЕ", crashHead:"УДАР ГОЛОВОЙ",
+ deathLava:"ЛАВА!", deathDrowned:"УТОНУЛ!", deathSpikes:"ШИПЫ!",
+ alertSaveFail:"Не удалось сохранить.", alertNoSave:"Сохранённая игра не найдена.", alertBadSave:"Сохранение повреждено.", alertLoadFail:"Не удалось загрузить сохранение."
+},
+zh:{
+ subtitle:"后轮特技骑手 • 每关都能通关",
+ diffHint:"(更难，但一定能通关)",
+ extreme:"极限",
+ driveLbl:"驱动",
+ driveModeLbl:"驱动模式",
+ rear:"后轮", front:"前轮", both:"全轮",
+ audio:"音频",
+ newGame:"新游戏", loadSave:"读取存档", saveGame:"保存游戏",
+ worldSeed:"世界种子", rnd:"随机", use:"使用",
+ info1:"按键：W / ↑ = 油门，S / ↓ = 刹车，A / ← = 后仰，D / → = 前倾。R = 在检查点重生。",
+ info2:"ENTER / SPACE 激活选中的菜单按钮。ESC / P 暂停。首次点按后开始声音。",
+ info3:"致命坑只会以跳台跳跃出现，并保证有助跑。轮子着地才能在摔倒中存活。检查点总在跳跃前的安全地面上。一定有通关的方法。",
+ respawnKey:"重生(R)", restartLevel:"重开本关", quitTitle:"返回主菜单", quit:"退出",
+ retryCp:"检查点重试", levelComplete:"关卡完成",
+ lean:"重心", backWard:"后仰", fwd:"前倾", gas:"油门", brake:"刹车",
+ hudDistFmt:"{d}米", hudSpeedFmt:"{v}km/h", hudCoinsFmt:"金币{n}", hudCpFmt:"CP{a}/{b}",
+ hudLevelFmt:"第{n}关 • {d}", hudScoreFmt:"得分{n}", hudFlipsFmt:"翻滚{n}", hudComboFmt:"连击x{n}",
+ distLbl:"距离", scoreLbl:"得分", coinsLbl:"金币",
+ winDistFmt:"距离:{d}米", winFlipsFmt:"翻滚:{n}", winCoinsFmt:"金币:{n}",
+ winCrashesFmt:"摔倒:{n}", winBonusFmt:"关卡奖励:+{v}", winTotalFmt:"总分:{v}",
+ cpReached:"检查点", cpFmt:"检查点{a}/{b}", flipFmt:"{n}x 翻滚 x{m} +{p}",
+ recovered:"已复位", seedSet:"种子已设置", saved:"已保存",
+ crashed:"撞车", crashLanding:"落地失败", crashFell:"坠落", crashHead:"头部撞击",
+ deathLava:"岩浆!", deathDrowned:"溺水!", deathSpikes:"尖刺!",
+ alertSaveFail:"无法保存。", alertNoSave:"没有找到存档。", alertBadSave:"存档无效。", alertLoadFail:"无法读取存档。"
+}
+});
+TLI18N.mount("#titleScreen .dialog");
+</script>
 <script>
 'use strict';
 var PI=Math.PI,TAU=PI*2;
@@ -187,7 +613,7 @@ var canvas=$('c');var ctx=canvas.getContext('2d',{alpha:false,desynchronized:tru
 var W=1,H=1;
 var seed=genSeed();var seedNum=hashStr(seed);
 var level=1,score=0,difficulty=0,driveMode=0,musicOn=true;
-var DIFF_NAMES=['EASY','NORMAL','HARD','EXTREME'];var DRIVE_NAMES=['REAR','FRONT','BOTH'];
+var DIFF_KEYS=['easy','normal','hard','extreme'];var DRIVE_KEYS=['rear','front','both'];
 var T_GROUND=0,T_RAMP=1,T_HILL=2,T_WALL=3,T_FINISH=4,T_DEADLY=5,T_BRIDGE=6,T_BOOST=7,T_ROCK=8;
 var terrain=[],trees=[],rocks=[],pools=[],coins=[],checkpoints=[],bridges=[],pits=[],ridges=[],clouds=[];
 var finishX=0,worldW=0,theme=null;
@@ -440,20 +866,20 @@ subPattern:makePattern(64,function(p,s){paintSub(p,s,cfg,new RNG((seedNum^(level
 
 function resetRider(){rider.torsoAbs=nearestUprightAngle(bike.a);rider.torsoV=0;rider.headAbs=nearestUprightAngle(bike.a);rider.headV=0;rider.crouch=0;rider.crouchV=0;}
 function resetBike(){groundAt(120,ggInfo);bike.x=120;bike.y=ggInfo.y-WRAD-WY-1;bike.vx=0;bike.vy=0;bike.a=ggInfo.angle;bike.av=0;bike.speed=0;bike.onGnd=true;bike.rearG=true;bike.frontG=true;bike.alive=true;bike.finished=false;bike.air=0;bike.rot=0;bike.maxRot=0;bike.flips=0;bike.flipsAwarded=0;bike.dist=0;bike.maxX=bike.x;bike.engineOn=false;bike.combo=0;bike.comboT=0;bike.fax=0;bike.fay=0;bike.boosting=false;bike.wheelRot=0;curCp=0;stuckTimer=0;stuckCooldown=0;resetRider();}
-function respawnAtCheckpoint(){if(!inGame&&!crashPending&&bike.alive)return;var cp=checkpoints[clamp(curCp,0,checkpoints.length-1)]||{x:120,y:420};groundAt(cp.x,ggInfo);bike.x=cp.x;bike.y=ggInfo.y-WRAD-WY-1;bike.vx=0;bike.vy=0;bike.a=ggInfo.angle;bike.av=0;bike.speed=0;bike.onGnd=true;bike.rearG=true;bike.frontG=true;bike.alive=true;bike.finished=false;bike.air=0;bike.rot=0;bike.maxRot=0;bike.flipsAwarded=0;bike.engineOn=false;bike.combo=0;bike.comboT=0;bike.fax=0;bike.fay=0;bike.boosting=false;bike.wheelRot=0;stuckTimer=0;stuckCooldown=1.2;crashPending=false;crashTimer=0;riderCompress=0;resetRider();clearInputs();cam.init=false;inGame=true;paused=false;hideScreens();$('pauseBtn').style.display='block';updateTouchVisibility();lastT=window.performance&&window.performance.now?window.performance.now():Date.now();acc=0;ensureAudio();stopMusic();tryStartMusic();showPopup('CHECKPOINT');}
+function respawnAtCheckpoint(){if(!inGame&&!crashPending&&bike.alive)return;var cp=checkpoints[clamp(curCp,0,checkpoints.length-1)]||{x:120,y:420};groundAt(cp.x,ggInfo);bike.x=cp.x;bike.y=ggInfo.y-WRAD-WY-1;bike.vx=0;bike.vy=0;bike.a=ggInfo.angle;bike.av=0;bike.speed=0;bike.onGnd=true;bike.rearG=true;bike.frontG=true;bike.alive=true;bike.finished=false;bike.air=0;bike.rot=0;bike.maxRot=0;bike.flipsAwarded=0;bike.engineOn=false;bike.combo=0;bike.comboT=0;bike.fax=0;bike.fay=0;bike.boosting=false;bike.wheelRot=0;stuckTimer=0;stuckCooldown=1.2;crashPending=false;crashTimer=0;riderCompress=0;resetRider();clearInputs();cam.init=false;inGame=true;paused=false;hideScreens();$('pauseBtn').style.display='block';updateTouchVisibility();lastT=window.performance&&window.performance.now?window.performance.now():Date.now();acc=0;ensureAudio();stopMusic();tryStartMusic();showPopup(TLI18N.t("cpReached"));}
 function resetPools(){rain.reset();snow.reset();fog.reset();leaves.reset();splashes.reset();}
 function addShake(mag,tm){shakeMag=max(shakeMag,mag);shakeTime=max(shakeTime,tm);}
 function showPopup(txt){var d=document.createElement('div');d.className='popup';d.textContent=txt;document.body.appendChild(d);window.setTimeout(function(){if(d.parentNode)d.parentNode.removeChild(d);},1700);}
-function awardFlips(){var completed=floor((bike.maxRot+FLIP_EPS)/TAU);if(completed<=bike.flipsAwarded)return;var add=min(10,completed-bike.flipsAwarded);if(add<=0)return;var mult=bike.combo+1;var pts=add*500*mult;score+=pts;bike.flips+=add;bike.combo+=add;bike.comboT=2.5;bike.flipsAwarded=completed;showPopup(add+'x FLIP x'+mult+' +'+pts);sfx('flip');}
+function awardFlips(){var completed=floor((bike.maxRot+FLIP_EPS)/TAU);if(completed<=bike.flipsAwarded)return;var add=min(10,completed-bike.flipsAwarded);if(add<=0)return;var mult=bike.combo+1;var pts=add*500*mult;score+=pts;bike.flips+=add;bike.combo+=add;bike.comboT=2.5;bike.flipsAwarded=completed;showPopup(TLI18N.t("flipFmt",{n:add,m:mult,p:pts}));sfx('flip');}
 function isOccluded(lx,ly,tx,ty){var dx=tx-lx,dy=ty-ly;var dist=sqrt(dx*dx+dy*dy);if(dist<42)return false;var steps=clamp(floor(dist/38),2,quality.tier===0?5:10);for(var i=1;i<steps;i++){var t=i/steps;if(t<0.16||t>0.84)continue;var sx=lx+dx*t,sy=ly+dy*t;groundAt(sx,tmpInfo);if(tmpInfo.y<sy-2.0)return true;}return false;}
 function lightIntensity(l,px,py,occlude){if(!l.on||l.i<=0.015)return 0;var dx=px-l.x,dy=py-l.y;var d2=dx*dx+dy*dy;if(d2>l.range*l.range)return 0;var d=sqrt(d2);var ad=abs(normAngle(atan2(dy,dx)-l.dir));if(ad>l.beam)return 0;var spot=1-ad/l.beam;var fall=1-d/l.range;var inten=l.i*spot*spot*fall*fall*l.power;if(inten<0.012)return 0;if(occlude&&quality.tier>0&&isOccluded(l.x,l.y,px,py))return 0;return clamp(inten,0,1);}
 function updateLights(){headLight.color=visuals.lightColor;tailLight.color=visuals.tailColor;headLight.on=false;tailLight.on=false;headLight.i=0;tailLight.i=0;if(!isFinite(bike.x)||!isFinite(bike.y)||!isFinite(bike.a))return;var ca=cos(bike.a),sa=sin(bike.a);var mult=(bike.alive&&!bike.finished)?1.0:(crashPending?0.42:0.18);headLight.x=bike.x+HEAD_L_X*ca-HEAD_L_Y*sa;headLight.y=bike.y+HEAD_L_X*sa+HEAD_L_Y*ca;headLight.dir=bike.a;headLight.i=visuals.headlight*mult;headLight.range=500+bike.speed*0.55;headLight.beam=0.76+clamp(bike.speed/MAXSPD,0,1)*0.16;headLight.power=1.35;headLight.on=headLight.i>0.04;tailLight.x=bike.x+TAIL_L_X*ca-TAIL_L_Y*sa;tailLight.y=bike.y+TAIL_L_X*sa+TAIL_L_Y*ca;tailLight.dir=bike.a+PI;tailLight.i=visuals.tailLight*mult;tailLight.range=230+bike.speed*0.26;tailLight.beam=1.18;tailLight.power=0.62;tailLight.on=tailLight.i>0.02;}
 function updateRiderDynamics(dt,landed,preVy){if(!isFinite(dt)||dt<=0)return;var leanCtl=(input.right?1:0)-(input.left?1:0);if(!bike.onGnd)leanCtl=clamp(leanCtl+bike.av*0.035,-1.25,1.25);var fax=clamp(bike.fax||0,-3200,3200);var fay=clamp(bike.fay||0,-3600,3600);var accelLean=clamp(-fax/3600,-0.20,0.20);var brakeLean=input.brake?0.055:0;var gasLean=bike.engineOn?-0.035:0;var desiredLean=clamp(leanCtl*0.09+accelLean+brakeLean+gasLean,-0.32,0.32);if(!isFinite(desiredLean))desiredLean=0;var upright=nearestUprightAngle(rider.torsoAbs);var target=upright+desiredLean;var err=normAngle(rider.torsoAbs-target);var k=bike.onGnd?58:26;var damp=bike.onGnd?9.5:5.0;if(landed){var imp=clamp(preVy/1100,0,1.25);rider.torsoV+=bike.av*0.08;rider.crouchV+=imp*24;}rider.torsoV+=(-err*k-rider.torsoV*damp)*dt;rider.torsoV=clamp(rider.torsoV,-45,45);rider.torsoAbs+=rider.torsoV*dt;if(!isFinite(rider.torsoAbs)){rider.torsoAbs=nearestUprightAngle(bike.a);rider.torsoV=0;}var maxRel=bike.onGnd?0.86:1.20;var rel=normAngle(rider.torsoAbs-bike.a);if(rel>maxRel){rider.torsoAbs=bike.a+maxRel;if(rider.torsoV>bike.av)rider.torsoV=bike.av+(rider.torsoV-bike.av)*0.18;}else if(rel<-maxRel){rider.torsoAbs=bike.a-maxRel;if(rider.torsoV<bike.av)rider.torsoV=bike.av+(rider.torsoV-bike.av)*0.18;}var headUpright=nearestUprightAngle(rider.headAbs);var torsoOffset=normAngle(rider.torsoAbs);var headTarget=headUpright+desiredLean*0.38+torsoOffset*0.20;var headErr=normAngle(rider.headAbs-headTarget);var hk=bike.onGnd?46:24;var hd=bike.onGnd?8.2:4.6;if(landed)rider.headV+=bike.av*0.04;rider.headV+=(-headErr*hk-rider.headV*hd)*dt;rider.headV=clamp(rider.headV,-40,40);rider.headAbs+=rider.headV*dt;if(!isFinite(rider.headAbs)){rider.headAbs=rider.torsoAbs;rider.headV=0;}var headRel=normAngle(rider.headAbs-rider.torsoAbs);var maxHeadRel=0.58;if(headRel>maxHeadRel){rider.headAbs=rider.torsoAbs+maxHeadRel;if(rider.headV>rider.torsoV)rider.headV=rider.torsoV+(rider.headV-rider.torsoV)*0.2;}else if(headRel<-maxHeadRel){rider.headAbs=rider.torsoAbs-maxHeadRel;if(rider.headV<rider.torsoV)rider.headV=rider.torsoV+(rider.headV-rider.torsoV)*0.2;}var tuck=bike.onGnd?0:clamp(abs(bike.av)*0.04+bike.air*0.11+abs(leanCtl)*0.14,0,0.62);var contactComp=bike.onGnd?clamp((-fay-850)/2200,0,1):0;var targetComp=clamp(contactComp+riderCompress*0.42+tuck*0.55,0,1);var compAcc=(targetComp-rider.crouch)*130-rider.crouchV*21;rider.crouchV+=compAcc*dt;rider.crouchV=clamp(rider.crouchV,-70,70);rider.crouch+=rider.crouchV*dt;rider.crouch=clamp(rider.crouch,0,1);if(!isFinite(rider.crouch)){rider.crouch=0;rider.crouchV=0;}}
 function applyWheelThrust(info,factor,dt,traction){bike.vx+=cos(info.angle)*ENG*traction*factor*dt;bike.vy+=sin(info.angle)*ENG*traction*factor*dt;}
-function updateStuck(dt){if(!bike.alive||bike.finished)return;if(stuckCooldown>0){stuckCooldown-=dt;stuckTimer=max(0,stuckTimer-dt*5);return;}if(!bike.onGnd){stuckTimer=max(0,stuckTimer-dt*8);return;}groundAt(bike.x,tmpInfo);var canDrive=(driveMode!==1&&bike.rearG)||(driveMode!==0&&bike.frontG);var aligned=angleDist(bike.a,tmpInfo.angle)<1.0;if(input.gas&&canDrive&&bike.speed<60&&aligned)stuckTimer+=dt;else stuckTimer=max(0,stuckTimer-dt*3.2);if(stuckTimer>4.0){respawnAtCheckpoint();showPopup('RECOVERED');}}
-function collectCoinsAndCheckpoints(){var ca=cos(bike.a),sa=sin(bike.a);var hx=bike.x+HEAD_X*ca-HEAD_Y*sa;var hy=bike.y+HEAD_X*sa+HEAD_Y*ca;for(var i=0;i<coins.length;i++){var c=coins[i];if(c.taken)continue;if(c.x<bike.x-80||c.x>bike.x+80)continue;var dx=c.x-bike.x,dy=c.y-bike.y;var dhx=c.x-hx,dhy=c.y-hy;if(dx*dx+dy*dy<34*34||dhx*dhx+dhy*dhy<30*30){c.taken=true;coinsGot++;score+=25;sfx('coin');}}for(var j=curCp+1;j<checkpoints.length;j++){var cp=checkpoints[j];if(bike.x>=cp.x&&bike.onGnd){cp.reached=true;curCp=j;showPopup('CHECKPOINT '+(j+1)+'/'+checkpoints.length);sfx('cp');}else break;}}
-function deadlyReason(kind){if(kind===1)return 'LAVA!';if(kind===2)return 'DROWNED!';return 'SPIKES!';}
-function checkHazards(rwy,fwy){if((bike.rearG&&rgInfo.type===T_DEADLY)||(bike.frontG&&fgInfo.type===T_DEADLY)){var kind=0;for(var i=0;i<pits.length;i++){var p=pits[i];if(bike.x>=p.x0-20&&bike.x<=p.x1+20){kind=p.kind;break;}}crash(deadlyReason(kind));return true;}for(var j=0;j<pits.length;j++){var w=pits[j];if(w.kind!==2)continue;if(bike.x<w.x0||bike.x>w.x1)continue;if(rwy+WRAD>w.waterY||fwy+WRAD>w.waterY){crash('DROWNED!');return true;}}return false;}
+function updateStuck(dt){if(!bike.alive||bike.finished)return;if(stuckCooldown>0){stuckCooldown-=dt;stuckTimer=max(0,stuckTimer-dt*5);return;}if(!bike.onGnd){stuckTimer=max(0,stuckTimer-dt*8);return;}groundAt(bike.x,tmpInfo);var canDrive=(driveMode!==1&&bike.rearG)||(driveMode!==0&&bike.frontG);var aligned=angleDist(bike.a,tmpInfo.angle)<1.0;if(input.gas&&canDrive&&bike.speed<60&&aligned)stuckTimer+=dt;else stuckTimer=max(0,stuckTimer-dt*3.2);if(stuckTimer>4.0){respawnAtCheckpoint();showPopup(TLI18N.t("recovered"));}}
+function collectCoinsAndCheckpoints(){var ca=cos(bike.a),sa=sin(bike.a);var hx=bike.x+HEAD_X*ca-HEAD_Y*sa;var hy=bike.y+HEAD_X*sa+HEAD_Y*ca;for(var i=0;i<coins.length;i++){var c=coins[i];if(c.taken)continue;if(c.x<bike.x-80||c.x>bike.x+80)continue;var dx=c.x-bike.x,dy=c.y-bike.y;var dhx=c.x-hx,dhy=c.y-hy;if(dx*dx+dy*dy<34*34||dhx*dhx+dhy*dhy<30*30){c.taken=true;coinsGot++;score+=25;sfx('coin');}}for(var j=curCp+1;j<checkpoints.length;j++){var cp=checkpoints[j];if(bike.x>=cp.x&&bike.onGnd){cp.reached=true;curCp=j;showPopup(TLI18N.t("cpFmt",{a:j+1,b:checkpoints.length}));sfx('cp');}else break;}}
+function deadlyReason(kind){if(kind===1)return 'deathLava';if(kind===2)return 'deathDrowned';return 'deathSpikes';}
+function checkHazards(rwy,fwy){if((bike.rearG&&rgInfo.type===T_DEADLY)||(bike.frontG&&fgInfo.type===T_DEADLY)){var kind=0;for(var i=0;i<pits.length;i++){var p=pits[i];if(bike.x>=p.x0-20&&bike.x<=p.x1+20){kind=p.kind;break;}}crash(deadlyReason(kind));return true;}for(var j=0;j<pits.length;j++){var w=pits[j];if(w.kind!==2)continue;if(bike.x<w.x0||bike.x>w.x1)continue;if(rwy+WRAD>w.waterY||fwy+WRAD>w.waterY){crash('deathDrowned');return true;}}return false;}
 
 function physics(dt){
 if(!bike.alive||bike.finished)return;
@@ -509,23 +935,25 @@ if(landed){
 awardFlips();groundAt(bike.x,ggInfo);
 var alignErr=angleDist(bike.a,ggInfo.angle);
 riderCompress=max(riderCompress,min(1,preVy/620+alignErr*0.35));
-if(alignErr>P.landTol&&bike.speed>110){crash('BAD LANDING');return;}
+if(alignErr>P.landTol&&bike.speed>110){crash('crashLanding');return;}
 if(preVy>220||alignErr>0.9){sfx('land');addShake(min(1,preVy/950+alignErr*0.15),0.16);}
 bike.rot=0;bike.maxRot=0;bike.flipsAwarded=0;bike.air=0;
 }else if(!nowAir){bike.rot=0;bike.maxRot=0;bike.flipsAwarded=0;bike.air=0;}
 if(!nowAir&&bike.comboT>0){bike.comboT-=dt;if(bike.comboT<=0)bike.combo=0;}
 collectCoinsAndCheckpoints();updateStuck(dt);
-if(bike.y>2500){crash('FELL OFF');return;}
+if(bike.y>2500){crash('crashFell');return;}
 ca=cos(bike.a);sa=sin(bike.a);
 var hxx=bike.x+HEAD_X*ca-HEAD_Y*sa,hyy=bike.y+HEAD_X*sa+HEAD_Y*ca;
 groundAt(hxx,hgInfo);var headPen=hyy+HEAD_R-hgInfo.y;
-if(ca<-0.25&&headPen>-1){crash('HEAD IMPACT');return;}
+if(ca<-0.25&&headPen>-1){crash('crashHead');return;}
 if(hgInfo.type===T_DEADLY&&headPen>-1){crash(deadlyReason(0));return;}
 if(bike.x>=finishX&&bike.onGnd){win();return;}
 }
 function spawnBoostSpark(info){if(splashes.count>=splashes.cap)return;var p=splashes.a[splashes.count++];p.x=bike.x+(random()-0.5)*30;p.y=info.y-2;p.vx=-bike.vx*0.2+(random()-0.5)*60;p.vy=-40-random()*120;p.life=0.3+random()*0.3;p.maxLife=0.6;p.r=0.3;p.g=0.9;p.b=1.0;p.size=1.5+random()*2.5;p.kind=3;}
-function crash(reason){if(!bike.alive||bike.finished)return;awardFlips();bike.alive=false;crashReason=reason||'CRASHED';crashes++;crashPending=true;crashTimer=0.75;riderCompress=1;clearInputs();updateTouchVisibility();sfx('crash');addShake(1,0.35);var count=quality.tier===0?10:quality.tier===1?18:26;for(var i=0;i<count&&splashes.count<splashes.cap;i++){var p=splashes.a[splashes.count++];p.x=bike.x+(random()-0.5)*24;p.y=bike.y+(random()-0.5)*24;p.vx=(random()-0.5)*360;p.vy=-random()*260-60;p.life=0.45+random()*0.45;p.maxLife=0.90;p.r=1;p.g=0.35+random()*0.40;p.b=0.05;p.size=2+random()*4;p.kind=2;}stopMusic();silenceEngine();}
-function win(){if(bike.finished||!bike.alive)return;bike.finished=true;clearInputs();updateTouchVisibility();var pts=floor(bike.dist)+bike.flips*300+coinsGot*10;score+=pts;$('winStats').innerHTML='Distance: '+floor(bike.dist)+' m<br>Flips: '+bike.flips+' &bull; Coins: '+coinsGot+'<br>Crashes: '+crashes+'<br>Difficulty: '+DIFF_NAMES[clamp(difficulty,0,3)]+' &bull; Drive: '+DRIVE_NAMES[clamp(driveMode,0,2)]+'<br>Level bonus: +'+pts+'<br>Total score: '+score;inGame=false;paused=false;showScreen('winScreen');sfx('win');stopMusic();silenceEngine();}
+function crash(reason){if(!bike.alive||bike.finished)return;awardFlips();bike.alive=false;crashReason=reason||'crashed';crashes++;crashPending=true;crashTimer=0.75;riderCompress=1;clearInputs();updateTouchVisibility();sfx('crash');addShake(1,0.35);var count=quality.tier===0?10:quality.tier===1?18:26;for(var i=0;i<count&&splashes.count<splashes.cap;i++){var p=splashes.a[splashes.count++];p.x=bike.x+(random()-0.5)*24;p.y=bike.y+(random()-0.5)*24;p.vx=(random()-0.5)*360;p.vy=-random()*260-60;p.life=0.45+random()*0.45;p.maxLife=0.90;p.r=1;p.g=0.35+random()*0.40;p.b=0.05;p.size=2+random()*4;p.kind=2;}stopMusic();silenceEngine();}
+var winPts=0;
+function winStatsHtml(){return TLI18N.t("winDistFmt",{d:floor(bike.dist)})+'<br>'+TLI18N.t("winFlipsFmt",{n:bike.flips})+' &bull; '+TLI18N.t("winCoinsFmt",{n:coinsGot})+'<br>'+TLI18N.t("winCrashesFmt",{n:crashes})+'<br>'+TLI18N.t("difficulty")+': '+TLI18N.t(DIFF_KEYS[clamp(difficulty,0,3)])+' &bull; '+TLI18N.t("driveLbl")+': '+TLI18N.t(DRIVE_KEYS[clamp(driveMode,0,2)])+'<br>'+TLI18N.t("winBonusFmt",{v:winPts})+'<br>'+TLI18N.t("winTotalFmt",{v:score});}
+function win(){if(bike.finished||!bike.alive)return;bike.finished=true;clearInputs();updateTouchVisibility();winPts=floor(bike.dist)+bike.flips*300+coinsGot*10;score+=winPts;$('winStats').innerHTML=winStatsHtml();inGame=false;paused=false;showScreen('winScreen');sfx('win');stopMusic();silenceEngine();}
 
 function spawnPoolSplash(pool,x,y,vx,vy,speed,strength){var base=quality.tier===0?6:quality.tier===1?12:18;var count=clamp(floor((base+speed/34+pool.amount*7)*strength),4,quality.splashMax);for(var i=0;i<count&&splashes.count<splashes.cap;i++){var p=splashes.a[splashes.count++];var side=random()<0.5?-1:1;p.x=x+(random()-0.5)*pool.len*0.58;p.y=y-random()*3;p.vx=vx*(0.10+random()*0.22)+side*(45+random()*150)*strength;p.vy=-90-random()*(170+speed*0.28)*strength-vy*0.04;p.life=0.55+random()*0.75;p.maxLife=1.30;if(pool.type===1){p.r=0.32+random()*0.18;p.g=0.60+random()*0.20;p.b=0.95+random()*0.05;p.size=2.2+random()*5.0;}else{p.r=0.86+random()*0.10;p.g=0.90+random()*0.08;p.b=0.96+random()*0.04;p.size=2.0+random()*4.2;}p.kind=pool.type===1?0:1;}}
 function updateSplashParticles(dt){for(var i=0;i<splashes.count;i++){var p=splashes.a[i];p.life-=dt;if(p.life<=0){splashes.recycle(i);i--;continue;}if(p.kind===2){p.vy+=900*dt;p.vx*=0.985;}else if(p.kind===3){p.vy+=300*dt;p.vx*=0.96;}else{p.vy+=(p.kind===1?520:880)*dt;p.vx*=0.985;p.vy*=0.992;groundAt(p.x,tmpInfo);if(p.y>tmpInfo.y+10)p.life=min(p.life,0.08);}p.x+=p.vx*dt;p.y+=p.vy*dt;}}
@@ -585,7 +1013,7 @@ function drawPrecipScreen(){var pool=visuals.weather===1?rain:visuals.weather===
 function drawWeatherScreen(){ctx.setTransform(1,0,0,1,0,0);drawFogScreen();drawPrecipScreen();}
 function render(){if(!ctx)return;ctx.setTransform(1,0,0,1,0,0);drawSky();var sk=0;if(!paused&&shakeTime>0)sk=shakeMag*9*min(1,shakeTime/0.3);var shakeX=(random()-0.5)*sk;var shakeY=(random()-0.5)*sk;worldTransform(shakeX,shakeY);var leftW=cam.x-140/cam.scale;var rightW=cam.x+(W+140)/cam.scale;drawTerrain(leftW,rightW);drawPits(leftW,rightW);drawBoosts(leftW,rightW);drawBridges(leftW,rightW);drawPools(leftW,rightW);drawRocks(leftW,rightW);drawTrees(leftW,rightW);drawCheckpoints(leftW,rightW);drawCoins(leftW,rightW);drawLeavesWorld();drawSplashesWorld();if(bike.alive&&!bike.finished)drawScooterAndRider();drawWeatherScreen();}
 function setText(el,txt){if(!el)return;if(hudLast[el.id]!==txt){hudLast[el.id]=txt;el.textContent=txt;}}
-function updateHUD(){setText($('hudDist'),floor(bike.dist)+' m');setText($('hudSpeed'),floor(bike.speed*0.36)+' km/h');setText($('hudCoins'),'Coins '+coinsGot);setText($('hudCp'),'CP '+(curCp+1)+'/'+max(1,checkpoints.length));setText($('hudLevel'),'Level '+level+' • '+DIFF_NAMES[clamp(difficulty,0,3)]);setText($('hudScore'),'Score '+score);setText($('hudFlips'),'Flips '+bike.flips);setText($('hudCombo'),bike.combo>0?'Combo x'+(bike.combo+1):'');setText($('hudDrive'),'DRIVE '+DRIVE_NAMES[clamp(driveMode,0,2)]);setText($('hudMusic'),musicOn?'MUSIC ON':'MUSIC OFF');setText($('hudPerf'),'Q'+quality.tier);}
+function updateHUD(){setText($('hudDist'),TLI18N.t("hudDistFmt",{d:floor(bike.dist)}));setText($('hudSpeed'),TLI18N.t("hudSpeedFmt",{v:floor(bike.speed*0.36)}));setText($('hudCoins'),TLI18N.t("hudCoinsFmt",{n:coinsGot}));setText($('hudCp'),TLI18N.t("hudCpFmt",{a:curCp+1,b:max(1,checkpoints.length)}));setText($('hudLevel'),TLI18N.t("hudLevelFmt",{n:level,d:TLI18N.t(DIFF_KEYS[clamp(difficulty,0,3)])}));setText($('hudScore'),TLI18N.t("hudScoreFmt",{n:score}));setText($('hudFlips'),TLI18N.t("hudFlipsFmt",{n:bike.flips}));setText($('hudCombo'),bike.combo>0?TLI18N.t("hudComboFmt",{n:bike.combo+1}):'');setText($('hudDrive'),TLI18N.t("driveLbl")+' '+TLI18N.t(DRIVE_KEYS[clamp(driveMode,0,2)]));setText($('hudMusic'),TLI18N.t("music")+' '+TLI18N.t(musicOn?'on':'off'));setText($('hudPerf'),'Q'+quality.tier);}
 
 function clearInputs(){input.gas=input.brake=input.left=input.right=false;kIn.gas=kIn.brake=kIn.left=kIn.right=false;tIn.gas=tIn.brake=tIn.left=tIn.right=false;var zones=document.getElementsByClassName('touch-zone');for(var i=zones.length-1;i>=0;i--)zones[i].classList.remove('on');}
 function updateInput(){input.gas=kIn.gas||tIn.gas;input.brake=kIn.brake||tIn.brake;input.left=kIn.left||tIn.left;input.right=kIn.right||tIn.right;}
@@ -627,7 +1055,7 @@ function scheduleMusic(){if(!musicOn||!AC||AC.state!=='running'){music.timer=nul
 function playMusicStep(step,when){if(!AC||AC.state!=='running'||!musicOn)return;var s=step%16;var pat=music.pattern;var sec=music.section;var chord=music.progression[(sec+floor(step/64))%music.progression.length];var q=quality.music;var i;if(s%4===0)playSynth('sine',135,0.12,0.26,when,musicBus,44);if(q>=1){if(s===4||s===12||((pat&1)&&s===14))playNoise(0.07,0.085,when,musicBus,'highpass',1500);if(s%2===1)playNoise(0.025,0.026+(s%4===3?0.010:0),when,musicBus,'highpass',6200);}var bassSteps=[0,3,6,8,11,14];if(pat&1)bassSteps=[0,2,6,8,10,14];if(pat&2)bassSteps=[0,4,7,8,12,15];for(i=0;i<bassSteps.length;i++){if(s===bassSteps[i]){var bn=chord[i%chord.length]-12;playSynth('triangle',midiToFreq(36+bn),music.stepDur*1.45,0.105,when,musicBus);}}if(q>=2&&(s===0||s===6||s===10)){for(i=0;i<chord.length;i++)playSynth('sawtooth',midiToFreq(48+chord[i]),music.stepDur*1.2,0.020,when,musicBus);}if(q>=1&&s===0&&music.bar%2===0){for(i=0;i<chord.length;i++)playSynth('sine',midiToFreq(60+chord[i]),music.stepDur*14,0.018,when,musicBus);}for(i=0;i<music.leadCount;i++){var ev=music.leadEvents[i];if(ev.on&&ev.step===s){var dur=music.stepDur*ev.dur*0.92;var freq=midiToFreq(57+ev.note);var wave=(sec&1)?'square':'triangle';playSynth(wave,freq,dur,0.042+sec*0.005,when,musicBus);if(q>=2&&ev.dur>=8)playSynth('sine',freq*2.005,dur*0.75,0.014,when,musicBus);}}}
 function tryStartMusic(){if(!musicOn)return;if(audioReady)startMusic();else pendingMusic=true;}
 function toggleMusic(){musicOn=!musicOn;updateOptionUI();saveOptions();ensureAudio();if(AC&&musicBus){try{musicBus.gain.setTargetAtTime(musicOn?0.17:0.0001,AC.currentTime,0.08);}catch(e){}}if(musicOn){if(inGame&&!paused&&bike.alive&&!bike.finished)tryStartMusic();}else stopMusic();}
-function updateOptionUI(){for(var i=0;i<4;i++){var b=$('diffBtn'+i);if(b)b.className='btn optBtn'+(i===difficulty?' selected':'');}for(i=0;i<3;i++){var d=$('driveBtn'+i);if(d)d.className='btn optBtn'+(i===driveMode?' selected':'');var pd=$('pauseDriveBtn'+i);if(pd)pd.className='btn optBtn'+(i===driveMode?' selected':'');}var mb=$('musicBtn');if(mb){mb.textContent=musicOn?'MUSIC ON':'MUSIC OFF';mb.className='btn optBtn'+(musicOn?' selected':'');}var pmb=$('pauseMusicBtn');if(pmb){pmb.textContent=musicOn?'MUSIC ON':'MUSIC OFF';pmb.className='btn optBtn'+(musicOn?' selected':'');}}
+function updateOptionUI(){for(var i=0;i<4;i++){var b=$('diffBtn'+i);if(b)b.className='btn optBtn'+(i===difficulty?' selected':'');}for(i=0;i<3;i++){var d=$('driveBtn'+i);if(d)d.className='btn optBtn'+(i===driveMode?' selected':'');var pd=$('pauseDriveBtn'+i);if(pd)pd.className='btn optBtn'+(i===driveMode?' selected':'');}var mb=$('musicBtn');if(mb){mb.textContent=TLI18N.t("music")+' '+TLI18N.t(musicOn?'on':'off');mb.className='btn optBtn'+(musicOn?' selected':'');}var pmb=$('pauseMusicBtn');if(pmb){pmb.textContent=TLI18N.t("music")+' '+TLI18N.t(musicOn?'on':'off');pmb.className='btn optBtn'+(musicOn?' selected':'');}}
 function setDifficulty(d){difficulty=clamp(floor(d),0,3);updateOptionUI();saveOptions();}
 function setDriveMode(d){driveMode=clamp(floor(d),0,2);updateOptionUI();saveOptions();}
 var OPT_KEY='scooterStuntPro.options.v1';
@@ -635,9 +1063,9 @@ function saveOptions(){try{localStorage.setItem(OPT_KEY,JSON.stringify({difficul
 function loadOptions(){try{var raw=localStorage.getItem(OPT_KEY);if(!raw)return;var d=JSON.parse(raw);if(d&&typeof d.difficulty==='number')difficulty=clamp(floor(d.difficulty),0,3);if(d&&typeof d.driveMode==='number')driveMode=clamp(floor(d.driveMode),0,2);if(d&&typeof d.musicOn==='boolean')musicOn=d.musicOn;}catch(e){}}
 function readSeed(){var el=$('seedInput');var v=el?el.value.trim():'';if(!v){v=genSeed();if(el)el.value=v;}seed=v;seedNum=hashStr(seed);}
 function regenerateSeed(){seed=genSeed();seedNum=hashStr(seed);$('seedInput').value=seed;}
-function applySeed(){readSeed();showPopup('SEED SET');}
+function applySeed(){readSeed();showPopup(TLI18N.t("seedSet"));}
 function hideScreens(){var ids=['titleScreen','pauseScreen','overScreen','winScreen'];for(var i=0;i<ids.length;i++){var e=$(ids[i]);if(e)e.classList.add('hidden');}updateTouchVisibility();}
-function showScreen(id){var ids=['titleScreen','pauseScreen','overScreen','winScreen'];for(var i=0;i<ids.length;i++){var e=$(ids[i]);if(!e)continue;if(ids[i]===id)e.classList.remove('hidden');else e.classList.add('hidden');}if(id==='overScreen'){$('overTitle').textContent=crashReason||'CRASHED';$('overDist').textContent=floor(bike.dist);$('overScore').textContent=score;$('overCoins').textContent=coinsGot;}clearInputs();updateTouchVisibility();}
+function showScreen(id){var ids=['titleScreen','pauseScreen','overScreen','winScreen'];for(var i=0;i<ids.length;i++){var e=$(ids[i]);if(!e)continue;if(ids[i]===id)e.classList.remove('hidden');else e.classList.add('hidden');}if(id==='overScreen'){$('overTitle').textContent=TLI18N.t(crashReason||'crashed');$('overDist').textContent=floor(bike.dist);$('overScore').textContent=score;$('overCoins').textContent=coinsGot;}clearInputs();updateTouchVisibility();}
 function startNewGame(){ensureAudio();readSeed();level=1;score=0;startLevel();}
 function startLevel(){crashPending=false;crashTimer=0;riderCompress=0;cam.init=false;clearInputs();resetPools();genTerrain(level,seedNum,difficulty);genVisuals();genTrees();buildTheme();genPools();resetBike();coinsGot=0;crashes=0;crashReason='';acc=0;shakeTime=0;shakeMag=0;wxTime=0;inGame=true;paused=false;hideScreens();$('pauseBtn').style.display='block';updateTouchVisibility();lastT=window.performance&&window.performance.now?window.performance.now():Date.now();ensureAudio();stopMusic();tryStartMusic();}
 function pauseGame(){if(!inGame||paused||!bike.alive||bike.finished)return;paused=true;showScreen('pauseScreen');stopMusic();silenceEngine();}
@@ -646,11 +1074,12 @@ function restartLevel(){startLevel();}
 function nextLevel(){level++;startLevel();}
 function quitToTitle(){inGame=false;paused=false;crashPending=false;showScreen('titleScreen');$('pauseBtn').style.display='none';stopMusic();silenceEngine();}
 var SAVE_KEY='scooterStuntPro.optimized.v19';
-function saveToStorage(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({seed:seed,level:level,score:score,difficulty:difficulty,driveMode:driveMode,musicOn:musicOn,cp:curCp}));showPopup('SAVED');}catch(e){window.alert('Could not save.');}}
-function loadFromStorage(){ensureAudio();try{var raw=localStorage.getItem(SAVE_KEY);if(!raw){window.alert('No saved game found.');return;}var d=JSON.parse(raw);if(!d||!d.seed){window.alert('Save invalid.');return;}seed=String(d.seed);seedNum=hashStr(seed);level=d.level>0?floor(d.level):1;score=d.score>0?floor(d.score):0;difficulty=typeof d.difficulty==='number'?clamp(floor(d.difficulty),0,3):0;driveMode=typeof d.driveMode==='number'?clamp(floor(d.driveMode),0,2):0;musicOn=typeof d.musicOn==='boolean'?d.musicOn:true;updateOptionUI();saveOptions();$('seedInput').value=seed;startLevel();var cp=typeof d.cp==='number'?clamp(floor(d.cp),0,checkpoints.length-1):0;if(cp>0){curCp=cp;for(var i=0;i<=cp;i++)checkpoints[i].reached=true;respawnAtCheckpoint();}}catch(e){window.alert('Could not load save.');}}
+function saveToStorage(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({seed:seed,level:level,score:score,difficulty:difficulty,driveMode:driveMode,musicOn:musicOn,cp:curCp}));showPopup(TLI18N.t("saved"));}catch(e){window.alert(TLI18N.t("alertSaveFail"));}}
+function loadFromStorage(){ensureAudio();try{var raw=localStorage.getItem(SAVE_KEY);if(!raw){window.alert(TLI18N.t("alertNoSave"));return;}var d=JSON.parse(raw);if(!d||!d.seed){window.alert(TLI18N.t("alertBadSave"));return;}seed=String(d.seed);seedNum=hashStr(seed);level=d.level>0?floor(d.level):1;score=d.score>0?floor(d.score):0;difficulty=typeof d.difficulty==='number'?clamp(floor(d.difficulty),0,3):0;driveMode=typeof d.driveMode==='number'?clamp(floor(d.driveMode),0,2):0;musicOn=typeof d.musicOn==='boolean'?d.musicOn:true;updateOptionUI();saveOptions();$('seedInput').value=seed;startLevel();var cp=typeof d.cp==='number'?clamp(floor(d.cp),0,checkpoints.length-1):0;if(cp>0){curCp=cp;for(var i=0;i<=cp;i++)checkpoints[i].reached=true;respawnAtCheckpoint();}}catch(e){window.alert(TLI18N.t("alertLoadFail"));}}
 function showGameOver(){inGame=false;paused=false;showScreen('overScreen');}
 function frame(t){window.requestAnimationFrame(frame);try{var now=t||(window.performance&&window.performance.now?window.performance.now():Date.now());var dt=(now-lastT)/1000;lastT=now;if(dt<0)dt=0;if(dt>0.1)dt=0.1;updateQualityAuto(dt);if(!inGame){updateHUD();return;}if(!paused){if(bike.alive&&!bike.finished){updateInput();acc+=dt;var steps=0;while(acc>=STEP&&steps<(quality.tier===0?4:8)&&bike.alive&&!bike.finished){physics(STEP);acc-=STEP;steps++;}if(acc>STEP*8)acc=0;}updateSplashParticles(dt);updateWeather(dt);updatePools(dt);if(shakeTime>0){shakeTime-=dt;if(shakeTime<=0){shakeTime=0;shakeMag=0;}}riderCompress*=Math.exp(-5*dt);if(crashPending){crashTimer-=dt;if(crashTimer<=0){crashPending=false;showGameOver();}}updateCamera(dt);if(bike.alive&&!bike.finished)updateEngineSound();else silenceEngine();}updateLights();render();updateHUD();}catch(e){if(window.console&&console.error)console.error(e);}}
 loadOptions();configureQualityTier(initialQualityTier());resize();updateOptionUI();initTouch();$('seedInput').value=seed;
+TLI18N.onChange(function(){updateOptionUI();updateHUD();var ov=$('overTitle'),os=$('overScreen'),ws=$('winScreen'),st=$('winStats');if(ov&&os&&!os.classList.contains('hidden'))ov.textContent=TLI18N.t(crashReason||'crashed');if(st&&ws&&!ws.classList.contains('hidden'))st.innerHTML=winStatsHtml();});
 window.addEventListener('resize',resize,false);
 window.addEventListener('orientationchange',function(){window.setTimeout(resize,120);},false);
 document.addEventListener('keydown',handleKey,false);
@@ -687,5 +1116,232 @@ else seen(cur);
 }).catch(function () {});
 })();
 </script>
+<script>
+/* Developer harness. ?debug=dbg/moto.js loads the shared engine dbg/_harness.js
+   then that script: live panel with state, elements, layout per screen mode,
+   texts, balance, cheats, JSON export. No parameter or missing script = the
+   page behaves exactly as without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
+</script>
+<!-- inlined fs.js — the source of truth is fs.js: edit that file and re-inline this block -->
+<script>
+/* fs.js — the one fullscreen control every page shares.
+
+   Two jobs:
+
+   1. A toggle button. `TLFS.mount("#opts", {cls:"btn"})` puts it inside a menu or
+      title panel using that page's own button class; `TLFS.mount()` alone floats a
+      small icon button in the bottom-right corner; `{icon:true}` swaps the word for
+      a ⤢ glyph and moves it into `aria-label` for narrow hosts. The wording is the
+      shared translation key `fullscreen` / `exitFullscreen` — from the i18n kit, from
+      a page table published through `TLFS_LABEL(key)`, or English as the floor — and
+      a change of `<html lang>` repaints it. Where the Fullscreen API is missing the
+      button hides itself instead of lying.
+
+   2. Re-fit on every usable-area change. Entering or leaving fullscreen, an
+      orientation flip, and a mobile browser bar hiding or showing all change the
+      area the game has to fill — and the bar case does not always fire a plain
+      `resize`. This file listens to `fullscreenchange` (all vendor spellings) and
+      to `visualViewport.resize`, then re-applies `<html data-fs>` and dispatches
+      `resize` (plus `orientationchange`) once per frame, so the page's own layout
+      code runs. `TLFS.refitOnly()` gives a page that already has its own
+      fullscreen button just that wiring, without a second button.
+
+   Nothing here reads game state, and a page that never calls mount/refitOnly gets
+   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+(function () {
+  if (window.TLFS) return;
+  var de = document.documentElement;
+  var REQ = de.requestFullscreen || de.webkitRequestFullscreen ||
+    de.msRequestFullscreen || de.mozRequestFullScreen;
+  var EX = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.msExitFullscreen || document.mozCancelFullScreen;
+  var blocked = !REQ || !EX || de.fullscreenEnabled === false;
+  var ICON = "\u2922"; /* narrow hosts (side stripes, icon bars) get the glyph plus a
+                          translated aria-label instead of the word */
+  var btns = [], cbs = [], queued = false, styleDone = false;
+
+  function isFull() {
+    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
+      de.msFullscreenElement || de.mozFullScreenElement);
+  }
+  function kit() {
+    var k = window.TLI18N;
+    return (k && typeof k.t === "function") ? k : null;
+  }
+  /* A missing key makes t() hand back the key name — that is not a label.
+     Pages that keep their own translation table (billiards, tilt, oilstorm) publish
+     TLFS_LABEL(key) instead of the kit; they win over the kit, English is the floor. */
+  function label() {
+    var want = isFull() ? "exitFullscreen" : "fullscreen";
+    var L = window.TLFS_LABEL;
+    if (typeof L === "function") {
+      try { var v = L(want); if (v && v !== want) return String(v) } catch (e) {}
+    }
+    var k = kit(), t = null;
+    if (k) { try { t = k.t(want) } catch (e) { t = null } }
+    if (!t || t === want) t = isFull() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+    return t;
+  }
+  function cssOnce() {
+    if (styleDone) return;
+    styleDone = true;
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlfs-float:hover{border-color:#ffd76a;color:#ffd76a}" +
+      ".tlfs-float[hidden]{display:none}";
+    document.head.appendChild(st);
+  }
+  function paint() {
+    var txt = label();
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      b.textContent = b.__tlfsIcon ? ICON : txt;
+      b.setAttribute("aria-label", txt);
+      b.setAttribute("aria-pressed", isFull() ? "true" : "false");
+    }
+  }
+  /* One pass per frame: fullscreenchange and visualViewport.resize often arrive
+     together, and dispatching resize from inside a resize listener would loop. */
+  function refit() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint();
+      for (var i = 0; i < cbs.length; i++) { try { cbs[i](isFull()) } catch (e) {} }
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("orientationchange"));
+    });
+  }
+  function toggle() {
+    if (blocked) return false;
+    var was = isFull();
+    try {
+      if (was) EX.call(document);
+      else { var p = REQ.call(de); if (p && p.catch) p.catch(function () {}) }
+    } catch (e) {}
+    /* the change event may never come (sandboxed frames, denied requests, some
+       headless shells that grant then silently drop): repaint the state we can
+       read twice, late enough to catch a transition nobody announced. */
+    setTimeout(refit, 220);
+    setTimeout(refit, 700);
+    return !was;
+  }
+
+  de.setAttribute("data-fs", "off");
+  ["fullscreenchange", "webkitfullscreenchange", "MSFullscreenChange", "mozfullscreenchange"]
+    .forEach(function (t) { document.addEventListener(t, refit, false) });
+  ["fullscreenerror", "webkitfullscreenerror"].forEach(function (t) {
+    document.addEventListener(t, function () { de.setAttribute("data-fs", "off"); paint() }, false)
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", refit, false);
+    window.visualViewport.addEventListener("scroll", function () {
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint(); /* an exit the browser never announced must still clear the label */
+    }, false);
+  }
+  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
+  }, false);
+  /* A language switch changes <html lang>: repaint from whatever table the page
+     uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
+     drive their toggle state off that attribute, and taking it would corrupt them. */
+  new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
+
+  window.TLFS = {
+    version: "2026.11.23.3",
+    supported: !blocked,
+    isFull: isFull,
+    label: label,
+    paint: paint,
+    toggle: toggle,
+    onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
+    /* just the size/orientation wiring, for a page with its own fullscreen button */
+    refitOnly: function () { paint(); return true },
+    /* put the button in `sel` (or float it when the selector matches nothing).
+       opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
+       puts the translated word in aria-label, for narrow hosts. */
+    mount: function (sel, opts) {
+      cssOnce();
+      var o = opts || {};
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = o.cls || "tlfs-float";
+      b.id = o.id || "tlfsBtn";
+      b.__tlfsIcon = !!o.icon;
+      if (o.float !== false && !o.cls) b.classList.add("tlfs-float");
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", label());
+      if (o.ariaLabel) b.setAttribute("data-aria", o.ariaLabel);
+      b.textContent = o.icon ? ICON : label();
+      /* a menu that starts the game on any tap (defender binds pointerdown on the
+         whole title screen) must not fire when the fullscreen button is pressed */
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("touchstart", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle() });
+      var host = sel ? document.querySelector(sel) : null;
+      if (host) {
+        if (o.prepend && host.firstChild) host.insertBefore(b, host.firstChild);
+        else host.appendChild(b);
+      } else {
+        b.classList.add("tlfs-float");
+        document.body.appendChild(b);
+      }
+      if (blocked) b.style.display = "none";
+      btns.push(b);
+      paint();
+      return b;
+    },
+    /* wire a button the page already has in its markup (keeps its own look) */
+    attach: function (el) {
+      cssOnce();
+      if (!el) return null;
+      if (blocked) { el.style.display = "none"; return el }
+      el.addEventListener("click", function (e) { e.preventDefault(); toggle() });
+      btns.push(el);
+      paint();
+      return el;
+    },
+    /* a rebuilt panel drops its children: re-add every button the page mounted */
+    reassert: function () {
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i];
+        if (!b.isConnected && b.__tlfsHost) {
+          var h = document.querySelector(b.__tlfsHost);
+          if (h) h.appendChild(b);
+        }
+      }
+      paint();
+      return btns.length
+    }
+  };
+  /* remember where each button was mounted so a panel rebuild can put it back */
+  var mount0 = window.TLFS.mount;
+  window.TLFS.mount = function (sel, opts) {
+    var b = mount0(sel, opts);
+    if (b) b.__tlfsHost = sel || "body";
+    return b;
+  };
+  var k = kit();
+  if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
+})();
+</script>
+<script>TLFS.mount("#titleScreen .dialog",{cls:"btn"});</script>
 </body>
 </html>

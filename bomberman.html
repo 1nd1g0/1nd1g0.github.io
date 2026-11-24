@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#070911">
 <title>BOMB BLASTER</title>
-<meta name="version" content="2026.11.07.1">
+<meta name="version" content="2026.11.24.1">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:#070911;color:#dfe8ff;
@@ -126,8 +126,547 @@ button.home:active{box-shadow:0 1px 0 #804000}
   </div>
 </div>
 
-<div id="overlay"><div class="panel" id="panel"></div></div>
+<div id="overlay"><div class="panel" id="panel"><div id="panelBody"></div></div></div>
 
+<!-- inlined i18n.js — the source of truth is i18n.js: edit that file and re-inline this block -->
+<script>
+/* ============================================================================
+   i18n.js — shared language kit for every page of this site.
+   Language code decision tree (identical everywhere, in this order):
+     0. any technical problem with this kit -> English
+     1. URL ?language=xx      (a region suffix is fine: pt-BR, zh-CN)
+     2. localStorage['tll:lang']
+     3. the browser's language list (navigator.languages, then navigator.language)
+     4. English
+   A code outside CODES is dropped, not trusted, so the next level decides. Only
+   the picker button writes storage, so a ?language= link never overwrites the
+   visitor's saved choice.
+
+   Page usage
+     <script src="i18n.js"><\/script>            BEFORE the game script
+     <script>TLI18N.add({en:{k:"Text"},es:{...},pt:{...},ru:{...},zh:{...}})<\/script>
+     markup:  <b data-t="score">SCORE</b>  <button data-tip="help">?</button>
+              <input data-ph="name">  <i data-aria="pause">  <img data-alt="car">
+     js:      el.textContent=TLI18N.t("gameOver");
+              el.innerHTML="<b>"+TLI18N.t("best")+": "+n+"</b>";
+              ctx.fillText(TLI18N.t("paused"),x,y);
+     canvas / innerHTML redraws: TLI18N.onChange(()=>redrawAll());
+     pick a host for the language button: TLI18N.mount("#startPanel")
+       (omit it and the kit parks a pill in the lower-left corner)
+   Keys missing from a non-English table fall back to English, so a half
+   translated table still runs. Values for *Fmt keys carry {placeholders}.
+   ========================================================================= */
+(function(){
+"use strict";
+var KEY="tll:lang", CODES=["en","es","pt","ru","zh"];
+var LANGS=[ // code · name in its own language · that word for "language" · its flag
+ ['en','English','Language','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0,0 60,40M60,0 0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 60,40M60,0 0,40" stroke="#C8102E" stroke-width="3.2"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="13"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="8"/></svg>'],
+ ['es','Español','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#AA151B"/><path d="M0,10H60M0,30H60" stroke="#F1BF00" stroke-width="20"/>  </svg>'],
+ ['pt','Português','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="40" fill="#046A38"/><rect x="24" width="36" height="40" fill="#DA291C"/><circle cx="24" cy="20" r="7.5" fill="#FEDF00" stroke="#046A38" stroke-width="1.4"/><path d="M24,14.5 24,22.5M20.5,17.5H27.5" stroke="#DA291C" stroke-width="2.2" fill="none"/></svg>'],
+ ['ru','Русский','Язык','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.34" width="60" height="13.33" fill="#0039A6"/><rect y="26.67" width="60" height="13.33" fill="#D52B1E"/></svg>'],
+ ['zh','中文','语言','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#EE1C25"/><circle cx="10" cy="10" r="5.6" fill="#FFDC00"/><circle cx="21" cy="6" r="2.1" fill="#FFDC00"/><circle cx="26" cy="11.5" r="2.1" fill="#FFDC00"/><circle cx="26" cy="18.5" r="2.1" fill="#FFDC00"/><circle cx="21" cy="24" r="2.1" fill="#FFDC00"/></svg>']
+];
+/* ---- shared vocabulary: the same word means the same thing in every game.
+       Values carry no glyphs — pages keep their ⌂ ▶ ■ icons in the markup. ---- */
+var COMMON={
+en:{
+ paused:"PAUSED",pause:"PAUSE",resume:"RESUME",start:"START",play:"PLAY",home:"HOME",menu:"MENU",
+ options:"OPTIONS",settings:"SETTINGS",help:"HELP",howToPlay:"HOW TO PLAY",rules:"RULES",controls:"CONTROLS",
+ keys:"KEYS",gamepad:"GAMEPAD",mouse:"MOUSE",touch:"TOUCH",
+ sound:"SOUND",music:"MUSIC",sfx:"SOUND FX",on:"ON",off:"OFF",fullscreen:"FULLSCREEN",exitFullscreen:"EXIT FULLSCREEN",
+ difficulty:"DIFFICULTY",easy:"EASY",normal:"NORMAL",hard:"HARD",low:"LOW",high:"HIGH",
+ score:"SCORE",best:"BEST",hiScore:"HIGH SCORE",level:"LEVEL",lives:"LIVES",time:"TIME",
+ speed:"SPEED",round:"ROUND",wave:"WAVE",seed:"SEED",newSeed:"NEW SEED",
+ restart:"RESTART",retry:"RETRY",continue:"CONTINUE",tryAgain:"TRY AGAIN",nextLevel:"NEXT LEVEL",
+ gameOver:"GAME OVER",youWin:"YOU WIN",youLose:"GAME OVER",clear:"CLEARED",
+ fire:"FIRE",jump:"JUMP",back:"BACK",exit:"EXIT",close:"CLOSE",ok:"OK",cancel:"CANCEL",
+ loading:"LOADING",shots:"SHOTS",moves:"MOVES",power:"POWER",angle:"ANGLE",
+ langTitle:"LANGUAGE",langNote:"Choose your language — it is remembered, and it applies to this game and to the whole catalogue.",
+ langBack:"CHANGE LANGUAGE",players:"PLAYERS",player:"PLAYER",you:"YOU",cpu:"CPU",random:"RANDOM"},
+es:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INICIO",play:"JUGAR",home:"INICIO",menu:"MENÚ",
+ options:"OPCIONES",settings:"AJUSTES",help:"AYUDA",howToPlay:"CÓMO JUGAR",rules:"REGLAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"MANDO",mouse:"RATÓN",touch:"TÁCTIL",
+ sound:"SONIDO",music:"MÚSICA",sfx:"EFECTOS",on:"ACTIVO",off:"APAGADO",fullscreen:"PANTALLA COMPLETA",exitFullscreen:"SALIR DE PANTALLA COMPLETA",
+ difficulty:"DIFICULTAD",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAJO",high:"ALTO",
+ score:"PUNTOS",best:"RÉCORD",hiScore:"RÉCORD",level:"NIVEL",lives:"VIDAS",time:"TIEMPO",
+ speed:"VELOCIDAD",round:"RONDA",wave:"OLEADA",seed:"SEMILLA",newSeed:"NUEVA SEMILLA",
+ restart:"REINICIAR",retry:"REINTENTAR",continue:"CONTINUAR",tryAgain:"INTÉNTALO OTRA VEZ",nextLevel:"SIGUIENTE NIVEL",
+ gameOver:"FIN DEL JUEGO",youWin:"¡GANASTE!",youLose:"FIN DEL JUEGO",clear:"SUPERADO",
+ fire:"DISPARO",jump:"SALTAR",back:"ATRÁS",exit:"SALIR",close:"CERRAR",ok:"ACEPTAR",cancel:"CANCELAR",
+ loading:"CARGANDO",shots:"LANZAMIENTOS",moves:"MOVIMIENTOS",power:"FUERZA",angle:"ÁNGULO",
+ langTitle:"IDIOMA",langNote:"Elige tu idioma: se recuerda y se aplica a este juego y a todo el catálogo.",
+ langBack:"CAMBIAR IDIOMA",players:"JUGADORES",player:"JUGADOR",you:"TÚ",cpu:"CPU",random:"ALEATORIO"},
+pt:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INÍCIO",play:"JOGAR",home:"INÍCIO",menu:"MENU",
+ options:"OPÇÕES",settings:"CONFIGURAÇÕES",help:"AJUDA",howToPlay:"COMO JOGAR",rules:"REGRAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"CONTROLE",mouse:"MOUSE",touch:"TOQUE",
+ sound:"SOM",music:"MÚSICA",sfx:"EFEITOS",on:"LIGADO",off:"DESLIGADO",fullscreen:"TELA CHEIA",exitFullscreen:"SAIR DA TELA CHEIA",
+ difficulty:"DIFICULDADE",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAIXO",high:"ALTO",
+ score:"PONTOS",best:"RECORDE",hiScore:"RECORDE",level:"NÍVEL",lives:"VIDAS",time:"TEMPO",
+ speed:"VELOCIDADE",round:"RODADA",wave:"ONDA",seed:"SEMENTE",newSeed:"NOVA SEMENTE",
+ restart:"REINICIAR",retry:"TENTAR DE NOVO",continue:"CONTINUAR",tryAgain:"TENTE DE NOVO",nextLevel:"PRÓXIMO NÍVEL",
+ gameOver:"FIM DE JOGO",youWin:"VOCÊ VENCEU",youLose:"FIM DE JOGO",clear:"COMPLETO",
+ fire:"DISPARO",jump:"SALTAR",back:"VOLTAR",exit:"SAIR",close:"FECHAR",ok:"OK",cancel:"CANCELAR",
+ loading:"CARREGANDO",shots:"BATIDAS",moves:"JOGADAS",power:"FORÇA",angle:"ÂNGULO",
+ langTitle:"IDIOMA",langNote:"Escolha seu idioma: ele é lembrado e vale para este jogo e para todo o catálogo.",
+ langBack:"MUDAR IDIOMA",players:"JOGADORES",player:"JOGADOR",you:"VOCÊ",cpu:"CPU",random:"ALEATÓRIO"},
+ru:{
+ paused:"ПАУЗА",pause:"ПАУЗА",resume:"ПРОДОЛЖИТЬ",start:"СТАРТ",play:"ИГРАТЬ",home:"ДОМОЙ",menu:"МЕНЮ",
+ options:"НАСТРОЙКИ",settings:"НАСТРОЙКИ",help:"ПОМОЩЬ",howToPlay:"КАК ИГРАТЬ",rules:"ПРАВИЛА",controls:"УПРАВЛЕНИЕ",
+ keys:"КЛАВИШИ",gamepad:"ГЕЙМПАД",mouse:"МЫШЬ",touch:"СЕНСОР",
+ sound:"ЗВУК",music:"МУЗЫКА",sfx:"ЗВУКИ",on:"ВКЛ",off:"ВЫКЛ",fullscreen:"НА ВЕСЬ ЭКРАН",exitFullscreen:"ВЫЙТИ С ЭКРАНА",
+ difficulty:"СЛОЖНОСТЬ",easy:"ЛЕГКО",normal:"НОРМА",hard:"СЛОЖНО",low:"НИЗ",high:"ВЕРХ",
+ score:"СЧЁТ",best:"РЕКОРД",hiScore:"РЕКОРД",level:"УРОВЕНЬ",lives:"ЖИЗНИ",time:"ВРЕМЯ",
+ speed:"СКОРОСТЬ",round:"РАУНД",wave:"ВОЛНА",seed:"КОД УРОВНЯ",newSeed:"НОВЫЙ КОД",
+ restart:"ЗАНОВО",retry:"ЕЩЁ РАЗ",continue:"ПРОДОЛЖИТЬ",tryAgain:"ПОПРОБУЙ ЕЩЁ",nextLevel:"СЛЕДУЮЩИЙ УРОВЕНЬ",
+ gameOver:"КОНЕЦ",youWin:"ПОБЕДА",youLose:"КОНЕЦ",clear:"УРОВЕНЬ ПРОЙДЕН",
+ fire:"ОГОНЬ",jump:"ПРЫЖОК",back:"НАЗАД",exit:"ВЫХОД",close:"ЗАКРЫТЬ",ok:"ОК",cancel:"ОТМЕНА",
+ loading:"ЗАГРУЗКА",shots:"УДАРЫ",moves:"ХОДЫ",power:"СИЛА",angle:"УГОЛ",
+ langTitle:"ЯЗЫК",langNote:"Выберите язык — он запоминается и действует для этой игры и для всего каталога.",
+ langBack:"СМЕНИТЬ ЯЗЫК",players:"ИГРОКИ",player:"ИГРОК",you:"ВЫ",cpu:"БОТ",random:"СЛУЧАЙНО"},
+zh:{
+ paused:"暂停",pause:"暂停",resume:"继续",start:"开始",play:"开始游戏",home:"主页",menu:"菜单",
+ options:"选项",settings:"设置",help:"帮助",howToPlay:"怎么玩",rules:"规则",controls:"操作",
+ keys:"按键",gamepad:"手柄",mouse:"鼠标",touch:"触摸",
+ sound:"声音",music:"音乐",sfx:"音效",on:"开",off:"关",fullscreen:"全屏",exitFullscreen:"退出全屏",
+ difficulty:"难度",easy:"简单",normal:"普通",hard:"困难",low:"低",high:"高",
+ score:"得分",best:"最高分",hiScore:"最高分",level:"关卡",lives:"生命",time:"时间",
+ speed:"速度",round:"回合",wave:"波次",seed:"种子",newSeed:"新种子",
+ restart:"重新开始",retry:"重试",continue:"继续",tryAgain:"再试一次",nextLevel:"下一关",
+ gameOver:"游戏结束",youWin:"胜利",youLose:"游戏结束",clear:"过关",
+ fire:"射击",jump:"跳跃",back:"返回",exit:"退出",close:"关闭",ok:"确定",cancel:"取消",
+ loading:"加载中",shots:"击球",moves:"步数",power:"力量",angle:"角度",
+ langTitle:"语言",langNote:"选择语言：会被记住，并用于这个游戏和整个游戏目录。",
+ langBack:"更换语言",players:"玩家",player:"玩家",you:"你",cpu:"电脑",random:"随机"}
+};
+var PAGE={en:{},es:{},pt:{},ru:{},zh:{}};
+function lget(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+function lset(v){try{localStorage.setItem(KEY,v)}catch(e){}}
+var code=null;
+/* A browser language list -> a supported code, or null when it says nothing
+   usable. "pt-BR", "ru_RU", "zh-CN" all match on their 2-letter base. */
+function fromBrowser(){
+ try{
+  var list=null;
+  if(navigator&&Array.isArray(navigator.languages)&&navigator.languages.length)list=navigator.languages;
+  else if(navigator)list=[navigator.language||navigator.userLanguage||""];
+  for(var i=0;i<(list||[]).length;i++){
+   var c=String(list[i]||"").toLowerCase().slice(0,2);
+   if(CODES.indexOf(c)>=0)return c;
+  }
+ }catch(e){}
+ return null;
+}
+(function(){
+ try{
+  var c=null,m=/[?&]language=([a-zA-Z]{2,3})/.exec(location.search||"");
+  if(m)c=m[1].toLowerCase().slice(0,2);           // ?language=pt-BR counts as pt
+  if(c&&CODES.indexOf(c)<0)c=null;
+  if(!c){var s=(lget()||"").toLowerCase().slice(0,2);if(CODES.indexOf(s)>=0)c=s;}
+  if(!c)c=fromBrowser();
+  code=c||"en";
+ }catch(e){code="en";} // a broken lookup speaks English, never nothing
+})();
+function raw(k){
+ var t=PAGE[code]?PAGE[code][k]:null; if(t!=null)return t;
+ t=COMMON[code]?COMMON[code][k]:null; if(t!=null)return t;
+ t=PAGE.en[k]; if(t!=null)return t;
+ t=COMMON.en[k]; return t==null?null:t;
+}
+var hooks=[];
+var API={
+ version:"2026.11.22.2", codes:CODES.slice(), langs:LANGS,
+ lang:function(){return code},
+ browserLang:function(){return fromBrowser()},
+ t:function(k,v){var s;try{s=raw(k)}catch(e){code="en";try{s=raw(k)}catch(e2){s=null}}
+  if(s==null)s=k;var o=v||{};for(var p in o)s=s.split("{"+p+"}").join(String(o[p]));return s},
+ flag:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][3];return ""},
+ name:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][2];return c},
+ add:function(tab){for(var c in tab){if(!PAGE[c])continue;for(var k in tab[c])PAGE[c][k]=tab[c][k];}
+  try{API.apply()}catch(e){}},
+ /* read the tables (the developer harness edits texts through these) */
+ keys:function(c){var out=[],seen={};try{var src=[PAGE[c],COMMON[c],PAGE.en,COMMON.en];
+  for(var i=0;i<src.length;i++)for(var k in src[i])if(!seen[k]){seen[k]=1;out.push(k)}out.sort();}catch(e){}
+  return out},
+ table:function(){var o={};try{for(var i=0;i<CODES.length;i++){var c=CODES[i],m={},s=[COMMON[c],PAGE[c],COMMON.en,PAGE.en];
+  for(var j=0;j<s.length;j++)for(var k in s[j])if(m[k]==null&&s[j][k]!=null)m[k]=s[j][k];o[c]=m;}}catch(e){}
+  return o},
+ setKey:function(c,k,v){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;
+  try{(PAGE[c]=PAGE[c]||{})[k]=String(v);}catch(e){return;}
+  try{API.apply()}catch(e){}
+  for(var i=0;i<hooks.length;i++)try{hooks[i](code)}catch(e){}},
+ onChange:function(f){hooks.push(f)},
+ set:function(c){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;code=c;lset(c);
+  try{API.apply()}catch(e){}for(var i=0;i<hooks.length;i++)try{hooks[i](c)}catch(e){}},
+ apply:function(root){
+  if(document.documentElement)document.documentElement.lang=code;
+  var r=root||document;
+  var set=function(e,attr,put){var v=raw(e.getAttribute(attr));if(v!=null)put(e,v);};
+  var all=[];
+  if(r.nodeType===1)all.push(r);
+  if(r.querySelectorAll)all=all.concat([].slice.call(r.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]")));
+  for(var i=0;i<all.length;i++){var e=all[i];
+   try{
+    if(e.hasAttribute("data-t"))set(e,"data-t",function(n,v){n.textContent=v});
+    if(e.hasAttribute("data-ph"))set(e,"data-ph",function(n,v){n.placeholder=v});
+    if(e.hasAttribute("data-tip"))set(e,"data-tip",function(n,v){n.title=v});
+    if(e.hasAttribute("data-aria"))set(e,"data-aria",function(n,v){n.setAttribute("aria-label",v)});
+    if(e.hasAttribute("data-alt"))set(e,"data-alt",function(n,v){n.alt=v});
+   }catch(e2){} // one odd node never aborts the pass
+  }
+  if(pill){try{pill.innerHTML=API.flag(code)+"<span>"+API.name(code)+"</span>";pill.title=API.t("langTitle");}catch(e){}}
+ },
+ mount:function(sel){hostSel=sel;ensurePill();},
+};
+/* ---------------- language button + picker overlay ---------------- */
+var hostSel=null,pill=null,ov=null;
+var CSS=".tlbtn{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(20,24,22,.72);flex:0 0 auto;align-self:center;"
+ +"border:1px solid #3a463f;border-radius:6px;color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:1px;"
+ +"cursor:pointer;line-height:1;width:auto;max-width:100%}.tlbtn:hover,.tlbtn:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}"
+ +".tlbtn svg{width:22px;height:15px;border:1px solid #2e3a34;border-radius:2px;display:block}"
+ +".tlfix{position:fixed;left:12px;bottom:12px;z-index:2147483000}"
+ +".tlov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;"
+ +"background:rgba(4,7,6,.86);padding:16px}.tlov[hidden]{display:none}"
+ +".tlpanel{max-width:660px;width:100%;background:#141816;border:1px solid #3a463f;border-radius:12px;"
+ +"padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.6);color:#c9d2cb;font:inherit;text-align:center}"
+ +".tlpanel h2{margin:0 0 6px;font-size:20px;letter-spacing:4px;color:#ffd76a}"
+ +".tlpanel p{margin:0 0 16px;font-size:12px;line-height:1.6;color:#8a948e}"
+ +".tlgrid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}"
+ +".tlb{width:132px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;"
+ +"background:rgba(20,24,22,.7);border:1px solid #3a463f;border-radius:8px;cursor:pointer;color:#c9d2cb;font:inherit}"
+ +".tlb:hover,.tlb:focus{border-color:#ffd76a;color:#f4e9c8;outline:none;box-shadow:0 0 14px rgba(255,215,106,.18)}"
+ +".tlb svg{width:50px;height:34px;border:1px solid #2e3a34;border-radius:4px;display:block}"
+ +".tlb b{font-size:13px;color:#f4e9c8}.tlb span{font-size:10px;letter-spacing:1px;color:#8a948e}"
+ +".tlx{margin-top:16px;padding:7px 20px;background:none;border:1px solid #3a463f;border-radius:6px;"
+ +"color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:2px;cursor:pointer}"
+ +".tlx:hover,.tlx:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}";
+function style(){if(document.getElementById("tlcss"))return;var s=document.createElement("style");s.id="tlcss";s.textContent=CSS;document.head.appendChild(s);}
+function ensurePill(){
+ if(pill)return;
+ var host=hostSel?document.querySelector(hostSel):null;
+ if(!host&&document.readyState==="loading")return; // retried at DOMContentLoaded
+ style();
+ pill=document.createElement("button");
+ pill.type="button";pill.className="tlbtn";pill.setAttribute("aria-haspopup","dialog");
+ if(!host){pill.className="tlbtn tlfix";document.body.appendChild(pill);}
+ else host.insertBefore(pill,host.firstChild);
+ pill.onclick=openOv;
+ API.apply();
+}
+function openOv(){
+ if(!ov){
+  ov=document.createElement("div");ov.className="tlov";ov.hidden=true;
+  var p=document.createElement("div");p.className="tlpanel";
+  var h=document.createElement("h2");h.setAttribute("data-t","langTitle");p.appendChild(h);
+  var np=document.createElement("p");np.setAttribute("data-t","langNote");p.appendChild(np);
+  var g=document.createElement("div");g.className="tlgrid";
+  for(var i=0;i<LANGS.length;i++){
+   var b=document.createElement("button");b.type="button";b.className="tlb";b.dataset.lang=LANGS[i][0];
+   b.innerHTML=LANGS[i][3]+"<b>"+LANGS[i][1]+"</b><span>"+LANGS[i][2]+"</span>";g.appendChild(b);
+  }
+  p.appendChild(g);
+  var x=document.createElement("button");x.type="button";x.className="tlx";x.setAttribute("data-t","close");p.appendChild(x);
+  ov.appendChild(p);document.body.appendChild(ov);
+  g.onclick=function(e){var b=e.target;while(b&&b!==g&&!b.dataset.lang)b=b.parentNode;if(b&&b.dataset.lang){API.set(b.dataset.lang);closeOv();}};
+  x.onclick=closeOv;
+  ov.onclick=function(e){if(e.target===ov)closeOv();};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ov&&!ov.hidden)closeOv();});
+ }
+ API.apply(ov);
+ ov.hidden=false;
+}
+function closeOv(){if(ov)ov.hidden=true;}
+function boot(){
+ try{ensurePill();API.apply();}
+ catch(e){code="en";try{ensurePill();API.apply();}catch(e2){}} // rule 0: English on any kit fault
+}
+/* keep freshly added nodes translated without the page calling apply() */
+new MutationObserver(function(ms){
+ if(!pill)return;
+ try{
+  for(var i=0;i<ms.length;i++){var n=ms[i].addedNodes;
+   for(var j=0;j<n.length;j++){var e=n[j];
+    if(e.nodeType!==1)continue;
+    if(e.matches&&e.matches("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]"))API.apply(e);
+    else if(e.querySelectorAll&&e.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]").length)API.apply(e);
+   }}
+ }catch(e){}
+}).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+window.TLI18N=API;
+})();
+</script>
+<script>
+/* If i18n.js is missing or only half-loaded, the game still runs: this stub
+   keeps the same API, pins English, and serves the en table this page registers
+   below via add(). */
+if(!window.TLI18N||typeof window.TLI18N.add!=="function"||typeof window.TLI18N.t!=="function"||typeof window.TLI18N.apply!=="function"||typeof window.TLI18N.mount!=="function"){(function(){var T={en:{}};window.TLI18N={version:"en-fallback",codes:["en"],langs:[["en","EN","English",""]],
+add:function(tab){for(var c in tab){T[c]=Object.assign(T[c]||{},tab[c]);}},
+t:function(k,v){var s=(T.en&&T.en[k]!=null)?T.en[k]:k,o=v||{};for(var p in o)s=String(s).split("{"+p+"}").join(String(o[p]));return s},
+flag:function(){return "";},name:function(c){return c;},lang:function(){return "en";},
+set:function(){},onChange:function(){},apply:function(){},mount:function(){}};})();}
+</script>
+<script>
+TLI18N.add({
+en:{
+ // --- fatal error
+ canvasErr:"Canvas 2D not available.",
+ // --- HUD cards (compact labels; over2/clear2 keep the space that joins them to the first word)
+ hudTotal:"TOTAL",hudLvFmt:"LV{n}",hudScFmt:"SC {n}",hudBombFmt:"B{n}",hudFireFmt:"F{n}",hudPlyFmt:"P{n}",hudCpuFmt:"C{n}",
+ // --- help headings
+ helpSub:"FIELD MANUAL",hObjects:"OBJECTS",hPrizes:"PRIZES",hEnemies:"ENEMIES",
+ // --- help: field objects
+ ob_floor:"Floor",ob_floor_d:"Open walkable ground.",
+ ob_brick:"Brick",ob_brick_d:"Destructible block. May hide a prize.",
+ ob_wall:"Wall",ob_wall_d:"Solid indestructible block.",
+ ob_bomb:"Bomb",ob_bomb_d:"Explodes after a short fuse.",
+ ob_mine:"Land Mine",ob_mine_d:"Enemy-triggered bomb. If not remote-controlled, it also explodes on a normal fuse.",
+ ob_portalLock:"Portal locked",ob_portalLock_d:"Exit portal. Locked until enemies are cleared or a key is used.",
+ ob_portalOn:"Portal active",ob_portalOn_d:"Enter this portal to clear the level.",
+ // --- help: prizes (PU order)
+ pu_bomb:"Bomb Up",pu_bomb_d:"Carry one extra bomb at the same time.",
+ pu_fire:"Fire Up",pu_fire_d:"Increases blast radius by one tile.",
+ pu_speed:"Speed Up",pu_speed_d:"Move faster.",
+ pu_fullfire:"Full Fire",pu_fullfire_d:"Blast radius becomes maximum.",
+ pu_heart:"Heart",pu_heart_d:"Absorbs one fatal hit.",
+ pu_oneup:"1-Up",pu_oneup_d:"Grants one extra life.",
+ pu_shield:"Shield",pu_shield_d:"Temporary invincibility.",
+ pu_remote:"Remote",pu_remote_d:"Bombs must be detonated manually with the remote button.",
+ pu_power:"Power Bomb",pu_power_d:"Your next bomb has maximum blast radius.",
+ pu_spike:"Spike Bomb",pu_spike_d:"Blasts continue through destroyed bricks.",
+ pu_mine:"Land Mine",pu_mine_d:"Explodes when an enemy touches it. Without remote it also explodes on a normal fuse.",
+ pu_danger:"Danger Bomb",pu_danger_d:"Explodes in a 3x3 area.",
+ pu_key:"Key",pu_key_d:"Immediately reveals and opens the exit portal.",
+ pu_gem:"Gem",pu_gem_d:"Bonus score.",
+ pu_clock:"Clock",pu_clock_d:"Freezes all enemies for a short time.",
+ // --- help: enemies (ETYPES order)
+ foe_0:"Blob",foe_0_d:"Slow and weak. Wanders around.",
+ foe_1:"Sprinter",foe_1_d:"Very fast but fragile.",
+ foe_2:"Hunter",foe_2_d:"Actively hunts players.",
+ foe_3:"Bomber",foe_3_d:"Can pass through bombs.",
+ foe_4:"Ghost",foe_4_d:"Passes through walls and bombs.",
+ foe_5:"Tank",foe_5_d:"Slow, but takes several hits.",
+ foe_6:"Balloon",foe_6_d:"Floats through obstacles, erratic.",
+ foe_7:"Doll",foe_7_d:"Cautious. Tries to avoid blasts.",
+ foe_8:"Bat",foe_8_d:"Fast and erratic. Passes bombs.",
+ foe_9:"Skull",foe_9_d:"Smart and tougher. Avoids danger.",
+ foe_10:"Knight",foe_10_d:"Very tough, slow.",
+ foe_11:"Wizard",foe_11_d:"Smart. Phases through walls.",
+ // --- start menu
+ menuSub:"DELUXE PROCEDURAL COURSES",sizeLbl:"LEVEL SIZE",sizeFit:"FIT",sizeWide:"WIDE",sizeTall:"TALL",
+ relLbl:"CPU RELATIONS",relCoop:"CO-OP",relHostile:"HOSTILE",
+ startNewBtn:"START NEW GAME",codeLbl:"CONTINUE FROM PASSCODE",
+ seedPh:"seed (optional)",codePh:"paste passcode",
+ ctrlHint:"WASD / Arrows · X/Space bomb · Z remote · L P2 bomb · K P2 remote · Esc pause",
+ // --- pause panel
+ pauseSubFmt:"LV {n} · TOTAL {m}",replayLevel:"REPLAY LEVEL",passLbl:"PASSCODE",
+ copyPass:"SAVE & COPY PASSCODE",mainMenu:"MAIN MENU",escResume:"ESC or tap ⏸ to resume",
+ // --- game over panel
+ over1:"GAME",over2:" OVER",overSub:"THE COURSE WINS THIS ROUND",
+ overTotalFmt:"TOTAL {n}",overReachedFmt:"Reached level {n}",
+ // --- level clear panel
+ clear1:"LEVEL",clear2:" CLEAR",clearSubFmt:"COURSE {n} COMPLETE",nextCourse:"NEXT COURSE"
+},
+es:{
+ canvasErr:"No hay Canvas 2D disponible.",
+ hudTotal:"TOTAL",hudLvFmt:"NV{n}",hudScFmt:"PTS {n}",hudBombFmt:"B{n}",hudFireFmt:"F{n}",hudPlyFmt:"J{n}",hudCpuFmt:"C{n}",
+ helpSub:"MANUAL DE JUEGO",hObjects:"OBJETOS",hPrizes:"PREMIOS",hEnemies:"ENEMIGOS",
+ ob_floor:"Suelo",ob_floor_d:"Suelo libre por el que puedes andar.",
+ ob_brick:"Ladrillo",ob_brick_d:"Bloque destructible. Puede esconder un premio.",
+ ob_wall:"Muro",ob_wall_d:"Bloque sólido e indestructible.",
+ ob_bomb:"Bomba",ob_bomb_d:"Explota tras una mecha corta.",
+ ob_mine:"Mina",ob_mine_d:"Bomba activada por enemigos. Sin el mando, también estalla con una mecha normal.",
+ ob_portalLock:"Portal cerrado",ob_portalLock_d:"Salida. Bloqueada hasta eliminar a los enemigos o usar una llave.",
+ ob_portalOn:"Portal abierto",ob_portalOn_d:"Entra en este portal para pasar el nivel.",
+ pu_bomb:"Más bombas",pu_bomb_d:"Lleva una bomba extra a la vez.",
+ pu_fire:"Más potencia",pu_fire_d:"Aumenta el radio de explosión en una casilla.",
+ pu_speed:"Más velocidad",pu_speed_d:"Muévete más rápido.",
+ pu_fullfire:"Potencia máxima",pu_fullfire_d:"El radio de explosión pasa al máximo.",
+ pu_heart:"Corazón",pu_heart_d:"Absorbe un golpe mortal.",
+ pu_oneup:"1-Up",pu_oneup_d:"Da una vida extra.",
+ pu_shield:"Escudo",pu_shield_d:"Invencibilidad temporal.",
+ pu_remote:"Mando",pu_remote_d:"Las bombas se detonan a mano con el botón de mando.",
+ pu_power:"Bomba potente",pu_power_d:"Tu próxima bomba explota al máximo.",
+ pu_spike:"Bomba perforante",pu_spike_d:"La explosión atraviesa los ladrillos rotos.",
+ pu_mine:"Mina",pu_mine_d:"Explota si un enemigo la pisa. Sin mando, también estalla con mecha normal.",
+ pu_danger:"Bomba de peligro",pu_danger_d:"Explota en un área de 3x3.",
+ pu_key:"Llave",pu_key_d:"Revela y abre la salida al instante.",
+ pu_gem:"Gema",pu_gem_d:"Puntos extra.",
+ pu_clock:"Reloj",pu_clock_d:"Congela a los enemigos un rato.",
+ foe_0:"Mota",foe_0_d:"Lento y débil. Vaga sin rumbo.",
+ foe_1:"Velocista",foe_1_d:"Muy rápido pero frágil.",
+ foe_2:"Cazador",foe_2_d:"Persigue a los jugadores.",
+ foe_3:"Bombardero",foe_3_d:"Puede atravesar bombas.",
+ foe_4:"Fantasma",foe_4_d:"Atraviesa muros y bombas.",
+ foe_5:"Tanque",foe_5_d:"Lento, pero resiste varios golpes.",
+ foe_6:"Globo",foe_6_d:"Flota entre obstáculos, va a su aire.",
+ foe_7:"Muñeca",foe_7_d:"Cautelosa. Intenta evitar las explosiones.",
+ foe_8:"Murciélago",foe_8_d:"Rápido y errático. Atraviesa bombas.",
+ foe_9:"Calavera",foe_9_d:"Listo y resistente. Esquiva el peligro.",
+ foe_10:"Caballero",foe_10_d:"Muy resistente, lento.",
+ foe_11:"Mago",foe_11_d:"Listo. Atraviesa los muros.",
+ menuSub:"NIVELES PROCEDURALES DE LUJO",sizeLbl:"TAMAÑO DEL NIVEL",sizeFit:"AJUSTE",sizeWide:"ANCHO",sizeTall:"ALTO",
+ relLbl:"RELACIÓN CON LA CPU",relCoop:"COOPERATIVA",relHostile:"HOSTIL",
+ startNewBtn:"EMPEZAR PARTIDA",codeLbl:"CONTINUAR CON CÓDIGO",
+ seedPh:"semilla (opcional)",codePh:"pega el código",
+ ctrlHint:"WASD / Flechas · X/Space bomba · Z mando · L bomba J2 · K mando J2 · Esc pausa",
+ pauseSubFmt:"NV {n} · TOTAL {m}",replayLevel:"REPETIR NIVEL",passLbl:"CÓDIGO",
+ copyPass:"GUARDAR Y COPIAR CÓDIGO",mainMenu:"MENÚ PRINCIPAL",escResume:"ESC o pulsa ⏸ para continuar",
+ over1:"PARTIDA",over2:" PERDIDA",overSub:"EL NIVEL GANA ESTA RONDA",
+ overTotalFmt:"TOTAL {n}",overReachedFmt:"Nivel alcanzado: {n}",
+ clear1:"NIVEL",clear2:" SUPERADO",clearSubFmt:"NIVEL {n} SUPERADO",nextCourse:"SIGUIENTE NIVEL"
+},
+pt:{
+ canvasErr:"Canvas 2D não disponível.",
+ hudTotal:"TOTAL",hudLvFmt:"NV{n}",hudScFmt:"PTS {n}",hudBombFmt:"B{n}",hudFireFmt:"F{n}",hudPlyFmt:"J{n}",hudCpuFmt:"C{n}",
+ helpSub:"MANUAL DO JOGO",hObjects:"OBJETOS",hPrizes:"PRÊMIOS",hEnemies:"INIMIGOS",
+ ob_floor:"Piso",ob_floor_d:"Área livre por onde você anda.",
+ ob_brick:"Tijolo",ob_brick_d:"Bloque destrutível. Pode esconder um prêmio.",
+ ob_wall:"Parede",ob_wall_d:"Bloque sólido e indestrutível.",
+ ob_bomb:"Bomba",ob_bomb_d:"Explode depois de um pavio curto.",
+ ob_mine:"Mina",ob_mine_d:"Bomba ativada por inimigos. Sem o controle remoto, também explode com pavio normal.",
+ ob_portalLock:"Portal travado",ob_portalLock_d:"Saída. Trancada até eliminar os inimigos ou usar uma chave.",
+ ob_portalOn:"Portal aberto",ob_portalOn_d:"Entre neste portal para completar a fase.",
+ pu_bomb:"Mais bombas",pu_bomb_d:"Carrega uma bomba extra ao mesmo tempo.",
+ pu_fire:"Mais poder",pu_fire_d:"Aumenta o raio da explosão em uma casa.",
+ pu_speed:"Mais velocidade",pu_speed_d:"Mova-se mais rápido.",
+ pu_fullfire:"Poder máximo",pu_fullfire_d:"O raio da explosão fica no máximo.",
+ pu_heart:"Coração",pu_heart_d:"Absorve um golpe fatal.",
+ pu_oneup:"1-Up",pu_oneup_d:"Dá uma vida extra.",
+ pu_shield:"Escudo",pu_shield_d:"Invencibilidade temporária.",
+ pu_remote:"Controle",pu_remote_d:"As bombas são detonadas manualmente com o botão de controle.",
+ pu_power:"Bomba poderosa",pu_power_d:"Sua próxima bomba explode no máximo.",
+ pu_spike:"Bomba perfurante",pu_spike_d:"A explosão atravessa os tijolos destruídos.",
+ pu_mine:"Mina",pu_mine_d:"Explode quando um inimigo a toca. Sem controle, também explode com pavio normal.",
+ pu_danger:"Bomba perigosa",pu_danger_d:"Explode em uma área 3x3.",
+ pu_key:"Chave",pu_key_d:"Revela e abre a saída na hora.",
+ pu_gem:"Gema",pu_gem_d:"Pontos extras.",
+ pu_clock:"Relógio",pu_clock_d:"Congela os inimigos por um tempo.",
+ foe_0:"Bolota",foe_0_d:"Lento e fraco. Vaga sem rumo.",
+ foe_1:"Veloz",foe_1_d:"Muito rápido mas frágil.",
+ foe_2:"Caçador",foe_2_d:"Persegue os jogadores.",
+ foe_3:"Bombardeiro",foe_3_d:"Pode atravessar bombas.",
+ foe_4:"Fantasma",foe_4_d:"Atravessa paredes e bombas.",
+ foe_5:"Tanque",foe_5_d:"Lento, mas aguenta vários golpes.",
+ foe_6:"Balão",foe_6_d:"Flutua entre obstáculos, errático.",
+ foe_7:"Boneca",foe_7_d:"Cautelosa. Tenta evitar as explosões.",
+ foe_8:"Morcego",foe_8_d:"Rápido e errático. Atravessa bombas.",
+ foe_9:"Caveira",foe_9_d:"Esperto e resistente. Evita o perigo.",
+ foe_10:"Cavaleiro",foe_10_d:"Muito resistente, lento.",
+ foe_11:"Mago",foe_11_d:"Esperto. Atravessa paredes.",
+ menuSub:"FASES PROCEDURAIS PREMIUM",sizeLbl:"TAMANHO DA FASE",sizeFit:"AJUSTE",sizeWide:"LARGO",sizeTall:"ALTO",
+ relLbl:"RELAÇÃO COM A CPU",relCoop:"COOPERATIVO",relHostile:"HOSTIL",
+ startNewBtn:"INICIAR NOVO JOGO",codeLbl:"CONTINUAR COM CÓDIGO",
+ seedPh:"semente (opcional)",codePh:"cole o código",
+ ctrlHint:"WASD / Setas · X/Space bomba · Z controle · L bomba J2 · K controle J2 · Esc pausa",
+ pauseSubFmt:"FASE {n} · TOTAL {m}",replayLevel:"REPETIR FASE",passLbl:"CÓDIGO",
+ copyPass:"SALVAR E COPIAR CÓDIGO",mainMenu:"MENU PRINCIPAL",escResume:"ESC ou toque em ⏸ para continuar",
+ over1:"FIM",over2:" DE JOGO",overSub:"A FASE GANHA ESSA RODADA",
+ overTotalFmt:"TOTAL {n}",overReachedFmt:"Você chegou ao nível {n}",
+ clear1:"FASE",clear2:" COMPLETA",clearSubFmt:"FASE {n} COMPLETA",nextCourse:"PRÓXIMA FASE"
+},
+ru:{
+ canvasErr:"Canvas 2D недоступен.",
+ hudTotal:"ВСЕГО",hudLvFmt:"УР{n}",hudScFmt:"ОЧ {n}",hudBombFmt:"Б{n}",hudFireFmt:"О{n}",hudPlyFmt:"И{n}",hudCpuFmt:"К{n}",
+ helpSub:"ИНСТРУКТАЖ",hObjects:"ОБЪЕКТЫ",hPrizes:"ПРИЗЫ",hEnemies:"ВРАГИ",
+ ob_floor:"Пол",ob_floor_d:"Открытый участок, по которому можно ходить.",
+ ob_brick:"Кирпич",ob_brick_d:"Разрушаемый блок. Может прятать приз.",
+ ob_wall:"Стена",ob_wall_d:"Прочный неразрушимый блок.",
+ ob_bomb:"Бомба",ob_bomb_d:"Взрывается через короткий фитиль.",
+ ob_mine:"Мина",ob_mine_d:"Бомба, срабатывающая от врага. Без пульта также взрывается по обычному фитилю.",
+ ob_portalLock:"Портал закрыт",ob_portalLock_d:"Выход. Заперт, пока не уничтожены враги или не использован ключ.",
+ ob_portalOn:"Портал открыт",ob_portalOn_d:"Войдите в портал, чтобы пройти уровень.",
+ pu_bomb:"Больше бомб",pu_bomb_d:"Переноси одну дополнительную бомбу сразу.",
+ pu_fire:"Огонь вверх",pu_fire_d:"Увеличивает радиус взрыва на клетку.",
+ pu_speed:"Скорость вверх",pu_speed_d:"Двигайся быстрее.",
+ pu_fullfire:"Максимум огня",pu_fullfire_d:"Радиус взрыва становится максимальным.",
+ pu_heart:"Сердце",pu_heart_d:"Поглощает один смертельный удар.",
+ pu_oneup:"+1 жизнь",pu_oneup_d:"Даёт одну дополнительную жизнь.",
+ pu_shield:"Щит",pu_shield_d:"Временная неуязвимость.",
+ pu_remote:"Пульт",pu_remote_d:"Бомбы взрывают вручную кнопкой пульта.",
+ pu_power:"Мощная бомба",pu_power_d:"Следующая бомба бьёт на максимум.",
+ pu_spike:"Сквозная бомба",pu_spike_d:"Взрыв идёт сквозь разрушенные кирпичи.",
+ pu_mine:"Мина",pu_mine_d:"Взрывается, когда её касается враг. Без пульта взрывается и по обычному фитилю.",
+ pu_danger:"Опасная бомба",pu_danger_d:"Взрыв в области 3x3.",
+ pu_key:"Ключ",pu_key_d:"Сразу открывает портал выхода.",
+ pu_gem:"Самоцвет",pu_gem_d:"Бонусные очки.",
+ pu_clock:"Часы",pu_clock_d:"Замораживает всех врагов на время.",
+ foe_0:"Липун",foe_0_d:"Медленный и слабый. Бродит как попало.",
+ foe_1:"Спринтер",foe_1_d:"Очень быстрый, но хрупкий.",
+ foe_2:"Охотник",foe_2_d:"Активно преследует игроков.",
+ foe_3:"Бомбист",foe_3_d:"Проходит сквозь бомбы.",
+ foe_4:"Призрак",foe_4_d:"Проходит сквозь стены и бомбы.",
+ foe_5:"Танк",foe_5_d:"Медленный, но держит несколько ударов.",
+ foe_6:"Шар",foe_6_d:"Плавает сквозь препятствия, непредсказуем.",
+ foe_7:"Кукла",foe_7_d:"Осторожна. Старается избегать взрывов.",
+ foe_8:"Нетопырь",foe_8_d:"Быстрый и непредсказуемый. Проходит сквозь бомбы.",
+ foe_9:"Череп",foe_9_d:"Умный и крепкий. Обходит опасности.",
+ foe_10:"Рыцарь",foe_10_d:"Очень крепкий, медленный.",
+ foe_11:"Волшебник",foe_11_d:"Умный. Проходит сквозь стены.",
+ menuSub:"ПРОЦЕДУРНЫЕ УРОВНИ ДЕЛЮКС",sizeLbl:"РАЗМЕР УРОВНЯ",sizeFit:"ПО ЭКРАНУ",sizeWide:"ШИРОКИЙ",sizeTall:"ВЫСОКИЙ",
+ relLbl:"ОТНОШЕНИЯ С КОМПЬЮТЕРОМ",relCoop:"КООПЕРАЦИЯ",relHostile:"ВРАЖДЕНИЕ",
+ startNewBtn:"НОВАЯ ИГРА",codeLbl:"ПРОДОЛЖИТЬ ПО КОДУ",
+ seedPh:"код уровня (необязательно)",codePh:"вставьте код",
+ ctrlHint:"WASD / Стрелки · X/Space бомба · Z пульт · L бомба И2 · K пульт И2 · Esc пауза",
+ pauseSubFmt:"УР {n} · ВСЕГО {m}",replayLevel:"ЗАНОВО УРОВЕНЬ",passLbl:"КОД ПРОХОДА",
+ copyPass:"СОХРАНИТЬ И СКОПИРОВАТЬ КОД",mainMenu:"ГЛАВНОЕ МЕНЮ",escResume:"ESC или нажмите ⏸, чтобы продолжить",
+ over1:"ИГРА",over2:" ОКОНЧЕНА",overSub:"В ЭТОМ РАУНДЕ ПОБЕЖДАЕТ УРОВЕНЬ",
+ overTotalFmt:"ВСЕГО {n}",overReachedFmt:"Достигнут уровень {n}",
+ clear1:"УРОВЕНЬ",clear2:" ПРОЙДЕН",clearSubFmt:"УРОВЕНЬ {n} ПРОЙДЕН",nextCourse:"СЛЕДУЮЩИЙ УРОВЕНЬ"
+},
+zh:{
+ canvasErr:"Canvas 2D 不可用。",
+ hudTotal:"总分",hudLvFmt:"关{n}",hudScFmt:"分{n}",hudBombFmt:"弹{n}",hudFireFmt:"爆{n}",hudPlyFmt:"P{n}",hudCpuFmt:"C{n}",
+ helpSub:"作战手册",hObjects:"物件",hPrizes:"道具",hEnemies:"敌人",
+ ob_floor:"地板",ob_floor_d:"可以走通的空地。",
+ ob_brick:"砖块",ob_brick_d:"可破坏的方块,可能藏着道具。",
+ ob_wall:"墙壁",ob_wall_d:"坚固而不可破坏的方块。",
+ ob_bomb:"炸弹",ob_bomb_d:"引信很短,随即爆炸。",
+ ob_mine:"地雷",ob_mine_d:"敌人踩到才炸。没有遥控时也会按普通引信爆炸。",
+ ob_portalLock:"传送门关闭",ob_portalLock_d:"出口。消灭全部敌人或使用钥匙前无法进入。",
+ ob_portalOn:"传送门开启",ob_portalOn_d:"进入此传送门即可过关。",
+ pu_bomb:"炸弹+1",pu_bomb_d:"同时多携带一枚炸弹。",
+ pu_fire:"火力提升",pu_fire_d:"爆炸范围增加一格。",
+ pu_speed:"速度提升",pu_speed_d:"移动更快。",
+ pu_fullfire:"满火力",pu_fullfire_d:"爆炸范围达到最大。",
+ pu_heart:"爱心",pu_heart_d:"抵挡一次致命伤害。",
+ pu_oneup:"加命",pu_oneup_d:"获得一条额外生命。",
+ pu_shield:"护盾",pu_shield_d:"短暂无敌。",
+ pu_remote:"遥控器",pu_remote_d:"需用遥控按钮手动引爆炸弹。",
+ pu_power:"强力炸弹",pu_power_d:"下一枚炸弹范围最大。",
+ pu_spike:"穿砖炸弹",pu_spike_d:"爆炸可穿透已破坏的砖块。",
+ pu_mine:"地雷",pu_mine_d:"敌人碰到即爆炸。没有遥控时也会按普通引信爆炸。",
+ pu_danger:"危险炸弹",pu_danger_d:"在3x3范围内爆炸。",
+ pu_key:"钥匙",pu_key_d:"立即显示并打开出口传送门。",
+ pu_gem:"宝石",pu_gem_d:"额外得分。",
+ pu_clock:"时钟",pu_clock_d:"短暂冻结所有敌人。",
+ foe_0:"黏怪",foe_0_d:"缓慢弱小,四处游荡。",
+ foe_1:"冲刺者",foe_1_d:"极快但脆弱。",
+ foe_2:"猎手",foe_2_d:"主动追击玩家。",
+ foe_3:"炸弹客",foe_3_d:"可穿过炸弹。",
+ foe_4:"幽灵",foe_4_d:"穿墙也穿炸弹。",
+ foe_5:"坦克",foe_5_d:"缓慢,要打好几下。",
+ foe_6:"气球",foe_6_d:"飘过障碍,轨迹不定。",
+ foe_7:"人偶",foe_7_d:"谨慎,会躲开爆炸。",
+ foe_8:"蝙蝠",foe_8_d:"快速飘忽,能穿过炸弹。",
+ foe_9:"骷髅",foe_9_d:"聪明耐打,会避开危险。",
+ foe_10:"骑士",foe_10_d:"极耐打,但缓慢。",
+ foe_11:"巫师",foe_11_d:"聪明,能穿墙。",
+ menuSub:"豪华随机关卡",sizeLbl:"关卡大小",sizeFit:"适应屏幕",sizeWide:"宽屏",sizeTall:"高屏",
+ relLbl:"电脑阵营",relCoop:"合作",relHostile:"敌对",
+ startNewBtn:"开始新游戏",codeLbl:"用密码继续",
+ seedPh:"种子(可选)",codePh:"粘贴密码",
+ ctrlHint:"WASD/方向键 · X/Space 放炸弹 · Z 遥控 · L 玩家2放炸弹 · K 玩家2遥控 · Esc 暂停",
+ pauseSubFmt:"第{n}关 · 总分{m}",replayLevel:"重玩本关",passLbl:"密码",
+ copyPass:"保存并复制密码",mainMenu:"主菜单",escResume:"按 ESC 或点 ⏸ 继续",
+ over1:"游戏",over2:"结束",overSub:"本轮由关卡获胜",
+ overTotalFmt:"总分{n}",overReachedFmt:"到达第{n}关",
+ clear1:"关卡",clear2:"通过",clearSubFmt:"第{n}关完成",nextCourse:"下一关"
+}
+});
+TLI18N.mount("#panel");
+</script>
 <script>
 (function(){
 "use strict";
@@ -160,21 +699,21 @@ var T={
 };
 
 var PU=[
- {id:'bomb',w:10,c1:'#5ad2ff',c2:'#0d4d9e',name:'Bomb Up',text:'Carry one extra bomb at the same time.'},
- {id:'fire',w:10,c1:'#ffb14d',c2:'#a83a10',name:'Fire Up',text:'Increases blast radius by one tile.'},
- {id:'speed',w:8,c1:'#9dff6b',c2:'#1b7a26',name:'Speed Up',text:'Move faster.'},
- {id:'fullfire',w:3,c1:'#ffdd00',c2:'#c04a00',name:'Full Fire',text:'Blast radius becomes maximum.'},
- {id:'heart',w:6,c1:'#ff5577',c2:'#99001e',name:'Heart',text:'Absorbs one fatal hit.'},
- {id:'oneup',w:4,c1:'#88ff88',c2:'#008040',name:'1-Up',text:'Grants one extra life.'},
- {id:'shield',w:4,c1:'#aaffee',c2:'#1e7a9c',name:'Shield',text:'Temporary invincibility.'},
- {id:'remote',w:6,c1:'#ff88ff',c2:'#7d007d',name:'Remote',text:'Bombs must be detonated manually with the remote button.'},
- {id:'power',w:5,c1:'#ff5522',c2:'#5c0000',name:'Power Bomb',text:'Your next bomb has maximum blast radius.'},
- {id:'spike',w:5,c1:'#dcdcdc',c2:'#2e2e2e',name:'Spike Bomb',text:'Blasts continue through destroyed bricks.'},
- {id:'mine',w:4,c1:'#996644',c2:'#2b0e00',name:'Land Mine',text:'Explodes when an enemy touches it. Without remote it also explodes on a normal fuse.'},
- {id:'danger',w:4,c1:'#ff0033',c2:'#2b0000',name:'Danger Bomb',text:'Explodes in a 3x3 area.'},
- {id:'key',w:1,c1:'#ffd700',c2:'#7a4a00',name:'Key',text:'Immediately reveals and opens the exit portal.'},
- {id:'gem',w:8,c1:'#44ddff',c2:'#004a77',name:'Gem',text:'Bonus score.'},
- {id:'clock',w:3,c1:'#ffffff',c2:'#556688',name:'Clock',text:'Freezes all enemies for a short time.'}
+ {id:'bomb',w:10,c1:'#5ad2ff',c2:'#0d4d9e'},
+ {id:'fire',w:10,c1:'#ffb14d',c2:'#a83a10'},
+ {id:'speed',w:8,c1:'#9dff6b',c2:'#1b7a26'},
+ {id:'fullfire',w:3,c1:'#ffdd00',c2:'#c04a00'},
+ {id:'heart',w:6,c1:'#ff5577',c2:'#99001e'},
+ {id:'oneup',w:4,c1:'#88ff88',c2:'#008040'},
+ {id:'shield',w:4,c1:'#aaffee',c2:'#1e7a9c'},
+ {id:'remote',w:6,c1:'#ff88ff',c2:'#7d007d'},
+ {id:'power',w:5,c1:'#ff5522',c2:'#5c0000'},
+ {id:'spike',w:5,c1:'#dcdcdc',c2:'#2e2e2e'},
+ {id:'mine',w:4,c1:'#996644',c2:'#2b0e00'},
+ {id:'danger',w:4,c1:'#ff0033',c2:'#2b0000'},
+ {id:'key',w:1,c1:'#ffd700',c2:'#7a4a00'},
+ {id:'gem',w:8,c1:'#44ddff',c2:'#004a77'},
+ {id:'clock',w:3,c1:'#ffffff',c2:'#556688'}
 ];
 var PU_BY_ID={},PU_TOTAL_W=0;
 for(var puIndex=0;puIndex<PU.length;puIndex++){
@@ -192,18 +731,18 @@ function pickPrize(){
 }
 
 var ETYPES=[
- {name:'Blob',desc:'Slow and weak. Wanders around.',speed:1.6,hp:1,wall:0,bomb:0,smart:0,err:0},
- {name:'Sprinter',desc:'Very fast but fragile.',speed:3.0,hp:1,wall:0,bomb:0,smart:0,err:0},
- {name:'Hunter',desc:'Actively hunts players.',speed:2.1,hp:1,wall:0,bomb:0,smart:1,err:0},
- {name:'Bomber',desc:'Can pass through bombs.',speed:2.0,hp:1,wall:0,bomb:1,smart:0,err:0},
- {name:'Ghost',desc:'Passes through walls and bombs.',speed:1.5,hp:1,wall:1,bomb:1,smart:0,err:0},
- {name:'Tank',desc:'Slow, but takes several hits.',speed:1.0,hp:3,wall:0,bomb:0,smart:0,err:0},
- {name:'Balloon',desc:'Floats through obstacles, erratic.',speed:1.3,hp:1,wall:1,bomb:1,smart:0,err:1},
- {name:'Doll',desc:'Cautious. Tries to avoid blasts.',speed:1.9,hp:1,wall:0,bomb:0,smart:0,err:0},
- {name:'Bat',desc:'Fast and erratic. Passes bombs.',speed:2.8,hp:1,wall:0,bomb:1,smart:0,err:1},
- {name:'Skull',desc:'Smart and tougher. Avoids danger.',speed:2.0,hp:2,wall:0,bomb:0,smart:1,err:0},
- {name:'Knight',desc:'Very tough, slow.',speed:1.2,hp:4,wall:0,bomb:0,smart:0,err:0},
- {name:'Wizard',desc:'Smart. Phases through walls.',speed:1.8,hp:2,wall:1,bomb:0,smart:1,err:0}
+ {speed:1.6,hp:1,wall:0,bomb:0,smart:0,err:0},
+ {speed:3.0,hp:1,wall:0,bomb:0,smart:0,err:0},
+ {speed:2.1,hp:1,wall:0,bomb:0,smart:1,err:0},
+ {speed:2.0,hp:1,wall:0,bomb:1,smart:0,err:0},
+ {speed:1.5,hp:1,wall:1,bomb:1,smart:0,err:0},
+ {speed:1.0,hp:3,wall:0,bomb:0,smart:0,err:0},
+ {speed:1.3,hp:1,wall:1,bomb:1,smart:0,err:1},
+ {speed:1.9,hp:1,wall:0,bomb:0,smart:0,err:0},
+ {speed:2.8,hp:1,wall:0,bomb:1,smart:0,err:1},
+ {speed:2.0,hp:2,wall:0,bomb:0,smart:1,err:0},
+ {speed:1.2,hp:4,wall:0,bomb:0,smart:0,err:0},
+ {speed:1.8,hp:2,wall:1,bomb:0,smart:1,err:0}
 ];
 var ECOLS=[
  {a:'#ff5f7a',b:'#a3102c',c:'#ffd0d8'},
@@ -222,8 +761,8 @@ var ECOLS=[
 
 /* dom/state */
 var canvas=$('c'),ctx=canvas.getContext('2d');
-var overlay=$('overlay'),panel=$('panel'),hud=$('hud');
-if(!ctx){panel.innerHTML='<div class="err">Canvas 2D not available.</div>';return;}
+var overlay=$('overlay'),panel=$('panel'),panelBody=$('panelBody'),hud=$('hud');
+if(!ctx){panelBody.innerHTML='<div class="err" data-t="canvasErr">Canvas 2D not available.</div>';return;}
 
 var GW=15,GH=13,grid=null;
 var players=[],enemies=[],bombs=[],blasts=[],powerups=[];
@@ -732,7 +1271,7 @@ function buildHud(){
   });
  }
  var total=document.createElement('div');total.id='total';
- total.innerHTML='<span>TOTAL</span><b>0</b>';
+ total.innerHTML='<span data-t="hudTotal">TOTAL</span><b>0</b>';
  hud.appendChild(total);
  hudTotalEl=total.querySelector('b');
 
@@ -751,12 +1290,12 @@ function updateHud(){
  var i,p,c;
  for(i=0;i<players.length;i++){
   p=players[i];c=hudCards[i];
-  setTxt(c.name,p.cpu?('C'+(i+1)):('P'+(i+1)));
-  setTxt(c.lv,'LV'+level);
+  setTxt(c.name,TLI18N.t(p.cpu?'hudCpuFmt':'hudPlyFmt',{n:i+1}));
+  setTxt(c.lv,TLI18N.t('hudLvFmt',{n:level}));
   setTxt(c.hp,'♥'+Math.max(0,p.lives));
-  setTxt(c.b,'B'+p.maxBombs);
-  setTxt(c.f,'F'+p.fire);
-  setTxt(c.score,'SC '+(p.score||0));
+  setTxt(c.b,TLI18N.t('hudBombFmt',{n:p.maxBombs}));
+  setTxt(c.f,TLI18N.t('hudFireFmt',{n:p.fire}));
+  setTxt(c.score,TLI18N.t('hudScFmt',{n:(p.score||0)}));
   var sig=p.alive?JSON.stringify(buffList(p)):'DEAD';
   if(c.sig!==sig){
    c.sig=sig;
@@ -783,28 +1322,28 @@ function updateHud(){
  forceHud=false;
 }
 
-/* help */
-function helpRow(tile,title,desc){
+/* help — every row carries translation keys; the kit fills data-t on insert and on language switch */
+function helpRow(tile,nameKey,descKey){
  return '<div class="helpRow"><canvas class="hicon" data-tile="'+tile+'" width="32" height="32"></canvas>'+
-  '<div><b>'+title+'</b><br>'+desc+'</div></div>';
+  '<div><b data-t="'+nameKey+'"></b><br><span data-t="'+descKey+'"></span></div></div>';
 }
 function showHelp(from){
  helpFrom=from;
- var html='<h1>HELP</h1><div class="sub">FIELD MANUAL</div>';
- html+='<div class="lbl">OBJECTS</div>';
- html+=helpRow(T.FLOOR_A,'Floor','Open walkable ground.');
- html+=helpRow(T.BRICK,'Brick','Destructible block. May hide a prize.');
- html+=helpRow(T.WALL,'Wall','Solid indestructible block.');
- html+=helpRow(T.BOMB0,'Bomb','Explodes after a short fuse.');
- html+=helpRow(PU_BY_ID.mine.tile,'Land Mine','Enemy-triggered bomb. If not remote-controlled, it also explodes on a normal fuse.');
- html+=helpRow(T.PORTAL_OFF,'Portal locked','Exit portal. Locked until enemies are cleared or a key is used.');
- html+=helpRow(T.PORTAL_ON,'Portal active','Enter this portal to clear the level.');
- html+='<div class="lbl">PRIZES</div>';
- for(var i=0;i<PU.length;i++)html+=helpRow(PU[i].tile,PU[i].name,PU[i].text);
- html+='<div class="lbl">ENEMIES</div>';
- for(var e=0;e<ETYPES.length;e++)html+=helpRow(T.E0+e*2,ETYPES[e].name,ETYPES[e].desc);
- html+='<button data-act="helpBack">BACK</button>';
- showPanel(html);
+ var html='<h1>'+TLI18N.t('help')+'</h1><div class="sub" data-t="helpSub">FIELD MANUAL</div>';
+ html+='<div class="lbl" data-t="hObjects">OBJECTS</div>';
+ html+=helpRow(T.FLOOR_A,'ob_floor','ob_floor_d');
+ html+=helpRow(T.BRICK,'ob_brick','ob_brick_d');
+ html+=helpRow(T.WALL,'ob_wall','ob_wall_d');
+ html+=helpRow(T.BOMB0,'ob_bomb','ob_bomb_d');
+ html+=helpRow(PU_BY_ID.mine.tile,'ob_mine','ob_mine_d');
+ html+=helpRow(T.PORTAL_OFF,'ob_portalLock','ob_portalLock_d');
+ html+=helpRow(T.PORTAL_ON,'ob_portalOn','ob_portalOn_d');
+ html+='<div class="lbl" data-t="hPrizes">PRIZES</div>';
+ for(var i=0;i<PU.length;i++)html+=helpRow(PU[i].tile,'pu_'+PU[i].id,'pu_'+PU[i].id+'_d');
+ html+='<div class="lbl" data-t="hEnemies">ENEMIES</div>';
+ for(var e=0;e<ETYPES.length;e++)html+=helpRow(T.E0+e*2,'foe_'+e,'foe_'+e+'_d');
+ html+='<button data-act="helpBack">'+TLI18N.t('back')+'</button>';
+ showPanel(html,function(){showHelp(from);});
  var cvs=panel.querySelectorAll('canvas.hicon');
  for(var c=0;c<cvs.length;c++){
   var tile=parseInt(cvs[c].getAttribute('data-tile'),10);
@@ -1724,12 +2263,7 @@ function killPlayer(pl){
   state='gameover';
   setTimeout(function(){
    if(state!=='gameover')return;
-   showPanel('<h1>GAME<span> OVER</span></h1><div class="sub">THE COURSE WINS THIS ROUND</div>'+
-    '<div class="big">TOTAL '+totalScore()+'</div><div class="hint">Reached level '+level+'</div>'+
-    '<button data-act="retry">TRY AGAIN</button>'+
-    '<div class="row3"><button class="alt" data-act="help">HELP</button>'+
-    '<button class="alt" data-act="menu">MENU</button>'+
-    '<button class="home" data-act="home">HOME</button></div>');
+   showGameOver();
   },650);
  }
 }
@@ -1927,10 +2461,7 @@ function update(dt){
     var cap=level;
     setTimeout(function(){
      if(state!=='levelclear')return;
-     showPanel('<h1>LEVEL<span> CLEAR</span></h1><div class="sub">COURSE '+cap+' COMPLETE</div>'+
-      '<div class="big">TOTAL '+totalScore()+'</div><button data-act="next">NEXT COURSE</button>'+
-      '<div class="row2" style="margin-top:6px"><button class="alt" data-act="menu">MAIN MENU</button>'+
-      '<button class="home" data-act="home">HOME</button></div>');
+     showClear(cap);
     },550);
     break;
    }
@@ -2112,49 +2643,80 @@ function render(){
 }
 
 /* panels */
-function showPanel(html){panel.innerHTML=html;overlay.style.display='block';}
-function hidePanel(){overlay.style.display='none';}
+var panelRepaint=null; // rebuilds the panel that is on screen, in the current language
+function showPanel(html,repack){
+ panelBody.innerHTML=html;
+ panelRepaint=repack||null;
+ TLI18N.apply(panelBody);
+ overlay.style.display='block';
+}
+function hidePanel(){overlay.style.display='none';panelRepaint=null;}
+TLI18N.onChange(function(){
+ if(panelRepaint&&overlay.style.display==='block')panelRepaint();
+ forceHud=true;
+ updateHud();
+});
 function pickBtns(grp,cur,vals){
+ // labels are translation keys; language-neutral codes (1P, 2P, +1C, L, XL) have no
+ // table entry, and t() hands such a key back unchanged
  var out='';
  for(var i=0;i<vals.length;i++){
-  out+='<button class="pick '+(cur===vals[i][0]?'on':'')+'" data-grp="'+grp+'" data-val="'+vals[i][0]+'">'+vals[i][1]+'</button>';
+  out+='<button class="pick '+(cur===vals[i][0]?'on':'')+'" data-grp="'+grp+'" data-val="'+vals[i][0]+'">'+TLI18N.t(vals[i][1])+'</button>';
  }
  return out;
 }
 function showMenu(){
  state='menu';splitOn=wasSplit=false;
  var saved=lsGet(PASS_KEY)||'';
+ var keepSeed=$('seedIn')?$('seedIn').value:'';
  showPanel('<h1>BOMB<span>BLASTER</span></h1>'+
-  '<div class="sub">DELUXE PROCEDURAL COURSES</div>'+
-  '<input id="seedIn" placeholder="seed (optional)" maxlength="14" autocomplete="off" spellcheck="false">'+
-  '<div class="lbl">LEVEL SIZE</div><div class="row5">'+pickBtns('size',levelSize,[['fit','FIT'],['wide','WIDE'],['tall','TALL'],['large','L'],['huge','XL']])+'</div>'+
-  '<div class="lbl">PLAYERS</div><div class="row5">'+pickBtns('mode',playerMode,[['1p','1P'],['2p','2P'],['cpu1','+1C'],['cpu2','+2C'],['cpu3','+3C']])+'</div>'+
-  '<div class="lbl">CPU RELATIONS</div><div class="row2">'+pickBtns('rel',hostile?'hostile':'coop',[['coop','CO-OP'],['hostile','HOSTILE']])+'</div>'+
-  '<button data-act="play" style="margin-top:10px">START NEW GAME</button>'+
+  '<div class="sub">'+TLI18N.t('menuSub')+'</div>'+
+  '<input id="seedIn" data-ph="seedPh" placeholder="seed (optional)" maxlength="14" autocomplete="off" spellcheck="false">'+
+  '<div class="lbl">'+TLI18N.t('sizeLbl')+'</div><div class="row5">'+pickBtns('size',levelSize,[['fit','sizeFit'],['wide','sizeWide'],['tall','sizeTall'],['large','L'],['huge','XL']])+'</div>'+
+  '<div class="lbl">'+TLI18N.t('players')+'</div><div class="row5">'+pickBtns('mode',playerMode,[['1p','1P'],['2p','2P'],['cpu1','+1C'],['cpu2','+2C'],['cpu3','+3C']])+'</div>'+
+  '<div class="lbl">'+TLI18N.t('relLbl')+'</div><div class="row2">'+pickBtns('rel',hostile?'hostile':'coop',[['coop','relCoop'],['hostile','relHostile']])+'</div>'+
+  '<button data-act="play" style="margin-top:10px">'+TLI18N.t('startNewBtn')+'</button>'+
   '<div class="row2" style="margin-top:6px">'+
-  '<button class="alt" data-act="help">HELP</button>'+
-  '<button class="home" data-act="home">HOME</button>'+
+  '<button class="alt" data-act="help">'+TLI18N.t('help')+'</button>'+
+  '<button class="home" data-act="home">'+TLI18N.t('home')+'</button>'+
   '</div>'+
-  '<div class="lbl">CONTINUE FROM PASSCODE</div>'+
-  '<input id="codeIn" class="code" placeholder="paste passcode" value="'+saved+'">'+
-  '<button class="alt" data-act="continue">CONTINUE</button>'+
-  '<div class="hint">WASD / Arrows · X/Space bomb · Z remote · L P2 bomb · K P2 remote · Esc pause</div>');
+  '<div class="lbl">'+TLI18N.t('codeLbl')+'</div>'+
+  '<input id="codeIn" class="code" data-ph="codePh" placeholder="paste passcode" value="'+saved+'">'+
+  '<button class="alt" data-act="continue">'+TLI18N.t('continue')+'</button>'+
+  '<div class="hint">'+TLI18N.t('ctrlHint')+'</div>',showMenu);
  updateTouch();
+ var seedIn=$('seedIn');if(seedIn&&keepSeed)seedIn.value=keepSeed;
 }
 function showPause(){
  if(state!=='playing'&&state!=='paused')return;
  state='paused';
  var code=encodePass();
  lsSet(PASS_KEY,code);
- showPanel('<h1>PAUSED</h1><div class="sub">LV '+level+' · TOTAL '+totalScore()+'</div>'+
-  '<button data-act="resume">CONTINUE</button>'+
-  '<button class="alt" data-act="replay">REPLAY LEVEL</button>'+
-  '<button class="alt" data-act="help">HELP</button>'+
-  '<div class="lbl">PASSCODE</div><input id="pauseCode" class="code" readonly value="'+code+'">'+
-  '<button class="alt" data-act="copy">SAVE &amp; COPY PASSCODE</button>'+
-  '<div class="row2" style="margin-top:8px"><button class="alt" data-act="menu">MAIN MENU</button>'+
-  '<button class="home" data-act="home">HOME</button></div>'+
-  '<div class="hint">ESC or tap ⏸ to resume</div>');
+ showPanel('<h1>'+TLI18N.t('paused')+'</h1><div class="sub">'+TLI18N.t('pauseSubFmt',{n:level,m:totalScore()})+'</div>'+
+  '<button data-act="resume">'+TLI18N.t('continue')+'</button>'+
+  '<button class="alt" data-act="replay">'+TLI18N.t('replayLevel')+'</button>'+
+  '<button class="alt" data-act="help">'+TLI18N.t('help')+'</button>'+
+  '<div class="lbl">'+TLI18N.t('passLbl')+'</div><input id="pauseCode" class="code" readonly value="'+code+'">'+
+  '<button class="alt" data-act="copy">'+TLI18N.t('copyPass')+'</button>'+
+  '<div class="row2" style="margin-top:8px"><button class="alt" data-act="menu">'+TLI18N.t('mainMenu')+'</button>'+
+  '<button class="home" data-act="home">'+TLI18N.t('home')+'</button></div>'+
+  '<div class="hint">'+TLI18N.t('escResume')+'</div>',showPause);
+}
+function showGameOver(){
+ showPanel('<h1>'+TLI18N.t('over1')+'<span>'+TLI18N.t('over2')+'</span></h1>'+
+  '<div class="sub">'+TLI18N.t('overSub')+'</div>'+
+  '<div class="big">'+TLI18N.t('overTotalFmt',{n:totalScore()})+'</div><div class="hint">'+TLI18N.t('overReachedFmt',{n:level})+'</div>'+
+  '<button data-act="retry">'+TLI18N.t('tryAgain')+'</button>'+
+  '<div class="row3"><button class="alt" data-act="help">'+TLI18N.t('help')+'</button>'+
+  '<button class="alt" data-act="menu">'+TLI18N.t('menu')+'</button>'+
+  '<button class="home" data-act="home">'+TLI18N.t('home')+'</button></div>',showGameOver);
+}
+function showClear(cap){
+ showPanel('<h1>'+TLI18N.t('clear1')+'<span>'+TLI18N.t('clear2')+'</span></h1>'+
+  '<div class="sub">'+TLI18N.t('clearSubFmt',{n:cap})+'</div>'+
+  '<div class="big">'+TLI18N.t('overTotalFmt',{n:totalScore()})+'</div><button data-act="next">'+TLI18N.t('nextCourse')+'</button>'+
+  '<div class="row2" style="margin-top:6px"><button class="alt" data-act="menu">'+TLI18N.t('mainMenu')+'</button>'+
+  '<button class="home" data-act="home">'+TLI18N.t('home')+'</button></div>',function(){showClear(cap);});
 }
 function encodePass(){
  return b64e(JSON.stringify({
@@ -2377,6 +2939,40 @@ function frame(now){
 }
 requestAnimationFrame(frame);
 
+/* Developer harness bridge (?debug=dbg/bomberman.js): names only, no logic, no
+   listeners. Game behaviour is identical with and without the debug parameter. */
+window.TLHOOK = {
+  get state() { return state }, set state(v) { state = v },
+  get level() { return level }, set level(v) { level = v },
+  get time() { return time },
+  get frozen() { return frozen }, set frozen(v) { frozen = v },
+  get shake() { return shake }, set shake(v) { shake = v },
+  get flash() { return flash }, set flash(v) { flash = v },
+  get update() { return update }, set update(f) { update = f },
+  get killPlayer() { return killPlayer }, set killPlayer(f) { killPlayer = f },
+  get respawn() { return respawn }, set respawn(f) { respawn = f },
+  get levelSize() { return levelSize }, set levelSize(v) { levelSize = v },
+  get playerMode() { return playerMode }, set playerMode(v) { playerMode = v },
+  get hostile() { return hostile }, set hostile(v) { hostile = v },
+  get splitOn() { return splitOn }, set splitOn(v) { splitOn = v },
+  get ts() { return ts }, get camX() { return camX }, get camY() { return camY },
+  get GW() { return GW }, set GW(v) { GW = v },
+  get GH() { return GH }, set GH(v) { GH = v },
+  get TS() { return TS }, get PART() { return PART },
+  get players() { return players }, get enemies() { return enemies }, get bombs() { return bombs },
+  get blasts() { return blasts }, get powerups() { return powerups }, get exit() { return exit },
+  get grid() { return grid },
+  get seedStr() { return seedStr }, set seedStr(v) { seedStr = v },
+  get startNew() { return startNew },
+  ETYPES: ETYPES, PU: PU, PU_BY_ID: PU_BY_ID,
+  get BOMB_FUSE() { return BOMB_FUSE }, set BOMB_FUSE(v) { BOMB_FUSE = v },
+  get BLAST_TIME() { return BLAST_TIME }, set BLAST_TIME(v) { BLAST_TIME = v },
+  ctx: ctx, buildLevel: buildLevel, applyPU: applyPU, pickPrize: pickPrize,
+  placeBomb: placeBomb, detonate: detonate, detonateRemote: detonateRemote,
+  addScore: addScore, hidePanel: hidePanel, showPanel: showPanel,
+  startNew: startNew, showGameOver: showGameOver
+};
+
 })();
 </script>
 <script>
@@ -2416,5 +3012,232 @@ else seen(cur);
 }).catch(function () {});
 })();
 </script>
+<script>
+/* Developer harness. ?debug=dbg/bomberman.js loads the shared engine dbg/_harness.js
+   then that script: live panel with state, elements, layout per screen mode,
+   texts, balance, cheats, JSON export. No parameter or missing script = the
+   page behaves exactly as without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
+</script>
+<!-- inlined fs.js — the source of truth is fs.js: edit that file and re-inline this block -->
+<script>
+/* fs.js — the one fullscreen control every page shares.
+
+   Two jobs:
+
+   1. A toggle button. `TLFS.mount("#opts", {cls:"btn"})` puts it inside a menu or
+      title panel using that page's own button class; `TLFS.mount()` alone floats a
+      small icon button in the bottom-right corner; `{icon:true}` swaps the word for
+      a ⤢ glyph and moves it into `aria-label` for narrow hosts. The wording is the
+      shared translation key `fullscreen` / `exitFullscreen` — from the i18n kit, from
+      a page table published through `TLFS_LABEL(key)`, or English as the floor — and
+      a change of `<html lang>` repaints it. Where the Fullscreen API is missing the
+      button hides itself instead of lying.
+
+   2. Re-fit on every usable-area change. Entering or leaving fullscreen, an
+      orientation flip, and a mobile browser bar hiding or showing all change the
+      area the game has to fill — and the bar case does not always fire a plain
+      `resize`. This file listens to `fullscreenchange` (all vendor spellings) and
+      to `visualViewport.resize`, then re-applies `<html data-fs>` and dispatches
+      `resize` (plus `orientationchange`) once per frame, so the page's own layout
+      code runs. `TLFS.refitOnly()` gives a page that already has its own
+      fullscreen button just that wiring, without a second button.
+
+   Nothing here reads game state, and a page that never calls mount/refitOnly gets
+   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+(function () {
+  if (window.TLFS) return;
+  var de = document.documentElement;
+  var REQ = de.requestFullscreen || de.webkitRequestFullscreen ||
+    de.msRequestFullscreen || de.mozRequestFullScreen;
+  var EX = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.msExitFullscreen || document.mozCancelFullScreen;
+  var blocked = !REQ || !EX || de.fullscreenEnabled === false;
+  var ICON = "\u2922"; /* narrow hosts (side stripes, icon bars) get the glyph plus a
+                          translated aria-label instead of the word */
+  var btns = [], cbs = [], queued = false, styleDone = false;
+
+  function isFull() {
+    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
+      de.msFullscreenElement || de.mozFullScreenElement);
+  }
+  function kit() {
+    var k = window.TLI18N;
+    return (k && typeof k.t === "function") ? k : null;
+  }
+  /* A missing key makes t() hand back the key name — that is not a label.
+     Pages that keep their own translation table (billiards, tilt, oilstorm) publish
+     TLFS_LABEL(key) instead of the kit; they win over the kit, English is the floor. */
+  function label() {
+    var want = isFull() ? "exitFullscreen" : "fullscreen";
+    var L = window.TLFS_LABEL;
+    if (typeof L === "function") {
+      try { var v = L(want); if (v && v !== want) return String(v) } catch (e) {}
+    }
+    var k = kit(), t = null;
+    if (k) { try { t = k.t(want) } catch (e) { t = null } }
+    if (!t || t === want) t = isFull() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+    return t;
+  }
+  function cssOnce() {
+    if (styleDone) return;
+    styleDone = true;
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlfs-float:hover{border-color:#ffd76a;color:#ffd76a}" +
+      ".tlfs-float[hidden]{display:none}";
+    document.head.appendChild(st);
+  }
+  function paint() {
+    var txt = label();
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      b.textContent = b.__tlfsIcon ? ICON : txt;
+      b.setAttribute("aria-label", txt);
+      b.setAttribute("aria-pressed", isFull() ? "true" : "false");
+    }
+  }
+  /* One pass per frame: fullscreenchange and visualViewport.resize often arrive
+     together, and dispatching resize from inside a resize listener would loop. */
+  function refit() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint();
+      for (var i = 0; i < cbs.length; i++) { try { cbs[i](isFull()) } catch (e) {} }
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("orientationchange"));
+    });
+  }
+  function toggle() {
+    if (blocked) return false;
+    var was = isFull();
+    try {
+      if (was) EX.call(document);
+      else { var p = REQ.call(de); if (p && p.catch) p.catch(function () {}) }
+    } catch (e) {}
+    /* the change event may never come (sandboxed frames, denied requests, some
+       headless shells that grant then silently drop): repaint the state we can
+       read twice, late enough to catch a transition nobody announced. */
+    setTimeout(refit, 220);
+    setTimeout(refit, 700);
+    return !was;
+  }
+
+  de.setAttribute("data-fs", "off");
+  ["fullscreenchange", "webkitfullscreenchange", "MSFullscreenChange", "mozfullscreenchange"]
+    .forEach(function (t) { document.addEventListener(t, refit, false) });
+  ["fullscreenerror", "webkitfullscreenerror"].forEach(function (t) {
+    document.addEventListener(t, function () { de.setAttribute("data-fs", "off"); paint() }, false)
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", refit, false);
+    window.visualViewport.addEventListener("scroll", function () {
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint(); /* an exit the browser never announced must still clear the label */
+    }, false);
+  }
+  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
+  }, false);
+  /* A language switch changes <html lang>: repaint from whatever table the page
+     uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
+     drive their toggle state off that attribute, and taking it would corrupt them. */
+  new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
+
+  window.TLFS = {
+    version: "2026.11.23.3",
+    supported: !blocked,
+    isFull: isFull,
+    label: label,
+    paint: paint,
+    toggle: toggle,
+    onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
+    /* just the size/orientation wiring, for a page with its own fullscreen button */
+    refitOnly: function () { paint(); return true },
+    /* put the button in `sel` (or float it when the selector matches nothing).
+       opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
+       puts the translated word in aria-label, for narrow hosts. */
+    mount: function (sel, opts) {
+      cssOnce();
+      var o = opts || {};
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = o.cls || "tlfs-float";
+      b.id = o.id || "tlfsBtn";
+      b.__tlfsIcon = !!o.icon;
+      if (o.float !== false && !o.cls) b.classList.add("tlfs-float");
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", label());
+      if (o.ariaLabel) b.setAttribute("data-aria", o.ariaLabel);
+      b.textContent = o.icon ? ICON : label();
+      /* a menu that starts the game on any tap (defender binds pointerdown on the
+         whole title screen) must not fire when the fullscreen button is pressed */
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("touchstart", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle() });
+      var host = sel ? document.querySelector(sel) : null;
+      if (host) {
+        if (o.prepend && host.firstChild) host.insertBefore(b, host.firstChild);
+        else host.appendChild(b);
+      } else {
+        b.classList.add("tlfs-float");
+        document.body.appendChild(b);
+      }
+      if (blocked) b.style.display = "none";
+      btns.push(b);
+      paint();
+      return b;
+    },
+    /* wire a button the page already has in its markup (keeps its own look) */
+    attach: function (el) {
+      cssOnce();
+      if (!el) return null;
+      if (blocked) { el.style.display = "none"; return el }
+      el.addEventListener("click", function (e) { e.preventDefault(); toggle() });
+      btns.push(el);
+      paint();
+      return el;
+    },
+    /* a rebuilt panel drops its children: re-add every button the page mounted */
+    reassert: function () {
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i];
+        if (!b.isConnected && b.__tlfsHost) {
+          var h = document.querySelector(b.__tlfsHost);
+          if (h) h.appendChild(b);
+        }
+      }
+      paint();
+      return btns.length
+    }
+  };
+  /* remember where each button was mounted so a panel rebuild can put it back */
+  var mount0 = window.TLFS.mount;
+  window.TLFS.mount = function (sel, opts) {
+    var b = mount0(sel, opts);
+    if (b) b.__tlfsHost = sel || "body";
+    return b;
+  };
+  var k = kit();
+  if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
+})();
+</script>
+<script>TLFS.mount("#panel",{cls:"alt"});</script>
 </body>
 </html>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#140b08">
 <title>Putt Canyon DX</title>
-<meta name="version" content="2026.11.12.7">
+<meta name="version" content="2026.11.24.1">
 <style>
 :root{--ink:#ffe9c9;--dim:#c9a97f;--bg:#140b08;--panel:#241309;--panel2:#33200f;--acc:#ff9a3c;--acc2:#5ad068;--line:#5a3a22}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
@@ -88,34 +88,34 @@ textarea{width:100%;min-height:120px;font-family:ui-monospace,Consolas,monospace
   <div id="menu" class="scr hide">
     <div class="scrIn">
     <h1>PUTT CANYON</h1>
-    <div class="sub">ARCADE MINI-GOLF &middot; OFFLINE 3D</div>
-    <button class="btn acc" id="bPlay">TEE OFF</button>
-    <button class="btn grn hide" id="bCont">CONTINUE</button>
-    <button class="btn" id="bHoles">HOLE SELECT</button>
-    <button class="btn" id="bCustom">MY COURSES</button>
-    <button class="btn" id="bGen">PROCEDURAL ROUNDS</button>
-    <button class="btn" id="bEdit">LEVEL EDITOR</button>
-    <button class="btn" id="bHelp">HOW TO PLAY</button>
-    <button class="btn" id="bSet">SETTINGS</button>
-    <button class="btn" id="bHome">🏠 HOME</button>
+    <div class="sub" data-t="menuSub">ARCADE MINI-GOLF &middot; OFFLINE 3D</div>
+    <button class="btn acc" id="bPlay" data-t="teeOff">TEE OFF</button>
+    <button class="btn grn hide" id="bCont" data-t="continue">CONTINUE</button>
+    <button class="btn" id="bHoles" data-t="holeSelect">HOLE SELECT</button>
+    <button class="btn" id="bCustom" data-t="myCourses">MY COURSES</button>
+    <button class="btn" id="bGen" data-t="procRounds">PROCEDURAL ROUNDS</button>
+    <button class="btn" id="bEdit" data-t="levelEditor">LEVEL EDITOR</button>
+    <button class="btn" id="bHelp" data-t="howToPlay">HOW TO PLAY</button>
+    <button class="btn" id="bSet" data-t="settings">SETTINGS</button>
+    <button class="btn" id="bHome">🏠 <span data-t="home">HOME</span></button>
     <div class="sub" id="bestLine" style="margin-top:14px"></div>
     </div>
   </div>
   <div id="hud" class="hide">
     <div id="hudTop">
       <span class="pill" id="hudHole"></span><span class="pill" id="hudPar"></span>
-      <span class="pill">STROKES <b id="hudStr">0</b></span><span class="pill">TOTAL <b id="hudTot">0</b></span>
+      <span class="pill"><span data-t="strokesLbl">STROKES</span> <b id="hudStr">0</b></span><span class="pill"><span data-t="totalLbl">TOTAL</span> <b id="hudTot">0</b></span>
     </div>
     <div id="hudBotW">
       <div id="hint"></div>
       <div id="powRow"><div id="powWrap"><div id="pow"></div></div><span id="powPct">0%</span></div>
       <div id="hudBot">
-        <button class="btn ic" id="bUndo" title="Undo last shot (Z)">↶</button>
-        <button class="btn ic" id="bRestart" title="Restart hole (R)">↺</button>
-        <button class="btn ic" id="bMute" title="Sound (M)">♪</button>
-        <button class="btn ic" id="bCam" title="Recenter camera">◎</button>
-        <button class="btn ic" id="bHelpHud" title="Help">?</button>
-        <button class="btn ic" id="bMenu" title="Menu">☰</button>
+        <button class="btn ic" id="bUndo" data-tip="tipUndo">↶</button>
+        <button class="btn ic" id="bRestart" data-tip="tipRestart">↺</button>
+        <button class="btn ic" id="bMute" data-tip="tipSound">♪</button>
+        <button class="btn ic" id="bCam" data-tip="tipCam">◎</button>
+        <button class="btn ic" id="bHelpHud" data-tip="help">?</button>
+        <button class="btn ic" id="bMenu" data-tip="menu">☰</button>
       </div>
     </div>
   </div>
@@ -123,30 +123,558 @@ textarea{width:100%;min-height:120px;font-family:ui-monospace,Consolas,monospace
   <div id="ed" class="hide">
     <div id="edTop">
       <button class="btn sm" id="edBack">☰</button>
-      <input type="text" id="edName" placeholder="Hole name" maxlength="40">
-      <span class="lbl">PAR</span><input type="number" id="edPar" min="2" max="9" step="1">
-      <button class="btn sm grn" id="edTest">▶ TEST</button>
-      <button class="btn sm" id="edIO">⇅ I/O</button>
+      <input type="text" id="edName" data-ph="edNamePh" maxlength="40">
+      <span class="lbl" data-t="parLbl">PAR</span><input type="number" id="edPar" min="2" max="9" step="1">
+      <button class="btn sm grn" id="edTest">▶ <span data-t="edTestLbl">TEST</span></button>
+      <button class="btn sm" id="edIO">⇅ <span data-t="edIOLbl">I/O</span></button>
     </div>
     <div id="edPanel">
       <div class="row" id="edTools"></div>
-      <div class="lbl">PARTS — tap scene to move selected · drag = orbit · two fingers / right-drag = pan</div>
+      <div class="lbl" data-t="edParts">PARTS — tap scene to move selected · drag = orbit · two fingers / right-drag = pan</div>
       <div id="edList"></div>
       <div class="row" id="edProps"></div>
       <div class="row">
-        <button class="btn sm" id="edDup">⧉ Dup</button><button class="btn sm" id="edDel">🗑 Del</button>
+        <button class="btn sm" id="edDup">⧉ <span data-t="edDupLbl">Dup</span></button><button class="btn sm" id="edDel">🗑 <span data-t="edDelLbl">Del</span></button>
         <button class="btn sm" id="edUp">▲</button><button class="btn sm" id="edDn">▼</button>
-        <button class="btn sm" id="edTee">SET TEE</button><button class="btn sm" id="edCup">SET CUP</button>
-        <button class="btn sm" id="edSeal">🧱 SEAL</button><button class="btn sm" id="edCheck">✓ CHECK</button>
-        <button class="btn sm grn" id="edSave">💾 SAVE</button>
+        <button class="btn sm" id="edTee" data-t="edTeeLbl">SET TEE</button><button class="btn sm" id="edCup" data-t="edCupLbl">SET CUP</button>
+        <button class="btn sm" id="edSeal">🧱 <span data-t="edSealLbl">SEAL</span></button><button class="btn sm" id="edCheck">✓ <span data-t="edCheckLbl">CHECK</span></button>
+        <button class="btn sm grn" id="edSave">💾 <span data-t="edSaveLbl">SAVE</span></button>
       </div>
     </div>
   </div>
   <div id="modal" class="hide"><div id="mBox"></div></div>
   <div id="toast"></div>
 </div>
+<!-- inlined i18n.js — the source of truth is i18n.js: edit that file and re-inline this block -->
+<script>
+/* ============================================================================
+   i18n.js — shared language kit for every page of this site.
+   Language code decision tree (identical everywhere, in this order):
+     0. any technical problem with this kit -> English
+     1. URL ?language=xx      (a region suffix is fine: pt-BR, zh-CN)
+     2. localStorage['tll:lang']
+     3. the browser's language list (navigator.languages, then navigator.language)
+     4. English
+   A code outside CODES is dropped, not trusted, so the next level decides. Only
+   the picker button writes storage, so a ?language= link never overwrites the
+   visitor's saved choice.
+
+   Page usage
+     <script src="i18n.js"><\/script>            BEFORE the game script
+     <script>TLI18N.add({en:{k:"Text"},es:{...},pt:{...},ru:{...},zh:{...}})<\/script>
+     markup:  <b data-t="score">SCORE</b>  <button data-tip="help">?</button>
+              <input data-ph="name">  <i data-aria="pause">  <img data-alt="car">
+     js:      el.textContent=TLI18N.t("gameOver");
+              el.innerHTML="<b>"+TLI18N.t("best")+": "+n+"</b>";
+              ctx.fillText(TLI18N.t("paused"),x,y);
+     canvas / innerHTML redraws: TLI18N.onChange(()=>redrawAll());
+     pick a host for the language button: TLI18N.mount("#startPanel")
+       (omit it and the kit parks a pill in the lower-left corner)
+   Keys missing from a non-English table fall back to English, so a half
+   translated table still runs. Values for *Fmt keys carry {placeholders}.
+   ========================================================================= */
+(function(){
+"use strict";
+var KEY="tll:lang", CODES=["en","es","pt","ru","zh"];
+var LANGS=[ // code · name in its own language · that word for "language" · its flag
+ ['en','English','Language','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0,0 60,40M60,0 0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 60,40M60,0 0,40" stroke="#C8102E" stroke-width="3.2"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="13"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="8"/></svg>'],
+ ['es','Español','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#AA151B"/><path d="M0,10H60M0,30H60" stroke="#F1BF00" stroke-width="20"/>  </svg>'],
+ ['pt','Português','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="40" fill="#046A38"/><rect x="24" width="36" height="40" fill="#DA291C"/><circle cx="24" cy="20" r="7.5" fill="#FEDF00" stroke="#046A38" stroke-width="1.4"/><path d="M24,14.5 24,22.5M20.5,17.5H27.5" stroke="#DA291C" stroke-width="2.2" fill="none"/></svg>'],
+ ['ru','Русский','Язык','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.34" width="60" height="13.33" fill="#0039A6"/><rect y="26.67" width="60" height="13.33" fill="#D52B1E"/></svg>'],
+ ['zh','中文','语言','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#EE1C25"/><circle cx="10" cy="10" r="5.6" fill="#FFDC00"/><circle cx="21" cy="6" r="2.1" fill="#FFDC00"/><circle cx="26" cy="11.5" r="2.1" fill="#FFDC00"/><circle cx="26" cy="18.5" r="2.1" fill="#FFDC00"/><circle cx="21" cy="24" r="2.1" fill="#FFDC00"/></svg>']
+];
+/* ---- shared vocabulary: the same word means the same thing in every game.
+       Values carry no glyphs — pages keep their ⌂ ▶ ■ icons in the markup. ---- */
+var COMMON={
+en:{
+ paused:"PAUSED",pause:"PAUSE",resume:"RESUME",start:"START",play:"PLAY",home:"HOME",menu:"MENU",
+ options:"OPTIONS",settings:"SETTINGS",help:"HELP",howToPlay:"HOW TO PLAY",rules:"RULES",controls:"CONTROLS",
+ keys:"KEYS",gamepad:"GAMEPAD",mouse:"MOUSE",touch:"TOUCH",
+ sound:"SOUND",music:"MUSIC",sfx:"SOUND FX",on:"ON",off:"OFF",fullscreen:"FULLSCREEN",exitFullscreen:"EXIT FULLSCREEN",
+ difficulty:"DIFFICULTY",easy:"EASY",normal:"NORMAL",hard:"HARD",low:"LOW",high:"HIGH",
+ score:"SCORE",best:"BEST",hiScore:"HIGH SCORE",level:"LEVEL",lives:"LIVES",time:"TIME",
+ speed:"SPEED",round:"ROUND",wave:"WAVE",seed:"SEED",newSeed:"NEW SEED",
+ restart:"RESTART",retry:"RETRY",continue:"CONTINUE",tryAgain:"TRY AGAIN",nextLevel:"NEXT LEVEL",
+ gameOver:"GAME OVER",youWin:"YOU WIN",youLose:"GAME OVER",clear:"CLEARED",
+ fire:"FIRE",jump:"JUMP",back:"BACK",exit:"EXIT",close:"CLOSE",ok:"OK",cancel:"CANCEL",
+ loading:"LOADING",shots:"SHOTS",moves:"MOVES",power:"POWER",angle:"ANGLE",
+ langTitle:"LANGUAGE",langNote:"Choose your language — it is remembered, and it applies to this game and to the whole catalogue.",
+ langBack:"CHANGE LANGUAGE",players:"PLAYERS",player:"PLAYER",you:"YOU",cpu:"CPU",random:"RANDOM"},
+es:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INICIO",play:"JUGAR",home:"INICIO",menu:"MENÚ",
+ options:"OPCIONES",settings:"AJUSTES",help:"AYUDA",howToPlay:"CÓMO JUGAR",rules:"REGLAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"MANDO",mouse:"RATÓN",touch:"TÁCTIL",
+ sound:"SONIDO",music:"MÚSICA",sfx:"EFECTOS",on:"ACTIVO",off:"APAGADO",fullscreen:"PANTALLA COMPLETA",exitFullscreen:"SALIR DE PANTALLA COMPLETA",
+ difficulty:"DIFICULTAD",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAJO",high:"ALTO",
+ score:"PUNTOS",best:"RÉCORD",hiScore:"RÉCORD",level:"NIVEL",lives:"VIDAS",time:"TIEMPO",
+ speed:"VELOCIDAD",round:"RONDA",wave:"OLEADA",seed:"SEMILLA",newSeed:"NUEVA SEMILLA",
+ restart:"REINICIAR",retry:"REINTENTAR",continue:"CONTINUAR",tryAgain:"INTÉNTALO OTRA VEZ",nextLevel:"SIGUIENTE NIVEL",
+ gameOver:"FIN DEL JUEGO",youWin:"¡GANASTE!",youLose:"FIN DEL JUEGO",clear:"SUPERADO",
+ fire:"DISPARO",jump:"SALTAR",back:"ATRÁS",exit:"SALIR",close:"CERRAR",ok:"ACEPTAR",cancel:"CANCELAR",
+ loading:"CARGANDO",shots:"LANZAMIENTOS",moves:"MOVIMIENTOS",power:"FUERZA",angle:"ÁNGULO",
+ langTitle:"IDIOMA",langNote:"Elige tu idioma: se recuerda y se aplica a este juego y a todo el catálogo.",
+ langBack:"CAMBIAR IDIOMA",players:"JUGADORES",player:"JUGADOR",you:"TÚ",cpu:"CPU",random:"ALEATORIO"},
+pt:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INÍCIO",play:"JOGAR",home:"INÍCIO",menu:"MENU",
+ options:"OPÇÕES",settings:"CONFIGURAÇÕES",help:"AJUDA",howToPlay:"COMO JOGAR",rules:"REGRAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"CONTROLE",mouse:"MOUSE",touch:"TOQUE",
+ sound:"SOM",music:"MÚSICA",sfx:"EFEITOS",on:"LIGADO",off:"DESLIGADO",fullscreen:"TELA CHEIA",exitFullscreen:"SAIR DA TELA CHEIA",
+ difficulty:"DIFICULDADE",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAIXO",high:"ALTO",
+ score:"PONTOS",best:"RECORDE",hiScore:"RECORDE",level:"NÍVEL",lives:"VIDAS",time:"TEMPO",
+ speed:"VELOCIDADE",round:"RODADA",wave:"ONDA",seed:"SEMENTE",newSeed:"NOVA SEMENTE",
+ restart:"REINICIAR",retry:"TENTAR DE NOVO",continue:"CONTINUAR",tryAgain:"TENTE DE NOVO",nextLevel:"PRÓXIMO NÍVEL",
+ gameOver:"FIM DE JOGO",youWin:"VOCÊ VENCEU",youLose:"FIM DE JOGO",clear:"COMPLETO",
+ fire:"DISPARO",jump:"SALTAR",back:"VOLTAR",exit:"SAIR",close:"FECHAR",ok:"OK",cancel:"CANCELAR",
+ loading:"CARREGANDO",shots:"BATIDAS",moves:"JOGADAS",power:"FORÇA",angle:"ÂNGULO",
+ langTitle:"IDIOMA",langNote:"Escolha seu idioma: ele é lembrado e vale para este jogo e para todo o catálogo.",
+ langBack:"MUDAR IDIOMA",players:"JOGADORES",player:"JOGADOR",you:"VOCÊ",cpu:"CPU",random:"ALEATÓRIO"},
+ru:{
+ paused:"ПАУЗА",pause:"ПАУЗА",resume:"ПРОДОЛЖИТЬ",start:"СТАРТ",play:"ИГРАТЬ",home:"ДОМОЙ",menu:"МЕНЮ",
+ options:"НАСТРОЙКИ",settings:"НАСТРОЙКИ",help:"ПОМОЩЬ",howToPlay:"КАК ИГРАТЬ",rules:"ПРАВИЛА",controls:"УПРАВЛЕНИЕ",
+ keys:"КЛАВИШИ",gamepad:"ГЕЙМПАД",mouse:"МЫШЬ",touch:"СЕНСОР",
+ sound:"ЗВУК",music:"МУЗЫКА",sfx:"ЗВУКИ",on:"ВКЛ",off:"ВЫКЛ",fullscreen:"НА ВЕСЬ ЭКРАН",exitFullscreen:"ВЫЙТИ С ЭКРАНА",
+ difficulty:"СЛОЖНОСТЬ",easy:"ЛЕГКО",normal:"НОРМА",hard:"СЛОЖНО",low:"НИЗ",high:"ВЕРХ",
+ score:"СЧЁТ",best:"РЕКОРД",hiScore:"РЕКОРД",level:"УРОВЕНЬ",lives:"ЖИЗНИ",time:"ВРЕМЯ",
+ speed:"СКОРОСТЬ",round:"РАУНД",wave:"ВОЛНА",seed:"КОД УРОВНЯ",newSeed:"НОВЫЙ КОД",
+ restart:"ЗАНОВО",retry:"ЕЩЁ РАЗ",continue:"ПРОДОЛЖИТЬ",tryAgain:"ПОПРОБУЙ ЕЩЁ",nextLevel:"СЛЕДУЮЩИЙ УРОВЕНЬ",
+ gameOver:"КОНЕЦ",youWin:"ПОБЕДА",youLose:"КОНЕЦ",clear:"УРОВЕНЬ ПРОЙДЕН",
+ fire:"ОГОНЬ",jump:"ПРЫЖОК",back:"НАЗАД",exit:"ВЫХОД",close:"ЗАКРЫТЬ",ok:"ОК",cancel:"ОТМЕНА",
+ loading:"ЗАГРУЗКА",shots:"УДАРЫ",moves:"ХОДЫ",power:"СИЛА",angle:"УГОЛ",
+ langTitle:"ЯЗЫК",langNote:"Выберите язык — он запоминается и действует для этой игры и для всего каталога.",
+ langBack:"СМЕНИТЬ ЯЗЫК",players:"ИГРОКИ",player:"ИГРОК",you:"ВЫ",cpu:"БОТ",random:"СЛУЧАЙНО"},
+zh:{
+ paused:"暂停",pause:"暂停",resume:"继续",start:"开始",play:"开始游戏",home:"主页",menu:"菜单",
+ options:"选项",settings:"设置",help:"帮助",howToPlay:"怎么玩",rules:"规则",controls:"操作",
+ keys:"按键",gamepad:"手柄",mouse:"鼠标",touch:"触摸",
+ sound:"声音",music:"音乐",sfx:"音效",on:"开",off:"关",fullscreen:"全屏",exitFullscreen:"退出全屏",
+ difficulty:"难度",easy:"简单",normal:"普通",hard:"困难",low:"低",high:"高",
+ score:"得分",best:"最高分",hiScore:"最高分",level:"关卡",lives:"生命",time:"时间",
+ speed:"速度",round:"回合",wave:"波次",seed:"种子",newSeed:"新种子",
+ restart:"重新开始",retry:"重试",continue:"继续",tryAgain:"再试一次",nextLevel:"下一关",
+ gameOver:"游戏结束",youWin:"胜利",youLose:"游戏结束",clear:"过关",
+ fire:"射击",jump:"跳跃",back:"返回",exit:"退出",close:"关闭",ok:"确定",cancel:"取消",
+ loading:"加载中",shots:"击球",moves:"步数",power:"力量",angle:"角度",
+ langTitle:"语言",langNote:"选择语言：会被记住，并用于这个游戏和整个游戏目录。",
+ langBack:"更换语言",players:"玩家",player:"玩家",you:"你",cpu:"电脑",random:"随机"}
+};
+var PAGE={en:{},es:{},pt:{},ru:{},zh:{}};
+function lget(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+function lset(v){try{localStorage.setItem(KEY,v)}catch(e){}}
+var code=null;
+/* A browser language list -> a supported code, or null when it says nothing
+   usable. "pt-BR", "ru_RU", "zh-CN" all match on their 2-letter base. */
+function fromBrowser(){
+ try{
+  var list=null;
+  if(navigator&&Array.isArray(navigator.languages)&&navigator.languages.length)list=navigator.languages;
+  else if(navigator)list=[navigator.language||navigator.userLanguage||""];
+  for(var i=0;i<(list||[]).length;i++){
+   var c=String(list[i]||"").toLowerCase().slice(0,2);
+   if(CODES.indexOf(c)>=0)return c;
+  }
+ }catch(e){}
+ return null;
+}
+(function(){
+ try{
+  var c=null,m=/[?&]language=([a-zA-Z]{2,3})/.exec(location.search||"");
+  if(m)c=m[1].toLowerCase().slice(0,2);           // ?language=pt-BR counts as pt
+  if(c&&CODES.indexOf(c)<0)c=null;
+  if(!c){var s=(lget()||"").toLowerCase().slice(0,2);if(CODES.indexOf(s)>=0)c=s;}
+  if(!c)c=fromBrowser();
+  code=c||"en";
+ }catch(e){code="en";} // a broken lookup speaks English, never nothing
+})();
+function raw(k){
+ var t=PAGE[code]?PAGE[code][k]:null; if(t!=null)return t;
+ t=COMMON[code]?COMMON[code][k]:null; if(t!=null)return t;
+ t=PAGE.en[k]; if(t!=null)return t;
+ t=COMMON.en[k]; return t==null?null:t;
+}
+var hooks=[];
+var API={
+ version:"2026.11.22.2", codes:CODES.slice(), langs:LANGS,
+ lang:function(){return code},
+ browserLang:function(){return fromBrowser()},
+ t:function(k,v){var s;try{s=raw(k)}catch(e){code="en";try{s=raw(k)}catch(e2){s=null}}
+  if(s==null)s=k;var o=v||{};for(var p in o)s=s.split("{"+p+"}").join(String(o[p]));return s},
+ flag:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][3];return ""},
+ name:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][2];return c},
+ add:function(tab){for(var c in tab){if(!PAGE[c])continue;for(var k in tab[c])PAGE[c][k]=tab[c][k];}
+  try{API.apply()}catch(e){}},
+ /* read the tables (the developer harness edits texts through these) */
+ keys:function(c){var out=[],seen={};try{var src=[PAGE[c],COMMON[c],PAGE.en,COMMON.en];
+  for(var i=0;i<src.length;i++)for(var k in src[i])if(!seen[k]){seen[k]=1;out.push(k)}out.sort();}catch(e){}
+  return out},
+ table:function(){var o={};try{for(var i=0;i<CODES.length;i++){var c=CODES[i],m={},s=[COMMON[c],PAGE[c],COMMON.en,PAGE.en];
+  for(var j=0;j<s.length;j++)for(var k in s[j])if(m[k]==null&&s[j][k]!=null)m[k]=s[j][k];o[c]=m;}}catch(e){}
+  return o},
+ setKey:function(c,k,v){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;
+  try{(PAGE[c]=PAGE[c]||{})[k]=String(v);}catch(e){return;}
+  try{API.apply()}catch(e){}
+  for(var i=0;i<hooks.length;i++)try{hooks[i](code)}catch(e){}},
+ onChange:function(f){hooks.push(f)},
+ set:function(c){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;code=c;lset(c);
+  try{API.apply()}catch(e){}for(var i=0;i<hooks.length;i++)try{hooks[i](c)}catch(e){}},
+ apply:function(root){
+  if(document.documentElement)document.documentElement.lang=code;
+  var r=root||document;
+  var set=function(e,attr,put){var v=raw(e.getAttribute(attr));if(v!=null)put(e,v);};
+  var all=[];
+  if(r.nodeType===1)all.push(r);
+  if(r.querySelectorAll)all=all.concat([].slice.call(r.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]")));
+  for(var i=0;i<all.length;i++){var e=all[i];
+   try{
+    if(e.hasAttribute("data-t"))set(e,"data-t",function(n,v){n.textContent=v});
+    if(e.hasAttribute("data-ph"))set(e,"data-ph",function(n,v){n.placeholder=v});
+    if(e.hasAttribute("data-tip"))set(e,"data-tip",function(n,v){n.title=v});
+    if(e.hasAttribute("data-aria"))set(e,"data-aria",function(n,v){n.setAttribute("aria-label",v)});
+    if(e.hasAttribute("data-alt"))set(e,"data-alt",function(n,v){n.alt=v});
+   }catch(e2){} // one odd node never aborts the pass
+  }
+  if(pill){try{pill.innerHTML=API.flag(code)+"<span>"+API.name(code)+"</span>";pill.title=API.t("langTitle");}catch(e){}}
+ },
+ mount:function(sel){hostSel=sel;ensurePill();},
+};
+/* ---------------- language button + picker overlay ---------------- */
+var hostSel=null,pill=null,ov=null;
+var CSS=".tlbtn{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(20,24,22,.72);flex:0 0 auto;align-self:center;"
+ +"border:1px solid #3a463f;border-radius:6px;color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:1px;"
+ +"cursor:pointer;line-height:1;width:auto;max-width:100%}.tlbtn:hover,.tlbtn:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}"
+ +".tlbtn svg{width:22px;height:15px;border:1px solid #2e3a34;border-radius:2px;display:block}"
+ +".tlfix{position:fixed;left:12px;bottom:12px;z-index:2147483000}"
+ +".tlov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;"
+ +"background:rgba(4,7,6,.86);padding:16px}.tlov[hidden]{display:none}"
+ +".tlpanel{max-width:660px;width:100%;background:#141816;border:1px solid #3a463f;border-radius:12px;"
+ +"padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.6);color:#c9d2cb;font:inherit;text-align:center}"
+ +".tlpanel h2{margin:0 0 6px;font-size:20px;letter-spacing:4px;color:#ffd76a}"
+ +".tlpanel p{margin:0 0 16px;font-size:12px;line-height:1.6;color:#8a948e}"
+ +".tlgrid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}"
+ +".tlb{width:132px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;"
+ +"background:rgba(20,24,22,.7);border:1px solid #3a463f;border-radius:8px;cursor:pointer;color:#c9d2cb;font:inherit}"
+ +".tlb:hover,.tlb:focus{border-color:#ffd76a;color:#f4e9c8;outline:none;box-shadow:0 0 14px rgba(255,215,106,.18)}"
+ +".tlb svg{width:50px;height:34px;border:1px solid #2e3a34;border-radius:4px;display:block}"
+ +".tlb b{font-size:13px;color:#f4e9c8}.tlb span{font-size:10px;letter-spacing:1px;color:#8a948e}"
+ +".tlx{margin-top:16px;padding:7px 20px;background:none;border:1px solid #3a463f;border-radius:6px;"
+ +"color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:2px;cursor:pointer}"
+ +".tlx:hover,.tlx:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}";
+function style(){if(document.getElementById("tlcss"))return;var s=document.createElement("style");s.id="tlcss";s.textContent=CSS;document.head.appendChild(s);}
+function ensurePill(){
+ if(pill)return;
+ var host=hostSel?document.querySelector(hostSel):null;
+ if(!host&&document.readyState==="loading")return; // retried at DOMContentLoaded
+ style();
+ pill=document.createElement("button");
+ pill.type="button";pill.className="tlbtn";pill.setAttribute("aria-haspopup","dialog");
+ if(!host){pill.className="tlbtn tlfix";document.body.appendChild(pill);}
+ else host.insertBefore(pill,host.firstChild);
+ pill.onclick=openOv;
+ API.apply();
+}
+function openOv(){
+ if(!ov){
+  ov=document.createElement("div");ov.className="tlov";ov.hidden=true;
+  var p=document.createElement("div");p.className="tlpanel";
+  var h=document.createElement("h2");h.setAttribute("data-t","langTitle");p.appendChild(h);
+  var np=document.createElement("p");np.setAttribute("data-t","langNote");p.appendChild(np);
+  var g=document.createElement("div");g.className="tlgrid";
+  for(var i=0;i<LANGS.length;i++){
+   var b=document.createElement("button");b.type="button";b.className="tlb";b.dataset.lang=LANGS[i][0];
+   b.innerHTML=LANGS[i][3]+"<b>"+LANGS[i][1]+"</b><span>"+LANGS[i][2]+"</span>";g.appendChild(b);
+  }
+  p.appendChild(g);
+  var x=document.createElement("button");x.type="button";x.className="tlx";x.setAttribute("data-t","close");p.appendChild(x);
+  ov.appendChild(p);document.body.appendChild(ov);
+  g.onclick=function(e){var b=e.target;while(b&&b!==g&&!b.dataset.lang)b=b.parentNode;if(b&&b.dataset.lang){API.set(b.dataset.lang);closeOv();}};
+  x.onclick=closeOv;
+  ov.onclick=function(e){if(e.target===ov)closeOv();};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ov&&!ov.hidden)closeOv();});
+ }
+ API.apply(ov);
+ ov.hidden=false;
+}
+function closeOv(){if(ov)ov.hidden=true;}
+function boot(){
+ try{ensurePill();API.apply();}
+ catch(e){code="en";try{ensurePill();API.apply();}catch(e2){}} // rule 0: English on any kit fault
+}
+/* keep freshly added nodes translated without the page calling apply() */
+new MutationObserver(function(ms){
+ if(!pill)return;
+ try{
+  for(var i=0;i<ms.length;i++){var n=ms[i].addedNodes;
+   for(var j=0;j<n.length;j++){var e=n[j];
+    if(e.nodeType!==1)continue;
+    if(e.matches&&e.matches("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]"))API.apply(e);
+    else if(e.querySelectorAll&&e.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]").length)API.apply(e);
+   }}
+ }catch(e){}
+}).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+window.TLI18N=API;
+})();
+</script>
+<script>
+/* If i18n.js is missing or only half-loaded, the game still runs: this stub
+   keeps the same API, pins English, and serves the en table this page registers
+   below via add(). */
+if(!window.TLI18N||typeof window.TLI18N.add!=="function"||typeof window.TLI18N.t!=="function"||typeof window.TLI18N.apply!=="function"||typeof window.TLI18N.mount!=="function"){(function(){var T={en:{}};window.TLI18N={version:"en-fallback",codes:["en"],langs:[["en","EN","English",""]],
+add:function(tab){for(var c in tab){T[c]=Object.assign(T[c]||{},tab[c]);}},
+t:function(k,v){var s=(T.en&&T.en[k]!=null)?T.en[k]:k,o=v||{};for(var p in o)s=String(s).split("{"+p+"}").join(String(o[p]));return s},
+flag:function(){return "";},name:function(c){return c;},lang:function(){return "en";},
+set:function(){},onChange:function(){},apply:function(){},mount:function(){}};})();}
+</script>
+<script>
+TLI18N.add({
+en:{
+ menuSub:"ARCADE MINI-GOLF · OFFLINE 3D", teeOff:"TEE OFF", holeSelect:"HOLE SELECT", myCourses:"MY COURSES",
+ procRounds:"PROCEDURAL ROUNDS", levelEditor:"LEVEL EDITOR",
+ holeSelNote:"Practice any unlocked hole. Progress is saved automatically after every cup.",
+ strokesLbl:"STROKES", totalLbl:"TOTAL", holeLbl:"HOLE", parLbl:"PAR",
+ hintTouch:"drag FROM BALL & release to putt (soft drags = soft putts) · elsewhere: orbit · 2 fingers: pan",
+ hintDesktop:"drag FROM BALL to putt (short drag = gentle tap) · elsewhere orbit · right-drag pan · Q E orbit · scroll zoom · Z undo · R restart",
+ tipUndo:"Undo last shot (Z)", tipRestart:"Restart hole (R)", tipSound:"Sound (M)", tipCam:"Recenter camera",
+ edNamePh:"Hole name", edTestLbl:"TEST", edIOLbl:"I/O", edDupLbl:"Dup", edDelLbl:"Del",
+ edTeeLbl:"SET TEE", edCupLbl:"SET CUP", edSealLbl:"SEAL", edCheckLbl:"CHECK", edSaveLbl:"SAVE",
+ edParts:"PARTS — tap scene to move selected · drag = orbit · two fingers / right-drag = pan",
+ hPutt:"PUTT", hUndo:"UNDO", hCam:"CAMERA", hWater:"WATER", hCampaign:"CAMPAIGN", hProc:"PROCEDURAL", hEditor:"EDITOR",
+ helpPutt:"press ON THE BALL, drag back, release. Short drag = gentle tap, long drag = drive. Every drag past the tiny dead-zone counts, soft shots included. Dots = simulated roll/flight.",
+ helpUndo:"↶ (or Z) takes back the last shot while the ball is at rest.",
+ helpCam:"drag elsewhere to orbit. Two fingers / right-drag = pan. Pinch / scroll = zoom.",
+ helpWater:"every generated hole has a railed bridge; splashing = +1. Sand eats speed. Windmills sweep the ball — time it.",
+ helpCampaign:"118 holes. First 18 teach one idea each; the next 100 escalate from 2-obstacle combos to 5-6 obstacle gauntlets. Every generated hole turns (no straight clones) and its real tee-to-cup route is measured against every earlier hole before it is accepted.",
+ helpProc:"seeded rounds from the same trick-block library, walk-verified, and fingerprint-checked so they can never reuse a main-campaign hole.",
+ helpKeys:"R restart · Z undo · M sound · EDITOR build & share holes (SEAL auto-walls the perimeter).",
+ qualityLbl:"QUALITY", qualityAuto:" — AUTO (adapts to your device)", qAuto:"Auto", qLow:"Low", qMed:"Med", qHigh:"High",
+ resetData:"RESET ALL DATA", wipeAsk:"Erase all saved courses, progress & best scores?",
+ holesLbl:"HOLES", dMellow:"Mellow", dSpicy:"Spicy",
+ genNote:"Every hole is walk-verified, trajectory-unique, and fingerprint-checked — procedural rounds never reuse a main-campaign hole.",
+ saveToCourses:"SAVE TO MY COURSES", playAll:"PLAY ALL", exportAll:"EXPORT ALL", importLbl:"IMPORT", clearLbl:"CLEAR",
+ noCourses1:"No custom holes yet.", noCourses2:"Build them in the", noCourses3:"or import JSON.",
+ deleteAsk:"Delete all custom holes?",
+ ioTitle:"IMPORT / EXPORT (JSON)", ioCopyLbl:"COPY", ioDlLbl:"DOWNLOAD .JSON", ioFileLbl:"LOAD FILE",
+ ioFormat:"Format: one level object, an array, or {\"levels\":[…]}. Sanitized on import.",
+ holeToast:"HOLE {n} · {name} · PAR {par}", restarted:"RESTARTED", nothingToUndo:"NOTHING TO UNDO", shotUndone:"SHOT UNDONE",
+ savedHoles:"SAVED {n} HOLES", savedToCoursesN:"SAVED {n} TO MY COURSES", copied:"COPIED", invalidData:"INVALID LEVEL DATA",
+ importedEditor:"IMPORTED INTO EDITOR", importedN:"SAVED {n} TO MY COURSES", importedHoles:"IMPORTED {n} HOLE(S)",
+ edPlace:"EDITOR — TAP SCENE TO PLACE", teePlace:"TAP SCENE TO PLACE TEE", cupPlace:"TAP SCENE TO PLACE CUP",
+ needGround:"LEVEL NEEDS GROUND", savedCourse:"SAVED TO MY COURSES", sealed:"PERIMETER SEALED — FLUSH CORNERS",
+ walkOk:"BALL-SIZED WALK PATH TO CUP", testAnyway:"TEST ANYWAY",
+ waterPen:"WATER +1", oobPen:"OUT OF BOUNDS +1",
+ whyNoLevel:"no level", whyNoGround:"no ground", whyTooLarge:"too large", whyTeeBlocked:"tee blocked",
+ whyCupBlocked:"cup blocked", whyMillWater:"mill beside water", whyCupMill:"cup in mill sweep",
+ whyTeeMill:"tee in mill sweep", whyNoPath:"no walkable path to cup", whyErr:"analysis error",
+ ace:"ACE!", eagle:"EAGLE!", birdie:"BIRDIE!", parTerm:"PAR", bogey:"BOGEY", dblBogey:"DOUBLE BOGEY", even:"EVEN",
+ holeStrokes:"Hole {n} · {s} strokes", nextHole:"NEXT HOLE", finishRound:"FINISH ROUND", roundComplete:"ROUND COMPLETE",
+ totalLine:"Total {t} · {rel} vs par ({p})", playAgain:"PLAY AGAIN",
+ newCampaign:"NEW CAMPAIGN — {n} HOLES · PAR {p}", continueHole:"CONTINUE — HOLE {i}/{n}",
+ bestCampaign:"BEST CAMPAIGN · {s} STROKES", myCoursesCount:"MY COURSES ({n})",
+ glFail:"WebGL is not available on this device/browser.",
+ ptGround:"Ground", ptRamp:"Ramp", ptWall:"Wall", ptSand:"Sand", ptWater:"Water", ptMill:"Mill",
+ pTop:"TOP", pCol:"COL", pAxis:"AXIS", pHgt:"HGT", pBase:"BASE", pRad:"RAD", pSpd:"SPD",
+ pBlades:"BLADES", pHub:"HUB", pBldH:"BLD H",
+ noParts:"no parts — add one above", selPart:"select or add a part", pLvl:"LVL"},
+es:{
+ menuSub:"MINIGOLF ARCADE · 3D SIN CONEXIÓN", teeOff:"SALIDA", holeSelect:"SELECCIÓN DE HOYOS", myCourses:"MIS CAMPOS",
+ procRounds:"RONDAS PROCEDURALES", levelEditor:"EDITOR DE NIVELES",
+ holeSelNote:"Practica cualquier hoyo desbloqueado. El progreso se guarda solo después de cada embocadura.",
+ strokesLbl:"GOLPES", totalLbl:"TOTAL", holeLbl:"HOYO", parLbl:"PAR",
+ hintTouch:"arrastra DESDE LA BOLITA y suelta para golpear (arrastres suaves = golpes suaves) · en otro sitio: orbitar · 2 dedos: desplazar",
+ hintDesktop:"arrastra DESDE LA BOLITA para golpear (arrastre corto = toque suave) · en otro sitio orbitar · arrastre derecho desplaza · Q E orbitar · rueda zoom · Z deshacer · R reiniciar",
+ tipUndo:"Deshacer el último golpe (Z)", tipRestart:"Reiniciar el hoyo (R)", tipSound:"Sonido (M)", tipCam:"Recentrar la cámara",
+ edNamePh:"Nombre del hoyo", edTestLbl:"PROBAR", edIOLbl:"I/O", edDupLbl:"Duplicar", edDelLbl:"Borrar",
+ edTeeLbl:"MARCAR TEE", edCupLbl:"MARCAR HOYO", edSealLbl:"SELLAR", edCheckLbl:"COMPROBAR", edSaveLbl:"GUARDAR",
+ edParts:"PIEZAS — toca la escena para mover la seleccionada · arrastrar = orbitar · dos dedos / arrastre derecho = desplazar",
+ hPutt:"GOLPE", hUndo:"DESHACER", hCam:"CÁMARA", hWater:"AGUA", hCampaign:"CAMPAÑA", hProc:"PROCEDURAL", hEditor:"EDITOR",
+ helpPutt:"pulsa SOBRE LA BOLITA, arrastra hacia atrás y suelta. Arrastre corto = toque suave, largo = golpe fuerte. Todo arrastre que supera la pequeña zona muerta cuenta, incluidos los golpes suaves. Los puntos simulan el rodado/vuelo.",
+ helpUndo:"↶ (o Z) devuelve el último golpe mientras la bola está quieta.",
+ helpCam:"arrastra en otro sitio para orbitar. Dos dedos / arrastre derecho = desplazar. Pinza / rueda = zoom.",
+ helpWater:"cada hoyo generado tiene un puente con barandilla; caer al agua = +1. La arena frena. Los molinos barren la bola — calcula el momento.",
+ helpCampaign:"118 hoyos. Los 18 primeros enseñan una idea cada uno; los 100 siguientes escalan de combos de 2 obstáculos a toboganes de 5-6. Cada hoyo generado gira (no hay clones rectos) y su ruta real de tee a hoyo se compara con todos los anteriores antes de aceptarlo.",
+ helpProc:"rondas con semilla de la misma biblioteca de bloques, verificadas a pie y con huella digital, por lo que nunca repiten un hoyo de la campaña principal.",
+ helpKeys:"R reiniciar · Z deshacer · M sonido · EDITOR crea y comparte hoyos (SELLAR pone muros automáticos en el perímetro).",
+ qualityLbl:"CALIDAD", qualityAuto:" — AUTO (se adapta a tu dispositivo)", qAuto:"Auto", qLow:"Bajo", qMed:"Medio", qHigh:"Alto",
+ resetData:"BORRAR TODOS LOS DATOS", wipeAsk:"¿Borrar todos los campos guardados, el progreso y los récords?",
+ holesLbl:"HOYOS", dMellow:"SUAVE", dSpicy:"PICANTE",
+ genNote:"Cada hoyo está verificado a pie, es único en trayectoria y tiene huella digital: las rondas procedurales nunca repiten un hoyo de la campaña principal.",
+ saveToCourses:"GUARDAR EN MIS CAMPOS", playAll:"JUGAR TODO", exportAll:"EXPORTAR TODO", importLbl:"IMPORTAR", clearLbl:"VACIAR",
+ noCourses1:"Todavía no hay hoyos propios.", noCourses2:"Créalos en el", noCourses3:"o importa JSON.",
+ deleteAsk:"¿Borrar todos los hoyos propios?",
+ ioTitle:"IMPORTAR / EXPORTAR (JSON)", ioCopyLbl:"COPIAR", ioDlLbl:"DESCARGAR .JSON", ioFileLbl:"CARGAR ARCHIVO",
+ ioFormat:"Formato: un objeto de nivel, un array o {\"levels\":[…]}. Se sanitiza al importar.",
+ holeToast:"HOYO {n} · {name} · PAR {par}", restarted:"REINICIADO", nothingToUndo:"NADA QUE DESHACER", shotUndone:"GOLPE DESHECHO",
+ savedHoles:"GUARDADOS {n} HOYOS", savedToCoursesN:"GUARDADOS {n} EN MIS CAMPOS", copied:"COPIADO", invalidData:"DATOS DE NIVEL NO VÁLIDOS",
+ importedEditor:"IMPORTADO AL EDITOR", importedN:"GUARDADOS {n} EN MIS CAMPOS", importedHoles:"IMPORTADOS {n} HOYOS",
+ edPlace:"EDITOR — TOCA LA ESCENA PARA COLOCAR", teePlace:"TOCA LA ESCENA PARA COLOCAR EL TEE", cupPlace:"TOCA LA ESCENA PARA COLOCAR EL HOYO",
+ needGround:"EL NIVEL NECESITA SUELO", savedCourse:"GUARDADO EN MIS CAMPOS", sealed:"PERÍMETRO SELLADO — ESQUINAS A NIVEL",
+ walkOk:"CAMINO DE TAMAÑO DE BOLITA HASTA EL HOYO", testAnyway:"PROBAR IGUAL",
+ waterPen:"AGUA +1", oobPen:"FUERA DE LÍMITE +1",
+ whyNoLevel:"sin nivel", whyNoGround:"sin suelo", whyTooLarge:"demasiado grande", whyTeeBlocked:"tee bloqueado",
+ whyCupBlocked:"hoyo bloqueado", whyMillWater:"molino junto al agua", whyCupMill:"hoyo en el barrido del molino",
+ whyTeeMill:"tee en el barrido del molino", whyNoPath:"no hay camino transitable al hoyo", whyErr:"error de análisis",
+ ace:"¡ACE!", eagle:"¡ÁGUILA!", birdie:"¡BIRDIE!", parTerm:"PAR", bogey:"BOGEY", dblBogey:"DOBLE BOGEY", even:"IGUAL",
+ holeStrokes:"Hoyo {n} · {s} golpes", nextHole:"SIGUIENTE HOYO", finishRound:"TERMINAR RONDA", roundComplete:"RONDA COMPLETA",
+ totalLine:"Total {t} · {rel} respecto al par ({p})", playAgain:"JUGAR OTRA VEZ",
+ newCampaign:"NUEVA CAMPAÑA — {n} HOYOS · PAR {p}", continueHole:"CONTINUAR — HOYO {i}/{n}",
+ bestCampaign:"RÉCORD DE CAMPAÑA · {s} GOLPES", myCoursesCount:"MIS CAMPOS ({n})",
+ glFail:"WebGL no está disponible en este dispositivo/navegador.",
+ ptGround:"Suelo", ptRamp:"Rampa", ptWall:"Muro", ptSand:"Arena", ptWater:"Agua", ptMill:"Molino",
+ pTop:"ARRIBA", pCol:"COLOR", pAxis:"EJE", pHgt:"ALTURA", pBase:"BASE", pRad:"RADIO", pSpd:"VEL",
+ pBlades:"PALAS", pHub:"CUBO", pBldH:"ALTO PALA",
+ noParts:"sin piezas — añade una arriba", selPart:"selecciona o añade una pieza", pLvl:"NIVEL"},
+pt:{
+ menuSub:"MINIGOLF ARCADE · 3D OFFLINE", teeOff:"SAÍDA", holeSelect:"SELEÇÃO DE BURACOS", myCourses:"MEUS CAMPOS",
+ procRounds:"RODADAS PROCEDURAIS", levelEditor:"EDITOR DE NÍVEIS",
+ holeSelNote:"Treine qualquer buraco desbloqueado. O progresso é salvo automaticamente depois de cada tacada.",
+ strokesLbl:"BATIDAS", totalLbl:"TOTAL", holeLbl:"BURACO", parLbl:"PAR",
+ hintTouch:"arraste DESDE A BOLA e solte para bater (arrastes suaves = tacadas suaves) · em outro lugar: orbitar · 2 dedos: deslocar",
+ hintDesktop:"arraste DESDE A BOLA para bater (arraste curto = tacada leve) · em outro lugar orbitar · arraste direito desloca · Q E orbitar · roda zoom · Z desfazer · R reiniciar",
+ tipUndo:"Desfazer a última tacada (Z)", tipRestart:"Reiniciar o buraco (R)", tipSound:"Som (M)", tipCam:"Recentrar a câmera",
+ edNamePh:"Nome do buraco", edTestLbl:"TESTAR", edIOLbl:"I/O", edDupLbl:"Duplicar", edDelLbl:"Apagar",
+ edTeeLbl:"MARCAR TEE", edCupLbl:"MARCAR BURACO", edSealLbl:"SELAR", edCheckLbl:"CHECAR", edSaveLbl:"SALVAR",
+ edParts:"PEÇAS — toque na cena para mover a selecionada · arrastar = orbitar · dois dedos / arraste direito = deslocar",
+ hPutt:"BATER", hUndo:"DESFAZER", hCam:"CÂMERA", hWater:"ÁGUA", hCampaign:"CAMPANHA", hProc:"PROCEDURAL", hEditor:"EDITOR",
+ helpPutt:"pressione SOBRE A BOLA, arraste para trás e solte. Arraste curto = tacada leve, longo = tacada forte. Todo arraste além da pequena zona morta conta, inclusive as tacadas suaves. Os pontos simulam rolagem/voo.",
+ helpUndo:"↶ (ou Z) desfaz a última tacada enquanto a bola está parada.",
+ helpCam:"arraste em outro lugar para orbitar. Dois dedos / arraste direito = deslocar. Pinça / roda = zoom.",
+ helpWater:"todo buraco gerado tem uma ponte com guarda-corpo; cair na água = +1. A areia come a velocidade. Os moinhos varrem a bola — calcule o momento.",
+ helpCampaign:"118 buracos. Os 18 primeiros ensinam uma ideia cada; os 100 seguintes escalam de combinações com 2 obstáculos a percursos com 5-6. Todo buraco gerado faz curvas (sem clones retos) e sua rota real do tee ao buraco é medida contra todos os anteriores antes de ser aceito.",
+ helpProc:"rodadas com semente da mesma biblioteca de blocos, verificadas a pé e com impressão digital, por isso nunca reutilizam um buraco da campanha principal.",
+ helpKeys:"R reiniciar · Z desfazer · M som · EDITOR cria e compartilha buracos (SELAR muroa o perímetro automaticamente).",
+ qualityLbl:"QUALIDADE", qualityAuto:" — AUTO (se adapta ao seu dispositivo)", qAuto:"Auto", qLow:"Baixo", qMed:"Médio", qHigh:"Alto",
+ resetData:"APAGAR TODOS OS DADOS", wipeAsk:"Apagar todos os campos salvos, o progresso e os recordes?",
+ holesLbl:"BURACOS", dMellow:"SUAVE", dSpicy:"PICANTE",
+ genNote:"Todo buraco é verificado a pé, único na trajetória e com impressão digital — as rodadas procedurais nunca reutilizam um buraco da campanha principal.",
+ saveToCourses:"SALVAR NOS MEUS CAMPOS", playAll:"JOGAR TODOS", exportAll:"EXPORTAR TUDO", importLbl:"IMPORTAR", clearLbl:"LIMPAR",
+ noCourses1:"Ainda não há buracos próprios.", noCourses2:"Crie-os no", noCourses3:"ou importe JSON.",
+ deleteAsk:"Apagar todos os buracos próprios?",
+ ioTitle:"IMPORTAR / EXPORTAR (JSON)", ioCopyLbl:"COPIAR", ioDlLbl:"BAIXAR .JSON", ioFileLbl:"CARREGAR ARQUIVO",
+ ioFormat:"Formato: um objeto de nível, um array ou {\"levels\":[…]}. É sanitizado na importação.",
+ holeToast:"BURACO {n} · {name} · PAR {par}", restarted:"REINICIADO", nothingToUndo:"NADA PARA DESFAZER", shotUndone:"TACADA DESFEITA",
+ savedHoles:"{n} BURACOS SALVOS", savedToCoursesN:"{n} SALVOS NOS MEUS CAMPOS", copied:"COPIADO", invalidData:"DADOS DE NÍVEL INVÁLIDOS",
+ importedEditor:"IMPORTADO PARA O EDITOR", importedN:"{n} SALVOS NOS MEUS CAMPOS", importedHoles:"{n} BURACO(S) IMPORTADOS",
+ edPlace:"EDITOR — TOQUE NA CENA PARA COLOCAR", teePlace:"TOQUE NA CENA PARA COLOCAR O TEE", cupPlace:"TOQUE NA CENA PARA COLOCAR O BURACO",
+ needGround:"O NÍVEL PRECISA DE CHÃO", savedCourse:"SALVO NOS MEUS CAMPOS", sealed:"PERÍMETRO SELADO — CANTOS NO NÍVEL",
+ walkOk:"CAMINHO DO TAMANHO DA BOLA ATÉ O BURACO", testAnyway:"TESTAR MESMO ASSIM",
+ waterPen:"ÁGUA +1", oobPen:"FORA DOS LIMITES +1",
+ whyNoLevel:"sem nível", whyNoGround:"sem chão", whyTooLarge:"grande demais", whyTeeBlocked:"tee bloqueado",
+ whyCupBlocked:"buraco bloqueado", whyMillWater:"moinho junto da água", whyCupMill:"buraco no varredouro do moinho",
+ whyTeeMill:"tee no varredouro do moinho", whyNoPath:"não há caminho até o buraco", whyErr:"erro de análise",
+ ace:"ACE!", eagle:"ÁGUIA!", birdie:"BIRDIE!", parTerm:"PAR", bogey:"BOGEY", dblBogey:"DOBLE BOGEY", even:"IGUAL",
+ holeStrokes:"Buraco {n} · {s} batidas", nextHole:"PRÓXIMO BURACO", finishRound:"TERMINAR RODADA", roundComplete:"RODADA COMPLETA",
+ totalLine:"Total {t} · {rel} vs par ({p})", playAgain:"JOGAR DE NOVO",
+ newCampaign:"NOVA CAMPANHA — {n} BURACOS · PAR {p}", continueHole:"CONTINUAR — BURACO {i}/{n}",
+ bestCampaign:"RECORDE DA CAMPANHA · {s} BATIDAS", myCoursesCount:"MEUS CAMPOS ({n})",
+ glFail:"WebGL não está disponível neste dispositivo/navegador.",
+ ptGround:"Chão", ptRamp:"Rampa", ptWall:"Parede", ptSand:"Areia", ptWater:"Água", ptMill:"Moinho",
+ pTop:"TOPO", pCol:"COR", pAxis:"EIXO", pHgt:"ALTURA", pBase:"BASE", pRad:"RAIO", pSpd:"VEL",
+ pBlades:"PÁS", pHub:"CUBO", pBldH:"ALT. PÁ",
+ noParts:"sem peças — adicione uma acima", selPart:"selecione ou adicione uma peça", pLvl:"NÍVEL"},
+ru:{
+ menuSub:"МИНИ-ГОЛЬФ · 3D БЕЗ СЕТИ", teeOff:"УДАР", holeSelect:"ВЫБОР ЛУНОК", myCourses:"МОИ ПОЛЯ",
+ procRounds:"СЛУЧАЙНЫЕ РАУНДЫ", levelEditor:"РЕДАКТОР УРОВНЕЙ",
+ holeSelNote:"Тренируйте любую открытую лунку. Прогресс сохраняется автоматически после каждой лунки.",
+ strokesLbl:"УДАРЫ", totalLbl:"ВСЕГО", holeLbl:"ЛУНКА", parLbl:"ПАР",
+ hintTouch:"тяните ОТ МЯЧА и отпустите — удар (мягкое тягло = мягкий пат) · в другом месте: орбита · 2 пальца: сдвиг",
+ hintDesktop:"тяните ОТ МЯЧА для удара (короткое тягло = лёгкий пат) · в другом месте орбита · правая кнопка — сдвиг · Q E орбита · колесо зум · Z отмена · R заново",
+ tipUndo:"Отменить последний удар (Z)", tipRestart:"Начать лунку заново (R)", tipSound:"Звук (M)", tipCam:"Центрировать камеру",
+ edNamePh:"Название лунки", edTestLbl:"ТЕСТ", edIOLbl:"I/O", edDupLbl:"Дублировать", edDelLbl:"Удалить",
+ edTeeLbl:"ОТМЕТИТЬ ТЭ", edCupLbl:"ОТМЕТИТЬ ЛУНКУ", edSealLbl:"ОБВЕСТИ", edCheckLbl:"ПРОВЕРКА", edSaveLbl:"СОХРАНИТЬ",
+ edParts:"ДЕТАЛИ — коснитесь сцены, чтобы переместить выбранную · тягло = орбита · два пальца / правая кнопка = сдвиг",
+ hPutt:"ПАТ", hUndo:"ОТМЕНА", hCam:"КАМЕРА", hWater:"ВОДА", hCampaign:"КАМПАНИЯ", hProc:"СЛУЧАЙНО", hEditor:"РЕДАКТОР",
+ helpPutt:"нажмите НА МЯЧ, тяните назад, отпустите. Короткое тягло = лёгкий пат, длинное = сильный удар. Засчитывается любое тягло сверх мёртвой зоны, включая мягкие. Точки показывают раскат и полёт.",
+ helpUndo:"↶ (или Z) отменяет последний удар, пока мяч покоится.",
+ helpCam:"тяните в другом месте — орбита. Два пальца / правая кнопка = сдвиг. Щипок / колесо = зум.",
+ helpWater:"на каждой сгенерированной лунке есть мост с перилами; падение в воду = +1. Песок гасит скорость. Ветряные мелницы заметают мяч — рассчитайте время.",
+ helpCampaign:"118 лунок. Первые 18 по одной идее каждая; следующие 100 идут от комбинаций из 2 препятствий к полосам из 5-6. Каждая сгенерированная лунка имеет повороты (прямых клонов нет), а её реальный путь от тэ до лунки сравнивается со всеми предыдущими до принятия.",
+ helpProc:"раунды по зерну из той же библиотеки блоков, проверены проходимостью и отпечатком, поэтому никогда не повторяют лунку основной кампании.",
+ helpKeys:"R заново · Z отмена · M звук · РЕДАКТОР строит и делится лунками (ОБВЕСТИ сам ставит стены по периметру).",
+ qualityLbl:"КАЧЕСТВО", qualityAuto:" — АВТО (подстраивается под устройство)", qAuto:"Авто", qLow:"Низк", qMed:"Сред", qHigh:"Выс",
+ resetData:"СТЕРЕТЬ ВСЕ ДАННЫЕ", wipeAsk:"Стереть все сохранённые поля, прогресс и рекорды?",
+ holesLbl:"ЛУНКИ", dMellow:"СПОКОЙНО", dSpicy:"ОСТРО",
+ genNote:"Каждая лунка проверена проходимостью, уникальна по траектории и имеет отпечаток — случайные раунды никогда не повторяют лунку основной кампании.",
+ saveToCourses:"СОХРАНИТЬ В МОИ ПОЛЯ", playAll:"ИГРАТЬ ВСЕ", exportAll:"ЭКСПОРТ ВСЕХ", importLbl:"ИМПОРТ", clearLbl:"ОЧИСТКА",
+ noCourses1:"Своих лунок пока нет.", noCourses2:"Создайте их в", noCourses3:"или импортируйте JSON.",
+ deleteAsk:"Удалить все свои лунки?",
+ ioTitle:"ИМПОРТ / ЭКСПОРТ (JSON)", ioCopyLbl:"КОПИРОВАТЬ", ioDlLbl:"СКАЧАТЬ .JSON", ioFileLbl:"ЗАГРУЗИТЬ ФАЙЛ",
+ ioFormat:"Формат: один объект уровня, массив или {\"levels\":[…]}. При импорте санитизируется.",
+ holeToast:"ЛУНКА {n} · {name} · ПАР {par}", restarted:"НАЧАТО ЗАНОВО", nothingToUndo:"Нечего ОТМЕНЯТЬ", shotUndone:"УДАР ОТМЕНЁН",
+ savedHoles:"СОХРАНЕНО ЛУНОК: {n}", savedToCoursesN:"СОХРАНЕНО В МОИ ПОЛЯ: {n}", copied:"СКОПИРОВАНО", invalidData:"ДАННЫЕ УРОВНЯ НЕВЕРНЫ",
+ importedEditor:"Импортировано в РЕДАКТОР", importedN:"СОХРАНЕНО В МОИ ПОЛЯ: {n}", importedHoles:"Импортировано лунок: {n}",
+ edPlace:"РЕДАКТОР — КОСНИТЕСЬ СЦЕНЫ, ЧТОБЫ РАЗМЕСТИТЬ", teePlace:"КОСНИТЕСЬ СЦЕНЫ, ЧТОБЫ ПОСТАВИТЬ ТЭ", cupPlace:"КОСНИТЕСЬ СЦЕНЫ, ЧТОБЫ ПОСТАВИТЬ ЛУНКУ",
+ needGround:"УРОВНЮ НУЖЕН ПОЛ", savedCourse:"СОХРАНЕНО В МОИ ПОЛЯ", sealed:"ПЕРИМЕТР ОБВЕДЁН — УГЛЫ ВЫРОВНЕНЫ",
+ walkOk:"ПРОХОД РАЗМЕРА МЯЧА ДО ЛУНКИ", testAnyway:"ПРОВЕРИТЬ ВСЁ РАВНО",
+ waterPen:"ВОДА +1", oobPen:"ВНЕ ГРАНИЦ +1",
+ whyNoLevel:"нет уровня", whyNoGround:"нет пола", whyTooLarge:"слишком крупно", whyTeeBlocked:"тэ заблокирован",
+ whyCupBlocked:"лунка заблокирована", whyMillWater:"мелница у воды", whyCupMill:"лунка в зоне мелницы",
+ whyTeeMill:"тэ в зоне мелницы", whyNoPath:"нет проходимого пути к лунке", whyErr:"ошибка анализа",
+ ace:"ЭЙС!", eagle:"ОРЁЛ!", birdie:"БЁРДИ!", parTerm:"ПАР", bogey:"БОГГИ", dblBogey:"ДВОЙНОЙ БОГГИ", even:"В ПАР",
+ holeStrokes:"Лунка {n} · ударов {s}", nextHole:"СЛЕДУЮЩАЯ ЛУНКА", finishRound:"ЗАВЕРШИТЬ РАУНД", roundComplete:"РАУНД ЗАВЕРШЁН",
+ totalLine:"Всего {t} · {rel} к пару ({p})", playAgain:"ИГРАТЬ СНОВА",
+ newCampaign:"НОВАЯ КАМПАНИЯ — ЛУНОК: {n} · ПАР {p}", continueHole:"ПРОДОЛЖИТЬ — ЛУНКА {i}/{n}",
+ bestCampaign:"РЕКОРД КАМПАНИИ · {s} УДАРОВ", myCoursesCount:"МОИ ПОЛЯ ({n})",
+ glFail:"WebGL недоступен на этом устройстве/в браузере.",
+ ptGround:"Пол", ptRamp:"Рампа", ptWall:"Стена", ptSand:"Песок", ptWater:"Вода", ptMill:"Мелница",
+ pTop:"ВЕРХ", pCol:"ЦВЕТ", pAxis:"ОСЬ", pHgt:"ВЫСОТА", pBase:"БАЗА", pRad:"РАДИУС", pSpd:"СКОР",
+ pBlades:"ЛОПАСТИ", pHub:"ЦЕНТР", pBldH:"ВЫС. ЛОПАСТИ",
+ noParts:"нет деталей — добавьте выше", selPart:"выберите или добавьте деталь", pLvl:"УРОВЕНЬ"},
+zh:{
+ menuSub:"街机迷你高尔夫 · 离线 3D", teeOff:"开球", holeSelect:"选择球洞", myCourses:"我的球场",
+ procRounds:"程序化回合", levelEditor:"关卡编辑器",
+ holeSelNote:"练习任何已解锁的球洞。每次进洞后自动保存进度。",
+ strokesLbl:"杆数", totalLbl:"总计", holeLbl:"球洞", parLbl:"标准杆",
+ hintTouch:"从球拖拽并放开即可击球（轻拖 = 轻推）· 其他位置：旋转视角 · 两指：平移",
+ hintDesktop:"从球拖拽击球（短拖 = 轻推）· 其他位置旋转 · 右键拖拽平移 · Q E 旋转 · 滚轮缩放 · Z 撤销 · R 重开",
+ tipUndo:"撤销上一杆 (Z)", tipRestart:"重开本洞 (R)", tipSound:"声音 (M)", tipCam:"相机回中",
+ edNamePh:"球洞名称", edTestLbl:"试玩", edIOLbl:"I/O", edDupLbl:"复制", edDelLbl:"删除",
+ edTeeLbl:"设发球点", edCupLbl:"设洞口", edSealLbl:"封闭边界", edCheckLbl:"检查", edSaveLbl:"保存",
+ edParts:"部件 — 点场景移动所选 · 拖拽 = 旋转 · 两指 / 右键拖拽 = 平移",
+ hPutt:"击球", hUndo:"撤销", hCam:"相机", hWater:"水", hCampaign:"战役", hProc:"程序化", hEditor:"编辑器",
+ helpPutt:"按在球上，向后拖拽后放开。短拖 = 轻推，长拖 = 大力。只要超过极小的死区都算一次击球，轻推也算。点表示模拟的滚动与飞行。",
+ helpUndo:"↶（或 Z）在球静止时撤销上一杆。",
+ helpCam:"在其他位置拖拽可旋转视角。两指 / 右键拖拽 = 平移。捏合 / 滚轮 = 缩放。",
+ helpWater:"每个生成的球洞都有带护栏的桥；落水 = +1。沙地会减速。风车会扫到球 — 把握时机。",
+ helpCampaign:"118 个球洞。前 18 洞每洞教一个要点；之后 100 洞从 2 个障碍的组合升级到 5-6 个障碍的关卡。每个生成的球洞都有转弯（没有直线克隆），并被接受前会与之前所有球洞比较真实发球点到洞口的路线。",
+ helpProc:"用同一技巧积木库按种子生成的回合，经过行走验证与指纹核对，绝不重复主战役的球洞。",
+ helpKeys:"R 重开 · Z 撤销 · M 声音 · 编辑器 建造并分享球洞（封闭边界会自动沿外围砌墙）。",
+ qualityLbl:"画质", qualityAuto:" — 自动（随设备调整）", qAuto:"自动", qLow:"低", qMed:"中", qHigh:"高",
+ resetData:"清除全部数据", wipeAsk:"要清除所有已保存球场、进度与最佳成绩吗？",
+ holesLbl:"洞数", dMellow:"温和", dSpicy:"刺激",
+ genNote:"每个球洞都经过行走验证、轨迹唯一并核对指纹 — 程序化回合绝不重复主战役的球洞。",
+ saveToCourses:"保存到我的球场", playAll:"全部开始", exportAll:"全部导出", importLbl:"导入", clearLbl:"清空",
+ noCourses1:"还没有自建球洞。", noCourses2:"可以在", noCourses3:"中建造，或导入 JSON。",
+ deleteAsk:"要删除所有自建球洞吗？",
+ ioTitle:"导入 / 导出 (JSON)", ioCopyLbl:"复制", ioDlLbl:"下载 .JSON", ioFileLbl:"打开文件",
+ ioFormat:"格式：单个关卡对象、数组，或 {\"levels\":[…]}。导入时会清理。",
+ holeToast:"第 {n} 洞 · {name} · 标准杆 {par}", restarted:"已重开", nothingToUndo:"没有可撤销的", shotUndone:"已撤销该杆",
+ savedHoles:"已保存 {n} 个球洞", savedToCoursesN:"已保存 {n} 个到我的球场", copied:"已复制", invalidData:"关卡数据无效",
+ importedEditor:"已导入编辑器", importedN:"已保存 {n} 个到我的球场", importedHoles:"已导入 {n} 个球洞",
+ edPlace:"编辑器 — 点场景放置", teePlace:"点场景放置发球点", cupPlace:"点场景放置洞口",
+ needGround:"关卡需要地面", savedCourse:"已保存到我的球场", sealed:"边界已封闭 — 转角齐平",
+ walkOk:"有球大小的通路到洞口", testAnyway:"仍要试玩",
+ waterPen:"落水 +1", oobPen:"出界 +1",
+ whyNoLevel:"没有关卡", whyNoGround:"没有地面", whyTooLarge:"尺寸过大", whyTeeBlocked:"发球点被挡",
+ whyCupBlocked:"洞口被挡", whyMillWater:"风车紧邻水面", whyCupMill:"洞口在风车扫掠区",
+ whyTeeMill:"发球点在风车扫掠区", whyNoPath:"没有可行走的通路到洞口", whyErr:"分析错误",
+ ace:"一杆进洞！", eagle:"老鹰球！", birdie:"小鸟球！", parTerm:"标准杆", bogey:"博忌", dblBogey:"双博忌", even:"平标准杆",
+ holeStrokes:"第 {n} 洞 · {s} 杆", nextHole:"下一洞", finishRound:"结束回合", roundComplete:"回合完成",
+ totalLine:"总计 {t} · 相对标准杆 {rel}（{p}）", playAgain:"再来一次",
+ newCampaign:"新战役 — {n} 洞 · 标准杆 {p}", continueHole:"继续 — 第 {i}/{n} 洞",
+ bestCampaign:"战役最佳 · {s} 杆", myCoursesCount:"我的球场 ({n})",
+ glFail:"此设备或浏览器不支持 WebGL。",
+ ptGround:"地面", ptRamp:"坡道", ptWall:"墙", ptSand:"沙", ptWater:"水", ptMill:"风车",
+ pTop:"顶", pCol:"颜色", pAxis:"轴", pHgt:"高", pBase:"底", pRad:"半径", pSpd:"速度",
+ pBlades:"叶片", pHub:"中心", pBldH:"叶高",
+ noParts:"没有部件 — 请在上方添加", selPart:"选择或添加一个部件", pLvl:"水面"}
+});
+</script>
 <script>
 'use strict';
+var PARTLBL={g:'ptGround',r:'ptRamp',w:'ptWall',s:'ptSand',q:'ptWater',m:'ptMill'};
+var WHY={'no level':'whyNoLevel','no ground':'whyNoGround','too large':'whyTooLarge','tee blocked':'whyTeeBlocked',
+ 'cup blocked':'whyCupBlocked','mill beside water':'whyMillWater','cup in mill sweep':'whyCupMill',
+ 'tee in mill sweep':'whyTeeMill','no walkable path to cup':'whyNoPath','analysis error':'whyErr'};
+function whyLbl(w){return TLI18N.t(WHY[w]||'whyErr').toUpperCase()}
 /* ============================ utils ============================ */
 function $(id){return document.getElementById(id)}
 var TAU=Math.PI*2;
@@ -189,7 +717,7 @@ var AU={ctx:null,on:true,
 var cv=$('gl');
 var gl=cv.getContext('webgl',{antialias:false,alpha:false,depth:true,stencil:false,powerPreference:'low-power',failIfMajorPerformanceCaveat:false});
 if(!gl)gl=cv.getContext('experimental-webgl');
-if(!gl){document.body.innerHTML='<div style="padding:40px;font-family:sans-serif">WebGL is not available on this device/browser.</div>';throw new Error('no webgl')}
+if(!gl){document.body.innerHTML='<div style="padding:40px;font-family:sans-serif">'+TLI18N.t('glFail')+'</div>';throw new Error('no webgl')}
 var VW=2,VH=2;
 var settings=Object.assign({q:0,snd:true},load('pc.set',{}));
 var autoScale=1,perfEMA=0,perfT=0;
@@ -1121,10 +1649,8 @@ function startHole(i){
  cam.yaw=Math.atan2(lv.tee[0]-lv.cup[0],lv.tee[1]-lv.cup[1]);
  cam.pitch=.66;cam.dist=14;cam.tx=ball.x;cam.ty=ball.y;cam.tz=ball.z;
  hideCard();updateHUD();
- toast("HOLE "+(i+1)+" · "+lv.name.toUpperCase()+" · PAR "+lv.par,2200);
- $('hint').textContent=isTouch?
-  "drag FROM BALL & release to putt (soft drags = soft putts) · elsewhere: orbit · 2 fingers: pan":
-  "drag FROM BALL to putt (short drag = gentle tap) · elsewhere orbit · right-drag pan · Q E orbit · scroll zoom · Z undo · R restart"}
+ toast(TLI18N.t("holeToast",{n:i+1,name:lv.name.toUpperCase(),par:lv.par}),2200);
+ $('hint').textContent=TLI18N.t(isTouch?"hintTouch":"hintDesktop")}
 function resetBall(){
  ball.x=lv.tee[0];ball.z=lv.tee[1];
  ball.y=topAt(lv.parts,ball.x,ball.z)+R_BALL;
@@ -1244,8 +1770,8 @@ function physEvents(fx){
  if(fx.mill&&now-_wallSnd>90){AU.mill();_wallSnd=now}
  else if((fx.wall||fx.bounce)&&now-_wallSnd>90){AU.wall();_wallSnd=now}
  if(fx.sand&&now-_sandSnd>450){AU.sand();_sandSnd=now}
- if(fx.water){AU.splash();penalty("WATER +1")}
- if(fx.oob){AU.pen();penalty("OUT OF BOUNDS +1")}
+ if(fx.water){AU.splash();penalty(TLI18N.t("waterPen"))}
+ if(fx.oob){AU.pen();penalty(TLI18N.t("oobPen"))}
  if(fx.sink)sunk()}
 function penalty(msg){
  strokes++;toast(msg);
@@ -1257,46 +1783,46 @@ function sunk(){
  setTimeout(function(){
   if(mode!=='play'&&mode!=='editTest')return;
   var diff=strokes-lv.par;
-  var term=strokes===1?"ACE!":diff<=-2?"EAGLE!":diff===-1?"BIRDIE!":diff===0?"PAR":diff===1?"BOGEY":diff===2?"DOUBLE BOGEY":"+"+diff;
+  var term=strokes===1?TLI18N.t("ace"):diff<=-2?TLI18N.t("eagle"):diff===-1?TLI18N.t("birdie"):diff===0?TLI18N.t("parTerm"):diff===1?TLI18N.t("bogey"):diff===2?TLI18N.t("dblBogey"):"+"+diff;
   round.scores.push(strokes);round.total+=strokes;
   if(round.label==='Campaign'){
    store('pc.prog',{i:holeIdx+1,total:round.total,scores:round.scores});
    var un=load('pc.unlock',0);
    if(holeIdx+1>un)store('pc.unlock',Math.min(holeIdx+1,CAMPAIGN.length-1))}
-  showCard(term,"Hole "+(holeIdx+1)+" · "+strokes+" stroke"+(strokes===1?"":"s"),
+  showCard(term,TLI18N.t("holeStrokes",{n:holeIdx+1,s:strokes}),
    holeIdx<round.levels.length-1?
-    [["NEXT HOLE ➜",nextHole]]:
-    [["FINISH ROUND",finishRound]])},900)}
+    [[TLI18N.t("nextHole")+" ➜",nextHole]]:
+    [[TLI18N.t("finishRound"),finishRound]])},900)}
 function nextHole(){hideCard();startHole(holeIdx+1)}
 function finishRound(){
  hideCard();
  var tot=round.total,parSum=0,i;
  for(i=0;i<round.levels.length;i++)parSum+=round.levels[i].par;
- var d=tot-parSum,rel=d===0?"EVEN":(d>0?"+"+d:String(d));
+ var d=tot-parSum,rel=d===0?TLI18N.t("even"):(d>0?"+"+d:String(d));
  if(round.label==='Campaign'){
   store('pc.prog',null);
   var best=load('pc.best',null);
   if(!best||best.n!==round.levels.length||tot<best.s)store('pc.best',{s:tot,n:round.levels.length})}
- showCard("ROUND COMPLETE","Total "+tot+" · "+rel+" vs par ("+parSum+")",
-  [["PLAY AGAIN ➜",function(){hideCard();newRound(round.levels,round.label)}],
-   ["MENU",function(){hideCard();goHome()}]])}
+ showCard(TLI18N.t("roundComplete"),TLI18N.t("totalLine",{t:tot,rel:rel,p:parSum}),
+  [[TLI18N.t("playAgain")+" ➜",function(){hideCard();newRound(round.levels,round.label)}],
+   [TLI18N.t("menu"),function(){hideCard();goHome()}]])}
 function updateHUD(){
  if(!round||!lv)return;
- $('hudHole').innerHTML="HOLE <b>"+(holeIdx+1)+"</b>/"+round.levels.length;
- $('hudPar').innerHTML="PAR <b>"+lv.par+"</b>";
+ $('hudHole').innerHTML=TLI18N.t("holeLbl")+' <b>'+(holeIdx+1)+'</b>/'+round.levels.length;
+ $('hudPar').innerHTML=TLI18N.t("parLbl")+' <b>'+lv.par+'</b>';
  $('hudStr').textContent=strokes;
  $('hudTot').textContent=round.total+strokes;
  $('bMute').textContent=AU.on?'♪':'∅'}
 function restartHole(){
  if(mode!=='play'&&mode!=='editTest')return;
- resetBall();strokes=0;sinkT=-1;lockT=.35;shotHist=[];updateHUD();toast("RESTARTED")}
+ resetBall();strokes=0;sinkT=-1;lockT=.35;shotHist=[];updateHUD();toast(TLI18N.t("restarted"))}
 function undoShot(){
  if(mode!=='play'&&mode!=='editTest')return;
- if(sinkT>=0||ball.moving||!shotHist.length){toast("NOTHING TO UNDO");return}
+ if(sinkT>=0||ball.moving||!shotHist.length){toast(TLI18N.t("nothingToUndo"));return}
  var h=shotHist.pop();
  ball.x=h.x;ball.y=h.y;ball.z=h.z;ball.vx=0;ball.vy=0;ball.vz=0;
  ball.gh=topAt(lv.parts,ball.x,ball.z);ball.airT=0;ball.rest=null;
- strokes=h.s;shotOrigin=null;updateHUD();AU.click();toast("SHOT UNDONE")}
+ strokes=h.s;shotOrigin=null;updateHUD();AU.click();toast(TLI18N.t("shotUndone"))}
 
 /* ============================ camera / picking ============================ */
 function getBallScreenPos(){
@@ -1577,16 +2103,16 @@ function setBackdrop(){
 function campPar(){var s=0;for(var i=0;i<CAMPAIGN.length;i++)s+=CAMPAIGN[i].par;return s}
 function refreshMenu(){
  var n=CAMPAIGN.length;
- $('bPlay').textContent="NEW CAMPAIGN — "+n+" HOLES · PAR "+campPar();
+ $('bPlay').textContent=TLI18N.t("newCampaign",{n:n,p:campPar()});
  var pr=load('pc.prog',null);
  if(pr&&pr.i>0&&pr.i<n&&Array.isArray(pr.scores)){
   $('bCont').classList.remove('hide');
-  $('bCont').textContent="CONTINUE — HOLE "+(pr.i+1)+"/"+n}
+  $('bCont').textContent=TLI18N.t("continueHole",{i:pr.i+1,n:n})}
  else $('bCont').classList.add('hide');
  var best=load('pc.best',null);
- $('bestLine').textContent=(best&&best.n===n)?("BEST CAMPAIGN · "+best.s+" STROKES"):"";
+ $('bestLine').textContent=(best&&best.n===n)?TLI18N.t("bestCampaign",{s:best.s}):"";
  var cust=load('pc.custom',[]);
- $('bCustom').textContent="MY COURSES"+(cust.length?" ("+cust.length+")":"")}
+ $('bCustom').textContent=TLI18N.t("myCoursesCount",{n:cust.length})}
 function startCampaign(cont){
  AU.init();AU.click();showScr('hud');mode='play';
  round={levels:CAMPAIGN,label:'Campaign',total:0,scores:[]};
@@ -1614,11 +2140,11 @@ function holeModal(){
  for(var i=0;i<n;i++){
   var locked=i>un;
   h+='<button class="hbtn'+(locked?' lock':'')+'" '+(locked?'disabled':'onclick="practiceHole('+i+')"')+
-   ' title="'+CAMPAIGN[i].name+' · par '+CAMPAIGN[i].par+'">'+(i+1)+'</button>'}
- showModal('<h3>HOLE SELECT</h3>'+
-  '<div class="lbl">Practice any unlocked hole. Progress is saved automatically after every cup.</div>'+
+   ' title="'+CAMPAIGN[i].name+' · '+TLI18N.t("parLbl")+' '+CAMPAIGN[i].par+'">'+(i+1)+'</button>'}
+ showModal('<h3 data-t="holeSelect">HOLE SELECT</h3>'+
+  '<div class="lbl" data-t="holeSelNote">Practice any unlocked hole. Progress is saved automatically after every cup.</div>'+
   '<div id="holeGrid">'+h+'</div>'+
-  '<button class="btn acc" onclick="hideModal()">BACK</button>')}
+  '<button class="btn acc" data-t="back" onclick="hideModal()">BACK</button>')}
 window.practiceHole=function(i){
  hideModal();showScr('hud');mode='play';
  newRound([CAMPAIGN[i]],'Practice')};
@@ -1634,93 +2160,93 @@ function hideModal(){$('modal').classList.add('hide')}
 window.hideModal=hideModal;
 $('modal').addEventListener('pointerdown',function(e){if(e.target===$('modal'))hideModal()});
 if(!window.PointerEvent)$('modal').addEventListener('touchstart',function(e){if(e.target===$('modal'))hideModal()});
-function helpModal(){showModal('<h3>HOW TO PLAY</h3><div class="kv">'+
- '<div><b>PUTT</b> — press ON THE BALL, drag back, release. Short drag = gentle tap, long drag = drive. Every drag past the tiny dead-zone counts, soft shots included. Dots = simulated roll/flight.</div>'+
- '<div><b>UNDO</b> — ↶ (or Z) takes back the last shot while the ball is at rest.</div>'+
- '<div><b>CAMERA</b> — drag elsewhere to orbit. Two fingers / right-drag = pan. Pinch / scroll = zoom.</div>'+
- '<div><b>WATER</b> — every generated hole has a railed bridge; splashing = +1. Sand eats speed. Windmills sweep the ball — time it.</div>'+
- '<div><b>CAMPAIGN</b> — 118 holes. First 18 teach one idea each; the next 100 escalate from 2-obstacle combos to 5-6 obstacle gauntlets. Every generated hole turns (no straight clones) and its real tee-to-cup route is measured against every earlier hole before it is accepted.</div>'+
- '<div><b>PROCEDURAL</b> — seeded rounds from the same trick-block library, walk-verified, and fingerprint-checked so they can never reuse a main-campaign hole.</div>'+
- '<div><b>R</b> restart · <b>Z</b> undo · <b>M</b> sound · <b>EDITOR</b> build & share holes (SEAL auto-walls the perimeter).</div></div>'+
- '<button class="btn acc" onclick="hideModal()">BACK</button>')}
-function setModal(){showModal('<h3>SETTINGS</h3>'+
- '<div class="lbl">QUALITY'+(settings.q===0?' — AUTO (adapts to your device)':'')+'</div>'+
- '<div class="row">'+['Auto','Low','Med','High'].map(function(q,i){
-  return '<button class="btn sm '+(settings.q===i?'acc':'')+'" onclick="setQ('+i+')">'+q+'</button>'}).join('')+'</div>'+
- '<div class="row"><span class="lbl">SOUND</span>'+
+function helpModal(){showModal('<h3 data-t="howToPlay">HOW TO PLAY</h3><div class="kv">'+
+ '<div><b data-t="hPutt">PUTT</b> — <span data-t="helpPutt">press ON THE BALL, drag back, release. Short drag = gentle tap, long drag = drive. Every drag past the tiny dead-zone counts, soft shots included. Dots = simulated roll/flight.</span></div>'+
+ '<div><b data-t="hUndo">UNDO</b> — <span data-t="helpUndo">↶ (or Z) takes back the last shot while the ball is at rest.</span></div>'+
+ '<div><b data-t="hCam">CAMERA</b> — <span data-t="helpCam">drag elsewhere to orbit. Two fingers / right-drag = pan. Pinch / scroll = zoom.</span></div>'+
+ '<div><b data-t="hWater">WATER</b> — <span data-t="helpWater">every generated hole has a railed bridge; splashing = +1. Sand eats speed. Windmills sweep the ball — time it.</span></div>'+
+ '<div><b data-t="hCampaign">CAMPAIGN</b> — <span data-t="helpCampaign">118 holes. First 18 teach one idea each; the next 100 escalate from 2-obstacle combos to 5-6 obstacle gauntlets. Every generated hole turns (no straight clones) and its real tee-to-cup route is measured against every earlier hole before it is accepted.</span></div>'+
+ '<div><b data-t="hProc">PROCEDURAL</b> — <span data-t="helpProc">seeded rounds from the same trick-block library, walk-verified, and fingerprint-checked so they can never reuse a main-campaign hole.</span></div>'+
+ '<div><span data-t="helpKeys">R restart · Z undo · M sound · EDITOR build &amp; share holes (SEAL auto-walls the perimeter).</span></div></div>'+
+ '<button class="btn acc" data-t="back" onclick="hideModal()">BACK</button>')}
+function setModal(){showModal('<h3 data-t="settings">SETTINGS</h3>'+
+ '<div class="lbl"><span data-t="qualityLbl">QUALITY</span>'+(settings.q===0?'<span data-t="qualityAuto"> — AUTO (adapts to your device)</span>':'')+'</div>'+
+ '<div class="row">'+[['qAuto','Auto'],['qLow','Low'],['qMed','Med'],['qHigh','High']].map(function(q,i){
+  return '<button class="btn sm '+(settings.q===i?'acc':'')+'" data-t="'+q[0]+'" onclick="setQ('+i+')">'+q[1]+'</button>'}).join('')+'</div>'+
+ '<div class="row"><span class="lbl" data-t="sound">SOUND</span>'+
  '<button class="btn sm" id="sndBtn">'+(AU.on?'ON':'OFF')+'</button></div>'+
- '<div class="row"><button class="btn sm" id="wipeBtn">RESET ALL DATA</button></div>'+
- '<button class="btn acc" onclick="hideModal()">BACK</button>');
- $('sndBtn').onclick=function(){AU.on=!AU.on;settings.snd=AU.on;store('pc.set',settings);this.textContent=AU.on?'ON':'OFF'};
- $('wipeBtn').onclick=function(){if(confirm('Erase all saved courses, progress & best scores?')){try{localStorage.clear()}catch(e){}location.reload()}}}
+ '<div class="row"><button class="btn sm" id="wipeBtn" data-t="resetData">RESET ALL DATA</button></div>'+
+ '<button class="btn acc" data-t="back" onclick="hideModal()">BACK</button>');
+ $('sndBtn').onclick=function(){AU.on=!AU.on;settings.snd=AU.on;store('pc.set',settings);this.textContent=AU.on?TLI18N.t("on"):TLI18N.t("off")};
+ $('wipeBtn').onclick=function(){if(confirm(TLI18N.t("wipeAsk"))){try{localStorage.clear()}catch(e){}location.reload()}}}
 window.setQ=function(i){settings.q=i;store('pc.set',settings);autoScale=1;resize();setModal()};
-function genModal(){showModal('<h3>PROCEDURAL ROUNDS</h3>'+
- '<div class="row"><span class="lbl">SEED</span><input type="text" id="gSeed" value="'+Math.floor(Math.random()*99999)+'" style="width:130px">'+
+function genModal(){showModal('<h3 data-t="procRounds">PROCEDURAL ROUNDS</h3>'+
+ '<div class="row"><span class="lbl" data-t="seed">SEED</span><input type="text" id="gSeed" value="'+Math.floor(Math.random()*99999)+'" style="width:130px">'+
  '<button class="btn sm" id="gDie">🎲</button></div>'+
- '<div class="row"><span class="lbl">HOLES</span><input type="number" id="gN" value="9" min="1" max="30">'+
- '<span class="lbl">DIFFICULTY</span><select id="gD"><option value="0">Mellow</option><option value="1" selected>Normal</option><option value="2">Spicy</option></select></div>'+
- '<div class="row"><button class="btn sm grn" id="gPlay">▶ PLAY</button>'+
- '<button class="btn sm" id="gAdd">＋ SAVE TO MY COURSES</button></div>'+
- '<div class="lbl">Every hole is walk-verified, trajectory-unique, and fingerprint-checked — procedural rounds never reuse a main-campaign hole.</div>'+
- '<button class="btn acc" onclick="hideModal()">BACK</button>');
+ '<div class="row"><span class="lbl" data-t="holesLbl">HOLES</span><input type="number" id="gN" value="9" min="1" max="30">'+
+ '<span class="lbl" data-t="difficulty">DIFFICULTY</span><select id="gD"><option value="0" data-t="dMellow">Mellow</option><option value="1" selected data-t="normal">Normal</option><option value="2" data-t="dSpicy">Spicy</option></select></div>'+
+ '<div class="row"><button class="btn sm grn" id="gPlay">▶ <span data-t="play">PLAY</span></button>'+
+ '<button class="btn sm" id="gAdd">＋ <span data-t="saveToCourses">SAVE TO MY COURSES</span></button></div>'+
+ '<div class="lbl" data-t="genNote">Every hole is walk-verified, trajectory-unique, and fingerprint-checked — procedural rounds never reuse a main-campaign hole.</div>'+
+ '<button class="btn acc" data-t="back" onclick="hideModal()">BACK</button>');
  function gen(){return genLevels($('gSeed').value,clamp(+$('gN').value||9,1,30),+$('gD').value||0)}
  $('gDie').onclick=function(){$('gSeed').value=Math.floor(Math.random()*99999)};
  $('gPlay').onclick=function(){var ls=gen(),seed=$('gSeed').value;
   hideModal();showScr('hud');mode='play';newRound(ls,'Procedural · '+seed)};
  $('gAdd').onclick=function(){var ls=gen(),cust=load('pc.custom',[]);
   for(var i=0;i<ls.length;i++)cust.push(ls[i]);store('pc.custom',cust);
-  toast("SAVED "+ls.length+" HOLES");hideModal()}}
+  toast(TLI18N.t("savedHoles",{n:ls.length}));hideModal()}}
 function customModal(){
  var cust=load('pc.custom',[]);
- if(!cust.length){showModal('<h3>MY COURSES</h3><p>No custom holes yet.<br>Build them in the <b>LEVEL EDITOR</b> or import JSON.</p>'+
-  '<button class="btn acc" onclick="hideModal()">BACK</button>');return}
- showModal('<h3>MY COURSES ('+cust.length+')</h3>'+
- '<div class="row"><button class="btn sm grn" id="cPlay">▶ PLAY ALL</button>'+
- '<button class="btn sm" id="cExp">⇅ EXPORT ALL</button>'+
- '<button class="btn sm" id="cImp">IMPORT</button>'+
- '<button class="btn sm" id="cClr">🗑 CLEAR</button></div>'+
+ if(!cust.length){showModal('<h3 data-t="myCourses">MY COURSES</h3><p><span data-t="noCourses1">No custom holes yet.</span><br><span data-t="noCourses2">Build them in the</span> <b data-t="levelEditor">LEVEL EDITOR</b> <span data-t="noCourses3">or import JSON.</span></p>'+
+  '<button class="btn acc" data-t="back" onclick="hideModal()">BACK</button>');return}
+ showModal('<h3>'+TLI18N.t("myCoursesCount",{n:cust.length})+'</h3>'+
+ '<div class="row"><button class="btn sm grn" id="cPlay">▶ <span data-t="playAll">PLAY ALL</span></button>'+
+ '<button class="btn sm" id="cExp">⇅ <span data-t="exportAll">EXPORT ALL</span></button>'+
+ '<button class="btn sm" id="cImp" data-t="importLbl">IMPORT</button>'+
+ '<button class="btn sm" id="cClr">🗑 <span data-t="clearLbl">CLEAR</span></button></div>'+
  '<div class="row" style="max-height:40vh;overflow:auto">'+cust.map(function(l,i){
   return '<span class="chip">'+(i+1)+'. '+l.name+' · P'+l.par+
   ' <b style="color:var(--acc2)" onclick="event.stopPropagation();playOne('+i+')">▶</b>'+
   ' <b style="color:var(--acc)" onclick="event.stopPropagation();editOne('+i+')">✎</b>'+
   ' <b style="color:#ff6a5a" onclick="event.stopPropagation();delOne('+i+')">✕</b></span>'}).join('')+'</div>'+
- '<button class="btn acc" onclick="hideModal()">BACK</button>');
+ '<button class="btn acc" data-t="back" onclick="hideModal()">BACK</button>');
  $('cPlay').onclick=function(){hideModal();showScr('hud');mode='play';newRound(load('pc.custom',[]),'My Courses')};
  $('cExp').onclick=function(){ioModal(load('pc.custom',[]))};
  $('cImp').onclick=function(){ioModal(null)};
- $('cClr').onclick=function(){if(confirm('Delete all custom holes?')){store('pc.custom',[]);customModal()}}}
+ $('cClr').onclick=function(){if(confirm(TLI18N.t("deleteAsk"))){store('pc.custom',[]);customModal()}}}
 window.playOne=function(i){hideModal();showScr('hud');mode='play';newRound([load('pc.custom',[])[i]],'Custom')};
 window.delOne=function(i){var c=load('pc.custom',[]);c.splice(i,1);store('pc.custom',c);customModal()};
 window.editOne=function(i){hideModal();openEditor(load('pc.custom',[])[i],i)};
 function ioModal(data){
- showModal('<h3>IMPORT / EXPORT (JSON)</h3>'+
+ showModal('<h3 data-t="ioTitle">IMPORT / EXPORT (JSON)</h3>'+
  '<textarea id="ioTa" spellcheck="false">'+(data?JSON.stringify(data,null,1):'')+'</textarea>'+
  '<div class="row">'+
- '<button class="btn sm" id="ioCopy">📋 COPY</button>'+
- '<button class="btn sm" id="ioDl">⬇ DOWNLOAD .JSON</button>'+
- '<button class="btn sm" id="ioFile">⬆ LOAD FILE</button>'+
+ '<button class="btn sm" id="ioCopy">📋 <span data-t="ioCopyLbl">COPY</span></button>'+
+ '<button class="btn sm" id="ioDl">⬇ <span data-t="ioDlLbl">DOWNLOAD .JSON</span></button>'+
+ '<button class="btn sm" id="ioFile">⬆ <span data-t="ioFileLbl">LOAD FILE</span></button>'+
  '<input type="file" id="ioF" accept=".json,application/json" class="hide">'+
- '<button class="btn sm grn" id="ioUse">✓ IMPORT</button></div>'+
- '<div class="lbl">Format: one level object, an array, or {"levels":[…]}. Sanitized on import.</div>'+
- '<button class="btn acc" onclick="hideModal()">BACK</button>');
+ '<button class="btn sm grn" id="ioUse">✓ <span data-t="importLbl">IMPORT</span></button></div>'+
+ '<div class="lbl" data-t="ioFormat">Format: one level object, an array, or {"levels":[…]}. Sanitized on import.</div>'+
+ '<button class="btn acc" data-t="back" onclick="hideModal()">BACK</button>');
  $('ioCopy').onclick=function(){var ta=$('ioTa');ta.select();
   try{navigator.clipboard.writeText(ta.value)}catch(e){try{document.execCommand('copy')}catch(e2){}}
-  toast("COPIED")};
+  toast(TLI18N.t("copied"))};
  $('ioDl').onclick=function(){dl('putt-canyon-levels.json',$('ioTa').value)};
  $('ioFile').onclick=function(){$('ioF').click()};
  $('ioF').onchange=function(e){var f=e.target.files[0];if(!f)return;
   var r=new FileReader();r.onload=function(){$('ioTa').value=r.result};r.readAsText(f)};
  $('ioUse').onclick=function(){
   var ls=parseImport($('ioTa').value);
-  if(!ls){toast("INVALID LEVEL DATA");return}
+  if(!ls){toast(TLI18N.t("invalidData"));return}
   if(edit&&mode==='edit'){
-   if(ls.length===1){setEditLevel(ls[0]);toast("IMPORTED INTO EDITOR")}
+   if(ls.length===1){setEditLevel(ls[0]);toast(TLI18N.t("importedEditor"))}
    else{var c=load('pc.custom',[]);
     for(var i=0;i<ls.length;i++)c.push(ls[i]);store('pc.custom',c);
-    toast("SAVED "+ls.length+" TO MY COURSES")}}
+    toast(TLI18N.t("savedToCoursesN",{n:ls.length}))}}
   else{var c2=load('pc.custom',[]);
    for(var j=0;j<ls.length;j++)c2.push(ls[j]);store('pc.custom',c2);
-   toast("IMPORTED "+ls.length+" HOLE(S)")}
+   toast(TLI18N.t("importedHoles",{n:ls.length}))}
   hideModal()}}
 
 /* ============================ editor ============================ */
@@ -1733,7 +2259,7 @@ function openEditor(lvData,idx){
  loadLevelToGL(edit.level);
  var c=centerOf(edit.level);
  cam.tx=c[0];cam.tz=c[1];cam.ty=0;cam.yaw=.7;cam.pitch=.8;cam.dist=24;
- syncEdUI();toast("EDITOR — TAP SCENE TO PLACE",2200)}
+ syncEdUI();toast(TLI18N.t("edPlace"),2200)}
 function centerOf(l){var x=0,z=0,n=0;
  for(var i=0;i<l.parts.length;i++){x+=l.parts[i].x;z+=l.parts[i].z;n++}
  return n?[x/n,z/n]:[0,0]}
@@ -1748,42 +2274,42 @@ function closeEditor(){
 $('edBack').onclick=function(){closeEditor()};
 function saveEdLevel(quiet){
  var l=sanitize(edit.level);
- if(!l){toast("LEVEL NEEDS GROUND");return false}
+ if(!l){toast(TLI18N.t("needGround"));return false}
  edit.level=l;
  var c=load('pc.custom',[]);
  if(edit.customIdx>=0&&edit.customIdx<c.length)c[edit.customIdx]=l;
  else{c.push(l);edit.customIdx=c.length-1}
  store('pc.custom',c);
- if(!quiet)toast("SAVED TO MY COURSES");
+ if(!quiet)toast(TLI18N.t("savedCourse"));
  return true}
 $('edSave').onclick=function(){saveEdLevel(false)};
 $('edSeal').onclick=function(){
  sealCourse(edit.level);patchCorners(edit.level.parts);
- loadLevelToGL(edit.level);syncEdUI();toast("PERIMETER SEALED — FLUSH CORNERS")};
+ loadLevelToGL(edit.level);syncEdUI();toast(TLI18N.t("sealed"))};
 $('edCheck').onclick=function(){
  var r=walkCheck(edit.level);
- toast(r.ok?"✓ BALL-SIZED WALK PATH TO CUP":"⚠ "+r.why.toUpperCase(),2600)};
+ toast(r.ok?"✓ "+TLI18N.t("walkOk"):"⚠ "+whyLbl(r.why),2600)};
 function syncEdUI(){
  $('edName').value=edit.level.name;$('edPar').value=edit.level.par;
- $('edTools').innerHTML=['g:Ground','r:Ramp','w:Wall','s:Sand','q:Water','m:Mill'].map(function(s){
-  var t=s.split(':')[0],nm=s.split(':')[1];
-  return '<button class="btn sm" onclick="edAdd(\''+t+'\')">+ '+nm+'</button>'}).join('');
+ $('edTools').innerHTML=['g','r','w','s','q','m'].map(function(t){
+  return '<button class="btn sm" onclick="edAdd(\''+t+'\')">+ '+TLI18N.t(PARTLBL[t])+'</button>'}).join('');
  $('edList').innerHTML=edit.level.parts.map(function(p,i){
-  return '<span class="chip '+(i===edSel?'sel':'')+'" onclick="edSelect('+i+')">'+i+':'+p.t.toUpperCase()+'</span>'}).join('')||
-  '<span class="lbl">no parts — add one above</span>';
+  return '<span class="chip '+(i===edSel?'sel':'')+'" onclick="edSelect('+i+')">'+i+':'+TLI18N.t(PARTLBL[p.t]).toUpperCase()+'</span>'}).join('')||
+  '<span class="lbl">'+TLI18N.t("noParts")+'</span>';
  var p=edit.level.parts[edSel],pr=$('edProps');
- if(!p){pr.innerHTML='<span class="lbl">select or add a part</span>';return}
+ if(!p){pr.innerHTML='<span class="lbl">'+TLI18N.t("selPart")+'</span>';return}
  function F(k,lb,st){return '<span class="lbl">'+lb+'</span><input type="number" step="'+(st||.5)+'" value="'+(p[k]===undefined?0:p[k])+'" onchange="edSet(\''+k+'\',this.value)">'}
+ var C='<span class="lbl">'+TLI18N.t("pCol")+'</span>';
  var h='';
- if(p.t==='g')h=F('x','X')+F('z','Z')+F('w','W')+F('d','D')+F('y','TOP')+
-  '<span class="lbl">COL</span><input type="number" min="0" max="8" step="1" value="'+(p.c||0)+'" onchange="edSet(\'c\',this.value)">';
+ if(p.t==='g')h=F('x','X')+F('z','Z')+F('w','W')+F('d','D')+F('y',TLI18N.t("pTop"))+
+  C+'<input type="number" min="0" max="8" step="1" value="'+(p.c||0)+'" onchange="edSet(\'c\',this.value)">';
  else if(p.t==='r')h=F('x','X')+F('z','Z')+F('w','W')+F('d','D')+F('y0','H0')+F('y1','H1')+
-  '<span class="lbl">AXIS</span><select onchange="edSet(\'a\',this.value)"><option value="x"'+(p.a==='x'?' selected':'')+'>x</option><option value="z"'+(p.a!=='x'?' selected':'')+'>z</option></select>';
- else if(p.t==='w')h=F('x','X')+F('z','Z')+F('w','W')+F('d','D')+F('h','HGT')+F('y','BASE')+
-  '<span class="lbl">COL</span><input type="number" min="0" max="8" step="1" value="'+(p.c===undefined?1:p.c)+'" onchange="edSet(\'c\',this.value)">';
+  '<span class="lbl">'+TLI18N.t("pAxis")+'</span><select onchange="edSet(\'a\',this.value)"><option value="x"'+(p.a==='x'?' selected':'')+'>x</option><option value="z"'+(p.a!=='x'?' selected':'')+'>z</option></select>';
+ else if(p.t==='w')h=F('x','X')+F('z','Z')+F('w','W')+F('d','D')+F('h',TLI18N.t("pHgt"))+F('y',TLI18N.t("pBase"))+
+  C+'<input type="number" min="0" max="8" step="1" value="'+(p.c===undefined?1:p.c)+'" onchange="edSet(\'c\',this.value)">';
  else if(p.t==='s')h=F('x','X')+F('z','Z')+F('w','W')+F('d','D');
- else if(p.t==='q')h=F('x','X')+F('z','Z')+F('w','W')+F('d','D')+F('y','LVL');
- else if(p.t==='m')h=F('x','X')+F('z','Z')+F('r','RAD')+F('s','SPD',.1)+F('n','BLADES',1)+F('hub','HUB')+F('bh','BLD H');
+ else if(p.t==='q')h=F('x','X')+F('z','Z')+F('w','W')+F('d','D')+F('y',TLI18N.t("pLvl"));
+ else if(p.t==='m')h=F('x','X')+F('z','Z')+F('r',TLI18N.t("pRad"))+F('s',TLI18N.t("pSpd"),.1)+F('n',TLI18N.t("pBlades"),1)+F('hub',TLI18N.t("pHub"))+F('bh',TLI18N.t("pBldH"));
  pr.innerHTML=h}
 window.edAdd=function(t){
  var c=centerOf(edit.level);
@@ -1811,12 +2337,12 @@ $('edUp').onclick=function(){if(edSel>0){var a=edit.level.parts;
  var t=a[edSel-1];a[edSel-1]=a[edSel];a[edSel]=t;edSel--;loadLevelToGL(edit.level);syncEdUI()}};
 $('edDn').onclick=function(){var a=edit.level.parts;
  if(edSel>=0&&edSel<a.length-1){var t=a[edSel+1];a[edSel+1]=a[edSel];a[edSel]=t;edSel++;loadLevelToGL(edit.level);syncEdUI()}};
-$('edTee').onclick=function(){edPending='tee';toast("TAP SCENE TO PLACE TEE")};
-$('edCup').onclick=function(){edPending='cup';toast("TAP SCENE TO PLACE CUP")};
+$('edTee').onclick=function(){edPending='tee';toast(TLI18N.t("teePlace"))};
+$('edCup').onclick=function(){edPending='cup';toast(TLI18N.t("cupPlace"))};
 $('edTest').onclick=function(){
  if(!saveEdLevel(true))return;
  var r=walkCheck(edit.level);
- if(!r.ok)toast("⚠ "+r.why.toUpperCase()+" — TEST ANYWAY",2600);
+ if(!r.ok)toast("⚠ "+whyLbl(r.why)+" — "+TLI18N.t("testAnyway"),2600);
  mode='editTest';showScr('hud');
  newRound([JSON.parse(JSON.stringify(edit.level))],'Test')};
 $('edIO').onclick=function(){if(!saveEdLevel(true))return;ioModal(edit.level)};
@@ -1853,6 +2379,10 @@ function editorTap(sx,sy){
  setBackdrop();
  refreshMenu();
  showScr('menu');
+ TLI18N.mount('#menu');
+ TLI18N.onChange(function(){
+  refreshMenu();
+  if(mode==='edit'&&edit)syncEdUI()})
 })();
 </script>
 <script>
@@ -1883,5 +2413,232 @@ else seen(cur);
 }).catch(function () {});
 })();
 </script>
+<script>
+/* Developer harness. ?debug=dbg/minigolf3D.js loads the shared engine dbg/_harness.js
+   then that script: live panel with state, elements, layout per screen mode,
+   texts, balance, cheats, JSON export. No parameter or missing script = the
+   page behaves exactly as without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
+</script>
+<!-- inlined fs.js — the source of truth is fs.js: edit that file and re-inline this block -->
+<script>
+/* fs.js — the one fullscreen control every page shares.
+
+   Two jobs:
+
+   1. A toggle button. `TLFS.mount("#opts", {cls:"btn"})` puts it inside a menu or
+      title panel using that page's own button class; `TLFS.mount()` alone floats a
+      small icon button in the bottom-right corner; `{icon:true}` swaps the word for
+      a ⤢ glyph and moves it into `aria-label` for narrow hosts. The wording is the
+      shared translation key `fullscreen` / `exitFullscreen` — from the i18n kit, from
+      a page table published through `TLFS_LABEL(key)`, or English as the floor — and
+      a change of `<html lang>` repaints it. Where the Fullscreen API is missing the
+      button hides itself instead of lying.
+
+   2. Re-fit on every usable-area change. Entering or leaving fullscreen, an
+      orientation flip, and a mobile browser bar hiding or showing all change the
+      area the game has to fill — and the bar case does not always fire a plain
+      `resize`. This file listens to `fullscreenchange` (all vendor spellings) and
+      to `visualViewport.resize`, then re-applies `<html data-fs>` and dispatches
+      `resize` (plus `orientationchange`) once per frame, so the page's own layout
+      code runs. `TLFS.refitOnly()` gives a page that already has its own
+      fullscreen button just that wiring, without a second button.
+
+   Nothing here reads game state, and a page that never calls mount/refitOnly gets
+   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+(function () {
+  if (window.TLFS) return;
+  var de = document.documentElement;
+  var REQ = de.requestFullscreen || de.webkitRequestFullscreen ||
+    de.msRequestFullscreen || de.mozRequestFullScreen;
+  var EX = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.msExitFullscreen || document.mozCancelFullScreen;
+  var blocked = !REQ || !EX || de.fullscreenEnabled === false;
+  var ICON = "\u2922"; /* narrow hosts (side stripes, icon bars) get the glyph plus a
+                          translated aria-label instead of the word */
+  var btns = [], cbs = [], queued = false, styleDone = false;
+
+  function isFull() {
+    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
+      de.msFullscreenElement || de.mozFullScreenElement);
+  }
+  function kit() {
+    var k = window.TLI18N;
+    return (k && typeof k.t === "function") ? k : null;
+  }
+  /* A missing key makes t() hand back the key name — that is not a label.
+     Pages that keep their own translation table (billiards, tilt, oilstorm) publish
+     TLFS_LABEL(key) instead of the kit; they win over the kit, English is the floor. */
+  function label() {
+    var want = isFull() ? "exitFullscreen" : "fullscreen";
+    var L = window.TLFS_LABEL;
+    if (typeof L === "function") {
+      try { var v = L(want); if (v && v !== want) return String(v) } catch (e) {}
+    }
+    var k = kit(), t = null;
+    if (k) { try { t = k.t(want) } catch (e) { t = null } }
+    if (!t || t === want) t = isFull() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+    return t;
+  }
+  function cssOnce() {
+    if (styleDone) return;
+    styleDone = true;
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlfs-float:hover{border-color:#ffd76a;color:#ffd76a}" +
+      ".tlfs-float[hidden]{display:none}";
+    document.head.appendChild(st);
+  }
+  function paint() {
+    var txt = label();
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      b.textContent = b.__tlfsIcon ? ICON : txt;
+      b.setAttribute("aria-label", txt);
+      b.setAttribute("aria-pressed", isFull() ? "true" : "false");
+    }
+  }
+  /* One pass per frame: fullscreenchange and visualViewport.resize often arrive
+     together, and dispatching resize from inside a resize listener would loop. */
+  function refit() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint();
+      for (var i = 0; i < cbs.length; i++) { try { cbs[i](isFull()) } catch (e) {} }
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("orientationchange"));
+    });
+  }
+  function toggle() {
+    if (blocked) return false;
+    var was = isFull();
+    try {
+      if (was) EX.call(document);
+      else { var p = REQ.call(de); if (p && p.catch) p.catch(function () {}) }
+    } catch (e) {}
+    /* the change event may never come (sandboxed frames, denied requests, some
+       headless shells that grant then silently drop): repaint the state we can
+       read twice, late enough to catch a transition nobody announced. */
+    setTimeout(refit, 220);
+    setTimeout(refit, 700);
+    return !was;
+  }
+
+  de.setAttribute("data-fs", "off");
+  ["fullscreenchange", "webkitfullscreenchange", "MSFullscreenChange", "mozfullscreenchange"]
+    .forEach(function (t) { document.addEventListener(t, refit, false) });
+  ["fullscreenerror", "webkitfullscreenerror"].forEach(function (t) {
+    document.addEventListener(t, function () { de.setAttribute("data-fs", "off"); paint() }, false)
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", refit, false);
+    window.visualViewport.addEventListener("scroll", function () {
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint(); /* an exit the browser never announced must still clear the label */
+    }, false);
+  }
+  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
+  }, false);
+  /* A language switch changes <html lang>: repaint from whatever table the page
+     uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
+     drive their toggle state off that attribute, and taking it would corrupt them. */
+  new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
+
+  window.TLFS = {
+    version: "2026.11.23.3",
+    supported: !blocked,
+    isFull: isFull,
+    label: label,
+    paint: paint,
+    toggle: toggle,
+    onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
+    /* just the size/orientation wiring, for a page with its own fullscreen button */
+    refitOnly: function () { paint(); return true },
+    /* put the button in `sel` (or float it when the selector matches nothing).
+       opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
+       puts the translated word in aria-label, for narrow hosts. */
+    mount: function (sel, opts) {
+      cssOnce();
+      var o = opts || {};
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = o.cls || "tlfs-float";
+      b.id = o.id || "tlfsBtn";
+      b.__tlfsIcon = !!o.icon;
+      if (o.float !== false && !o.cls) b.classList.add("tlfs-float");
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", label());
+      if (o.ariaLabel) b.setAttribute("data-aria", o.ariaLabel);
+      b.textContent = o.icon ? ICON : label();
+      /* a menu that starts the game on any tap (defender binds pointerdown on the
+         whole title screen) must not fire when the fullscreen button is pressed */
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("touchstart", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle() });
+      var host = sel ? document.querySelector(sel) : null;
+      if (host) {
+        if (o.prepend && host.firstChild) host.insertBefore(b, host.firstChild);
+        else host.appendChild(b);
+      } else {
+        b.classList.add("tlfs-float");
+        document.body.appendChild(b);
+      }
+      if (blocked) b.style.display = "none";
+      btns.push(b);
+      paint();
+      return b;
+    },
+    /* wire a button the page already has in its markup (keeps its own look) */
+    attach: function (el) {
+      cssOnce();
+      if (!el) return null;
+      if (blocked) { el.style.display = "none"; return el }
+      el.addEventListener("click", function (e) { e.preventDefault(); toggle() });
+      btns.push(el);
+      paint();
+      return el;
+    },
+    /* a rebuilt panel drops its children: re-add every button the page mounted */
+    reassert: function () {
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i];
+        if (!b.isConnected && b.__tlfsHost) {
+          var h = document.querySelector(b.__tlfsHost);
+          if (h) h.appendChild(b);
+        }
+      }
+      paint();
+      return btns.length
+    }
+  };
+  /* remember where each button was mounted so a panel rebuild can put it back */
+  var mount0 = window.TLFS.mount;
+  window.TLFS.mount = function (sel, opts) {
+    var b = mount0(sel, opts);
+    if (b) b.__tlfsHost = sel || "body";
+    return b;
+  };
+  var k = kit();
+  if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
+})();
+</script>
+<script>TLFS.mount("#menu .scrIn",{cls:"btn"});</script>
 </body>
 </html>

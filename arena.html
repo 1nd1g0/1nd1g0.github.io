@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#150e07">
 <title>RUSTFALL — Diesel Arena</title>
-<meta name="version" content="2026.11.20.1">
+<meta name="version" content="2026.11.24.2">
 <!--
 ==============================================================================
  RUSTFALL v5 — single-file build, module-ready.
@@ -168,79 +168,808 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 <div id="topbar">
 <div id="fps">60 FPS</div>
 <button class="tbtn" id="btnSound">SOUND ON</button>
-<button class="tbtn" id="btnPause" style="display:none">PAUSE</button>
+<button class="tbtn" id="btnPause" style="display:none" data-t="pause">PAUSE</button>
 </div>
 <div id="ui">
 <div class="screen" id="scrTitle"><div class="wrap">
 <div class="hazard"></div>
 <div class="logo">RUSTFALL</div>
-<div class="tag">DIESEL ARENA // TWIN-STICK CARNAGE</div>
-<div class="sub">oil burns long &middot; fuel burns hot &middot; electrolyte conducts every zap</div>
-<div class="panel"><div class="ptitle">Deployment</div>
-<div class="seg" id="segMode"><div data-v="1" class="on">SOLO RUN</div><div data-v="2">LOCAL CO-OP</div><div data-v="3">CPU ALLY</div></div>
+<div class="tag" data-t="arena_tag">DIESEL ARENA // TWIN-STICK CARNAGE</div>
+<div class="sub" data-t="arena_sub">oil burns long &middot; fuel burns hot &middot; electrolyte conducts every zap</div>
+<div class="panel"><div class="ptitle" data-t="deploy">Deployment</div>
+<div class="seg" id="segMode"><div data-v="1" class="on" data-t="mode_sol">SOLO RUN</div><div data-v="2" data-t="mode_coop">LOCAL CO-OP</div><div data-v="3" data-t="mode_cpu">CPU ALLY</div></div>
 <div class="chars" id="charRow"></div>
-<button class="btn hot" id="btnSurv">Start Survival &mdash; Endless Arena</button>
-<div class="row"><button class="btn" id="btnQuests">Quest Log</button><button class="btn volt" id="btnDaily">Daily Run</button></div>
-<div class="row" style="margin-top:6px"><div style="flex:1"><input type="text" id="seedIn" maxlength="18" placeholder="ARENA SEED (blank = random)"></div><button class="tbtn" id="btnDice" style="padding:12px 14px">RND</button></div>
-<div class="row"><button class="btn small" id="btnOpts">Options</button><button class="btn small" id="btnKeys">Controls</button><button class="btn small" id="btnFull">Fullscreen</button><a class="btn small" id="btnHome" href="https://1nd1g0.github.io/">⌂ Home</a></div>
+<button class="btn hot" id="btnSurv" data-t="btn_surv">Start Survival &mdash; Endless Arena</button>
+<div class="row"><button class="btn" id="btnQuests" data-t="quest_log">Quest Log</button><button class="btn volt" id="btnDaily">Daily Run</button></div>
+<div class="row" style="margin-top:6px"><div style="flex:1"><input type="text" id="seedIn" maxlength="18" data-ph="seed_ph" placeholder="ARENA SEED (blank = random)"></div><button class="tbtn" id="btnDice" style="padding:12px 14px" data-t="rnd">RND</button></div>
+<div class="row"><button class="btn small" id="btnOpts" data-t="options">Options</button><button class="btn small" id="btnKeys" data-t="controls">Controls</button><button class="btn small" id="btnFull">Fullscreen</button><a class="btn small" id="btnHome" href="https://1nd1g0.github.io/">⌂ <span data-t="home">Home</span></a></div>
 </div>
-<div class="panel"><div class="ptitle">Field Manual</div><div class="hint" id="manual"></div></div>
+<div class="panel"><div class="ptitle" data-t="manual_title">Field Manual</div><div class="hint" id="manual"></div></div>
 <div class="sub" id="bestLine"></div>
 <div class="sub" style="color:#5e4e3a">v5 &middot; offline &middot; procedural art &amp; audio &middot; zero libraries</div>
 <div class="hazard"></div>
 </div></div>
 <div class="screen" id="scrQuests"><div class="wrap">
-<div class="dhead" style="color:var(--amber)">QUEST LOG</div>
-<div class="dsub">short contracts &middot; clear to unlock gear for survival</div>
-<div id="questList"></div><button class="btn" id="btnQBack">Back</button>
+<div class="dhead" style="color:var(--amber)" data-t="quest_log">QUEST LOG</div>
+<div class="dsub" data-t="quest_sub">short contracts &middot; clear to unlock gear for survival</div>
+<div id="questList"></div><button class="btn" id="btnQBack" data-t="back">Back</button>
 </div></div>
 <div class="screen" id="scrOptions"><div class="wrap">
-<div class="dhead" style="color:var(--amber)">OPTIONS</div><div class="panel" id="optBody"></div>
-<button class="btn" id="btnOBack">Back</button>
+<div class="dhead" style="color:var(--amber)" data-t="options">OPTIONS</div><div class="panel" id="optBody"></div>
+<button class="btn" id="btnOBack" data-t="back">Back</button>
 </div></div>
 <div class="screen" id="scrControls"><div class="wrap">
-<div class="dhead" style="color:var(--amber)">CONTROLS</div>
-<div class="dsub">click a binding, then press a key &middot; gamepad: click then press a button</div>
-<div class="panel"><div class="ptitle" style="color:var(--amber)">Player 1 &mdash; Keyboard</div><div id="keysP1"></div></div>
-<div class="panel"><div class="ptitle" style="color:var(--volt)">Player 2 &mdash; Keyboard (co-op)</div><div id="keysP2"></div></div>
-<div class="panel"><div class="ptitle">Gamepad</div><div class="hint" style="text-align:left">Left stick move &middot; right stick aim + fire &middot; <b>RT fires &amp; locks direction</b> &middot; first two pads map to P1 / P2.</div><div id="keysPad"></div></div>
-<div class="panel"><div class="ptitle">Touch</div><div class="hint" style="text-align:left">Solo: move stick bottom-left, fire stick bottom-right. Co-op landscape: each player owns one short side &mdash; <b>move stick is on your left, fire stick on your right</b>, HUD reads facing you. Double-tap the move stick to dash.</div></div>
-<div class="row"><button class="btn small" id="btnKReset">Reset Defaults</button><button class="btn" id="btnKBack">Back</button></div>
+<div class="dhead" style="color:var(--amber)" data-t="controls">CONTROLS</div>
+<div class="dsub" data-t="controls_sub">click a binding, then press a key &middot; gamepad: click then press a button</div>
+<div class="panel"><div class="ptitle" style="color:var(--amber)" data-t="p1_kb">Player 1 &mdash; Keyboard</div><div id="keysP1"></div></div>
+<div class="panel"><div class="ptitle" style="color:var(--volt)" data-t="p2_kb">Player 2 &mdash; Keyboard (co-op)</div><div id="keysP2"></div></div>
+<div class="panel"><div class="ptitle" data-t="gamepad">Gamepad</div><div class="hint" style="text-align:left" data-t="pad_hint">Left stick move &middot; right stick aim + fire &middot; <b>RT fires &amp; locks direction</b> &middot; first two pads map to P1 / P2.</div><div id="keysPad"></div></div>
+<div class="panel"><div class="ptitle" data-t="touch">Touch</div><div class="hint" style="text-align:left" data-t="touch_hint">Solo: move stick bottom-left, fire stick bottom-right. Co-op landscape: each player owns one short side &mdash; <b>move stick is on your left, fire stick on your right</b>, HUD reads facing you. Double-tap the move stick to dash.</div></div>
+<div class="row"><button class="btn small" id="btnKReset" data-t="reset_defaults">Reset Defaults</button><button class="btn" id="btnKBack" data-t="back">Back</button></div>
 </div></div>
 <div class="screen" id="scrDraft"><div class="wrap">
-<div class="dhead" id="draftHead">LEVEL UP</div><div class="dsub">draft one upgrade &middot; press 1 / 2 / 3 or tap</div>
+<div class="dhead" id="draftHead" data-t="level_up">LEVEL UP</div><div class="dsub" data-t="draft_sub">draft one upgrade &middot; press 1 / 2 / 3 or tap</div>
 <div class="draftcards" id="draftCards"></div><div class="fusion" id="fusionIntel"></div>
 </div></div>
 <div class="screen" id="scrChoice"><div class="wrap">
-<div class="dhead" style="color:var(--warn)">CONTRACT BOARD</div><div class="dsub">the director offers the next wave &mdash; pick your poison</div>
+<div class="dhead" style="color:var(--warn)" data-t="contract_board">CONTRACT BOARD</div><div class="dsub" data-t="contract_sub">the director offers the next wave &mdash; pick your poison</div>
 <div class="draftcards" id="choiceCards"></div>
 </div></div>
 <div class="screen" id="scrPause"><div class="wrap">
-<div class="dhead" style="color:var(--amber)">PAUSED</div>
-<div class="panel"><div class="ptitle">Current Build</div><div id="pauseBuild"></div></div>
-<button class="btn hot" id="btnResume">Resume</button>
-<button class="btn" id="btnRestart">Restart Run</button>
-<div class="row"><button class="btn" id="btnPOpts">Options</button><button class="btn" id="btnPFull">Fullscreen</button></div>
-<button class="btn" id="btnQuit">Abandon &rarr; Title</button>
+<div class="dhead" style="color:var(--amber)" data-t="paused">PAUSED</div>
+<div class="panel"><div class="ptitle" data-t="current_build">Current Build</div><div id="pauseBuild"></div></div>
+<button class="btn hot" id="btnResume" data-t="resume">Resume</button>
+<button class="btn" id="btnRestart" data-t="restart_run">Restart Run</button>
+<div class="row"><button class="btn" id="btnPOpts" data-t="options">Options</button><button class="btn" id="btnPFull">Fullscreen</button></div>
+<button class="btn" id="btnQuit" data-t="abandon_title">Abandon &rarr; Title</button>
 </div></div>
 <div class="screen" id="scrOver"><div class="wrap">
-<div class="dhead" id="overHead" style="color:var(--danger)">RUN TERMINATED</div>
+<div class="dhead" id="overHead" style="color:var(--danger)" data-t="run_terminated">RUN TERMINATED</div>
 <div class="dsub" id="overSub"></div>
-<div class="panel"><div class="ptitle">Debrief</div><div class="stats" id="overStats"></div><div id="overLB"></div></div>
-<button class="btn hot" id="btnRetry">Retry &mdash; Same Seed</button>
-<button class="btn" id="btnNew">New Arena</button>
-<button class="btn" id="btnOMenu">Title</button>
+<div class="panel"><div class="ptitle" data-t="debrief">Debrief</div><div class="stats" id="overStats"></div><div id="overLB"></div></div>
+<button class="btn hot" id="btnRetry" data-t="retry_same">Retry &mdash; Same Seed</button>
+<button class="btn" id="btnNew" data-t="new_arena">New Arena</button>
+<button class="btn" id="btnOMenu" data-t="title_btn">Title</button>
 </div></div>
 <div class="screen" id="scrQDone"><div class="wrap">
-<div class="dhead" style="color:var(--ok)">CONTRACT COMPLETE</div>
+<div class="dhead" style="color:var(--ok)" data-t="contract_complete">CONTRACT COMPLETE</div>
 <div class="bigstars" id="qdStars"></div>
-<div class="panel"><div class="ptitle">Reward Unlocked</div><div class="dsub" id="qdReward" style="font-size:15px;color:var(--acid)"></div><div class="stats" id="qdStats"></div></div>
-<button class="btn hot" id="btnQNext">Next Contract</button>
-<button class="btn" id="btnQMenu">Title</button>
+<div class="panel"><div class="ptitle" data-t="reward_unlocked">Reward Unlocked</div><div class="dsub" id="qdReward" style="font-size:15px;color:var(--acid)"></div><div class="stats" id="qdStats"></div></div>
+<button class="btn hot" id="btnQNext" data-t="next_contract">Next Contract</button>
+<button class="btn" id="btnQMenu" data-t="title_btn">Title</button>
 </div></div>
 </div>
 <div id="toasts"></div>
 <!-- ==== SHELL-END ==== -->
+<!-- inlined i18n.js — the source of truth is i18n.js: edit that file and re-inline this block -->
+<script>
+/* ============================================================================
+   i18n.js — shared language kit for every page of this site.
+   Language code decision tree (identical everywhere, in this order):
+     0. any technical problem with this kit -> English
+     1. URL ?language=xx      (a region suffix is fine: pt-BR, zh-CN)
+     2. localStorage['tll:lang']
+     3. the browser's language list (navigator.languages, then navigator.language)
+     4. English
+   A code outside CODES is dropped, not trusted, so the next level decides. Only
+   the picker button writes storage, so a ?language= link never overwrites the
+   visitor's saved choice.
+
+   Page usage
+     <script src="i18n.js"><\/script>            BEFORE the game script
+     <script>TLI18N.add({en:{k:"Text"},es:{...},pt:{...},ru:{...},zh:{...}})<\/script>
+     markup:  <b data-t="score">SCORE</b>  <button data-tip="help">?</button>
+              <input data-ph="name">  <i data-aria="pause">  <img data-alt="car">
+     js:      el.textContent=TLI18N.t("gameOver");
+              el.innerHTML="<b>"+TLI18N.t("best")+": "+n+"</b>";
+              ctx.fillText(TLI18N.t("paused"),x,y);
+     canvas / innerHTML redraws: TLI18N.onChange(()=>redrawAll());
+     pick a host for the language button: TLI18N.mount("#startPanel")
+       (omit it and the kit parks a pill in the lower-left corner)
+   Keys missing from a non-English table fall back to English, so a half
+   translated table still runs. Values for *Fmt keys carry {placeholders}.
+   ========================================================================= */
+(function(){
+"use strict";
+var KEY="tll:lang", CODES=["en","es","pt","ru","zh"];
+var LANGS=[ // code · name in its own language · that word for "language" · its flag
+ ['en','English','Language','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0,0 60,40M60,0 0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 60,40M60,0 0,40" stroke="#C8102E" stroke-width="3.2"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="13"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="8"/></svg>'],
+ ['es','Español','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#AA151B"/><path d="M0,10H60M0,30H60" stroke="#F1BF00" stroke-width="20"/>  </svg>'],
+ ['pt','Português','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="40" fill="#046A38"/><rect x="24" width="36" height="40" fill="#DA291C"/><circle cx="24" cy="20" r="7.5" fill="#FEDF00" stroke="#046A38" stroke-width="1.4"/><path d="M24,14.5 24,22.5M20.5,17.5H27.5" stroke="#DA291C" stroke-width="2.2" fill="none"/></svg>'],
+ ['ru','Русский','Язык','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.34" width="60" height="13.33" fill="#0039A6"/><rect y="26.67" width="60" height="13.33" fill="#D52B1E"/></svg>'],
+ ['zh','中文','语言','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#EE1C25"/><circle cx="10" cy="10" r="5.6" fill="#FFDC00"/><circle cx="21" cy="6" r="2.1" fill="#FFDC00"/><circle cx="26" cy="11.5" r="2.1" fill="#FFDC00"/><circle cx="26" cy="18.5" r="2.1" fill="#FFDC00"/><circle cx="21" cy="24" r="2.1" fill="#FFDC00"/></svg>']
+];
+/* ---- shared vocabulary: the same word means the same thing in every game.
+       Values carry no glyphs — pages keep their ⌂ ▶ ■ icons in the markup. ---- */
+var COMMON={
+en:{
+ paused:"PAUSED",pause:"PAUSE",resume:"RESUME",start:"START",play:"PLAY",home:"HOME",menu:"MENU",
+ options:"OPTIONS",settings:"SETTINGS",help:"HELP",howToPlay:"HOW TO PLAY",rules:"RULES",controls:"CONTROLS",
+ keys:"KEYS",gamepad:"GAMEPAD",mouse:"MOUSE",touch:"TOUCH",
+ sound:"SOUND",music:"MUSIC",sfx:"SOUND FX",on:"ON",off:"OFF",rnd:"RND",fullscreen:"FULLSCREEN",exitFullscreen:"EXIT FULLSCREEN",
+ difficulty:"DIFFICULTY",easy:"EASY",normal:"NORMAL",hard:"HARD",low:"LOW",high:"HIGH",
+ score:"SCORE",best:"BEST",hiScore:"HIGH SCORE",level:"LEVEL",lives:"LIVES",time:"TIME",
+ speed:"SPEED",round:"ROUND",wave:"WAVE",seed:"SEED",newSeed:"NEW SEED",
+ restart:"RESTART",retry:"RETRY",continue:"CONTINUE",tryAgain:"TRY AGAIN",nextLevel:"NEXT LEVEL",
+ gameOver:"GAME OVER",youWin:"YOU WIN",youLose:"GAME OVER",clear:"CLEARED",
+ fire:"FIRE",jump:"JUMP",back:"BACK",exit:"EXIT",close:"CLOSE",ok:"OK",cancel:"CANCEL",
+ loading:"LOADING",shots:"SHOTS",moves:"MOVES",power:"POWER",angle:"ANGLE",
+ langTitle:"LANGUAGE",langNote:"Choose your language — it is remembered, and it applies to this game and to the whole catalogue.",
+ langBack:"CHANGE LANGUAGE",players:"PLAYERS",player:"PLAYER",you:"YOU",cpu:"CPU",random:"RANDOM"},
+es:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INICIO",play:"JUGAR",home:"INICIO",menu:"MENÚ",
+ options:"OPCIONES",settings:"AJUSTES",help:"AYUDA",howToPlay:"CÓMO JUGAR",rules:"REGLAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"MANDO",mouse:"RATÓN",touch:"TÁCTIL",
+ sound:"SONIDO",music:"MÚSICA",sfx:"EFECTOS",on:"ACTIVO",off:"APAGADO",fullscreen:"PANTALLA COMPLETA",exitFullscreen:"SALIR DE PANTALLA COMPLETA",
+ difficulty:"DIFICULTAD",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAJO",high:"ALTO",
+ score:"PUNTOS",best:"RÉCORD",hiScore:"RÉCORD",level:"NIVEL",lives:"VIDAS",time:"TIEMPO",
+ speed:"VELOCIDAD",round:"RONDA",wave:"OLEADA",seed:"SEMILLA",newSeed:"NUEVA SEMILLA",
+ restart:"REINICIAR",retry:"REINTENTAR",continue:"CONTINUAR",tryAgain:"INTÉNTALO OTRA VEZ",nextLevel:"SIGUIENTE NIVEL",
+ gameOver:"FIN DEL JUEGO",youWin:"¡GANASTE!",youLose:"FIN DEL JUEGO",clear:"SUPERADO",
+ fire:"DISPARO",jump:"SALTAR",back:"ATRÁS",exit:"SALIR",close:"CERRAR",ok:"ACEPTAR",cancel:"CANCELAR",
+ loading:"CARGANDO",shots:"LANZAMIENTOS",moves:"MOVIMIENTOS",power:"FUERZA",angle:"ÁNGULO",
+ langTitle:"IDIOMA",langNote:"Elige tu idioma: se recuerda y se aplica a este juego y a todo el catálogo.",
+ langBack:"CAMBIAR IDIOMA",players:"JUGADORES",player:"JUGADOR",you:"TÚ",cpu:"CPU",random:"ALEATORIO"},
+pt:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INÍCIO",play:"JOGAR",home:"INÍCIO",menu:"MENU",
+ options:"OPÇÕES",settings:"CONFIGURAÇÕES",help:"AJUDA",howToPlay:"COMO JOGAR",rules:"REGRAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"CONTROLE",mouse:"MOUSE",touch:"TOQUE",
+ sound:"SOM",music:"MÚSICA",sfx:"EFEITOS",on:"LIGADO",off:"DESLIGADO",fullscreen:"TELA CHEIA",exitFullscreen:"SAIR DA TELA CHEIA",
+ difficulty:"DIFICULDADE",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAIXO",high:"ALTO",
+ score:"PONTOS",best:"RECORDE",hiScore:"RECORDE",level:"NÍVEL",lives:"VIDAS",time:"TEMPO",
+ speed:"VELOCIDADE",round:"RODADA",wave:"ONDA",seed:"SEMENTE",newSeed:"NOVA SEMENTE",
+ restart:"REINICIAR",retry:"TENTAR DE NOVO",continue:"CONTINUAR",tryAgain:"TENTE DE NOVO",nextLevel:"PRÓXIMO NÍVEL",
+ gameOver:"FIM DE JOGO",youWin:"VOCÊ VENCEU",youLose:"FIM DE JOGO",clear:"COMPLETO",
+ fire:"DISPARO",jump:"SALTAR",back:"VOLTAR",exit:"SAIR",close:"FECHAR",ok:"OK",cancel:"CANCELAR",
+ loading:"CARREGANDO",shots:"BATIDAS",moves:"JOGADAS",power:"FORÇA",angle:"ÂNGULO",
+ langTitle:"IDIOMA",langNote:"Escolha seu idioma: ele é lembrado e vale para este jogo e para todo o catálogo.",
+ langBack:"MUDAR IDIOMA",players:"JOGADORES",player:"JOGADOR",you:"VOCÊ",cpu:"CPU",random:"ALEATÓRIO"},
+ru:{
+ paused:"ПАУЗА",pause:"ПАУЗА",resume:"ПРОДОЛЖИТЬ",start:"СТАРТ",play:"ИГРАТЬ",home:"ДОМОЙ",menu:"МЕНЮ",
+ options:"НАСТРОЙКИ",settings:"НАСТРОЙКИ",help:"ПОМОЩЬ",howToPlay:"КАК ИГРАТЬ",rules:"ПРАВИЛА",controls:"УПРАВЛЕНИЕ",
+ keys:"КЛАВИШИ",gamepad:"ГЕЙМПАД",mouse:"МЫШЬ",touch:"СЕНСОР",
+ sound:"ЗВУК",music:"МУЗЫКА",sfx:"ЗВУКИ",on:"ВКЛ",off:"ВЫКЛ",rnd:"СЛУЧ.",fullscreen:"НА ВЕСЬ ЭКРАН",exitFullscreen:"ВЫЙТИ С ЭКРАНА",
+ difficulty:"СЛОЖНОСТЬ",easy:"ЛЕГКО",normal:"НОРМА",hard:"СЛОЖНО",low:"НИЗ",high:"ВЕРХ",
+ score:"СЧЁТ",best:"РЕКОРД",hiScore:"РЕКОРД",level:"УРОВЕНЬ",lives:"ЖИЗНИ",time:"ВРЕМЯ",
+ speed:"СКОРОСТЬ",round:"РАУНД",wave:"ВОЛНА",seed:"КОД УРОВНЯ",newSeed:"НОВЫЙ КОД",
+ restart:"ЗАНОВО",retry:"ЕЩЁ РАЗ",continue:"ПРОДОЛЖИТЬ",tryAgain:"ПОПРОБУЙ ЕЩЁ",nextLevel:"СЛЕДУЮЩИЙ УРОВЕНЬ",
+ gameOver:"КОНЕЦ",youWin:"ПОБЕДА",youLose:"КОНЕЦ",clear:"УРОВЕНЬ ПРОЙДЕН",
+ fire:"ОГОНЬ",jump:"ПРЫЖОК",back:"НАЗАД",exit:"ВЫХОД",close:"ЗАКРЫТЬ",ok:"ОК",cancel:"ОТМЕНА",
+ loading:"ЗАГРУЗКА",shots:"УДАРЫ",moves:"ХОДЫ",power:"СИЛА",angle:"УГОЛ",
+ langTitle:"ЯЗЫК",langNote:"Выберите язык — он запоминается и действует для этой игры и для всего каталога.",
+ langBack:"СМЕНИТЬ ЯЗЫК",players:"ИГРОКИ",player:"ИГРОК",you:"ВЫ",cpu:"БОТ",random:"СЛУЧАЙНО"},
+zh:{
+ paused:"暂停",pause:"暂停",resume:"继续",start:"开始",play:"开始游戏",home:"主页",menu:"菜单",
+ options:"选项",settings:"设置",help:"帮助",howToPlay:"怎么玩",rules:"规则",controls:"操作",
+ keys:"按键",gamepad:"手柄",mouse:"鼠标",touch:"触摸",
+ sound:"声音",music:"音乐",sfx:"音效",on:"开",off:"关",fullscreen:"全屏",exitFullscreen:"退出全屏",
+ difficulty:"难度",easy:"简单",normal:"普通",hard:"困难",low:"低",high:"高",
+ score:"得分",best:"最高分",hiScore:"最高分",level:"关卡",lives:"生命",time:"时间",
+ speed:"速度",round:"回合",wave:"波次",seed:"种子",newSeed:"新种子",
+ restart:"重新开始",retry:"重试",continue:"继续",tryAgain:"再试一次",nextLevel:"下一关",
+ gameOver:"游戏结束",youWin:"胜利",youLose:"游戏结束",clear:"过关",
+ fire:"射击",jump:"跳跃",back:"返回",exit:"退出",close:"关闭",ok:"确定",cancel:"取消",
+ loading:"加载中",shots:"击球",moves:"步数",power:"力量",angle:"角度",
+ langTitle:"语言",langNote:"选择语言：会被记住，并用于这个游戏和整个游戏目录。",
+ langBack:"更换语言",players:"玩家",player:"玩家",you:"你",cpu:"电脑",random:"随机"}
+};
+var PAGE={en:{},es:{},pt:{},ru:{},zh:{}};
+function lget(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+function lset(v){try{localStorage.setItem(KEY,v)}catch(e){}}
+var code=null;
+/* A browser language list -> a supported code, or null when it says nothing
+   usable. "pt-BR", "ru_RU", "zh-CN" all match on their 2-letter base. */
+function fromBrowser(){
+ try{
+  var list=null;
+  if(navigator&&Array.isArray(navigator.languages)&&navigator.languages.length)list=navigator.languages;
+  else if(navigator)list=[navigator.language||navigator.userLanguage||""];
+  for(var i=0;i<(list||[]).length;i++){
+   var c=String(list[i]||"").toLowerCase().slice(0,2);
+   if(CODES.indexOf(c)>=0)return c;
+  }
+ }catch(e){}
+ return null;
+}
+(function(){
+ try{
+  var c=null,m=/[?&]language=([a-zA-Z]{2,3})/.exec(location.search||"");
+  if(m)c=m[1].toLowerCase().slice(0,2);           // ?language=pt-BR counts as pt
+  if(c&&CODES.indexOf(c)<0)c=null;
+  if(!c){var s=(lget()||"").toLowerCase().slice(0,2);if(CODES.indexOf(s)>=0)c=s;}
+  if(!c)c=fromBrowser();
+  code=c||"en";
+ }catch(e){code="en";} // a broken lookup speaks English, never nothing
+})();
+function raw(k){
+ var t=PAGE[code]?PAGE[code][k]:null; if(t!=null)return t;
+ t=COMMON[code]?COMMON[code][k]:null; if(t!=null)return t;
+ t=PAGE.en[k]; if(t!=null)return t;
+ t=COMMON.en[k]; return t==null?null:t;
+}
+var hooks=[];
+var API={
+ version:"2026.11.22.2", codes:CODES.slice(), langs:LANGS,
+ lang:function(){return code},
+ browserLang:function(){return fromBrowser()},
+ t:function(k,v){var s;try{s=raw(k)}catch(e){code="en";try{s=raw(k)}catch(e2){s=null}}
+  if(s==null)s=k;var o=v||{};for(var p in o)s=s.split("{"+p+"}").join(String(o[p]));return s},
+ flag:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][3];return ""},
+ name:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][2];return c},
+ add:function(tab){for(var c in tab){if(!PAGE[c])continue;for(var k in tab[c])PAGE[c][k]=tab[c][k];}
+  try{API.apply()}catch(e){}},
+ /* read the tables (the developer harness edits texts through these) */
+ keys:function(c){var out=[],seen={};try{var src=[PAGE[c],COMMON[c],PAGE.en,COMMON.en];
+  for(var i=0;i<src.length;i++)for(var k in src[i])if(!seen[k]){seen[k]=1;out.push(k)}out.sort();}catch(e){}
+  return out},
+ table:function(){var o={};try{for(var i=0;i<CODES.length;i++){var c=CODES[i],m={},s=[COMMON[c],PAGE[c],COMMON.en,PAGE.en];
+  for(var j=0;j<s.length;j++)for(var k in s[j])if(m[k]==null&&s[j][k]!=null)m[k]=s[j][k];o[c]=m;}}catch(e){}
+  return o},
+ setKey:function(c,k,v){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;
+  try{(PAGE[c]=PAGE[c]||{})[k]=String(v);}catch(e){return;}
+  try{API.apply()}catch(e){}
+  for(var i=0;i<hooks.length;i++)try{hooks[i](code)}catch(e){}},
+ onChange:function(f){hooks.push(f)},
+ set:function(c){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;code=c;lset(c);
+  try{API.apply()}catch(e){}for(var i=0;i<hooks.length;i++)try{hooks[i](c)}catch(e){}},
+ apply:function(root){
+  if(document.documentElement)document.documentElement.lang=code;
+  var r=root||document;
+  var set=function(e,attr,put){var v=raw(e.getAttribute(attr));if(v!=null)put(e,v);};
+  var all=[];
+  if(r.nodeType===1)all.push(r);
+  if(r.querySelectorAll)all=all.concat([].slice.call(r.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]")));
+  for(var i=0;i<all.length;i++){var e=all[i];
+   try{
+    if(e.hasAttribute("data-t"))set(e,"data-t",function(n,v){n.textContent=v});
+    if(e.hasAttribute("data-ph"))set(e,"data-ph",function(n,v){n.placeholder=v});
+    if(e.hasAttribute("data-tip"))set(e,"data-tip",function(n,v){n.title=v});
+    if(e.hasAttribute("data-aria"))set(e,"data-aria",function(n,v){n.setAttribute("aria-label",v)});
+    if(e.hasAttribute("data-alt"))set(e,"data-alt",function(n,v){n.alt=v});
+   }catch(e2){} // one odd node never aborts the pass
+  }
+  if(pill){try{pill.innerHTML=API.flag(code)+"<span>"+API.name(code)+"</span>";pill.title=API.t("langTitle");}catch(e){}}
+ },
+ mount:function(sel){hostSel=sel;ensurePill();},
+};
+/* ---------------- language button + picker overlay ---------------- */
+var hostSel=null,pill=null,ov=null;
+var CSS=".tlbtn{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(20,24,22,.72);flex:0 0 auto;align-self:center;"
+ +"border:1px solid #3a463f;border-radius:6px;color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:1px;"
+ +"cursor:pointer;line-height:1;width:auto;max-width:100%}.tlbtn:hover,.tlbtn:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}"
+ +".tlbtn svg{width:22px;height:15px;border:1px solid #2e3a34;border-radius:2px;display:block}"
+ +".tlfix{position:fixed;left:12px;bottom:12px;z-index:2147483000}"
+ +".tlov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;"
+ +"background:rgba(4,7,6,.86);padding:16px}.tlov[hidden]{display:none}"
+ +".tlpanel{max-width:660px;width:100%;background:#141816;border:1px solid #3a463f;border-radius:12px;"
+ +"padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.6);color:#c9d2cb;font:inherit;text-align:center}"
+ +".tlpanel h2{margin:0 0 6px;font-size:20px;letter-spacing:4px;color:#ffd76a}"
+ +".tlpanel p{margin:0 0 16px;font-size:12px;line-height:1.6;color:#8a948e}"
+ +".tlgrid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}"
+ +".tlb{width:132px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;"
+ +"background:rgba(20,24,22,.7);border:1px solid #3a463f;border-radius:8px;cursor:pointer;color:#c9d2cb;font:inherit}"
+ +".tlb:hover,.tlb:focus{border-color:#ffd76a;color:#f4e9c8;outline:none;box-shadow:0 0 14px rgba(255,215,106,.18)}"
+ +".tlb svg{width:50px;height:34px;border:1px solid #2e3a34;border-radius:4px;display:block}"
+ +".tlb b{font-size:13px;color:#f4e9c8}.tlb span{font-size:10px;letter-spacing:1px;color:#8a948e}"
+ +".tlx{margin-top:16px;padding:7px 20px;background:none;border:1px solid #3a463f;border-radius:6px;"
+ +"color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:2px;cursor:pointer}"
+ +".tlx:hover,.tlx:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}";
+function style(){if(document.getElementById("tlcss"))return;var s=document.createElement("style");s.id="tlcss";s.textContent=CSS;document.head.appendChild(s);}
+function ensurePill(){
+ if(pill)return;
+ var host=hostSel?document.querySelector(hostSel):null;
+ if(!host&&document.readyState==="loading")return; // retried at DOMContentLoaded
+ style();
+ pill=document.createElement("button");
+ pill.type="button";pill.className="tlbtn";pill.setAttribute("aria-haspopup","dialog");
+ if(!host){pill.className="tlbtn tlfix";document.body.appendChild(pill);}
+ else host.insertBefore(pill,host.firstChild);
+ pill.onclick=openOv;
+ API.apply();
+}
+function openOv(){
+ if(!ov){
+  ov=document.createElement("div");ov.className="tlov";ov.hidden=true;
+  var p=document.createElement("div");p.className="tlpanel";
+  var h=document.createElement("h2");h.setAttribute("data-t","langTitle");p.appendChild(h);
+  var np=document.createElement("p");np.setAttribute("data-t","langNote");p.appendChild(np);
+  var g=document.createElement("div");g.className="tlgrid";
+  for(var i=0;i<LANGS.length;i++){
+   var b=document.createElement("button");b.type="button";b.className="tlb";b.dataset.lang=LANGS[i][0];
+   b.innerHTML=LANGS[i][3]+"<b>"+LANGS[i][1]+"</b><span>"+LANGS[i][2]+"</span>";g.appendChild(b);
+  }
+  p.appendChild(g);
+  var x=document.createElement("button");x.type="button";x.className="tlx";x.setAttribute("data-t","close");p.appendChild(x);
+  ov.appendChild(p);document.body.appendChild(ov);
+  g.onclick=function(e){var b=e.target;while(b&&b!==g&&!b.dataset.lang)b=b.parentNode;if(b&&b.dataset.lang){API.set(b.dataset.lang);closeOv();}};
+  x.onclick=closeOv;
+  ov.onclick=function(e){if(e.target===ov)closeOv();};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ov&&!ov.hidden)closeOv();});
+ }
+ API.apply(ov);
+ ov.hidden=false;
+}
+function closeOv(){if(ov)ov.hidden=true;}
+function boot(){
+ try{ensurePill();API.apply();}
+ catch(e){code="en";try{ensurePill();API.apply();}catch(e2){}} // rule 0: English on any kit fault
+}
+/* keep freshly added nodes translated without the page calling apply() */
+new MutationObserver(function(ms){
+ if(!pill)return;
+ try{
+  for(var i=0;i<ms.length;i++){var n=ms[i].addedNodes;
+   for(var j=0;j<n.length;j++){var e=n[j];
+    if(e.nodeType!==1)continue;
+    if(e.matches&&e.matches("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]"))API.apply(e);
+    else if(e.querySelectorAll&&e.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]").length)API.apply(e);
+   }}
+ }catch(e){}
+}).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+window.TLI18N=API;
+})();
+</script>
+<script>
+/* If i18n.js is missing or only half-loaded, the game still runs: this stub
+   keeps the same API, pins English, and serves the en table this page registers
+   below via add(). */
+if(!window.TLI18N||typeof window.TLI18N.add!=="function"||typeof window.TLI18N.t!=="function"||typeof window.TLI18N.apply!=="function"||typeof window.TLI18N.mount!=="function"){(function(){var T={en:{}};window.TLI18N={version:"en-fallback",codes:["en"],langs:[["en","EN","English",""]],
+add:function(tab){for(var c in tab){T[c]=Object.assign(T[c]||{},tab[c]);}},
+t:function(k,v){var s=(T.en&&T.en[k]!=null)?T.en[k]:k,o=v||{};for(var p in o)s=String(s).split("{"+p+"}").join(String(o[p]));return s},
+flag:function(){return "";},name:function(c){return c;},lang:function(){return "en";},
+set:function(){},onChange:function(){},apply:function(){},mount:function(){}};})();}
+</script>
+<script>
+'use strict';
+TLI18N.add({
+en:{
+ arena_tag:"DIESEL ARENA // TWIN-STICK CARNAGE",
+ arena_sub:"oil burns long · fuel burns hot · electrolyte conducts every zap",
+ deploy:"Deployment", mode_sol:"SOLO RUN", mode_coop:"LOCAL CO-OP", mode_cpu:"CPU ALLY",
+ btn_surv:"Start Survival — Endless Arena", quest_log:"Quest Log", daily_run:"Daily Run",
+ seed_ph:"ARENA SEED (blank = random)", manual_title:"Field Manual",
+ quest_sub:"short contracts · clear to unlock gear for survival",
+ controls_sub:"click a binding, then press a key · gamepad: click then press a button",
+ p1_kb:"Player 1 — Keyboard", p2_kb:"Player 2 — Keyboard (co-op)", gamepad:"Gamepad",
+ pad_hint:"Left stick move · right stick aim + fire · RT fires & locks direction · first two pads map to P1 / P2.",
+ touch_hint:"Solo: move stick bottom-left, fire stick bottom-right. Co-op landscape: each player owns one short side — move stick is on your left, fire stick on your right, HUD reads facing you. Double-tap the move stick to dash.",
+ reset_defaults:"Reset Defaults", level_up:"LEVEL UP", draft_sub:"draft one upgrade · press 1 / 2 / 3 or tap",
+ contract_board:"CONTRACT BOARD", contract_sub:"the director offers the next wave — pick your poison",
+ current_build:"Current Build", restart_run:"Restart Run", abandon_title:"Abandon → Title",
+ run_terminated:"RUN TERMINATED", contract_failed:"CONTRACT FAILED", debrief:"Debrief",
+ retry_same:"Retry — Same Seed", new_arena:"New Arena", title_btn:"Title",
+ contract_complete:"CONTRACT COMPLETE", reward_unlocked:"Reward Unlocked", next_contract:"Next Contract",
+ snd_on:"SOUND ON", snd_muted:"MUTED", fullscreen:"FULLSCREEN", exit_fullscreen:"EXIT FULLSCREEN",
+ best_lineFmt:"BEST — score {score} · wave {wave} · {time} · {kills} lifetime kills · {runs} runs",
+ daily_btnFmt:"Daily Run · {m1} + {m2}",
+ nm_over:"OVERDRIVE", nm_over_long:"OVERDRIVE x2 SPEED", nm_scatter:"SCATTER DAY", nm_titans:"TWIN TITANS", nm_glass:"GLASS JAW", nm_tide:"BLACK TIDE", nm_slick:"SLICK ICE", nm_black:"BLACKOUT", nm_gold:"GOLD RUSH",
+ manual_touch:"<b>MOVE</b> stick on your left · <b>FIRE</b> stick on your right · double-tap move stick = <b>DASH</b> · buttons: reload / lock-fire / mech.<br>Co-op: each player takes one short side of the device — controls and HUD rotate to face you.<br>Oil burns long and smoky, fuel burns hot and fast, <b style=\"color:#4fe8ff\">electrolyte douses fire and conducts every zap</b>.",
+ manual_kb:"<b>WASD</b> move · <b>ARROWS</b> shoot (8-way) · <b>MOUSE</b> aim, <b>LMB</b> fire, <b>RMB</b> reload · <b>SHIFT</b> fire &amp; lock direction · <b>SPACE</b>/double-tap = dash · <b>E</b> mech · <b>ESC</b> pause.<br>Co-op: P2 moves with <b>ARROWS</b>, shoots with <b>IJKL</b>, dashes with <b>R-CTRL</b>. Gamepads: sticks + <b>RT</b> lock-fire. CPU ally covers you under pressure and races you when calm.<br>Oil burns long and smoky, fuel burns hot and fast, <b style=\"color:#4fe8ff\">electrolyte douses fire and conducts every zap</b>. Blasts blow smoke away.",
+ q_rewardFmt:"REWARD: {r} · PAR {t}", syn_prefix:"SYNERGY:", stackFmt:"STACK {cur} / {max}",
+ ch_rig_d:"Balanced veteran. Bolt Pistol, 1 armor.", ch_scout_d:"Fast, no armor, short dash cooldown. Rattler SMG.",
+ ch_bruise_d:"Slow tank, 2 armor, knockback immune. Scattercannon.", ch_spark_d:"Tech specialist. Arc Caster, grounded, wide magnet.",
+ fusion_prefix:"FUSION INTEL (this arena): ", fusion_done:" [DONE]",
+ draft_headFmt:"PLAYER {n} — LEVEL {lv}", toast_cpuDraftFmt:"CPU DRAFTED {p}",
+ toast_fs:"FULLSCREEN NOT SUPPORTED HERE", toast_ctrlReset:"CONTROLS RESET", toast_autoQFmt:"AUTO QUALITY -> {q}",
+ opt_quality:"Graphics quality", opt_diff:"Difficulty", opt_diff_0:"Scrap (easy)", opt_diff_1:"Rust (normal)", opt_diff_2:"Chrome (swarm)",
+ opt_shake:"Screen shake", opt_sfx:"SFX volume", opt_music:"Music volume", opt_scale:"Render scale",
+ opt_light:"Dynamic lighting", opt_dmg:"Damage numbers", opt_fps:"FPS meter", opt_autoQ:"Auto quality drop",
+ opt_battery:"Battery saver (30fps)", opt_haptics:"Vibration", opt_fullscreen:"Fullscreen",
+ k_up:"Move up", k_down:"Move down", k_left:"Move left", k_right:"Move right",
+ k_aimUp:"Shoot up", k_aimDown:"Shoot down", k_aimLeft:"Shoot left", k_aimRight:"Shoot right",
+ k_dash:"Dash", k_reload:"Reload", k_lock:"Fire & lock", k_mech:"Deploy mech", k_pause:"Pause", k_pressing:"PRESS...",
+ no_perks:"no perks yet", over_subFmt:"seed {seed} · {biome}",
+ stat_score:"SCORE", stat_wave:"WAVE", stat_time:"TIME", stat_kills:"KILLS", stat_level:"LEVEL", stat_gems:"GEMS",
+ daily_lb:"Daily Leaderboard (local)", lb_ptsFmt:"{n} pts", lb_waveFmt:"wave {n}",
+ bn_nuke_sub:"arena cleared", bn_cryo_subFmt:"foes frozen {n}s", bn_x2_subFmt:"{n} seconds",
+ bn_fire_subFmt:"squad weapons ignite {n}s", bn_mechFmt:"{p} press {k} to deploy",
+ bn_waveFmt:"WAVE {n}", bn_wave_subFmt:"director budget {b}", bn_clearFmt:"WAVE {n} CLEARED", bn_clear_subFmt:"+{p} pts",
+ bn_elite_sub:"heavy unit entering the arena", bn_meteor_sub:"watch the red rings", bn_caustic_sub:"toxic cloud drifting with the wind",
+ bn_supply_sub:"defend the crate 15s", bn_ambush_sub:"they surround you", bn_converge_sub:"the perimeter ignites — hold the center",
+ bn_seismic_sub:"new cover rising", bn_turf_sub:"Legion vs Cult — kite them into crossfire",
+ bn_downFmt:"{p} DOWN", bn_down_sub:"stand close to revive", bn_mechdepFmt:"{p} — 18s of invincible tonnage",
+ bn_revivedFmt:"{p} REVIVED", bn_mech_spent:"MECH SPENT", bn_mech_spent_sub:"ejecting",
+ bn_supply_lost:"SUPPLY LOST", bn_supply_secured:"SUPPLY SECURED", bn_supply_sec_sub:"crate opened",
+ bn_cpu_ally:"CPU ALLY ONLINE", bn_cpu_ally_sub:"covers you when it gets hot — races you when it's calm",
+ bn_questFmt:"CONTRACT: {n}", bn_fusion:"WEAPON FUSION", bn_mech_ready:"MECH READY", bn_elite_sig:"ELITE SIGNATURE",
+ bn_nuke:"TACTICAL NUKE", bn_cryo:"CRYO FIELD", bn_x2:"DOUBLE XP", bn_fire:"FIRE ROUNDS", bn_meteors:"METEOR SHOWER",
+ bn_caustic:"CAUSTIC FOG", bn_supply:"SUPPLY DROP", bn_ambush:"AMBUSH RING", bn_converge:"CONVERGENCE",
+ bn_seismic:"SEISMIC SHIFT", bn_turf:"TURF WAR", bn_mech_dep:"MECH DEPLOYED", bn_daily_mut:"DAILY MUTATORS", bn_wave1:"WAVE 1",
+ hud_waveFmt:"WAVE {n}", hud_combo:"COMBO", hud_cryo:"CRYO", hud_x2:"2X XP", hud_fire:"FIRE",
+ hud_seedFmt:"SEED {seed} · {biome}", hud_reload:"RELOADING", hud_rld:"RLD...", hud_mechFmt:"MECH {n}s",
+ hud_downFmt:"DOWN {n}", hud_score:"SCORE", hud_move:"MOVE", hud_fire_btn:"FIRE", hud_dash:"DASH",
+ hud_mech_btn:"MECH", hud_rld_btn:"RLD", hud_lock:"LOCK", hud_partFmt:"MECH PART {c}/3", hud_ammo:"AMMO", hud_diesel:"DIESEL", hud_gun:"GUN", fps_unit:"FPS",
+ biome_rust_d:"open ground, standard hazards", biome_oil_d:"slick oil pools — everything burns",
+ biome_ice_d:"low friction — momentum carries you", biome_volt_d:"electrolyte pools conduct every zap",
+ biome_night_d:"blackout — lamps and fires only",
+ q1_d:"Scrap 25 scavvers in the Rust Flats.", q1_rw:"Rattler SMG joins the survival pool",
+ q2_d:"Kill 12 foes with explosions. Barrels are everywhere.", q2_rw:"Big Bang perk",
+ q3_d:"Survive 60 seconds of relentless ambush rings.", q3_rw:"Longspike Rifle",
+ q4_d:"Electrocute 15 foes through electrolyte pools.", q4_rw:"Arc Caster + Volt Rounds",
+ q5_d:"Defend 2 supply drops to extraction.", q5_rw:"Thumper Launcher",
+ q6_d:"Destroy 2 elite titans.", q6_rw:"Slugrail",
+ q7_d:"Burn 20 foes on the oil fires.", q7_rw:"Igniter + Wildfire",
+ q8_d:"Survive 90 seconds of everything at once.", q8_rw:"CORRUPTED perk tier",
+ perk_vit_d:"+25 max HP, heal 25", perk_arm_d:"+1 armor (flat damage soak)", perk_adr_d:"+12% move speed",
+ perk_hands_d:"-18% reload time", perk_mags_d:"+35% magazine size", perk_trig_d:"+15% fire rate",
+ perk_heavy_d:"+18% damage", perk_split_d:"+1 projectile per shot (70% dmg)", perk_split_syn:"shotguns & SMGs",
+ perk_rico_d:"bullets bounce +1 time off walls", perk_rico_syn:"Split Shot", perk_long_d:"+22% bullet speed & range",
+ perk_magnet_d:"+45% pickup radius", perk_scav_d:"+25% XP from gems", perk_combo_d:"+4 combo cap, slower decay",
+ perk_dash_d:"-28% dash cooldown", perk_vamp_d:"heal 2% of damage dealt",
+ perk_pyro_d:"25% chance to ignite targets & pools", perk_pyro_syn:"oil fields",
+ perk_volt_d:"hits arc to a nearby foe; zap electrolyte", perk_volt_syn:"Arc Caster",
+ perk_cryo_d:"hits slow foes 45% for 1.5s", perk_toxic_d:"hits apply corrosive damage over time",
+ perk_tips_d:"12% chance of mini-blast on hit", perk_tips_syn:"fast guns",
+ perk_bang_d:"+30% explosion radius & damage", perk_bang_syn:"Thumper",
+ perk_wild_d:"fire spreads faster and burns hotter", perk_wild_syn:"Igniter",
+ perk_walk_d:"immune to burning ground", perk_ground_d:"immune to electrolyte conduction",
+ perk_jugg_d:"+2 armor, knockback immune, -8% speed", perk_luck_d:"+30% power-up & crate drops",
+ perk_pact_d:"-30 max HP, +40% damage", perk_glass_d:"halve max HP, +75% damage", perk_lead_d:"-18% speed, +45% damage",
+ evo_0_d:"12 ricocheting incendiary pellets", evo_1_d:"chains 8 targets, electrifies pools",
+ evo_2_d:"cluster warheads, +60% blast", evo_3_d:"long-range white-hot fire stream",
+ evo_4_d:"pierces everything, huge velocity", evo_5_d:"insane fire rate, double magazine",
+ choice_elite_d:"2-3 titans enter immediately. Each drops a guaranteed weapon crate.",
+ choice_swarm_d:"Next wave budget x1.6 — but gems are worth double XP for 25 seconds."
+},
+es:{
+ arena_tag:"ARENA DIESEL // CARNAGE TWIN-STICK",
+ arena_sub:"el petróleo arde largo · el combustible arde fuerte · el electrolito conduce cada chispa",
+ deploy:"DESPLIEGUE", mode_sol:"PARTIDA SOLO", mode_coop:"CO-OP LOCAL", mode_cpu:"ALIADO CPU",
+ btn_surv:"Comenzar Supervivencia — Arena infinita", quest_log:"REGISTRO DE CONTRATOS", daily_run:"Partida diaria",
+ seed_ph:"SEMILLA DE ARENA (vacío = aleatorio)", manual_title:"MANUAL DE CAMPO",
+ quest_sub:"contratos cortos · complétalos para desbloquear equipo para supervivencia",
+ controls_sub:"clic en una acción y luego pulsa una tecla · mando: clic y pulsa un botón",
+ p1_kb:"Jugador 1 — Teclado", p2_kb:"Jugador 2 — Teclado (co-op)", gamepad:"MANDO",
+ pad_hint:"Stick izquierdo mover · stick derecho apuntar y disparar · RT dispara y fija la dirección · los dos primeros mandos van a P1 / P2.",
+ touch_hint:"Solo: stick de movimiento abajo a la izquierda, stick de fuego abajo a la derecha. Co-op horizontal: cada jugador tiene un lado corto — el stick de movimiento a tu izquierda, el de fuego a tu derecha, el HUD te mira de frente. Doble toque en el stick de movimiento para dash.",
+ reset_defaults:"Restaurar valores", level_up:"SUBIR DE NIVEL", draft_sub:"elige una mejora · pulsa 1 / 2 / 3 o toca",
+ contract_board:"TABLÓN DE CONTRATOS", contract_sub:"el director ofrece la siguiente oleada — elige tu veneno",
+ current_build:"CONSTRUCCIÓN ACTUAL", restart_run:"Reiniciar partida", abandon_title:"Abandonar → Título",
+ run_terminated:"PARTIDA TERMINADA", contract_failed:"CONTRATO FALLIDO", debrief:"INFORME",
+ retry_same:"Reintentar — misma semilla", new_arena:"Nueva arena", title_btn:"Título",
+ contract_complete:"CONTRATO CUMPLIDO", reward_unlocked:"RECOMPENSA DESBLOQUEADA", next_contract:"Siguiente contrato",
+ snd_on:"SONIDO ACTIVADO", snd_muted:"SILENCIO", fullscreen:"PANTALLA COMPLETA", exit_fullscreen:"SALIR DE PANTALLA COMPLETA",
+ best_lineFmt:"MEJOR — puntuación {score} · oleada {wave} · {time} · {kills} muertes totales · {runs} partidas",
+ daily_btnFmt:"Partida diaria · {m1} + {m2}",
+ nm_over:"TURBO", nm_over_long:"TURBO x2 VELOCIDAD", nm_scatter:"DÍA DISPERSO", nm_titans:"TITANES GEMINOS", nm_glass:"MANDÍBULA DE CRISTAL", nm_tide:"MAREA NEGRA", nm_slick:"HIELO RESBALADIZO", nm_black:"APAGÓN", nm_gold:"FIEBRE DEL ORO",
+ manual_touch:"<b>MOVE</b> stick a tu izquierda · <b>FIRE</b> stick a tu derecha · doble toque en el stick de movimiento = <b>DASH</b> · botones: recargar / fuego fijo / mech.<br>Co-op: cada jugador toma un lado corto del dispositivo — controles y HUD giran para mirarte.<br>El petróleo arde largo y con humo, el combustible arde fuerte y rápido, <b style=\"color:#4fe8ff\">el electrolito apaga el fuego y conduce cada chispa</b>.",
+ manual_kb:"<b>WASD</b> mover · <b>ARROWS</b> disparar (8 direcciones) · <b>MOUSE</b> apuntar, <b>LMB</b> disparar, <b>RMB</b> recargar · <b>SHIFT</b> disparar y fijar dirección · <b>SPACE</b>/doble toque = dash · <b>E</b> mech · <b>ESC</b> pausa.<br>Co-op: P2 mueve con <b>ARROWS</b>, dispara con <b>IJKL</b>, dash con <b>R-CTRL</b>. Mando: sticks + <b>RT</b> fuego fijo. El aliado CPU te cubre bajo presión y te reta cuando está tranquilo.<br>El petróleo arde largo y con humo, el combustible arde fuerte y rápido, <b style=\"color:#4fe8ff\">el electrolito apaga el fuego y conduce cada chispa</b>. Las explosiones dispersan el humo.",
+ q_rewardFmt:"RECOMPENSA: {r} · PAR {t}", syn_prefix:"SINERGIA:", stackFmt:"ACUMULADO {cur} / {max}",
+ ch_rig_d:"Veterano equilibrado. Bolt Pistol, 1 armadura.", ch_scout_d:"Rápido, sin armadura, dash rápido. Rattler SMG.",
+ ch_bruise_d:"Tanque lento, 2 armadura, inmune al retroceso. Scattercannon.", ch_spark_d:"Especialista técnico. Arc Caster, grounded, imán amplio.",
+ fusion_prefix:"INTEL DE FUSIÓN (esta arena): ", fusion_done:" [HECHO]",
+ draft_headFmt:"JUGADOR {n} — NIVEL {lv}", toast_cpuDraftFmt:"CPU ELIGIÓ {p}",
+ toast_fs:"PANTALLA COMPLETA NO DISPONIBLE AQUÍ", toast_ctrlReset:"CONTROLES RESTABLECIDOS", toast_autoQFmt:"CALIDAD AUTO -> {q}",
+ opt_quality:"Calidad gráfica", opt_diff:"Dificultad", opt_diff_0:"Chatarra (fácil)", opt_diff_1:"Óxido (normal)", opt_diff_2:"Cromo (enjambre)",
+ opt_shake:"Vibración de pantalla", opt_sfx:"Volumen de efectos", opt_music:"Volumen de música", opt_scale:"Escala de render",
+ opt_light:"Iluminación dinámica", opt_dmg:"Números de daño", opt_fps:"Contador de FPS", opt_autoQ:"Bajar calidad automático",
+ opt_battery:"Ahorro de batería (30fps)", opt_haptics:"Vibración", opt_fullscreen:"Pantalla completa",
+ k_up:"Mover arriba", k_down:"Mover abajo", k_left:"Mover izquierda", k_right:"Mover derecha",
+ k_aimUp:"Disparar arriba", k_aimDown:"Disparar abajo", k_aimLeft:"Disparar izquierda", k_aimRight:"Disparar derecha",
+ k_dash:"Dash", k_reload:"Recargar", k_lock:"Disparo fijo", k_mech:"Desplegar mech", k_pause:"Pausa", k_pressing:"PULSA...",
+ no_perks:"sin mejoras todavía", over_subFmt:"semilla {seed} · {biome}",
+ stat_score:"PUNTOS", stat_wave:"OLEADA", stat_time:"TIEMPO", stat_kills:"MUERTES", stat_level:"NIVEL", stat_gems:"GEMAS",
+ daily_lb:"Tabla diaria (local)", lb_ptsFmt:"{n} pts", lb_waveFmt:"oleada {n}",
+ bn_nuke_sub:"arena despejada", bn_cryo_subFmt:"enemigos congelados {n}s", bn_x2_subFmt:"{n} segundos",
+ bn_fire_subFmt:"armas del equipo incendiadas {n}s", bn_mechFmt:"{p} pulsa {k} para desplegar",
+ bn_waveFmt:"OLEADA {n}", bn_wave_subFmt:"presupuesto del director {b}", bn_clearFmt:"OLEADA {n} SUPERADA", bn_clear_subFmt:"+{p} pts",
+ bn_elite_sub:"unidad pesada entrando en la arena", bn_meteor_sub:"cuidado con los anillos rojos", bn_caustic_sub:"nube tóxica a favor del viento",
+ bn_supply_sub:"defiende la caja 15s", bn_ambush_sub:"te rodean", bn_converge_sub:"el perímetro arde — aguanta el centro",
+ bn_seismic_sub:"nueva cobertura emergiendo", bn_turf_sub:"Legión contra Culto — haz que se maten entre ellos",
+ bn_downFmt:"{p} ABATIDO", bn_down_sub:"acércate para revivir", bn_mechdepFmt:"{p} — 18s de tonelaje invencible",
+ bn_revivedFmt:"{p} REVIVIDO", bn_mech_spent:"MECH AGOTADO", bn_mech_spent_sub:"eyectando",
+ bn_supply_lost:"SUMINISTRO PERDIDO", bn_supply_secured:"SUMINISTRO ASEGURADO", bn_supply_sec_sub:"caja abierta",
+ bn_cpu_ally:"CPU ALLY ONLINE", bn_cpu_ally_sub:"te cubre cuando aprieta y te reta cuando está tranquilo",
+ bn_questFmt:"CONTRATO: {n}", bn_fusion:"FUSIÓN DE ARMAS", bn_mech_ready:"MECH LISTO", bn_elite_sig:"FIRMA ÉLITE",
+ bn_nuke:"TACTICAL NUKE", bn_cryo:"CRYO FIELD", bn_x2:"DOUBLE XP", bn_fire:"FIRE ROUNDS", bn_meteors:"METEOR SHOWER",
+ bn_caustic:"CAUSTIC FOG", bn_supply:"SUPPLY DROP", bn_ambush:"AMBUSH RING", bn_converge:"CONVERGENCE",
+ bn_seismic:"SEISMIC SHIFT", bn_turf:"TURF WAR", bn_mech_dep:"MECH DEPLOYED", bn_daily_mut:"DAILY MUTATORS", bn_wave1:"WAVE 1",
+ hud_waveFmt:"OLEADA {n}", hud_combo:"COMBO", hud_cryo:"CRIO", hud_x2:"2X XP", hud_fire:"FUEGO",
+ hud_seedFmt:"SEMILLA {seed} · {biome}", hud_reload:"RECARGANDO", hud_rld:"REC...", hud_mechFmt:"MECH {n}s",
+ hud_downFmt:"ABATIDO {n}", hud_score:"PUNTOS", hud_move:"MOVER", hud_fire_btn:"FUEGO", hud_dash:"DASH",
+ hud_mech_btn:"MECH", hud_rld_btn:"RLD", hud_lock:"LOCK", hud_partFmt:"PIEZA MECH {c}/3",
+ biome_rust_d:"terreno abierto, peligros estándar", biome_oil_d:"charcos de petróleo — todo arde",
+ biome_ice_d:"fricción baja — la inercia te arrastra", biome_volt_d:"charcos de electrolito conducen cada chispa",
+ biome_night_d:"apagón — solo lámparas y fuego",
+ q1_d:"Liquidar 25 scavvers en Rust Flats.", q1_rw:"Rattler SMG entra en el pool de supervivencia",
+ q2_d:"Matar 12 enemigos con explosiones. Hay barriles por todas partes.", q2_rw:"mejora Big Bang",
+ q3_d:"Sobrevive 60 segundos de anillos de emboscada implacables.", q3_rw:"Longspike Rifle",
+ q4_d:"Electrocutar 15 enemigos a través de charcos de electrolito.", q4_rw:"Arc Caster + Volt Rounds",
+ q5_d:"Defiende 2 envíos de suministros hasta la extracción.", q5_rw:"Thumper Launcher",
+ q6_d:"Destruir 2 titanes de élite.", q6_rw:"Slugrail",
+ q7_d:"Quemar 20 enemigos en los incendios de petróleo.", q7_rw:"Igniter + Wildfire",
+ q8_d:"Sobrevive 90 segundos de todo a la vez.", q8_rw:"nivel de mejora CORRUPTED",
+ perk_vit_d:"+25 HP máximo, cura 25", perk_arm_d:"+1 armadura (absorbe daño plano)", perk_adr_d:"+12% velocidad de movimiento",
+ perk_hands_d:"-18% tiempo de recarga", perk_mags_d:"+35% tamaño de cargador", perk_trig_d:"+15% cadencia",
+ perk_heavy_d:"+18% daño", perk_split_d:"+1 proyectil por disparo (70% daño)", perk_split_syn:"escopetas y subfusiles",
+ perk_rico_d:"las balas rebotan 1 vez más en las paredes", perk_rico_syn:"Split Shot", perk_long_d:"+22% velocidad y alcance de bala",
+ perk_magnet_d:"+45% radio de recogida", perk_scav_d:"+25% XP de gemas", perk_combo_d:"+4 tope de combo, decae más lento",
+ perk_dash_d:"-28% tiempo de dash", perk_vamp_d:"cura 2% del daño infligido",
+ perk_pyro_d:"25% de probabilidad de incendiar objetivos y charcos", perk_pyro_syn:"charcos de petróleo",
+ perk_volt_d:"los impactos arcan a un enemigo cercano; electrocutan electrolito", perk_volt_syn:"Arc Caster",
+ perk_cryo_d:"los impactos ralentizan enemigos 45% durante 1.5s", perk_toxic_d:"los impactos aplican daño corrosivo en el tiempo",
+ perk_tips_d:"12% de probabilidad de mini-explosión al impactar", perk_tips_syn:"armas rápidas",
+ perk_bang_d:"+30% radio y daño de explosión", perk_bang_syn:"Thumper",
+ perk_wild_d:"el fuego se expande más rápido y arde más fuerte", perk_wild_syn:"Igniter",
+ perk_walk_d:"inmune al suelo en llamas", perk_ground_d:"inmune a la conducción de electrolito",
+ perk_jugg_d:"+2 armadura, inmune al retroceso, -8% velocidad", perk_luck_d:"+30% botín y cajas",
+ perk_pact_d:"-30 HP máximo, +40% daño", perk_glass_d:"mitad de HP máximo, +75% daño", perk_lead_d:"-18% velocidad, +45% daño",
+ evo_0_d:"12 balas incendiarias rebotes", evo_1_d:"encadena 8 objetivos, electrifica los charcos",
+ evo_2_d:"ogivas de racimo, +60% explosión", evo_3_d:"chorro de fuego blanco a largo alcance",
+ evo_4_d:"perfora todo, velocidad enorme", evo_5_d:"cadencia insane, cargador doble",
+ choice_elite_d:"2-3 titanes entran de inmediato. Cada uno suelta una caja de armas garantizada.",
+ choice_swarm_d:"Presupuesto de la próxima oleada x1.6 — pero las gemas dan XP doble durante 25 segundos."
+},
+pt:{
+ arena_tag:"ARENA DIESEL // CARNAGE TWIN-STICK",
+ arena_sub:"o petróleo arde longo · combustível arde forte · eletrólito conduz cada faisca",
+ deploy:"DESLOCAMENTO", mode_sol:"MODO SOLO", mode_coop:"CO-OP LOCAL", mode_cpu:"ALIADO CPU",
+ btn_surv:"Começar Sobrevivência — Arena infinita", quest_log:"REGISTRO DE CONTRATOS", daily_run:"Corrida diária",
+ seed_ph:"SEMENTE DA ARENA (vazio = aleatório)", manual_title:"MANUAL DE CAMPO",
+ quest_sub:"contratos curtos · conclua para liberar equipamento da sobrevivência",
+ controls_sub:"clique numa ação e depois pressione uma tecla · gamepad: clique e pressione um botão",
+ p1_kb:"Jogador 1 — Teclado", p2_kb:"Jogador 2 — Teclado (co-op)", gamepad:"GAMEPAD",
+ pad_hint:"Analógico esquerdo mover · analógico direito mirar e atirar · RT atira e trava a direção · os dois primeiros gamepads vão para P1 / P2.",
+ touch_hint:"Solo: analógico de movimento embaixo à esquerda, analógico de tiro embaixo à direita. Co-op em paisagem: cada jogador fica com um lado curto — o analógico de movimento fica à sua esquerda, o de tiro à sua direita, o HUD lê na sua frente. Toque duplo no analógico de movimento para dash.",
+ reset_defaults:"Restaurar padrões", level_up:"SUBIR DE NÍVEL", draft_sub:"escolha uma melhoria · pressione 1 / 2 / 3 ou toque",
+ contract_board:"PAINEL DE CONTRATOS", contract_sub:"o diretor oferece a próxima onda — escolha seu veneno",
+ current_build:"CONSTRUÇÃO ATUAL", restart_run:"Reiniciar corrida", abandon_title:"Abandonar → Título",
+ run_terminated:"CORRIDA ENCERRADA", contract_failed:"CONTRATO FRACASSADO", debrief:"RELATÓRIO",
+ retry_same:"Repetir — mesma semente", new_arena:"Nova arena", title_btn:"Título",
+ contract_complete:"CONTRATO CONCLUÍDO", reward_unlocked:"RECOMPENSA LIBERADA", next_contract:"Próximo contrato",
+ snd_on:"SOM LIGADO", snd_muted:"MUDO", fullscreen:"TELA CHEIA", exit_fullscreen:"SAIR DA TELA CHEIA",
+ best_lineFmt:"MELHOR — pontos {score} · onda {wave} · {time} · {kills} mortes totais · {runs} corridas",
+ daily_btnFmt:"Corrida diária · {m1} + {m2}",
+ nm_over:"TURBO", nm_over_long:"TURBO x2 VELOCIDADE", nm_scatter:"DIA DISPERSO", nm_titans:"TITÃS GÊMEOS", nm_glass:"MANDÍBULA DE VIDRO", nm_tide:"MARÉ NEGRA", nm_slick:"GELO ESCORREGADIO", nm_black:"APAGÃO", nm_gold:"CORRIDA DO OURO",
+ manual_touch:"<b>MOVE</b> analógico à sua esquerda · <b>FIRE</b> analógico à sua direita · toque duplo no analógico de movimento = <b>DASH</b> · botões: recarregar / tiro travado / mech.<br>Co-op: cada jogador pega um lado curto do aparelho — controles e HUD giram para te encarar.<br>O petróleo arde longo e com fumaça, o combustível arde forte e rápido, <b style=\"color:#4fe8ff\">o eletrólito apaga o fogo e conduz cada faisca</b>.",
+ manual_kb:"<b>WASD</b> mover · <b>ARROWS</b> atirar (8 direções) · <b>MOUSE</b> mirar, <b>LMB</b> atirar, <b>RMB</b> recarregar · <b>SHIFT</b> atirar e travar direção · <b>SPACE</b>/toque duplo = dash · <b>E</b> mech · <b>ESC</b> pausa.<br>Co-op: P2 move com <b>ARROWS</b>, atira com <b>IJKL</b>, dash com <b>R-CTRL</b>. Gamepads: analógicos + <b>RT</b> tiro travado. O aliado CPU te cobre sob pressão e disputa com você quando está calmo.<br>O petróleo arde longo e com fumaça, o combustível arde forte e rápido, <b style=\"color:#4fe8ff\">o eletrólito apaga o fogo e conduz cada faisca</b>. Explosões espalham a fumaça.",
+ q_rewardFmt:"RECOMPENSA: {r} · PAR {t}", syn_prefix:"SINERGIA:", stackFmt:"POES {cur} / {max}",
+ ch_rig_d:"Veterano equilibrado. Bolt Pistol, 1 armadura.", ch_scout_d:"Rápido, sem armadura, dash curto. Rattler SMG.",
+ ch_bruise_d:"Tanque lento, 2 armadura, imune a knockback. Scattercannon.", ch_spark_d:"Especialista técnico. Arc Caster, grounded, ímã amplo.",
+ fusion_prefix:"INTEL DE FUSÃO (esta arena): ", fusion_done:" [FEITO]",
+ draft_headFmt:"JOGADOR {n} — NÍVEL {lv}", toast_cpuDraftFmt:"CPU ESCOLHEU {p}",
+ toast_fs:"TELA CHEIA NÃO SUPORTADA AQUI", toast_ctrlReset:"CONTROLES RESTAURADOS", toast_autoQFmt:"QUALIDADE AUTO -> {q}",
+ opt_quality:"Qualidade gráfica", opt_diff:"Dificuldade", opt_diff_0:"Sucata (fácil)", opt_diff_1:"Ferrugem (normal)", opt_diff_2:"Cromo (enxame)",
+ opt_shake:"Tremer da tela", opt_sfx:"Volume dos efeitos", opt_music:"Volume da música", opt_scale:"Escala de render",
+ opt_light:"Iluminação dinâmica", opt_dmg:"Números de dano", opt_fps:"Contador de FPS", opt_autoQ:"Queda automática de qualidade",
+ opt_battery:"Economia de bateria (30fps)", opt_haptics:"Vibração", opt_fullscreen:"Tela cheia",
+ k_up:"Mover para cima", k_down:"Mover para baixo", k_left:"Mover para a esquerda", k_right:"Mover para a direita",
+ k_aimUp:"Atirar para cima", k_aimDown:"Atirar para baixo", k_aimLeft:"Atirar para a esquerda", k_aimRight:"Atirar para a direita",
+ k_dash:"Dash", k_reload:"Recarregar", k_lock:"Tiro travado", k_mech:"Implantar mech", k_pause:"Pausa", k_pressing:"PRESSIONE...",
+ no_perks:"sem melhorias ainda", over_subFmt:"semente {seed} · {biome}",
+ stat_score:"PONTOS", stat_wave:"ONDA", stat_time:"TEMPO", stat_kills:"MORTES", stat_level:"NÍVEL", stat_gems:"GEMAS",
+ daily_lb:"Classificação diária (local)", lb_ptsFmt:"{n} pts", lb_waveFmt:"onda {n}",
+ bn_nuke_sub:"arena limpa", bn_cryo_subFmt:"inimigos congelados {n}s", bn_x2_subFmt:"{n} segundos",
+ bn_fire_subFmt:"armas do esquadrão inflamam {n}s", bn_mechFmt:"{p} pressione {k} para implantar",
+ bn_waveFmt:"ONDA {n}", bn_wave_subFmt:"orçamento do diretor {b}", bn_clearFmt:"ONDA {n} VENCIDA", bn_clear_subFmt:"+{p} pts",
+ bn_elite_sub:"unidad pesada entrando na arena", bn_meteor_sub:"cuidado com os anéis vermelhos", bn_caustic_sub:"nuvem tóxica à deriva com o vento",
+ bn_supply_sub:"defenda a caixa 15s", bn_ambush_sub:"eles te cercam", bn_converge_sub:"o perímetro incendeia — segure o centro",
+ bn_seismic_sub:"nova cobertura surgindo", bn_turf_sub:"Legião contra Culto — faça-os se matarem no fogo cruzado",
+ bn_downFmt:"{p} DERRUBADO", bn_down_sub:"fique perto para reviver", bn_mechdepFmt:"{p} — 18s de tonelagem invencível",
+ bn_revivedFmt:"{p} REVIVIDO", bn_mech_spent:"MECH ESGOTADO", bn_mech_spent_sub:"ejetando",
+ bn_supply_lost:"SUPRIMENTO PERDIDO", bn_supply_secured:"SUPRIMENTO GARANTIDO", bn_supply_sec_sub:"caixa aberta",
+ bn_cpu_ally:"CPU ALLY ONLINE", bn_cpu_ally_sub:"te cobre sob pressão e disputa com você quando está calmo",
+ bn_questFmt:"CONTRATO: {n}", bn_fusion:"FUSÃO DE ARMAS", bn_mech_ready:"MECH PRONTO", bn_elite_sig:"ASSINATURA ÉLITE",
+ bn_nuke:"TACTICAL NUKE", bn_cryo:"CRYO FIELD", bn_x2:"DOUBLE XP", bn_fire:"FIRE ROUNDS", bn_meteors:"METEOR SHOWER",
+ bn_caustic:"CAUSTIC FOG", bn_supply:"SUPPLY DROP", bn_ambush:"AMBUSH RING", bn_converge:"CONVERGENCE",
+ bn_seismic:"SEISMIC SHIFT", bn_turf:"TURF WAR", bn_mech_dep:"MECH DEPLOYED", bn_daily_mut:"DAILY MUTATORS", bn_wave1:"WAVE 1",
+ hud_waveFmt:"ONDA {n}", hud_combo:"COMBO", hud_cryo:"CRIO", hud_x2:"2X XP", hud_fire:"FOGO",
+ hud_seedFmt:"SEMENTE {seed} · {biome}", hud_reload:"RECARREGANDO", hud_rld:"REC...", hud_mechFmt:"MECH {n}s",
+ hud_downFmt:"DERRUBADO {n}", hud_score:"PONTOS", hud_move:"MOVER", hud_fire_btn:"FOGO", hud_dash:"DASH",
+ hud_mech_btn:"MECH", hud_rld_btn:"RLD", hud_lock:"LOCK", hud_partFmt:"PEÇA MECH {c}/3",
+ biome_rust_d:"terreno aberto, perigos padrão", biome_oil_d:"poças de petróleo — tudo queima",
+ biome_ice_d:"atrito baixo — o impulso te leva", biome_volt_d:"poças de eletrólito conduzem cada faisca",
+ biome_night_d:"apagão — só lâmpadas e fogo",
+ q1_d:"Elimine 25 scavvers nos Rust Flats.", q1_rw:"Rattler SMG entra no pool de sobrevivência",
+ q2_d:"Mate 12 inimigos com explosões. Barris por toda parte.", q2_rw:"melhoria Big Bang",
+ q3_d:"Sobreviva 60 segundos de anéis de emboscada implacáveis.", q3_rw:"Longspike Rifle",
+ q4_d:"Eletrocute 15 inimigos através das poças de eletrólito.", q4_rw:"Arc Caster + Volt Rounds",
+ q5_d:"Defenda 2 lançamentos de suprimento até a extração.", q5_rw:"Thumper Launcher",
+ q6_d:"Destrua 2 titãs de elite.", q6_rw:"Slugrail",
+ q7_d:"Queime 20 inimigos nos incêndios de petróleo.", q7_rw:"Igniter + Wildfire",
+ q8_d:"Sobreviva 90 segundos de tudo ao mesmo tempo.", q8_rw:"nível de melhoria CORRUPTED",
+ perk_vit_d:"+25 HP máximo, cura 25", perk_arm_d:"+1 armadura (absorve dano plano)", perk_adr_d:"+12% velocidade de movimento",
+ perk_hands_d:"-18% tempo de recarga", perk_mags_d:"+35% tamanho do pente", perk_trig_d:"+15% cadência",
+ perk_heavy_d:"+18% dano", perk_split_d:"+1 projétil por tiro (70% dano)", perk_split_syn:"escopetas e SMGs",
+ perk_rico_d:"balas quicam +1 vez nas paredes", perk_rico_syn:"Split Shot", perk_long_d:"+22% velocidade e alcance da bala",
+ perk_magnet_d:"+45% raio de coleta", perk_scav_d:"+25% XP de gemas", perk_combo_d:"+4 teto de combo, decai mais devagar",
+ perk_dash_d:"-28% tempo de dash", perk_vamp_d:"cura 2% do dano causado",
+ perk_pyro_d:"25% de chance de inflamar alvos e poças", perk_pyro_syn:"campos de petróleo",
+ perk_volt_d:"acertos arcam para um inimigo próximo; eletrocutam eletrólito", perk_volt_syn:"Arc Caster",
+ perk_cryo_d:"acertos lentos inimigos 45% por 1.5s", perk_toxic_d:"acertos aplicam dano corrosivo no tempo",
+ perk_tips_d:"12% de chance de mini-explosão ao acertar", perk_tips_syn:"armas rápidas",
+ perk_bang_d:"+30% raio e dano de explosão", perk_bang_syn:"Thumper",
+ perk_wild_d:"o fogo se espalha mais rápido e queima mais forte", perk_wild_syn:"Igniter",
+ perk_walk_d:"imune ao chão em chamas", perk_ground_d:"imune à condução do eletrólito",
+ perk_jugg_d:"+2 armadura, imune a knockback, -8% velocidade", perk_luck_d:"+30% drops de poder e caixas",
+ perk_pact_d:"-30 HP máximo, +40% dano", perk_glass_d:"metade do HP máximo, +75% dano", perk_lead_d:"-18% velocidade, +45% dano",
+ evo_0_d:"12 balas incendiárias que quicam", evo_1_d:"encadeia 8 alvos, eletrifica as poças",
+ evo_2_d:"ogivas de racimo, +60% explosão", evo_3_d:"jato de fogo branco de longo alcance",
+ evo_4_d:"perfura tudo, velocidade enorme", evo_5_d:"cadência insane, pente duplo",
+ choice_elite_d:"2-3 titãs entram imediatamente. Cada um larga uma caixa de arma garantida.",
+ choice_swarm_d:"Orçamento da próxima onda x1.6 — mas gemas valem XP dobro por 25 segundos."
+},
+ru:{
+ arena_tag:"DIESEL-АРЕНА // РАЗРУШЕНИЯ НА ДВУХ СТИКАХ",
+ arena_sub:"нефть горит долго · топливо горит ярко · электролит проводит каждую искру",
+ deploy:"РАЗВЁРТЫВАНИЕ", mode_sol:"ОДИНОЧНЫЙ ЗАБЕГ", mode_coop:"ЛОКАЛЬНЫЙ КООП", mode_cpu:"СОЮЗНИК — БОТ",
+ btn_surv:"Начать выживание — бесконечная арена", quest_log:"ЖУРНАЛ КОНТРАКТОВ", daily_run:"Дневной забег",
+ seed_ph:"КОД УРОВНЯ АРЕНЫ (пусто = случайно)", manual_title:"ПОЛЕВОЙ СПРАВОЧНИК",
+ quest_sub:"короткие контракты · выполни, чтобы открыть снаряжение для выживания",
+ controls_sub:"клик по привязке, затем нажми клавишу · геймпад: клик и нажми кнопку",
+ p1_kb:"Игрок 1 — Клавиатура", p2_kb:"Игрок 2 — Клавиатура (кооп)", gamepad:"ГЕЙМПАД",
+ pad_hint:"Левый стик — движение · правый стик — прицел и стрельба · RT стреляет и фиксирует направление · первые два геймпада идут в P1 / P2.",
+ touch_hint:"Соло: стик движения внизу слева, стик стрельбы внизу справа. Кооп в альбомнике: у каждого игрока своя короткая сторона — стик движения слева от тебя, стик стрельбы справа, HUD читается на тебя. Двойной тап по стику движения — dash.",
+ reset_defaults:"Сброс настроек", level_up:"НОВЫЙ УРОВЕНЬ", draft_sub:"выбери одно улучшение · нажми 1 / 2 / 3 или тапни",
+ contract_board:"ДОСКА КОНТРАКТОВ", contract_sub:"директор предлагает следующую волну — выбирай, от чего умереть",
+ current_build:"ТЕКУЩАЯ СБОРКА", restart_run:"Заново этот забег", abandon_title:"Бросить → Главный экран",
+ run_terminated:"ЗАБЕГ ОКОНЧЕН", contract_failed:"КОНТРАКТ ПРОВАЛЕН", debrief:"ОТЧЁТ",
+ retry_same:"Повтор — тот же код уровня", new_arena:"Новая арена", title_btn:"Главный экран",
+ contract_complete:"КОНТРАКТ ВЫПОЛНЕН", reward_unlocked:"НАГРАДА ОТКРЫТА", next_contract:"Следующий контракт",
+ snd_on:"ЗВУК ВКЛ", snd_muted:"ТИШИНА", fullscreen:"НА ВЕСЬ ЭКРАН", exit_fullscreen:"ВЫЙТИ С ЭКРАНА",
+ best_lineFmt:"ЛУЧШИЙ — счёт {score} · волна {wave} · {time} · {kills} убийств всего · {runs} забегов",
+ daily_btnFmt:"Дневной забег · {m1} + {m2}",
+ nm_over:"ТУРБО", nm_over_long:"ТУРБО x2 СКОРОСТЬ", nm_scatter:"ДЕНЬ РАЗСЕВА", nm_titans:"ТИТАНЫ-БЛИЗНЕЦЫ", nm_glass:"ЧЕЛЮСТЬ ИЗ СТЕКЛА", nm_tide:"ЧЁРНАЯ ВОЛНА", nm_slick:"СКОЛЬЗКИЙ ЛЁД", nm_black:"ТЕМНОТА", nm_gold:"ЗОЛОТАЯ ЛИХОРАДКА",
+ manual_touch:"<b>ДВИЖЕНИЕ</b> стик слева от тебя · <b>ОГОНЬ</b> стик справа · двойной тап по стику движения = <b>РЫВОК</b> · кнопки: перезарядка / фиксация огня / робот.<br>Кооп: каждый игрок занимает короткую сторону устройства — управление и HUD поворачиваются к тебе.<br>Нефть горит долго и дымно, топливо горит ярко и быстро, <b style=\"color:#4fe8ff\">электролит гасит огонь и проводит каждую искру</b>.",
+ manual_kb:"<b>WASD</b> движение · <b>ARROWS</b> стрельба (8 направлений) · <b>MOUSE</b> прицел, <b>LMB</b> огонь, <b>RMB</b> перезарядка · <b>SHIFT</b> огонь с фиксацией направления · <b>SPACE</b>/двойной тап = рывок · <b>E</b> робот · <b>ESC</b> пауза.<br>Кооп: P2 двигается на <b>ARROWS</b>, стреляет на <b>IJKL</b>, рывок на <b>R-CTRL</b>. Геймпады: стики + <b>RT</b> фиксация огня. Союзник-бот прикрывает тебя под давлением и соревнуется, когда спокойно.<br>Нефть горит долго и дымно, топливо горит ярко и быстро, <b style=\"color:#4fe8ff\">электролит гасит огонь и проводит каждую искру</b>. Взрывы разгоняют дым.",
+ q_rewardFmt:"НАГРАДА: {r} · ПАР {t}", syn_prefix:"СИНЕРГИЯ:", stackFmt:"СТОП {cur} / {max}",
+ ch_rig_d:"Сбалансированный ветеран. Пистолет болтов, 1 броня.", ch_scout_d:"Быстрый, без брони, короткий откат рывка. Пистолет-пулемёт «Трещотка».",
+ ch_bruise_d:"Медленный танк, 2 брони, иммунитет к отбрасыванию. Дробящая пушка.", ch_spark_d:"Техспециалист. Дугомет, заземление, широкий магнит.",
+ fusion_prefix:"РАЗВЕДКА СЛИЯНИЯ (эта арена): ", fusion_done:" [ГОТОВО]",
+ draft_headFmt:"ИГРОК {n} — УРОВЕНЬ {lv}", toast_cpuDraftFmt:"БОТ ВЫБРАЛ {p}",
+ toast_fs:"НА ВЕСЬ ЭКРАН ЗДЕСЬ НЕ ПОДДЕРЖИВАЕТСЯ", toast_ctrlReset:"УПРАВЛЕНИЕ СБРОШЕНО", toast_autoQFmt:"АВТО-КАЧЕСТВО -> {q}",
+ opt_quality:"Качество графики", opt_diff:"Сложность", opt_diff_0:"Металлолом (легко)", opt_diff_1:"Ржавчина (норма)", opt_diff_2:"Хром (сложно)",
+ opt_shake:"Тряска экрана", opt_sfx:"Громкость эффектов", opt_music:"Громкость музыки", opt_scale:"Масштаб рендера",
+ opt_light:"Динамическое освещение", opt_dmg:"Цифры урона", opt_fps:"Счётчик К/С", opt_autoQ:"Авто-снижение качества",
+ opt_battery:"Экономия батареи (30 К/С)", opt_haptics:"Вибрация", opt_fullscreen:"На весь экран",
+ k_up:"Движение вверх", k_down:"Движение вниз", k_left:"Движение влево", k_right:"Движение вправо",
+ k_aimUp:"Стрельба вверх", k_aimDown:"Стрельба вниз", k_aimLeft:"Стрельба влево", k_aimRight:"Стрельба вправо",
+ k_dash:"Рывок", k_reload:"Перезарядка", k_lock:"Огонь с фиксацией", k_mech:"Развернуть робота", k_pause:"Пауза", k_pressing:"ЖДУ НАЖАТИЯ...",
+ no_perks:"улучшений пока нет", over_subFmt:"код уровня {seed} · {biome}",
+ stat_score:"СЧЁТ", stat_wave:"ВОЛНА", stat_time:"ВРЕМЯ", stat_kills:"УБИЙСТВ", stat_level:"УРОВЕНЬ", stat_gems:"КРИСТАЛЛОВ",
+ daily_lb:"Дневная таблица (локально)", lb_ptsFmt:"{n} очков", lb_waveFmt:"волна {n}",
+ bn_nuke_sub:"арена вычищена", bn_cryo_subFmt:"враги заморожены {n}с", bn_x2_subFmt:"{n} секунд",
+ bn_fire_subFmt:"оружие отряда подожжено {n}с", bn_mechFmt:"{p}: нажми {k} для развёртывания",
+ bn_waveFmt:"ВОЛНА {n}", bn_wave_subFmt:"бюджет директора {b}", bn_clearFmt:"ВОЛНА {n} ЗАЧИЩЕНА", bn_clear_subFmt:"+{p} очков",
+ bn_elite_sub:"тяжёлая единица входит в арену", bn_meteor_sub:"следи за красными кольцами", bn_caustic_sub:"токсичное облако плывёт по ветру",
+ bn_supply_sub:"держи ящик 15с", bn_ambush_sub:"тебя окружают", bn_converge_sub:"периметр вспыхивает — держи центр",
+ bn_seismic_sub:"новое укрытие поднимается", bn_turf_sub:"Легион против Культа — своди их под перекрёстный огонь",
+ bn_downFmt:"{p} УПАЛ", bn_down_sub:"подойди, чтобы поднять", bn_mechdepFmt:"{p} — 18с неуязвимой массы",
+ bn_revivedFmt:"{p} ПОДНЯТ", bn_mech_spent:"РОБОТ ИСХОДАН", bn_mech_spent_sub:"катапульта",
+ bn_supply_lost:"СНАБЖЕНИЕ ПОТЕРЯНО", bn_supply_secured:"СНАБЖЕНИЕ ВЗЯТО", bn_supply_sec_sub:"ящик открыт",
+ bn_cpu_ally:"Бот-союзник в сети", bn_cpu_ally_sub:"прикрывает тебя под давлением и соревнуется, когда спокойно",
+ bn_questFmt:"КОНТРАКТ: {n}", bn_fusion:"СЛИЯНИЕ ОРУЖИЯ", bn_mech_ready:"РОБОТ ГОТОВ", bn_elite_sig:"ЭЛИТНЫЙ СИГНАЛ",
+ bn_nuke:"Тактический удар", bn_cryo:"Крио-поле", bn_x2:"×2 опыт", bn_fire:"Зажигательные снаряды", bn_meteors:"Метеорный дождь",
+ bn_caustic:"Едкий туман", bn_supply:"Сброс снабжения", bn_ambush:"Засадное кольцо", bn_converge:"Схождение",
+ bn_seismic:"Сейсмический сдвиг", bn_turf:"Война за территорию", bn_mech_dep:"Робот развёрнут", bn_daily_mut:"Ежедневные мутаторы", bn_wave1:"Волна 1",
+ hud_waveFmt:"ВОЛНА {n}", hud_combo:"КОМБО", hud_cryo:"КРИО", hud_x2:"×2 ОПЫТ", hud_fire:"ОГОНЬ",
+ hud_seedFmt:"КОД УРОВНЯ {seed} · {biome}", hud_reload:"ПЕРЕЗАРЯДКА", hud_rld:"ПЕР...", hud_mechFmt:"РОБОТ {n}с",
+ hud_downFmt:"УПАЛ {n}", hud_score:"СЧЁТ", hud_move:"ДВИЖЕНИЕ", hud_fire_btn:"ОГОНЬ", hud_dash:"РЫВОК",
+ hud_mech_btn:"РОБОТ", hud_rld_btn:"ЗАРЯД", hud_lock:"ЦЕЛЬ", hud_partFmt:"ЧАСТЬ РОБОТА {c}/3", hud_ammo:"СНАРЯДЫ", hud_diesel:"ГОРЮЧЕЕ", hud_gun:"ПУШКА", fps_unit:"К/С",
+ biome_rust_d:"открытая местность, стандартные опасности", biome_oil_d:"лужи нефти — всё горит",
+ biome_ice_d:"низкое трение — инерция уносит тебя", biome_volt_d:"лужи электролита проводят каждую искру",
+ biome_night_d:"блэкаут — только лампы и огонь",
+ q1_d:"Уничтожь 25 падальщиков в Ржавых Просторах.", q1_rw:"«Трещотка» добавляется в арсенал выживания",
+ q2_d:"Убей 12 врагов взрывами. Бочки повсюду.", q2_rw:"улучшение «Молотобой»",
+ q3_d:"Переживи 60 секунд колец засады без передышки.", q3_rw:"Длинношипная винтовка",
+ q4_d:"Электрокутируй 15 врагов через лужи электролита.", q4_rw:"Дугомет + вольтовые заряды",
+ q5_d:"Отстоять 2 сброса снабжения до эвакуации.", q5_rw:"Молотобой: пусковая установка",
+ q6_d:"Разруши 2 элитных титанов.", q6_rw:"Слагрельса",
+ q7_d:"Сожги 20 врагов в нефтяном огне.", q7_rw:"Поджигатель + дикий огонь",
+ q8_d:"Переживи 90 секунд всего сразу.", q8_rw:"уровень улучшений CORRUPTED",
+ perk_vit_d:"+25 к макс. HP, лечит 25", perk_arm_d:"+1 броня (плоское поглощение)", perk_adr_d:"+12% скорость движения",
+ perk_hands_d:"-18% время перезарядки", perk_mags_d:"+35% размер магазина", perk_trig_d:"+15% скорострельность",
+ perk_heavy_d:"+18% урон", perk_split_d:"+1 снаряд на выстрел (70% урона)", perk_split_syn:"дробовики и ПП",
+ perk_rico_d:"пули отскакивают от стен на 1 раз больше", perk_rico_syn:"Раздвоенный выстрел", perk_long_d:"+22% скорость и дальность пули",
+ perk_magnet_d:"+45% радиус подбора", perk_scav_d:"+25% XP с кристаллов", perk_combo_d:"+4 к потолку комбо, спад медленнее",
+ perk_dash_d:"-28% перезарядка dash", perk_vamp_d:"лечит 2% нанесённого урона",
+ perk_pyro_d:"25% шанс поджечь цели и лужи", perk_pyro_syn:"нефтяные поля",
+ perk_volt_d:"удары аркой бьют ближайшего врага; электрокутят электролит", perk_volt_syn:"Дугомет",
+ perk_cryo_d:"удары замедляют врагов на 45% на 1.5с", perk_toxic_d:"удары накладывают едкий урон со временем",
+ perk_tips_d:"12% шанс мини-взрыва при попадании", perk_tips_syn:"скорострельные пушки",
+ perk_bang_d:"+30% радиус и урон взрыва", perk_bang_syn:"Молотобой",
+ perk_wild_d:"огонь распространяется быстрее и горит жарче", perk_wild_syn:"Поджигатель",
+ perk_walk_d:"иммунен к горящей земле", perk_ground_d:"иммунен к проводимости электролита",
+ perk_jugg_d:"+2 броня, иммунитет к отбрасыванию, -8% скорости", perk_luck_d:"+30% дропа бонусов и ящиков",
+ perk_pact_d:"-30 макс. HP, +40% урона", perk_glass_d:"вдвое меньше макс. HP, +75% урона", perk_lead_d:"-18% скорости, +45% урона",
+ evo_0_d:"12 рикошетящих зажигательных пуль", evo_1_d:"цепляет 8 целей, электризует лужи",
+ evo_2_d:"кассетные боеприпасы, +60% взрыва", evo_3_d:"дальнобойная белая струя огня",
+ evo_4_d:"пробивает всё, огромная скорость", evo_5_d:"безумная скорострельность, двойной магазин",
+ choice_elite_d:"2-3 титана входят сразу. Каждый гарантированно роняет ящик с оружием.",
+ choice_swarm_d:"Бюджет следующей волны x1.6 — зато кристаллы дают двойной XP 25 секунд."
+},
+zh:{
+ arena_tag:"柴油竞技场 // 双摇杆杀戮",
+ arena_sub:"机油烧得久 · 燃料烧得猛 · 电解液导通每一道电火花",
+ deploy:"出击配置", mode_sol:"单人闯关", mode_coop:"本地双人", mode_cpu:"CPU队友",
+ btn_surv:"开始生存 — 无尽竞技场", quest_log:"契约日志", daily_run:"每日闯关",
+ seed_ph:"竞技场种子（留空 = 随机）", manual_title:"实战手册",
+ quest_sub:"简短契约 · 完成即可为生存模式解锁装备",
+ controls_sub:"点击一项绑定，再按一个键 · 手柄：点击后按一个键",
+ p1_kb:"玩家 1 — 键盘", p2_kb:"玩家 2 — 键盘（双人）", gamepad:"手柄",
+ pad_hint:"左摇杆移动 · 右摇杆瞄准并射击 · RT 射击并锁定方向 · 前两个手柄对应 P1 / P2。",
+ touch_hint:"单人：左下移动摇杆，右下射击摇杆。横屏双人：每位玩家占据一个短边 — 移动摇杆在你的左侧，射击摇杆在你的右侧，HUD 面向你。双击移动摇杆即可冲刺。",
+ reset_defaults:"恢复默认", level_up:"升级", draft_sub:"选择一项强化 · 按 1 / 2 / 3 或点击",
+ contract_board:"契约看板", contract_sub:"导演给出下一波 — 选你要哪种死法",
+ current_build:"当前构筑", restart_run:"重开这次闯关", abandon_title:"放弃 → 标题",
+ run_terminated:"闯关结束", contract_failed:"契约失败", debrief:"战后总结",
+ retry_same:"重试 — 同一颗种子", new_arena:"新竞技场", title_btn:"标题",
+ contract_complete:"契约完成", reward_unlocked:"解锁奖励", next_contract:"下一份契约",
+ snd_on:"声音开", snd_muted:"静音", fullscreen:"全屏", exit_fullscreen:"退出全屏",
+ best_lineFmt:"最佳 — 得分 {score} · 第{wave}波 · {time} · 累计击杀 {kills} · {runs} 次闯关",
+ daily_btnFmt:"每日闯关 · {m1} + {m2}",
+ nm_over:"超速", nm_over_long:"超速 x2 速度", nm_scatter:"飞散日", nm_titans:"双巨人", nm_glass:"玻璃下巴", nm_tide:"黑潮", nm_slick:"溜冰面", nm_black:"断电", nm_gold:"淘金热",
+ manual_touch:"<b>MOVE</b> 摇杆在你的左侧 · <b>FIRE</b> 摇杆在你的右侧 · 双击移动摇杆 = <b>DASH</b> · 按钮：换弹 / 锁定射击 / 机甲。<br>双人：每位玩家占据设备的一个短边 — 操作与 HUD 会转向你。<br>机油烧得久且浓烟，燃料烧得猛且快，<b style=\"color:#4fe8ff\">电解液灭火并导通每一道电火花</b>。",
+ manual_kb:"<b>WASD</b> 移动 · <b>ARROWS</b> 射击（8向） · <b>MOUSE</b> 瞄准，<b>LMB</b> 射击，<b>RMB</b> 换弹 · <b>SHIFT</b> 射击并锁定方向 · <b>SPACE</b>/双击 = 冲刺 · <b>E</b> 机甲 · <b>ESC</b> 暂停。<br>双人：P2 用 <b>ARROWS</b> 移动、<b>IJKL</b> 射击、<b>R-CTRL</b> 冲刺。手柄：摇杆 + <b>RT</b> 锁定射击。CPU 队友在你压力大时掩护，平静时与你竞速。<br>机油烧得久且浓烟，燃料烧得猛且快，<b style=\"color:#4fe8ff\">电解液灭火并导通每一道电火花</b>。爆炸会把烟吹散。",
+ q_rewardFmt:"奖励：{r} · 标准时间 {t}", syn_prefix:"联动：", stackFmt:"层数 {cur} / {max}",
+ ch_rig_d:"均衡的老兵。Bolt Pistol，1 点护甲。", ch_scout_d:"速度快，无护甲，冲刺冷却短。Rattler SMG。",
+ ch_bruise_d:"慢速坦克，2 点护甲，免疫击退。Scattercannon。", ch_spark_d:"技术专家。Arc Caster，接地，磁吸范围大。",
+ fusion_prefix:"融合情报（本竞技场）： ", fusion_done:" [已完成]",
+ draft_headFmt:"玩家 {n} — 等级 {lv}", toast_cpuDraftFmt:"CPU 选择了 {p}",
+ toast_fs:"此处不支持全屏", toast_ctrlReset:"操作已重置", toast_autoQFmt:"自动画质 -> {q}",
+ opt_quality:"画质", opt_diff:"难度", opt_diff_0:"废铁（简单）", opt_diff_1:"锈铁（普通）", opt_diff_2:"铬钢（潮海）",
+ opt_shake:"屏幕震动", opt_sfx:"音效音量", opt_music:"音乐音量", opt_scale:"渲染缩放",
+ opt_light:"动态光照", opt_dmg:"伤害数字", opt_fps:"FPS 显示", opt_autoQ:"自动降画质",
+ opt_battery:"省电模式（30fps）", opt_haptics:"震动反馈", opt_fullscreen:"全屏",
+ k_up:"向上移动", k_down:"向下移动", k_left:"向左移动", k_right:"向右移动",
+ k_aimUp:"向上射击", k_aimDown:"向下射击", k_aimLeft:"向左射击", k_aimRight:"向右射击",
+ k_dash:"冲刺", k_reload:"换弹", k_lock:"锁定射击", k_mech:"部署机甲", k_pause:"暂停", k_pressing:"请按键...",
+ no_perks:"尚无强化", over_subFmt:"种子 {seed} · {biome}",
+ stat_score:"得分", stat_wave:"波次", stat_time:"时间", stat_kills:"击杀", stat_level:"等级", stat_gems:"宝石",
+ daily_lb:"每日排行榜（本地）", lb_ptsFmt:"{n} 分", lb_waveFmt:"第{n}波",
+ bn_nuke_sub:"竞技场清空", bn_cryo_subFmt:"敌人冻结 {n}秒", bn_x2_subFmt:"{n} 秒",
+ bn_fire_subFmt:"全队武器燃烧 {n}秒", bn_mechFmt:"{p} 按 {k} 部署",
+ bn_waveFmt:"第{n}波", bn_wave_subFmt:"导演预算 {b}", bn_clearFmt:"第{n}波已清", bn_clear_subFmt:"+{p} 分",
+ bn_elite_sub:"重型单位进入竞技场", bn_meteor_sub:"小心红色光环", bn_caustic_sub:"毒云随风飘移",
+ bn_supply_sub:"守住补给箱 15秒", bn_ambush_sub:"他们包围了你", bn_converge_sub:"外围起火 — 守住中心",
+ bn_seismic_sub:"新的掩体升起", bn_turf_sub:"军团对邪教 — 把他们牵进交叉火力",
+ bn_downFmt:"{p} 倒地", bn_down_sub:"靠近即可救起", bn_mechdepFmt:"{p} — 18秒无敌碾压",
+ bn_revivedFmt:"{p} 被救起", bn_mech_spent:"机甲结束", bn_mech_spent_sub:"弹射",
+ bn_supply_lost:"补给丢失", bn_supply_secured:"补给到手", bn_supply_sec_sub:"箱子已开",
+ bn_cpu_ally:"CPU ALLY ONLINE", bn_cpu_ally_sub:"压力大时掩护你，平静时与你竞速",
+ bn_questFmt:"契约：{n}", bn_fusion:"武器融合", bn_mech_ready:"机甲就绪", bn_elite_sig:"精英信号",
+ bn_nuke:"TACTICAL NUKE", bn_cryo:"CRYO FIELD", bn_x2:"DOUBLE XP", bn_fire:"FIRE ROUNDS", bn_meteors:"METEOR SHOWER",
+ bn_caustic:"CAUSTIC FOG", bn_supply:"SUPPLY DROP", bn_ambush:"AMBUSH RING", bn_converge:"CONVERGENCE",
+ bn_seismic:"SEISMIC SHIFT", bn_turf:"TURF WAR", bn_mech_dep:"MECH DEPLOYED", bn_daily_mut:"DAILY MUTATORS", bn_wave1:"WAVE 1",
+ hud_waveFmt:"第{n}波", hud_combo:"连击", hud_cryo:"冰冻", hud_x2:"双倍XP", hud_fire:"火焰",
+ hud_seedFmt:"种子 {seed} · {biome}", hud_reload:"换弹中", hud_rld:"换弹…", hud_mechFmt:"机甲 {n}秒",
+ hud_downFmt:"倒地 {n}", hud_score:"得分", hud_move:"移动", hud_fire_btn:"开火", hud_dash:"冲刺",
+ hud_mech_btn:"机甲", hud_rld_btn:"换弹", hud_lock:"锁定", hud_partFmt:"机甲零件 {c}/3",
+ biome_rust_d:"开阔地面，标准危险", biome_oil_d:"油洼满地 — 一切都会燃烧",
+ biome_ice_d:"摩擦力低 — 惯性带着你走", biome_volt_d:"电解液洼地导通每一道电火花",
+ biome_night_d:"断电 — 只有灯和火",
+ q1_d:"在 Rust Flats 清剿 25 个 scavvers。", q1_rw:"Rattler SMG 加入生存武器池",
+ q2_d:"用爆炸杀死 12 个敌人。油桶随处可见。", q2_rw:"Big Bang 强化",
+ q3_d:"在无尽包围环中存活 60 秒。", q3_rw:"Longspike Rifle",
+ q4_d:"通过电解液洼地电击 15 个敌人。", q4_rw:"Arc Caster + Volt Rounds",
+ q5_d:"守住 2 次补给投放直到撤离。", q5_rw:"Thumper Launcher",
+ q6_d:"摧毁 2 个精英泰坦。", q6_rw:"Slugrail",
+ q7_d:"在油火中烧死 20 个敌人。", q7_rw:"Igniter + Wildfire",
+ q8_d:"同时面对一切并存活 90 秒。", q8_rw:"CORRUPTED 强化层级",
+ perk_vit_d:"+25 最大 HP，治疗 25", perk_arm_d:"+1 护甲（固定减伤）", perk_adr_d:"+12% 移动速度",
+ perk_hands_d:"-18% 换弹时间", perk_mags_d:"+35% 弹匣容量", perk_trig_d:"+15% 射速",
+ perk_heavy_d:"+18% 伤害", perk_split_d:"每次射击 +1 弹丸（70% 伤害）", perk_split_syn:"霰弹枪与冲锋枪",
+ perk_rico_d:"子弹多弹跳一次墙面", perk_rico_syn:"Split Shot", perk_long_d:"+22% 弹速与射程",
+ perk_magnet_d:"+45% 拾取半径", perk_scav_d:"宝石 XP +25%", perk_combo_d:"连击上限 +4，衰减更慢",
+ perk_dash_d:"-28% 冲刺冷却", perk_vamp_d:"按造成伤害的 2% 治疗",
+ perk_pyro_d:"25% 概率点燃目标与洼地", perk_pyro_syn:"油洼",
+ perk_volt_d:"命中电弧跳至附近敌人；电击电解液", perk_volt_syn:"Arc Caster",
+ perk_cryo_d:"命中使敌人减速 45%，持续 1.5秒", perk_toxic_d:"命中附加随时间的腐蚀伤害",
+ perk_tips_d:"12% 概率命中触发小爆炸", perk_tips_syn:"高射速武器",
+ perk_bang_d:"爆炸半径与伤害 +30%", perk_bang_syn:"Thumper",
+ perk_wild_d:"火焰蔓延更快、烧得更猛", perk_wild_syn:"Igniter",
+ perk_walk_d:"免疫燃烧地面", perk_ground_d:"免疫电解液导电",
+ perk_jugg_d:"+2 护甲，免疫击退，-8% 速度", perk_luck_d:"+30% 增益与补给箱掉落",
+ perk_pact_d:"-30 最大 HP，+40% 伤害", perk_glass_d:"最大 HP 减半，+75% 伤害", perk_lead_d:"-18% 速度，+45% 伤害",
+ evo_0_d:"12 发反弹燃烧弹丸", evo_1_d:"连锁 8 个目标，洼地带电",
+ evo_2_d:"集束弹头，爆炸 +60%", evo_3_d:"远距离白热火焰喷射",
+ evo_4_d:"贯穿一切，极高初速", evo_5_d:"疯狂射速，双倍弹匣",
+ choice_elite_d:"2-3 个泰坦立即入场。每个必定掉落一个武器箱。",
+ choice_swarm_d:"下一波预算 ×1.6 — 但宝石在 25 秒内给双倍 XP。"
+}
+});
+</script>
 <script>
 /* IIFE-BEGIN */
 (function(){
@@ -463,7 +1192,7 @@ barrel("p_barrelE","#3dddc4","#1a7c6c","#0c3a32","#8dffca","VOLT","#c5ffe9");
 pack("p_crate",64,64,function(c,w,h){c.fillStyle="rgba(0,0,0,.4)";c.fillRect(9,12,48,46);
 c.fillStyle=mg(c,7,7,54,54,"#6e5e3a","#8e7a4a","#3d3319");c.fillRect(7,7,50,50);
 c.strokeStyle="#2d2511";c.lineWidth=3;c.strokeRect(7,7,50,50);c.beginPath();c.moveTo(7,7);c.lineTo(57,57);c.moveTo(57,7);c.lineTo(57,57);c.stroke();
-c.fillStyle="#caa02e";c.font="900 9px Arial";c.textAlign="center";c.fillText("AMMO",32,36);rusty(c,w,h,3,r)});
+c.fillStyle="#caa02e";c.font="900 9px Arial";c.textAlign="center";c.fillText(TLI18N.t("hud_ammo"),32,36);rusty(c,w,h,3,r)});
 pack("p_supply",80,80,function(c,w,h){c.fillStyle="rgba(0,0,0,.4)";c.fillRect(11,14,60,58);
 c.fillStyle=mg(c,9,9,64,64,"#3c5e3c","#5e8e54","#1d321d");c.fillRect(9,9,62,62);
 c.strokeStyle="#122012";c.lineWidth=3;c.strokeRect(9,9,62,62);c.strokeStyle="#9dff4f";c.lineWidth=2;c.strokeRect(15,15,50,50);
@@ -485,7 +1214,7 @@ c.fillStyle="#0c0c0e";ell(c,w/2,y,10,6,0);c.fill()}});
 pack("p_pump",68,80,function(c,w,h){c.fillStyle="rgba(0,0,0,.4)";c.fillRect(14,16,42,56);
 c.fillStyle=mg(c,12,9,54,72,"#ae3e2c","#de6f4c","#5e1d11");c.fillRect(14,11,40,60);
 c.strokeStyle="#2d1109";c.lineWidth=2.4;c.strokeRect(14,11,40,60);
-c.fillStyle="#e8dcc0";c.fillRect(20,18,28,18);c.fillStyle="#1c1610";c.font="900 8px Arial";c.textAlign="center";c.fillText("DIESEL",34,29);
+c.fillStyle="#e8dcc0";c.fillRect(20,18,28,18);c.fillStyle="#1c1610";c.font="900 8px Arial";c.textAlign="center";c.fillText(TLI18N.t("hud_diesel"),34,29);
 c.strokeStyle="#141210";c.lineWidth=3.5;c.beginPath();c.moveTo(54,27);c.quadraticCurveTo(65,40,56,60);c.stroke();rusty(c,w,h,5,r)});
 pack("p_rock",64,58,function(c,w,h){c.fillStyle="rgba(0,0,0,.4)";ell(c,w/2,h/2+5,23,16,0);c.fill();
 c.fillStyle=rg(c,w/2-7,h/2-7,25,"#7e786c","#4f4b40","#2d2a22");
@@ -598,7 +1327,7 @@ c.fillStyle="#e8c070";for(var k=0;k<6;k++){var a=k/6*TAU;c.save();c.translate(w/
 c.fillStyle="#5d4519";c.beginPath();c.arc(w/2,h/2,3.5,0,TAU);c.fill()});
 pack("k_weap",52,44,function(c,w,h){c.fillStyle=rg(c,w/2,h/2,25,"rgba(140,255,90,.7)","rgba(50,120,30,.25)","rgba(0,0,0,0)");c.fillRect(0,0,w,h);
 c.fillStyle=mg(c,7,11,45,35,"#3c5e3c","#5e8e54","#1d321d");c.fillRect(7,11,38,24);
-c.strokeStyle="#122012";c.lineWidth=2;c.strokeRect(7,11,38,24);c.fillStyle="#c5ffb0";c.font="900 10px Arial";c.textAlign="center";c.fillText("GUN",w/2,27)});
+c.strokeStyle="#122012";c.lineWidth=2;c.strokeRect(7,11,38,24);c.fillStyle="#c5ffb0";c.font="900 10px Arial";c.textAlign="center";c.fillText(TLI18N.t("hud_gun"),w/2,27)});
 pack("f_soft",48,48,function(c,w,h){var g=c.createRadialGradient(w/2,h/2,1,w/2,h/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(1,"rgba(255,255,255,0)");c.fillStyle=g;c.fillRect(0,0,w,h)});
 pack("f_glow",192,192,function(c,w,h){var g=c.createRadialGradient(w/2,h/2,2,w/2,h/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.35,"rgba(255,255,255,.5)");g.addColorStop(1,"rgba(255,255,255,0)");c.fillStyle=g;c.fillRect(0,0,w,h)});
 pack("f_light",128,128,function(c,w,h){var g=c.createRadialGradient(w/2,h/2,1,w/2,h/2,w/2);
@@ -1262,7 +1991,7 @@ p.hp=0;
 if(players.length>1){
 var other=false;
 for(var i=0;i<players.length;i++){var o=players[i];if(o!==p&&!o.dead&&o.downT<=0)other=true}
-if(other){p.downT=22;p.rev=0;banner((p.cpu?"CPU":"PLAYER "+(p.idx+1))+" DOWN","stand close to revive","#ff4530");AU.down();return}
+if(other){p.downT=22;p.rev=0;banner(TLI18N.t('bn_downFmt',{p:p.cpu?"CPU":"PLAYER "+(p.idx+1)}),TLI18N.t('bn_down_sub'),"#ff4530");AU.down();return}
 }
 p.dead=true;AU.down();buzz(200);checkDead();
 }
@@ -1597,7 +2326,7 @@ part({s:"f_soft",x:p.x,y:p.y,vy:-60,life:0.3,sz:0.4,add:true,tint:"#7ff0ff"});
 }
 else if(k.kind==="health"){p.hp=Math.min(p.st.maxhp,p.hp+35);floater(p.x,p.y-24,"+35 HP","#7dff6a",15)}
 else if(k.kind==="nuke"){
-banner("TACTICAL NUKE","arena cleared","#ffd23e");CAM.shake=1;AU.boom(2);buzz([40,60,40]);
+banner(TLI18N.t('bn_nuke'),TLI18N.t('bn_nuke_sub'),"#ffd23e");CAM.shake=1;AU.boom(2);buzz([40,60,40]);
 part({s:"f_flash",x:CAM.rx,y:CAM.ry,life:0.4,sz:14,add:true});
 for(i=foes.length-1;i>=0;i--){
 var e=foes[i];
@@ -1608,13 +2337,13 @@ hurtFoe(e,e.elite?220:9999,0,0,"boom",p);e.tag="boom";
 for(i=0;i<parts.length;i++){var pt=parts[i];if(!pt.wind)continue;
 var dx=pt.x-CAM.rx,dy=pt.y-CAM.ry,d=hyp(dx,dy)||1;pt.vx+=dx/d*500;pt.vy+=dy/d*500}
 }
-else if(k.kind==="freeze"){RUN.pow.freeze=5;banner("CRYO FIELD","foes frozen 5s","#7ad5ff");
+else if(k.kind==="freeze"){RUN.pow.freeze=5;banner(TLI18N.t('bn_cryo'),TLI18N.t('bn_cryo_subFmt',{n:5}),"#7ad5ff");
 for(i=0;i<foes.length;i++)foes[i].frozen=5}
-else if(k.kind==="x2"){RUN.pow.x2=20;banner("DOUBLE XP","20 seconds","#9dff4f")}
-else if(k.kind==="fire"){RUN.pow.fire=15;banner("FIRE ROUNDS","squad weapons ignite 15s","#ff7a2f")}
+else if(k.kind==="x2"){RUN.pow.x2=20;banner(TLI18N.t('bn_x2'),TLI18N.t('bn_x2_subFmt',{n:20}),"#9dff4f")}
+else if(k.kind==="fire"){RUN.pow.fire=15;banner(TLI18N.t('bn_fire'),TLI18N.t('bn_fire_subFmt',{n:15}),"#ff7a2f")}
 else if(k.kind==="part"){
-p.parts++;AU.clank();floater(p.x,p.y-24,"MECH PART "+p.parts+"/3","#ffb347",15);
-if(p.parts>=3)banner("MECH READY","P"+(p.idx+1)+" press "+mechKey(p)+" to deploy","#4fe8ff");
+p.parts++;AU.clank();floater(p.x,p.y-24,TLI18N.t('hud_partFmt',{c:p.parts}),"#ffb347",15);
+if(p.parts>=3)banner(TLI18N.t('bn_mech_ready'),TLI18N.t('bn_mechFmt',{p:"P"+(p.idx+1),k:mechKey(p)}),"#4fe8ff");
 }
 else if(k.kind==="weap"&&k.gun){
 var old=p.gun,frac=p.mag/Math.max(1,Math.round(old.mag*p.st.mag));
@@ -1638,7 +2367,7 @@ for(var i=0;i<RUN.fus.length;i++){
 var f=RUN.fus[i];
 if(p.gun.frame===f.f&&!p.gun.evo&&(p.perks[f.p]||0)>=3){
 p.gun.evo=true;p.gun.name="* "+f.n+" *";f.ap(p.gun);p.mag=Math.round(p.gun.mag*p.st.mag);
-banner("WEAPON FUSION",f.n+" — "+f.d,"#ffd23e");AU.level();CAM.shake=Math.min(1,CAM.shake+0.4);
+banner(TLI18N.t('bn_fusion'),f.n+" — "+f.d,"#ffd23e");AU.level();CAM.shake=Math.min(1,CAM.shake+0.4);
 for(var k=0;k<16;k++){var a=k/16*TAU;
 part({s:"f_spark",x:p.x,y:p.y,vx:cosL(a)*240,vy:sinL(a)*240,life:0.5,sz:1.2,rot:a,add:true,tint:"#ffd88a",drag:2})}
 break;
@@ -1813,7 +2542,7 @@ function startWave(){
 RUN.waveState="fight";
 var diff=DIFF_MULT[clamp(OPT.diff|0,0,2)];
 RUN.budget=(22+RUN.wave*11)*diff*RUN.power*(1+0.5*(players.length-1))*RUN.swarm;RUN.swarm=1;
-banner("WAVE "+RUN.wave,"director budget "+Math.round(RUN.budget),"#ffb347");
+banner(TLI18N.t('bn_waveFmt',{n:RUN.wave}),TLI18N.t('bn_wave_subFmt',{b:Math.round(RUN.budget)}),"#ffb347");
 AU.inten=Math.min(3,1+((RUN.wave/4)|0));
 }
 function director(dt){
@@ -1823,7 +2552,7 @@ RUN.dpsT+=dt;if(RUN.dpsT>=1){RUN.dps=RUN.dpsAcc;RUN.dpsAcc=0;RUN.dpsT=0;RUN.powe
 if(RUN.waveState==="fight"){
 if(RUN.budget<=0&&foes.length<=5){
 RUN.waveState="breather";RUN.breather=3;RUN.score+=RUN.wave*100;
-banner("WAVE "+RUN.wave+" CLEARED","+"+(RUN.wave*100)+" pts","#9dff4f");
+banner(TLI18N.t('bn_clearFmt',{n:RUN.wave}),TLI18N.t('bn_clear_subFmt',{p:RUN.wave*100}),"#9dff4f");
 }
 RUN.spawnT-=dt;
 var low=false;for(i=0;i<players.length;i++)if(!players[i].dead&&players[i].hp<players[i].st.maxhp*0.25)low=true;
@@ -1845,7 +2574,7 @@ if(RUN.eliteT<=0&&RUN.wave>=3){
 RUN.eliteT=mrr(18,30);
 var n2=Math.min(((RUN.mods&&RUN.mods.titans)?2:1)+((RUN.wave/6)|0),3);
 for(i=0;i<n2;i++){var ve=pick(WORLD.vents);spawnFoe(rnd()<0.5?"brute":"rav",ve.x,ve.y,true,false)}
-banner("ELITE SIGNATURE","heavy unit entering the arena","#ff4530");AU.whistle();
+banner(TLI18N.t('bn_elite_sig'),TLI18N.t('bn_elite_sub'),"#ff4530");AU.whistle();
 }
 }else{
 RUN.breather-=dt;
@@ -1861,7 +2590,7 @@ if(RUN.eventT<=0&&RUN.wave>=2){RUN.eventT=mrr(45,75);event(pick(["meteor","fog",
 function event(kind){
 var i;
 if(kind==="meteor"){
-banner("METEOR SHOWER","watch the red rings","#ff4530");
+banner(TLI18N.t('bn_meteors'),TLI18N.t('bn_meteor_sub'),"#ff4530");
 var n=ri(8,14);
 for(i=0;i<n;i++)(function(k){
 after(k*0.5,function(){
@@ -1878,18 +2607,18 @@ for(var m=0;m<meteors.length;m++)if(meteors[m].x===x&&meteors[m].y===y){meteors.
 })(i);
 }
 else if(kind==="fog"){
-banner("CAUSTIC FOG","toxic cloud drifting with the wind","#9dff4f");
+banner(TLI18N.t('bn_caustic'),TLI18N.t('bn_caustic_sub'),"#9dff4f");
 var pf=pick(players);
 RUN.fog={x:clamp(pf.x+rr(-300,300),200,WORLD.w-200),y:clamp(pf.y+rr(-300,300),200,WORLD.h-200),r:250,t:14};
 }
 else if(kind==="supply"){
-banner("SUPPLY DROP","defend the crate 15s","#9dff4f");
+banner(TLI18N.t('bn_supply'),TLI18N.t('bn_supply_sub'),"#9dff4f");
 var x2,y2,tries=0;
 do{x2=rr(300,WORLD.w-300);y2=rr(300,WORLD.h-300);tries++}while(isSolid(x2,y2)&&tries<20);
 RUN.supply={x:x2,y:y2,hp:220,mhp:220,t:15,flash:0};AU.whistle();
 }
 else if(kind==="ambush"){
-banner("AMBUSH RING","they surround you","#ff4530");
+banner(TLI18N.t('bn_ambush'),TLI18N.t('bn_ambush_sub'),"#ff4530");
 for(i=0;i<players.length;i++){
 var pa=players[i];if(pa.dead)continue;
 var n2=ri(9,14);
@@ -1901,7 +2630,7 @@ after(0.8,function(){if(STATE==="play")spawnFoe(rnd()<0.6?"charg":"scav",x3,y3,f
 }
 }
 else if(kind==="ring"){
-banner("CONVERGENCE","the perimeter ignites — hold the center","#ff7a2f");
+banner(TLI18N.t('bn_converge'),TLI18N.t('bn_converge_sub'),"#ff7a2f");
 for(var rw=1;rw<WORLD.rows-1;rw++)for(var c=1;c<WORLD.cols-1;c++){
 if(rw<4||rw>=WORLD.rows-4||c<4||c>=WORLD.cols-4){
 var idx=rw*WORLD.cols+c;
@@ -1910,7 +2639,7 @@ if(!WORLD.solid[idx]){if(!WORLD.liq[idx]){WORLD.liq[idx]=1;liqTouch(idx)}igniteT
 }
 }
 else if(kind==="seismic"){
-banner("SEISMIC SHIFT","new cover rising","#ffd23e");CAM.shake=0.7;AU.boom(1.2);
+banner(TLI18N.t('bn_seismic'),TLI18N.t('bn_seismic_sub'),"#ffd23e");CAM.shake=0.7;AU.boom(1.2);
 for(i=0;i<7;i++)(function(){
 var c2=ri(4,WORLD.cols-5),rw2=ri(4,WORLD.rows-5),x4=(c2+0.5)*TILE,y4=(rw2+0.5)*TILE;
 for(var j=0;j<players.length;j++){var dx=players[j].x-x4,dy=players[j].y-y4;if(sqrt(dx*dx+dy*dy)<140)return}
@@ -1924,7 +2653,7 @@ WORLD.solid[idx2]=2;spill(x4+TILE,y4,1,1);AU.stomp();
 })();
 }
 else if(kind==="turf"){
-banner("TURF WAR","Legion vs Cult — kite them into crossfire","#4fe8ff");
+banner(TLI18N.t('bn_turf'),TLI18N.t('bn_turf_sub'),"#4fe8ff");
 var v1=WORLD.vents[0],v2=WORLD.vents[WORLD.vents.length-1];
 for(i=0;i<6;i++){
 spawnFoe(pick(["scav","charg","boil"]),v1.x+rr(-50,50),v1.y+rr(-50,50),false,true);
@@ -1936,7 +2665,7 @@ function initQuest(qi){
 var q=QUESTS[clamp(qi-1,0,QUESTS.length-1)];
 genWorld(RUN.seed,q.biome);hashInit();
 RUN.qt=0;RUN.qspawn=1;RUN.qdone=false;RUN.lastAmb=-1;RUN.lastEvt=-1;
-banner("CONTRACT: "+q.n,q.d,"#9dff4f");
+banner(TLI18N.t('bn_questFmt',{n:q.n}),TLI18N.t('q'+qi+'_d'),"#9dff4f");
 var i;
 if(q.sc==="barrels"){
 for(i=0;i<26;i++){
@@ -1973,6 +2702,13 @@ else if(q.sc==="fire")spawnFoe(pick(["scav","scav","boil"]),v.x,v.y,false,false)
 else spawnFoe(pick(["scav","scav","charg"]),v.x,v.y,false,false);
 }
 }
+function buildQDone(){
+var qi=RUN.quest,q=QUESTS[qi],sh="",i;
+for(i=0;i<3;i++)sh+='<span class="'+(i<(SAVE.quests[qi]|0)?"":"off")+'">&#9733;</span>';
+$("qdStars").innerHTML=sh;$("qdReward").textContent=TLI18N.t('q'+qi+'_rw');
+$("qdStats").innerHTML=statCards([[TLI18N.t('stat_time'),fmtT(RUN.time)],[TLI18N.t('stat_kills'),RUN.kills],[TLI18N.t('stat_score'),fmtN(RUN.score)]]);
+$("btnQNext").style.display=(RUN.quest<QUESTS.length)?"":"none";
+}
 function questWin(){
 if(STATE!=="play")return;
 var q=QUESTS[clamp(RUN.quest-1,0,QUESTS.length-1)],stars=1,i;
@@ -1984,10 +2720,7 @@ if(q.rw.w&&SAVE.unlocked.weapons.indexOf(q.rw.w)<0)SAVE.unlocked.weapons.push(q.
 if(q.rw.p&&SAVE.unlocked.perks.indexOf(q.rw.p)<0)SAVE.unlocked.perks.push(q.rw.p);
 persist();
 STATE="qdone";
-var sh="";for(i=0;i<3;i++)sh+='<span class="'+(i<stars?"":"off")+'">&#9733;</span>';
-$("qdStars").innerHTML=sh;$("qdReward").textContent=q.rw.label;
-$("qdStats").innerHTML=statCards([["TIME",fmtT(RUN.time)],["KILLS",RUN.kills],["SCORE",fmtN(RUN.score)]]);
-$("btnQNext").style.display=(RUN.quest<QUESTS.length)?"":"none";
+buildQDone();
 showScreen("scrQDone");AU.level();Input.release();syncRuntime();
 }
 /* ==== END: director.js ==== */
@@ -2042,6 +2775,29 @@ pref=pref.concat(["heavy","vit","adr","hands"]);
 for(i=0;i<pref.length;i++){var ix=opts.indexOf(pref[i]);if(ix>=0)return ix}
 return 0;
 }
+function renderDraft(){
+$("draftHead").textContent=TLI18N.t('draft_headFmt',{n:draftP.idx+1,lv:draftP.level});
+$("draftHead").style.color=draftP.col;
+var el=$("draftCards");el.innerHTML="";
+var RC=["#b9c8b0","#4fe8ff","#ffb347","#ff5a4a"],i;
+for(i=0;i<draftOpts.length;i++)(function(idx){
+var id=draftOpts[idx],def=PERKS[id],cur=draftP.perks[id]||0;
+var d=document.createElement("div");d.className="perk r"+def.r;
+d.innerHTML='<div class="pk">['+(idx+1)+']</div><img src="'+iconURL("i_"+id)+'" alt="">'+
+'<div class="pn" style="color:'+RC[def.r]+'">'+def.n+'</div><div class="pd">'+TLI18N.t('perk_'+id+'_d')+'</div>'+
+(def.syn?'<div class="syn">'+TLI18N.t('syn_prefix')+' '+TLI18N.t('perk_'+id+'_syn')+'</div>':'')+
+'<div class="ps">'+TLI18N.t('stackFmt',{cur:cur,max:def.max})+'</div>';
+d.onclick=function(){pickPerk(idx)};el.appendChild(d);
+})(i);
+var fi=TLI18N.t('fusion_prefix');
+for(i=0;i<RUN.fus.length;i++){
+var fu=RUN.fus[i],done=draftP.gun.evo&&draftP.gun.frame===fu.f,ei=-1;
+for(var e=0;e<EVOS.length;e++)if(EVOS[e].f===fu.f&&EVOS[e].p===fu.p)ei=e;
+fi+='<br><b style="color:'+(done?"#9dff4f":"#ffd23e")+'">'+GUNS[fu.f].n+" + "+PERKS[fu.p].n+" x3 &rarr; "+fu.n+"</b> ("+
+(ei>=0?TLI18N.t('evo_'+ei+'_d'):fu.d)+(done?TLI18N.t('fusion_done'):"")+")";
+}
+$("fusionIntel").innerHTML=fi;
+}
 function openDraft(){
 if(STATE!=="play")return;
 draftP=null;
@@ -2050,29 +2806,11 @@ if(!draftP)return;
 STATE="draft";draftOpts=weightedPerks(draftP);
 if(draftP.cpu){
 var ix=cpuPickIndex(draftP,draftOpts);
-toast("CPU DRAFTED "+PERKS[draftOpts[ix]].n.toUpperCase());
+toast(TLI18N.t('toast_cpuDraftFmt',{p:PERKS[draftOpts[ix]].n.toUpperCase()}));
 pickPerk(ix);
 return;
 }
-$("draftHead").textContent="PLAYER "+(draftP.idx+1)+" — LEVEL "+draftP.level;
-$("draftHead").style.color=draftP.col;
-var el=$("draftCards");el.innerHTML="";
-var RC=["#b9c8b0","#4fe8ff","#ffb347","#ff5a4a"],i;
-for(i=0;i<draftOpts.length;i++)(function(idx){
-var id=draftOpts[idx],def=PERKS[id],cur=draftP.perks[id]||0;
-var d=document.createElement("div");d.className="perk r"+def.r;
-d.innerHTML='<div class="pk">['+(idx+1)+']</div><img src="'+iconURL("i_"+id)+'" alt="">'+
-'<div class="pn" style="color:'+RC[def.r]+'">'+def.n+'</div><div class="pd">'+def.d+'</div>'+
-(def.syn?'<div class="syn">SYNERGY: '+def.syn+'</div>':'')+
-'<div class="ps">STACK '+cur+' / '+def.max+'</div>';
-d.onclick=function(){pickPerk(idx)};el.appendChild(d);
-})(i);
-var fi="FUSION INTEL (this arena): ";
-for(i=0;i<RUN.fus.length;i++){
-var fu=RUN.fus[i],done=draftP.gun.evo&&draftP.gun.frame===fu.f;
-fi+='<br><b style="color:'+(done?"#9dff4f":"#ffd23e")+'">'+GUNS[fu.f].n+" + "+PERKS[fu.p].n+" x3 &rarr; "+fu.n+"</b> ("+fu.d+")"+(done?" [DONE]":"");
-}
-$("fusionIntel").innerHTML=fi;
+renderDraft();
 showScreen("scrDraft");AU.inten=0;Input.release();syncRuntime();
 }
 function pickPerk(i){
@@ -2086,17 +2824,19 @@ showScreen(null);STATE="play";
 AU.inten=Math.min(3,1+((RUN.wave/4)|0));Input.release();syncRuntime();
 if(RUN.draftQ.length)openDraft();
 }
-function openChoice(){
-STATE="choice";RUN.choice=true;
+var CHOICE_IC=["i_skull","i_scav"];
+function renderChoice(){
 var el=$("choiceCards");el.innerHTML="";
-var opts=[
-{t:"ELITE CONTRACT",d:"2-3 titans enter immediately. Each drops a guaranteed weapon crate.",c:"#ff5a4a",ic:"i_skull"},
-{t:"SWARM SURGE",d:"Next wave budget x1.6 — but gems are worth double XP for 25 seconds.",c:"#9dff4f",ic:"i_scav"}];
-for(var i=0;i<opts.length;i++)(function(idx){
-var o=opts[idx],d=document.createElement("div");d.className="perk r"+(idx?1:3);
-d.innerHTML='<div class="pk">['+(idx+1)+']</div><img src="'+iconURL(o.ic)+'" alt=""><div class="pn" style="color:'+o.c+'">'+o.t+'</div><div class="pd">'+o.d+'</div>';
+var des=[TLI18N.t('choice_elite_d'),TLI18N.t('choice_swarm_d')],cols=["#ff5a4a","#9dff4f"],ttl=["ELITE CONTRACT","SWARM SURGE"];
+for(var i=0;i<2;i++)(function(idx){
+var d=document.createElement("div");d.className="perk r"+(idx?1:3);
+d.innerHTML='<div class="pk">['+(idx+1)+']</div><img src="'+iconURL(CHOICE_IC[idx])+'" alt=""><div class="pn" style="color:'+cols[idx]+'">'+ttl[idx]+'</div><div class="pd">'+des[idx]+'</div>';
 d.onclick=function(){pickChoice(idx)};el.appendChild(d);
 })(i);
+}
+function openChoice(){
+STATE="choice";RUN.choice=true;
+renderChoice();
 showScreen("scrChoice");Input.release();syncRuntime();
 }
 function pickChoice(i){
@@ -2267,10 +3007,10 @@ function mk(pi,mx,my,fx,fy,rot,up){
 var s={pi:pi,mx:mx,my:my,fx:fx,fy:fy,rad:rad,rot:rot,mid:null,fid:null,mv:{x:0,y:0},fv:{x:0,y:0},btns:[],tap:0};
 var sd={x:-up.y,y:up.x},off=rad+36;
 function put(x,y,id,label){var c=clampBtn(x,y);s.btns.push({x:c.x,y:c.y,r:20,id:id,label:label,flash:0,hidden:false})}
-put(mx+up.x*off,my+up.y*off,"dash","DASH");
-put(mx+up.x*off*1.85,my+up.y*off*1.85,"mech","MECH");
-put(fx+up.x*off,fy+up.y*off,"reload","RLD");
-put(fx+up.x*off*0.5+sd.x*off*0.9,fy+up.y*off*0.5+sd.y*off*0.9,"lock","LOCK");
+put(mx+up.x*off,my+up.y*off,"dash",TLI18N.t('hud_dash'));
+put(mx+up.x*off*1.85,my+up.y*off*1.85,"mech",TLI18N.t('hud_mech_btn'));
+put(fx+up.x*off,fy+up.y*off,"reload",TLI18N.t('hud_rld_btn'));
+put(fx+up.x*off*0.5+sd.x*off*0.9,fy+up.y*off*0.5+sd.y*off*0.9,"lock",TLI18N.t('hud_lock'));
 self.sticks.push(s);
 }
 if(OPT.coop===1){
@@ -2353,79 +3093,206 @@ for(var i=0;i<4;i++)part({s:"c_"+p.ch+"0",x:p.x,y:p.y,life:0.25,sz:0.42,rot:p.fa
 function tryMech(p){
 if(!p||p.dead||p.downT>0||p.parts<3||p.mechT>0||STATE!=="play")return;
 p.parts=0;p.mechT=18;p.r=30;
-banner("MECH DEPLOYED","P"+(p.idx+1)+" — 18s of invincible tonnage","#4fe8ff");
+banner(TLI18N.t('bn_mech_dep'),TLI18N.t('bn_mechdepFmt',{p:"P"+(p.idx+1)}),"#4fe8ff");
 AU.boom(0.8);AU.stomp();CAM.shake=Math.min(1,CAM.shake+0.5);buzz(30);
 for(var i=0;i<12;i++){var a=i/12*TAU;
 part({s:"f_smoke"+ri(0,3),x:p.x,y:p.y,vx:cosL(a)*140,vy:sinL(a)*140,life:1.2,sz:0.8,gr:0.6,a:0.5,tint:"#6b6560",drag:2})}
 }
 /* ==== END: input.js ==== */
 /* ==== MODULE: cpu.js ==== */
+/* Ally bot. Shoots only what a bullet can reach, keeps out of fire and electrolyte,
+   sidesteps spit, stands off from enemies that explode, reloads on a quiet beat,
+   and picks up loot it can afford. Modes: revive > retreat > cover > compete. */
+function cpuWalkOk(x,y){
+var i=tIdx(x,y);if(i<0||WORLD.solid[i]!==0)return false;
+for(var k=0;k<WORLD.props.length;k++){var pr=WORLD.props[k];if(pr.dead||!pr.solid)continue;
+var dx=x-pr.x,dy=y-pr.y;if(dx*dx+dy*dy<(pr.r+17)*(pr.r+17))return false}
+return true}
+/* does a straight shot reach this point — walls, wrecks and barrels all stop bullets */
+function cpuSight(x0,y0,x1,y1){
+var dx=x1-x0,dy=y1-y0,d=sqrt(dx*dx+dy*dy),n=(d/13)|0;
+for(var i=1;i<=n;i++){var t=i/n,x=x0+dx*t,y=y0+dy*t;
+var ii=tIdx(x,y);if(ii<0||WORLD.solid[ii]!==0)return false;
+for(var k=0;k<WORLD.props.length;k++){var pr=WORLD.props[k];if(pr.dead)continue;
+var px=x-pr.x,py=y-pr.y;if(px*px+py*py<(pr.r+3)*(pr.r+3))return false}}
+return true}
+function cpuRoom(x,y){var n=0;for(var k=0;k<4;k++)if(cpuWalkOk(x+cosL(k*PI/2)*72,y+sinL(k*PI/2)*72))n++;return n}
+/* what standing there costs: burning ground, electrolyte while anything zaps */
+function cpuHazard(p,x,y){
+var i=tIdx(x,y);if(i<0)return 0;var h=0;
+if(WORLD.burn[i]>0&&!p.st.fireproof)h+=1.6;
+if(WORLD.liq[i]===3&&(WORLD.zapT[i]>RUN.time||p.gun.core==="volt"||p.st.volt>0))h+=0.9;
+return h}
+function gunScore(w){return w.dmg*w.rof*(w.pel||1)*(w.frame==="launch"?1.5:1)}
+/* heading toward (dirx,diry) that is walkable and not on fire */
+function cpuSteer(p,dirx,diry){
+var base=atan2(diry,dirx),best=null,bestS=-1e9,here=cpuHazard(p,p.x,p.y);
+for(var k=0;k<7;k++){
+var off=k===6?PI:(k-3)*0.36,a=base+off;
+var ax=p.x+cosL(a)*46,ay=p.y+sinL(a)*46;
+if(!cpuWalkOk(ax,ay))continue;
+var hz=cpuHazard(p,ax,ay);
+var s=Math.cos(off)*1.5+cpuRoom(ax,ay)*0.16-hz*2.2+(hz===0?here*1.8:0);
+if(cpuWalkOk(p.x+cosL(a)*104,p.y+sinL(a)*104))s+=0.5;
+if(s>bestS){bestS=s;best={x:cosL(a),y:sinL(a)}}
+}
+return best||{x:cosL(base+PI),y:sinL(base+PI)}
+}
+/* sidestep: spit projectiles on a collision course, boil about to burst, brute mid-stomp */
+function cpuDodge(p){
+var bx=0,by=0,i;
+for(i=0;i<ebul.length;i++){
+var b=ebul[i],rx=b.x-p.x,ry=b.y-p.y,vv=b.vx*b.vx+b.vy*b.vy;
+if(vv<=0)continue;
+var t=-(rx*b.vx+ry*b.vy)/vv;
+if(t<0.02||t>0.7)continue;
+var cx=rx+b.vx*t,cy=ry+b.vy*t,cd=sqrt(cx*cx+cy*cy);
+if(cd>p.r+b.r+18)continue;
+var rl=sqrt(rx*rx+ry*ry)||1,w=cd<45?1.8:1;
+bx+=-ry/rl*w;by+=rx/rl*w;
+}
+for(i=0;i<foes.length;i++){
+var e=foes[i];if(e.hp<=0)continue;
+var ed=sqrt((e.x-p.x)*(e.x-p.x)+(e.y-p.y)*(e.y-p.y));if(ed<=1)continue;
+if(e.type==="boil"&&ed<135){var kb=(135-ed)/135*2;bx+=(p.x-e.x)/ed*kb;by+=(p.y-e.y)/ed*kb}
+else if(e.type==="brute"&&e.state===1&&ed<150){var kr=(150-ed)/150*1.6;bx+=(p.x-e.x)/ed*kr;by+=(p.y-e.y)/ed*kr}
+}
+return {x:bx,y:by}
+}
+/* loot worth walking to: health when hurt, a gun that beats the current one, gems */
+function cpuLoot(p){
+var best=null,bs=-1e9;
+for(var i=0;i<picks.length;i++){
+var k=picks[i],d=Math.hypot(k.x-p.x,k.y-p.y);
+if(d>420||k.armT>0||!cpuWalkOk(k.x,k.y))continue;
+var v;
+if(k.kind==="health")v=p.hp<p.st.maxhp*0.6?200:(p.hp<p.st.maxhp*0.85?90:14);
+else if(k.kind==="part")v=(p.parts<3&&p.mechT<=0)?150:0;
+else if(k.kind==="weap")v=(k.gun&&gunScore(k.gun)>gunScore(p.gun)*1.15)?150:0;
+else v=k.kind==="gemb"?80:38;
+var s=v-d*0.3;
+if(s>bs){bs=s;best=k}
+}
+return best
+}
+/* emergency: a boil about to burst or a brute mid-stomp — break out hard, dash if ready */
+function cpuEscape(p){
+var run=null,rd=1e9;
+near(p.x,p.y,175,function(e){
+var d=hyp(e.x-p.x,e.y-p.y);
+if((e.type==="boil"&&d<150)||(e.mut==="explosive"&&d<140)||(e.type==="brute"&&e.state===1&&d<170)){
+if(d<rd){rd=d;run={x:p.x-e.x,y:p.y-e.y}}}});
+if(!run)return null;
+var l=hyp(run.x,run.y)||1;
+if(p.dashCd<=0)tryDash(p,{x:run.x/l,y:run.y/l});
+return {x:run.x/l*3,y:run.y/l*3}
+}
 function cpuControl(p,dt){
 p.aiT-=dt;p.aiBurst-=dt;
-var partner=players[0],out={mv:{x:0,y:0},aim:null,firing:false};
+var partner=players[0];if(partner&&partner.dead)partner=null;
+var out={mv:{x:0,y:0},aim:null,firing:false};
+var bs=(p.gun.bs||900)*p.st.bs,rng=p.gun.rng*p.st.bs;
+/* rail, tesla and flame resolve along the aim line — walls and props do not stop them */
+var beam=p.gun.bs<=0;
 if(p.aiT<=0){
 p.aiT=0.12;
-var nearMe=0,nearPartner=0,nearest=null,nd=1e9,pThreat=null,pd=1e9,cx=0,cy=0,cn=0;
-near(p.x,p.y,140,function(e){nearMe++;var dx=e.x-p.x,dy=e.y-p.y,d=sqrt(dx*dx+dy*dy);if(d<nd){nd=d;nearest=e}});
-if(partner&&!partner.dead){
-near(partner.x,partner.y,280,function(e){nearPartner++;var dx=e.x-partner.x,dy=e.y-partner.y,d=sqrt(dx*dx+dy*dy);if(d<pd){pd=d;pThreat=e}cx+=e.x;cy+=e.y;cn++});
+var nearMe=0,nearest=null,nd=1e9,pThreat=null,pd=1e9;
+near(p.x,p.y,150,function(e){nearMe++;var dx=e.x-p.x,dy=e.y-p.y,d=sqrt(dx*dx+dy*dy);if(d<nd){nd=d;nearest=e}});
+if(partner)near(partner.x,partner.y,300,function(e){var dx=e.x-partner.x,dy=e.y-partner.y,d=sqrt(dx*dx+dy*dy);if(d<pd){pd=d;pThreat=e}});
+/* shootable enemies: inside true gun range and not behind cover */
+var cand=[];
+near(p.x,p.y,rng,function(e){
+var dx=e.x-p.x,dy=e.y-p.y,d=sqrt(dx*dx+dy*dy);
+var w=d+(partner?sqrt((e.x-partner.x)*(e.x-partner.x)+(e.y-partner.y)*(e.y-partner.y))*0.3:0)-(e.elite?70:0);
+if(d<90)w-=150;
+cand.push({e:e,w:w})});
+cand.sort(function(a,b){return a.w-b.w});
+var vis=null,vn=0;
+if(beam){vis=cand.length?cand[0].e:null;vn=cand.length}
+else{
+for(var ci=0;ci<cand.length&&ci<10;ci++){
+if(cpuSight(p.x,p.y,cand[ci].e.x,cand[ci].e.y)){if(!vis)vis=cand[ci].e;vn++}
 }
+}
+p.aiVis=vn;
 var mode="compete";
-if(partner&&partner.downT>0&&!partner.dead)mode="revive";
-else if(p.hp<p.st.maxhp*0.3||nearMe>4)mode="retreat";
-else if(partner&&(partner.hp<partner.st.maxhp*0.55||nearPartner>4))mode="cover";
+if(partner&&partner.downT>0)mode="revive";
+else if(nearMe>0&&(p.hp<p.st.maxhp*0.34||(p.hp<p.st.maxhp*0.65&&nearMe>=6)))mode="retreat";
+else if(partner&&(partner.hp<partner.st.maxhp*0.55||(pThreat&&pd<100)))mode="cover";
 p.aiMode=mode;
-var tx=p.x,ty=p.y,tgt=null;
-if(mode==="revive"){tx=partner.x;ty=partner.y;tgt=nearest}
-else if(mode==="retreat"){
-if(nearest){var ax=p.x-nearest.x,ay=p.y-nearest.y,ad=sqrt(ax*ax+ay*ay)||1;tx=p.x+ax/ad*260;ty=p.y+ay/ad*260;
-if(nd<70&&p.dashCd<=0)tryDash(p,{x:ax/ad,y:ay/ad})}
-tgt=nearest;
+var tx=p.x,ty=p.y,tgt=vis;
+if(mode==="revive"){
+/* stand between the pack and the downed partner so the revive happens under fire */
+tx=partner.x;ty=partner.y;
+if(pThreat){
+var vdx=pThreat.x-partner.x,vdy=pThreat.y-partner.y,vdl=sqrt(vdx*vdx+vdy*vdy)||1;
+tx=partner.x+vdx/vdl*58;ty=partner.y+vdy/vdl*58;
+}
+var rp=sqrt((tx-p.x)*(tx-p.x)+(ty-p.y)*(ty-p.y));
+if(rp>150&&p.dashCd<=0)tryDash(p,{x:tx-p.x,y:ty-p.y});
+}else if(mode==="retreat"){
+/* run toward open ground away from the nearest threat, not just away from it */
+var eA=nearest?atan2(p.y-nearest.y,p.x-nearest.x):rr(0,TAU),eb=null,ebS=-1e9;
+for(var k=0;k<7;k++){
+var a=eA+(k-3)*0.42,ax=p.x+cosL(a)*70,ay=p.y+sinL(a)*70;
+if(!cpuWalkOk(ax,ay))continue;
+var s=cpuRoom(ax,ay)-Math.abs(k-3)*0.5-cpuHazard(p,ax,ay)*2;
+if(s>ebS){ebS=s;eb={x:cosL(a),y:sinL(a)}}
+}
+if(!eb)eb={x:cosL(eA),y:sinL(eA)};
+tx=p.x+eb.x*230;ty=p.y+eb.y*230;
+if(nd<95&&p.dashCd<=0)tryDash(p,eb);
 }else if(mode==="cover"){
-if(cn>0&&pThreat){cx/=cn;cy/=cn;var bx=cx-partner.x,by=cy-partner.y,bd=sqrt(bx*bx+by*by)||1;
-tx=partner.x+bx/bd*95;ty=partner.y+by/bd*95;tgt=pThreat}
-else{tx=partner.x+60;ty=partner.y;tgt=nearest}
+/* stand on the threat side of the partner so the bot is the thing they shoot at */
+if(pThreat){
+var bdx=pThreat.x-partner.x,bdy=pThreat.y-partner.y,bdl=sqrt(bdx*bdx+bdy*bdy)||1;
+var sx=partner.x+bdx/bdl*130,sy=partner.y+bdy/bdl*130;
+var tries=[[sx,sy],[sx+bdy/bdl*95,sy-bdx/bdl*95],[sx-bdy/bdl*95,sy+bdx/bdl*95],[partner.x+rr(-60,60),partner.y+rr(-60,60)]];
+for(var ti=0;ti<tries.length;ti++){
+tx=tries[ti][0];ty=tries[ti][1];
+if(cpuWalkOk(tx,ty)&&cpuHazard(p,tx,ty)===0)break;
+}
+if(!tgt&&cpuSight(p.x,p.y,pThreat.x,pThreat.y))tgt=pThreat;
+}else{tx=partner.x+rr(-70,70);ty=partner.y+rr(-70,70)}
 }else{
-tgt=null;var bd2=1e9;
-near(p.x,p.y,620,function(e){var dx=e.x-p.x,dy=e.y-p.y,d=sqrt(dx*dx+dy*dy);
-if(partner){var px=e.x-partner.x,py=e.y-partner.y;d+=sqrt(px*px+py*py)*0.35}
-if(d<bd2){bd2=d;tgt=e}});
-if(tgt){tx=tgt.x;ty=tgt.y;
-var gx=null,gd=1e9;
-for(var gi=0;gi<picks.length;gi++){var k=picks[gi];if(k.kind!=="gem"&&k.kind!=="gemb"&&k.kind!=="health")continue;
-var kx=k.x-p.x,ky=k.y-p.y,kd=sqrt(kx*kx+ky*ky);if(kd<gd&&kd<240){gd=kd;gx=k}}
-if(gx&&gd<bd2*0.5){tx=gx.x;ty=gx.y}
+/* compete: chase the nearest shootable enemy, keep a stand-off from exploders */
+if(tgt){
+var sd=sqrt((tgt.x-p.x)*(tgt.x-p.x)+(tgt.y-p.y)*(tgt.y-p.y));
+var floor=tgt.type==="boil"?150:(tgt.elite?150:120);
+var lk=cpuLoot(p),ld=lk?hyp(lk.x-p.x,lk.y-p.y):1e9;
+if(lk&&ld<180&&ld<sd*0.7){tx=lk.x;ty=lk.y}
+else if(sd>floor+40){tx=tgt.x;ty=tgt.y}
+else{tx=p.x+(p.x-tgt.x)*0.6;ty=p.y+(p.y-tgt.y)*0.6}
 }else{
-var best=null,bestD=1e9;
-for(var pi2=0;pi2<picks.length;pi2++){var kk=picks[pi2];var kx2=kk.x-p.x,ky2=kk.y-p.y,kd2=sqrt(kx2*kx2+ky2*ky2);if(kd2<bestD){bestD=kd2;best=kk}}
-if(best){tx=best.x;ty=best.y}else{tx=partner?partner.x+rr(-160,160):WORLD.w/2;ty=partner?partner.y+rr(-160,160):WORLD.h/2}
+var lk0=cpuLoot(p);
+if(lk0){tx=lk0.x;ty=lk0.y}
+else if(partner){tx=partner.x+rr(-90,90);ty=partner.y+rr(-90,90)}
+else{tx=WORLD.w/2+rr(-220,220);ty=WORLD.h/2+rr(-220,220)}
 }
 }
 p.aiX=clamp(tx,TILE+30,WORLD.w-TILE-30);p.aiY=clamp(ty,TILE+30,WORLD.h-TILE-30);
 p.aiTgt=tgt;
 if(nearMe>=6&&p.parts>=3)tryMech(p);
-if(p.aiBurst<=-0.18)p.aiBurst=0.55;
+if(p.aiBurst<=-0.15)p.aiBurst=0.9;
+/* reload while it is quiet instead of waiting for the magazine to hit zero */
+if(p.rlT<=0&&(p.mag<=0||(!tgt&&p.mag<Math.round(p.gun.mag*p.st.mag)*0.35)))startReload(p);
 }
 var dxm=p.aiX-p.x,dym=p.aiY-p.y,dm=sqrt(dxm*dxm+dym*dym);
-if(dm>26){
-var mvx=dxm/dm,mvy=dym/dm;
-if(isSolid(p.x+mvx*44,p.y+mvy*44)){
-var a1=atan2(mvy,mvx)+0.9,a2=atan2(mvy,mvx)-0.9;
-var ok1=!isSolid(p.x+cosL(a1)*44,p.y+sinL(a1)*44);
-var a=(ok1||!isSolid(p.x+cosL(a2)*44,p.y+sinL(a2)*44))?((ok1&&MR()<0.5)?a1:a2):atan2(mvy,mvx)+PI;
-mvx=cosL(a);mvy=sinL(a);
-}
-var ti=tIdx(p.x+mvx*40,p.y+mvy*40);
-if(ti>=0&&WORLD.burn[ti]>0&&!p.st.fireproof){var aa=atan2(mvy,mvx)+PI/2;mvx=cosL(aa);mvy=sinL(aa)}
-out.mv.x=mvx;out.mv.y=mvy;
+var dg=cpuDodge(p),esc=cpuEscape(p);
+if(dm>26||hyp(dg.x,dg.y)>0.4||esc){
+var wx,wy;
+if(esc){wx=esc.x+(dm>26?dxm/dm*0.25:0);wy=esc.y+(dm>26?dym/dm*0.25:0)}
+else if(dm>26){wx=dxm/dm+dg.x*0.9;wy=dym/dm+dg.y*0.9}
+else{wx=dg.x;wy=dg.y}
+var st=cpuSteer(p,wx,wy);
+out.mv.x=st.x;out.mv.y=st.y;
 }
 var tg=p.aiTgt;
-if(tg&&tg.hp>0){
-var bs=p.gun.bs||900,dd=sqrt((tg.x-p.x)*(tg.x-p.x)+(tg.y-p.y)*(tg.y-p.y));
-var lead=clamp(dd/bs,0,0.5);
-var ax2=tg.x+tg.vx*lead-p.x,ay2=tg.y+tg.vy*lead-p.y;
-out.aim=atan2(ay2,ax2)+sinL(RUN.time*3+p.idx*2)*0.05;
-out.firing=dd<p.gun.rng*0.95&&p.aiBurst>0;
+if(tg&&tg.hp>0&&(beam||cpuSight(p.x,p.y,tg.x,tg.y))){
+var dd=sqrt((tg.x-p.x)*(tg.x-p.x)+(tg.y-p.y)*(tg.y-p.y));
+var lead=beam?0:clamp(dd/bs,0,0.55);
+out.aim=atan2(tg.y+tg.vy*lead-p.y,tg.x+tg.vx*lead-p.x)+sinL(RUN.time*2.6+p.idx*2)*0.015;
+out.firing=dd<rng*0.95&&p.aiBurst>0;
 }else if(dm>40){out.aim=atan2(dym,dxm)}
 return out;
 }
@@ -2489,13 +3356,12 @@ CAM.x=WORLD.w/2;CAM.y=WORLD.h/2;CAM.z=baseZoom();CAM.rx=CAM.x;CAM.ry=CAM.y;CAM.s
 AU.pattern(hashStr(seed));AU.inten=1;if(AU.ctx)AU.next=AU.ctx.currentTime+0.05;
 if(mode==="quest")initQuest(RUN.quest);
 STATE="play";showScreen(null);
-banner("WAVE 1",WORLD.B.n+" — "+WORLD.B.d,"#ffb347");
+banner(TLI18N.t('bn_wave1'),WORLD.B.n+" — "+TLI18N.t('biome_'+WORLD.bk+'_d'),"#ffb347");
 if(RUN.mods){
-var NM={over:"OVERDRIVE x2 SPEED",scatter:"SCATTER DAY",titans:"TWIN TITANS",glass:"GLASS JAW",tide:"BLACK TIDE",slick:"SLICK ICE",black:"BLACKOUT",gold:"GOLD RUSH"};
-var ms=[];for(var mk in RUN.mods)ms.push(NM[mk]);
-banner("DAILY MUTATORS",ms.join(" + "),"#4fe8ff");
+var ms=[];for(var mk in RUN.mods)ms.push(TLI18N.t(mk==="over"?"nm_over_long":"nm_"+mk));
+banner(TLI18N.t('bn_daily_mut'),ms.join(" + "),"#4fe8ff");
 }
-if(OPT.coop===3)banner("CPU ALLY ONLINE","covers you when it gets hot — races you when it's calm","#4fe8ff");
+if(OPT.coop===3)banner(TLI18N.t('bn_cpu_ally'),TLI18N.t('bn_cpu_ally_sub'),"#4fe8ff");
 SAVE.runs=(SAVE.runs|0)+1;persist();Input.release();Input.layout();syncRuntime();
 }
 function updPlayers(dt){
@@ -2508,13 +3374,13 @@ for(var o=0;o<players.length;o++){
 var op=players[o];
 if(op!==p&&!op.dead&&op.downT<=0){var odx=op.x-p.x,ody=op.y-p.y;if(sqrt(odx*odx+ody*ody)<70)p.rev+=dt}
 }
-if(p.rev>=2.5){p.downT=0;p.hp=p.st.maxhp*0.4;p.rev=0;p.inv=1.5;banner((p.cpu?"CPU":"PLAYER "+(p.idx+1))+" REVIVED","","#9dff4f");AU.level()}
+if(p.rev>=2.5){p.downT=0;p.hp=p.st.maxhp*0.4;p.rev=0;p.inv=1.5;banner(TLI18N.t('bn_revivedFmt',{p:p.cpu?"CPU":"PLAYER "+(p.idx+1)}),"","#9dff4f");AU.level()}
 if(p.downT<=0){p.dead=true;checkDead()}
 continue;
 }
 if(p.mechT>0){
 p.mechT-=dt;
-if(p.mechT<=0){p.r=15;banner("MECH SPENT","ejecting","#ffb347");
+if(p.mechT<=0){p.r=15;banner(TLI18N.t('bn_mech_spent'),TLI18N.t('bn_mech_spent_sub'),"#ffb347");
 for(var m=0;m<8;m++)part({s:"f_smoke"+ri(0,3),x:p.x,y:p.y,vx:rr(-100,100),vy:rr(-100,100),life:1.5,sz:0.8,gr:0.5,a:0.5,tint:"#6b6560"})}
 }
 var mv,aim=null,firing=false;
@@ -2590,9 +3456,7 @@ for(var k=0;k<3;k++)spill(rr(320,WORLD.w-320),rr(320,WORLD.h-320),3,1);
 CAM.x=WORLD.w/2;CAM.y=WORLD.h/2;CAM.z=baseZoom();CAM.rx=CAM.x;CAM.ry=CAM.y;
 AU.inten=0;
 }
-function pauseGame(){
-if(STATE!=="play")return;
-STATE="paused";
+function buildPause(){
 var html="",i,j;
 for(i=0;i<players.length;i++){
 var p=players[i];
@@ -2600,46 +3464,56 @@ html+='<div style="margin-bottom:8px"><b style="color:'+p.col+';font:900 12px Ar
 '</b> &middot; <span style="color:'+RAR[p.gun.rar].c+'">'+p.gun.name+"</span> &middot; LV "+p.level+
 '<div class="buildlist" style="margin-top:5px">';
 var pk=[];for(var id in p.perks)pk.push(id);
-if(!pk.length)html+='<span class="bperk">no perks yet</span>';
+if(!pk.length)html+='<span class="bperk">'+TLI18N.t('no_perks')+'</span>';
 for(j=0;j<pk.length;j++)html+='<span class="bperk"><img src="'+iconURL("i_"+pk[j])+'" alt="">'+PERKS[pk[j]].n+" x"+p.perks[pk[j]]+"</span>";
 html+="</div></div>";
 }
-$("pauseBuild").innerHTML=html;showScreen("scrPause");AU.inten=0;Input.release();syncRuntime();
+$("pauseBuild").innerHTML=html;
+}
+function pauseGame(){
+if(STATE!=="play")return;
+STATE="paused";
+buildPause();showScreen("scrPause");AU.inten=0;Input.release();syncRuntime();
 }
 function resumeGame(){
 if(STATE!=="paused")return;
 STATE="play";showScreen(null);
 AU.inten=Math.min(3,1+((RUN.wave/4)|0));Input.release();syncRuntime();
 }
+var lastLB="";
+function renderOver(){
+$("overHead").textContent=(RUN.mode==="quest")?TLI18N.t('contract_failed'):TLI18N.t('run_terminated');
+$("overSub").textContent=TLI18N.t('over_subFmt',{seed:RUN.seed,biome:WORLD.B.n});
+var ml=1,i;for(i=0;i<players.length;i++)ml=Math.max(ml,players[i].level);
+$("overStats").innerHTML=statCards([[TLI18N.t('stat_score'),fmtN(RUN.score)],[TLI18N.t('stat_wave'),RUN.wave],[TLI18N.t('stat_time'),fmtT(RUN.time)],
+[TLI18N.t('stat_kills'),RUN.kills],[TLI18N.t('stat_level'),ml],[TLI18N.t('stat_gems'),RUN.gems|0]]);
+$("overLB").innerHTML=lastLB;
+}
 function gameOver(){
 if(!RUN||RUN.over)return;
 RUN.over=true;STATE="over";
+var i;
 if(RUN.mode==="survival"||RUN.mode==="daily"){
 SAVE.best.score=Math.max(SAVE.best.score|0,RUN.score);
 SAVE.best.wave=Math.max(SAVE.best.wave|0,RUN.wave);
 SAVE.best.time=Math.max(SAVE.best.time|0,RUN.time|0);
 }
-var lbHTML="",i;
+lastLB="";
 if(RUN.mode==="daily"){
 var d=new Date(),key=d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
 var lb=SAVE.daily[key]||[];
 for(i=0;i<lb.length;i++)lb[i].me=false;
 lb.push({s:RUN.score,w:RUN.wave,t:RUN.time|0,me:true});
 lb.sort(function(a,b){return b.s-a.s});SAVE.daily[key]=lb.slice(0,8);
-lbHTML='<div class="ptitle" style="margin-top:10px">Daily Leaderboard (local)</div><table class="lb">';
+lastLB='<div class="ptitle" style="margin-top:10px">'+TLI18N.t('daily_lb')+'</div><table class="lb">';
 for(i=0;i<SAVE.daily[key].length;i++){
 var en=SAVE.daily[key][i];
-lbHTML+='<tr class="'+(en.me?"me":"")+'"><td>#'+(i+1)+"</td><td>"+fmtN(en.s)+" pts</td><td>wave "+en.w+"</td><td>"+fmtT(en.t)+"</td></tr>";
+lastLB+='<tr class="'+(en.me?"me":"")+'"><td>#'+(i+1)+"</td><td>"+TLI18N.t('lb_ptsFmt',{n:fmtN(en.s)})+"</td><td>"+TLI18N.t('lb_waveFmt',{n:en.w})+"</td><td>"+fmtT(en.t)+"</td></tr>";
 }
-lbHTML+="</table>";
+lastLB+="</table>";
 }
 persist();
-$("overHead").textContent=(RUN.mode==="quest")?"CONTRACT FAILED":"RUN TERMINATED";
-$("overSub").textContent="seed "+RUN.seed+" · "+WORLD.B.n;
-var ml=1;for(i=0;i<players.length;i++)ml=Math.max(ml,players[i].level);
-$("overStats").innerHTML=statCards([["SCORE",fmtN(RUN.score)],["WAVE",RUN.wave],["TIME",fmtT(RUN.time)],
-["KILLS",RUN.kills],["LEVEL",ml],["GEMS",RUN.gems|0]]);
-$("overLB").innerHTML=lbHTML;
+renderOver();
 showScreen("scrOver");AU.inten=0;Input.release();syncRuntime();
 }
 function statCards(a){var s="";for(var i=0;i<a.length;i++)s+='<div class="stat"><div class="sv">'+a[i][1]+'</div><div class="sl">'+a[i][0]+"</div></div>";return s}
@@ -2692,9 +3566,9 @@ updPicks(dt);updParts(dt);updTimers(dt);director(dt);
 if(STATE!=="play")return;
 if(RUN.supply){
 var su=RUN.supply;su.t-=dt;su.flash-=dt;
-if(su.hp<=0){queueBlast(su.x,su.y,90,40,null);banner("SUPPLY LOST","","#ff4530");RUN.supply=null}
+if(su.hp<=0){queueBlast(su.x,su.y,90,40,null);banner(TLI18N.t('bn_supply_lost'),"",  "#ff4530");RUN.supply=null}
 else if(su.t<=0){
-banner("SUPPLY SECURED","crate opened","#9dff4f");RUN.st.supply=(RUN.st.supply|0)+1;
+banner(TLI18N.t('bn_supply_secured'),TLI18N.t('bn_supply_sec_sub'),"#9dff4f");RUN.st.supply=(RUN.st.supply|0)+1;
 dropGun(su.x,su.y-20,1.4);dropPick("health",su.x-30,su.y+20);dropPick("gemb",su.x+30,su.y+20);
 AU.pick();RUN.supply=null;
 }
@@ -3083,15 +3957,15 @@ var coop=players.length>1;
 if(!coop||!isTouch){
 var sw=Math.min(320,W-150),sx0=W/2-sw/2,sy0=(coop&&isTouch&&W>=H)?SA.t+46:SA.t+8;
 panel(c,sx0,sy0,sw,40);
-c.textAlign="left";c.font='900 15px "Arial Black"';c.fillStyle="#ffb347";c.fillText("WAVE "+RUN.wave,sx0+10,sy0+26);
+c.textAlign="left";c.font='900 15px "Arial Black"';c.fillStyle="#ffb347";c.fillText(TLI18N.t('hud_waveFmt',{n:RUN.wave}),sx0+10,sy0+26);
 c.font="700 11px monospace";c.fillStyle="#c0ab8e";c.fillText(fmtT(RUN.time),sx0+10,sy0+39);
 c.textAlign="center";c.font='900 16px "Arial Black"';c.fillStyle="#f7ead6";c.fillText(fmtN(RUN.score),sx0+sw/2,sy0+27);
 if(RUN.combo>1){c.fillStyle="#ffd23e";c.font='900 '+(14+Math.min(RUN.combo,8))+'px "Arial Black"';c.fillText("x"+RUN.combo,sx0+sw-34,sy0+30)}
-c.textAlign="right";c.font="700 10px monospace";c.fillStyle="#907b60";c.fillText("COMBO",sx0+sw-10,sy0+40);
+c.textAlign="right";c.font="700 10px monospace";c.fillStyle="#907b60";c.fillText(TLI18N.t('hud_combo'),sx0+sw-10,sy0+40);
 var px=sx0,py=sy0+44,pw=[];
-if(RUN.pow.freeze>0)pw.push(["CRYO",RUN.pow.freeze,"#7ad5ff"]);
-if(RUN.pow.x2>0)pw.push(["2X XP",RUN.pow.x2,"#9dff4f"]);
-if(RUN.pow.fire>0)pw.push(["FIRE",RUN.pow.fire,"#ff7a2f"]);
+if(RUN.pow.freeze>0)pw.push([TLI18N.t('hud_cryo'),RUN.pow.freeze,"#7ad5ff"]);
+if(RUN.pow.x2>0)pw.push([TLI18N.t('hud_x2'),RUN.pow.x2,"#9dff4f"]);
+if(RUN.pow.fire>0)pw.push([TLI18N.t('hud_fire'),RUN.pow.fire,"#ff7a2f"]);
 c.textAlign="left";
 for(i=0;i<pw.length;i++){panel(c,px,py,64,22);c.font="900 10px Arial";c.fillStyle=pw[i][2];
 c.fillText(pw[i][0]+" "+Math.ceil(pw[i][1]),px+5,py+15);px+=70}
@@ -3101,8 +3975,8 @@ if(!coop)drawSolo(c);else for(i=0;i<players.length;i++)drawCoop(c,players[i]);
 if(isTouch&&STATE==="play"){
 for(i=0;i<Input.sticks.length;i++){
 var st=Input.sticks[i],pp=players[st.pi];if(!pp)continue;
-stick(c,st.mx,st.my,st.mv,st.mid!==null,st.rad,pp.col,"MOVE",st.rot);
-stick(c,st.fx,st.fy,st.fv,st.fid!==null,st.rad,pp.col,"FIRE",st.rot);
+stick(c,st.mx,st.my,st.mv,st.mid!==null,st.rad,pp.col,TLI18N.t('hud_move'),st.rot);
+stick(c,st.fx,st.fy,st.fv,st.fid!==null,st.rad,pp.col,TLI18N.t('hud_fire_btn'),st.rot);
 for(var bi=0;bi<st.btns.length;bi++){
 var bt=st.btns[bi];
 if(bt.id==="mech"&&pp.parts<3&&pp.mechT<=0){bt.hidden=true;continue}
@@ -3119,7 +3993,7 @@ c.globalAlpha=1;c.restore();
 }
 }
 if(!coop&&!isTouch){c.font="700 9px monospace";c.fillStyle="rgba(144,123,96,.75)";c.textAlign="right";
-c.fillText("SEED "+RUN.seed+" · "+WORLD.B.n,W-SA.r-10,H-SA.b-8)}
+c.fillText(TLI18N.t('hud_seedFmt',{seed:RUN.seed,biome:WORLD.B.n}),W-SA.r-10,H-SA.b-8)}
 }
 function stick(c,x,y,v,active,rad,col,label,rot){
 c.globalAlpha=active?0.85:0.45;
@@ -3157,10 +4031,10 @@ c.fillText(p.gun.name.slice(0,16),x0+62,y0+62);
 var ww=Math.min(190,W*0.38),wx=W-SA.r-ww-8,wy=SA.t+46;
 panel(c,wx,wy,ww,44);
 c.font='900 14px "Arial Black"';c.fillStyle=p.rlT>0?"#ffd23e":"#f7ead6";
-c.fillText(p.rlT>0?"RELOADING":p.mag+" / "+Math.round(p.gun.mag*p.st.mag),wx+8,wy+20);
-c.font="700 9px monospace";c.fillStyle="#907b60";c.fillText("SCORE "+fmtN(RUN.score)+(RUN.combo>1?"  x"+RUN.combo:""),wx+8,wy+36);
+c.fillText(p.rlT>0?TLI18N.t('hud_reload'):p.mag+" / "+Math.round(p.gun.mag*p.st.mag),wx+8,wy+20);
+c.font="700 9px monospace";c.fillStyle="#907b60";c.fillText(TLI18N.t('hud_score')+" "+fmtN(RUN.score)+(RUN.combo>1?"  x"+RUN.combo:""),wx+8,wy+36);
 if(p.rlT>0)bar(c,wx+8,wy+26,ww-16,4,1-p.rlT/(p.gun.rl*p.st.rl),"#ffd23e");
-if(p.mechT>0){c.fillStyle="#4fe8ff";c.font='900 10px "Arial Black"';c.fillText("MECH "+Math.ceil(p.mechT)+"s",wx+8,wy-6)}
+if(p.mechT>0){c.fillStyle="#4fe8ff";c.font='900 10px "Arial Black"';c.fillText(TLI18N.t('hud_mechFmt',{n:Math.ceil(p.mechT)}),wx+8,wy-6)}
 return;
 }
 var bw2=Math.min(300,W*0.44),x1=SA.l+10,y1=H-SA.b-92;
@@ -3174,16 +4048,16 @@ bar(c,x1+10,y1+56,bw2-20,6,p.xp/p.xpNext,"#4fe8ff");
 var dc2=1-clamp(p.dashCd/p.st.dashcd,0,1);
 c.beginPath();c.arc(x1+bw2-28,y1+58,11,0,TAU);c.strokeStyle="#4c3c29";c.lineWidth=3;c.stroke();
 c.beginPath();c.arc(x1+bw2-28,y1+58,11,-PI/2,-PI/2+dc2*TAU);c.strokeStyle=dc2>=1?"#7ad5ff":"#5c6c7c";c.stroke();
-c.font='900 8px "Arial Black"';c.fillStyle=dc2>=1?"#7ad5ff":"#5c6c7c";c.textAlign="center";c.fillText("DASH",x1+bw2-28,y1+61);
+c.font='900 8px "Arial Black"';c.fillStyle=dc2>=1?"#7ad5ff":"#5c6c7c";c.textAlign="center";c.fillText(TLI18N.t('hud_dash'),x1+bw2-28,y1+61);
 for(i=0;i<3;i++){c.fillStyle=i<p.parts?"#ffb347":"rgba(60,48,32,.85)";c.beginPath();c.arc(x1+bw2-56-i*16,y1+14,5,0,TAU);c.fill()}
-if(p.mechT>0){c.fillStyle="#4fe8ff";c.font='900 10px "Arial Black"';c.textAlign="left";c.fillText("MECH "+Math.ceil(p.mechT)+"s",x1+bw2-124,y1+18)}
+if(p.mechT>0){c.fillStyle="#4fe8ff";c.font='900 10px "Arial Black"';c.textAlign="left";c.fillText(TLI18N.t('hud_mechFmt',{n:Math.ceil(p.mechT)}),x1+bw2-124,y1+18)}
 var ww2=Math.min(240,W*0.4),wx2=W-SA.r-ww2-10,wy2=H-SA.b-72;
 panel(c,wx2,wy2,ww2,60);
 c.textAlign="left";c.font='900 11px "Arial Black"';c.fillStyle=RAR[p.gun.rar].c;
 c.fillText(p.gun.name.slice(0,26),wx2+10,wy2+18);
 var ms=Math.round(p.gun.mag*p.st.mag);
 c.font='900 17px "Arial Black"';c.fillStyle=p.rlT>0?"#ffd23e":"#f7ead6";
-c.fillText(p.rlT>0?"RELOADING":p.mag+" / "+ms,wx2+10,wy2+40);
+c.fillText(p.rlT>0?TLI18N.t('hud_reload'):p.mag+" / "+ms,wx2+10,wy2+40);
 if(p.rlT>0)bar(c,wx2+10,wy2+46,ww2-20,5,1-p.rlT/(p.gun.rl*p.st.rl),"#ffd23e");
 else{
 var n=Math.min(ms,20);
@@ -3213,11 +4087,11 @@ bar(c,-hw+7,-ph/2+18,bw3,8,p.hp/p.st.maxhp,p.hp<p.st.maxhp*0.25?"#ff4530":"#7dff
 bar(c,-hw+7,-ph/2+29,bw3,3,p.xp/p.xpNext,"#4fe8ff");
 c.font="700 9px monospace";c.fillStyle="#f7ead6";c.fillText(Math.ceil(p.hp),-hw+9+bw3,-ph/2+25);
 c.font='900 10px "Arial Black"';c.fillStyle=p.rlT>0?"#ffd23e":RAR[p.gun.rar].c;
-c.fillText(p.rlT>0?"RLD...":p.mag+"/"+Math.round(p.gun.mag*p.st.mag),-hw+9+bw3,-ph/2+13);
+c.fillText(p.rlT>0?TLI18N.t('hud_rld'):p.mag+"/"+Math.round(p.gun.mag*p.st.mag),-hw+9+bw3,-ph/2+13);
 var dc=1-clamp(p.dashCd/p.st.dashcd,0,1);
 c.beginPath();c.arc(hw-14,-ph/2+14,7,-PI/2,-PI/2+dc*TAU);c.strokeStyle=dc>=1?"#7ad5ff":"#5c6c7c";c.lineWidth=3;c.stroke();
 for(i=0;i<3;i++){c.fillStyle=i<p.parts?"#ffb347":"rgba(60,48,32,.85)";c.beginPath();c.arc(hw-26+i*9,ph/2-9,3,0,TAU);c.fill()}
-if(p.downT>0){c.fillStyle="#ff4530";c.font='900 10px "Arial Black"';c.fillText("DOWN "+Math.ceil(p.downT),-hw+7,ph/2-5)}
+if(p.downT>0){c.fillStyle="#ff4530";c.font='900 10px "Arial Black"';c.fillText(TLI18N.t('hud_downFmt',{n:Math.ceil(p.downT)}),-hw+7,ph/2-5)}
 else if(p.dead){c.fillStyle="#907b60";c.font='900 10px "Arial Black"';c.fillText("K.I.A.",-hw+7,ph/2-5)}
 else if(p.cpu){c.fillStyle="#4fe8ff";c.font='700 8px monospace';c.fillText(p.aiMode.toUpperCase(),-hw+7,ph/2-5)}
 c.globalAlpha=1;c.restore();
@@ -3245,11 +4119,11 @@ else{
 var el=document.documentElement;
 if(el.requestFullscreen)el.requestFullscreen();
 else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();
-else toast("FULLSCREEN NOT SUPPORTED HERE");
+else toast(TLI18N.t('toast_fs'));
 }
-}catch(e){toast("FULLSCREEN NOT SUPPORTED HERE")}
+}catch(e){toast(TLI18N.t('toast_fs'))}
 }
-function fullLabel(){return isFull()?"EXIT FULLSCREEN":"FULLSCREEN"}
+function fullLabel(){return isFull()?TLI18N.t('exit_fullscreen'):TLI18N.t('fullscreen')}
 function refreshFullBtns(){$("btnFull").textContent=fullLabel();$("btnPFull").textContent=fullLabel();var o=$("btnOptFull");if(o)o.textContent=fullLabel()}
 document.addEventListener("fullscreenchange",refreshFullBtns);
 document.addEventListener("webkitfullscreenchange",refreshFullBtns);
@@ -3261,7 +4135,7 @@ var ch=CHARS[id],d=document.createElement("div");d.className="card";
 var is1=OPT.c1===id,is2=OPT.coop>=2&&OPT.c2===id;
 if(is1)d.classList.add("on");if(is2)d.classList.add("on2");
 d.innerHTML=(is1?'<span class="tagp p1">P1</span>':"")+(is2?'<span class="tagp p2">'+(OPT.coop===3?"CPU":"P2")+'</span>':"")+
-'<img src="'+iconURL("c_"+id+"0")+'" alt=""><div class="cn">'+ch.n+'</div><div class="cd">'+ch.d+"</div>";
+'<img src="'+iconURL("c_"+id+"0")+'" alt=""><div class="cn">'+ch.n+'</div><div class="cd">'+TLI18N.t('ch_'+id+'_d')+"</div>";
 d.onclick=function(){
 AU.ui();
 if(OPT.coop===1)OPT.c1=id;
@@ -3274,17 +4148,13 @@ saveOpts();refreshTitle();
 };
 el.appendChild(d);
 })(ids[i]);
-$("bestLine").textContent="BEST — score "+fmtN(SAVE.best.score|0)+" · wave "+(SAVE.best.wave|0)+
-" · "+fmtT(SAVE.best.time|0)+" · "+(SAVE.kills|0)+" lifetime kills · "+(SAVE.runs|0)+" runs";
+$("bestLine").textContent=TLI18N.t('best_lineFmt',{score:fmtN(SAVE.best.score|0),wave:(SAVE.best.wave|0),time:fmtT(SAVE.best.time|0),kills:(SAVE.kills|0),runs:(SAVE.runs|0)});
 var d=new Date(),ds="DAILY-"+d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
 var dr=mulberry(hashStr(ds+"m")),pool=["over","scatter","titans","glass","tide","slick","black","gold"];
 var m1=pool[(dr()*pool.length)|0],m2=pool[(dr()*pool.length)|0];
 if(m2===m1)m2=pool[(pool.indexOf(m1)+3)%pool.length];
-var NM={over:"OVERDRIVE",scatter:"SCATTER DAY",titans:"TWIN TITANS",glass:"GLASS JAW",tide:"BLACK TIDE",slick:"SLICK ICE",black:"BLACKOUT",gold:"GOLD RUSH"};
-$("btnDaily").textContent="Daily Run · "+NM[m1]+" + "+NM[m2];
-$("manual").innerHTML=isTouch?
-'<b>MOVE</b> stick on your left &middot; <b>FIRE</b> stick on your right &middot; double-tap move stick = <b>DASH</b> &middot; buttons: reload / lock-fire / mech.<br>Co-op: each player takes one short side of the device — controls and HUD rotate to face you.<br>Oil burns long and smoky, fuel burns hot and fast, <b style="color:#4fe8ff">electrolyte douses fire and conducts every zap</b>.':
-'<b>WASD</b> move &middot; <b>ARROWS</b> shoot (8-way) &middot; <b>MOUSE</b> aim, <b>LMB</b> fire, <b>RMB</b> reload &middot; <b>SHIFT</b> fire &amp; lock direction &middot; <b>SPACE</b>/double-tap = dash &middot; <b>E</b> mech &middot; <b>ESC</b> pause.<br>Co-op: P2 moves with <b>ARROWS</b>, shoots with <b>IJKL</b>, dashes with <b>R-CTRL</b>. Gamepads: sticks + <b>RT</b> lock-fire. CPU ally covers you under pressure and races you when calm.<br>Oil burns long and smoky, fuel burns hot and fast, <b style="color:#4fe8ff">electrolyte douses fire and conducts every zap</b>. Blasts blow smoke away.';
+$("btnDaily").textContent=TLI18N.t('daily_btnFmt',{m1:TLI18N.t('nm_'+m1),m2:TLI18N.t('nm_'+m2)});
+$("manual").innerHTML=isTouch?TLI18N.t('manual_touch'):TLI18N.t('manual_kb');
 refreshFullBtns();
 }
 function buildQuests(){
@@ -3296,7 +4166,7 @@ var d=document.createElement("div");d.className="qcard"+(unlocked?"":" lock");
 var st="";for(var s=0;s<stars;s++)st+="&#9733;";
 var so="";for(s=stars;s<3;s++)so+='<span style="color:#3a2f22">&#9733;</span>';
 d.innerHTML='<div class="qnum">'+(unlocked?qi:"X")+'</div><div class="qbody"><div class="qn">'+q.n+
-'</div><div class="qd">'+q.d+'</div><div class="qr">REWARD: '+q.rw.label+" · PAR "+fmtT(q.par)+
+'</div><div class="qd">'+TLI18N.t('q'+qi+'_d')+'</div><div class="qr">'+TLI18N.t('q_rewardFmt',{r:TLI18N.t('q'+qi+'_rw'),t:fmtT(q.par)})+
 '</div></div><div class="qstars">'+st+so+"</div>";
 if(unlocked)d.onclick=function(){AU.ui();newRun("quest",{quest:qi,seed:"QUEST"+qi+"-"+((MR()*9999)|0)})};
 el.appendChild(d);
@@ -3315,34 +4185,34 @@ var sel=document.createElement("select"),qn=["LOW","MEDIUM","HIGH"],i;
 for(i=0;i<3;i++){var o=document.createElement("option");o.value=i;o.textContent=qn[i];sel.appendChild(o)}
 sel.value=OPT.quality;
 sel.onchange=function(){OPT.quality=parseInt(sel.value,10);Q=QUAL[clamp(OPT.quality,0,2)];resize();saveOpts()};
-row("Graphics quality",sel);
-var ds=document.createElement("select"),dl=[["Scrap (easy)",0],["Rust (normal)",1],["Chrome (swarm)",2]];
+row(TLI18N.t('opt_quality'),sel);
+var ds=document.createElement("select"),dl=[[TLI18N.t('opt_diff_0'),0],[TLI18N.t('opt_diff_1'),1],[TLI18N.t('opt_diff_2'),2]];
 for(i=0;i<3;i++){var o2=document.createElement("option");o2.value=dl[i][1];o2.textContent=dl[i][0];ds.appendChild(o2)}
 ds.value=OPT.diff;ds.onchange=function(){OPT.diff=parseInt(ds.value,10);saveOpts()};
-row("Difficulty",ds);
+row(TLI18N.t('opt_diff'),ds);
 function slider(key,label,fmt){
 var s=document.createElement("input");s.type="range";s.min=(key==="scale")?0.5:0;s.max=(key==="shake")?1.5:1;s.step=0.05;s.value=OPT[key];
 var v=row(label,s,fmt(OPT[key]));
 s.oninput=function(){OPT[key]=parseFloat(s.value);v.textContent=fmt(OPT[key]);AU.vol();if(key==="scale")resize();saveOpts()};
 }
-slider("shake","Screen shake",function(v){return Math.round(v*100)+"%"});
-slider("sfx","SFX volume",function(v){return Math.round(v*100)+"%"});
-slider("music","Music volume",function(v){return Math.round(v*100)+"%"});
-slider("scale","Render scale",function(v){return Math.round(v*100)+"%"});
+slider("shake",TLI18N.t('opt_shake'),function(v){return Math.round(v*100)+"%"});
+slider("sfx",TLI18N.t('opt_sfx'),function(v){return Math.round(v*100)+"%"});
+slider("music",TLI18N.t('opt_music'),function(v){return Math.round(v*100)+"%"});
+slider("scale",TLI18N.t('opt_scale'),function(v){return Math.round(v*100)+"%"});
 function tgl(key,label,fn){
 var t=document.createElement("div");t.className="tgl"+(OPT[key]?" on":"");
 t.onclick=function(){OPT[key]=!OPT[key];t.classList.toggle("on",OPT[key]);AU.ui();if(fn)fn();saveOpts()};
 row(label,t);
 }
-tgl("light","Dynamic lighting",function(){if(!loopRunning)renderOnce()});
-tgl("dmg","Damage numbers",null);
-tgl("fps","FPS meter",function(){$("fps").style.display=OPT.fps?"":"none"});
-tgl("autoQ","Auto quality drop",null);
-tgl("battery","Battery saver (30fps)",null);
-if(isTouch)tgl("haptics","Vibration",null);
+tgl("light",TLI18N.t('opt_light'),function(){if(!loopRunning)renderOnce()});
+tgl("dmg",TLI18N.t('opt_dmg'),null);
+tgl("fps",TLI18N.t('opt_fps'),function(){$("fps").style.display=OPT.fps?"":"none"});
+tgl("autoQ",TLI18N.t('opt_autoQ'),null);
+tgl("battery",TLI18N.t('opt_battery'),null);
+if(isTouch)tgl("haptics",TLI18N.t('opt_haptics'),null);
 var fb=document.createElement("button");fb.className="btn small";fb.id="btnOptFull";fb.textContent=fullLabel();
 fb.onclick=function(){AU.ui();toggleFull();setTimeout(refreshFullBtns,300)};
-row("Fullscreen",fb);
+row(TLI18N.t('opt_fullscreen'),fb);
 }
 function buildControls(){
 function mk(el,map,group,isPad){
@@ -3350,12 +4220,13 @@ el.innerHTML="";
 var labels={up:"Move up",down:"Move down",left:"Move left",right:"Move right",aimUp:"Shoot up",aimDown:"Shoot down",
 aimLeft:"Shoot left",aimRight:"Shoot right",dash:"Dash",reload:"Reload",lock:"Fire & lock",mech:"Deploy mech",pause:"Pause"};
 for(var k in map)(function(key){
+var label=TLI18N.t('k_'+key)||labels[key];
 var row=document.createElement("div");row.className="krow";
-var sp=document.createElement("span");sp.textContent=labels[key]||key;row.appendChild(sp);
+var sp=document.createElement("span");sp.textContent=label||key;row.appendChild(sp);
 var b=document.createElement("button");
 var capping=Input.cap&&Input.cap.group===group&&Input.cap.key===key;
 b.className="kbtn"+(capping?" cap":"");
-b.textContent=capping?"PRESS...":keyLabel(map[key]);
+b.textContent=capping?TLI18N.t('k_pressing'):keyLabel(map[key]);
 b.onclick=function(){AU.ui();Input.cap={group:group,key:key,pad:isPad,fn:function(v){KEYS[group][key]=v;saveKeys()}};buildControls()};
 row.appendChild(b);el.appendChild(row);
 })(k);
@@ -3365,7 +4236,7 @@ mk($("keysP2"),KEYS.p2,"p2",false);
 mk($("keysPad"),KEYS.pad,"pad",true);
 }
 function refreshSound(){
-var b=$("btnSound");b.textContent=OPT.muted?"MUTED":"SOUND ON";b.classList.toggle("off",OPT.muted);
+var b=$("btnSound");b.textContent=OPT.muted?TLI18N.t('snd_muted'):TLI18N.t('snd_on');b.classList.toggle("off",OPT.muted);
 }
 function wireUI(){
 $("btnSound").onclick=function(){AU.init();AU.resume();OPT.muted=!OPT.muted;AU.vol();saveOpts();refreshSound();if(OPT.muted)AU.suspend();else if(STATE==="play"||STATE==="title")AU.resume()};
@@ -3391,7 +4262,7 @@ $("btnOpts").onclick=function(){AU.ui();buildOptions();optBack="scrTitle";showSc
 $("btnOBack").onclick=function(){AU.ui();if(optBack==="scrPause")showScreen("scrPause");else toTitle()};
 $("btnKeys").onclick=function(){AU.ui();Input.cap=null;buildControls();showScreen("scrControls")};
 $("btnKBack").onclick=function(){AU.ui();Input.cap=null;toTitle()};
-$("btnKReset").onclick=function(){AU.ui();KEYS=JSON.parse(JSON.stringify(DEF_KEYS));saveKeys();buildControls();toast("CONTROLS RESET")};
+$("btnKReset").onclick=function(){AU.ui();KEYS=JSON.parse(JSON.stringify(DEF_KEYS));saveKeys();buildControls();toast(TLI18N.t('toast_ctrlReset'))};
 $("btnFull").onclick=function(){AU.ui();toggleFull();setTimeout(refreshFullBtns,300)};
 $("btnPFull").onclick=function(){AU.ui();toggleFull();setTimeout(refreshFullBtns,300)};
 $("btnResume").onclick=function(){AU.ui();resumeGame()};
@@ -3448,12 +4319,12 @@ lastFrame=tn;
 var dt=(tn-last)/1000;last=tn;
 if(dt>0.1)dt=0.1;if(dt<0)dt=0;
 fpsE=lerp(fpsE,1/Math.max(dt,0.001),0.05);fpsT+=dt;
-if(fpsT>0.5){fpsT=0;if(OPT.fps)$("fps").textContent=(fpsE|0)+" FPS"}
+if(fpsT>0.5){fpsT=0;if(OPT.fps)$("fps").textContent=(fpsE|0)+" "+TLI18N.t('fps_unit')}
 if(OPT.autoQ&&STATE==="play"&&fpsE<40){
 autoT+=dt;
 if(autoT>2.5&&OPT.quality>0){
 OPT.quality--;Q=QUAL[clamp(OPT.quality,0,2)];resize();saveOpts();autoT=0;
-toast("AUTO QUALITY -> "+["LOW","MEDIUM","HIGH"][OPT.quality]);
+toast(TLI18N.t('toast_autoQFmt',{q:["LOW","MEDIUM","HIGH"][OPT.quality]}));
 }
 }else autoT=0;
 Input.pads();
@@ -3468,8 +4339,48 @@ drawHUD();
 }
 window.addEventListener("resize",resize,false);
 window.addEventListener("orientationchange",function(){setTimeout(resize,140)},false);
-Input.init();wireUI();resize();toTitle();
+function tlResync(){
+refreshTitle();refreshSound();refreshFullBtns();
+if(isTouch&&Input.sticks)Input.layout();
+if(document.getElementById("scrQuests").classList.contains("show"))buildQuests();
+if(document.getElementById("scrOptions").classList.contains("show"))buildOptions();
+if(document.getElementById("scrControls").classList.contains("show"))buildControls();
+if(STATE==="draft"&&draftP)renderDraft();
+if(STATE==="choice")renderChoice();
+if(STATE==="paused")buildPause();
+if(STATE==="over")renderOver();
+if(STATE==="qdone")buildQDone();
+}
+TLI18N.mount("#scrTitle .panel");
+TLI18N.onChange(tlResync);
+Input.init();wireUI();resize();toTitle();tlResync();
 /* ==== END: boot.js ==== */
+/* Live handle for the external developer harness (dbg/arena.js + dbg/_harness.js).
+   It only names the page's own objects and functions; nothing here runs on its
+   own, and no game behaviour changes. Accessors are used for values the game
+   re-assigns (RUN, players, foes, Q, WORLD) and for hurtPlayer so a cheat can
+   wrap it and restore it later. */
+window.TLHOOK={
+  get state(){return STATE},
+  get run(){return RUN},
+  get players(){return players},
+  get foes(){return foes},
+  get bullets(){return bullets},
+  get ebul(){return ebul},
+  get picks(){return picks},
+  get world(){return WORLD},
+  get q(){return Q},
+  get fpsOn(){return OPT.fps}, set fpsOn(v){OPT.fps=!!v},
+  guns:GUNS, foesTable:FOES, charsTable:CHARS, perksTable:PERKS, mutsTable:MUTS,
+  diffMult:DIFF_MULT, quality:QUAL, opts:OPT, save:SAVE, keys:KEYS,
+  get hurtPlayer(){return hurtPlayer}, set hurtPlayer(f){hurtPlayer=f},
+  get hurtFoe(){return hurtFoe},
+  get hurtProp(){return hurtProp},
+  get spawnFoe(){return spawnFoe},
+  get banner(){return banner},
+  get persist(){return persist},
+  get saveOpts(){return saveOpts}
+};
 /* IIFE-END */
 })();
 </script>
@@ -3510,5 +4421,234 @@ else seen(cur);
 }).catch(function () {});
 })();
 </script>
+<script>
+/* Developer harness. ?debug=dbg/arena.js loads the shared engine dbg/_harness.js
+   and then that script, which registers the live panel: state, elements,
+   layout per screen mode, translation texts, balance, cheats, JSON export.
+   No parameter, or a missing script: nothing loads and the page behaves
+   exactly as it does without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
+</script>
+<!-- inlined fs.js — the source of truth is fs.js: edit that file and re-inline this block -->
+<script>
+/* fs.js — the one fullscreen control every page shares.
+
+   Two jobs:
+
+   1. A toggle button. `TLFS.mount("#opts", {cls:"btn"})` puts it inside a menu or
+      title panel using that page's own button class; `TLFS.mount()` alone floats a
+      small icon button in the bottom-right corner; `{icon:true}` swaps the word for
+      a ⤢ glyph and moves it into `aria-label` for narrow hosts. The wording is the
+      shared translation key `fullscreen` / `exitFullscreen` — from the i18n kit, from
+      a page table published through `TLFS_LABEL(key)`, or English as the floor — and
+      a change of `<html lang>` repaints it. Where the Fullscreen API is missing the
+      button hides itself instead of lying.
+
+   2. Re-fit on every usable-area change. Entering or leaving fullscreen, an
+      orientation flip, and a mobile browser bar hiding or showing all change the
+      area the game has to fill — and the bar case does not always fire a plain
+      `resize`. This file listens to `fullscreenchange` (all vendor spellings) and
+      to `visualViewport.resize`, then re-applies `<html data-fs>` and dispatches
+      `resize` (plus `orientationchange`) once per frame, so the page's own layout
+      code runs. `TLFS.refitOnly()` gives a page that already has its own
+      fullscreen button just that wiring, without a second button.
+
+   Nothing here reads game state, and a page that never calls mount/refitOnly gets
+   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+(function () {
+  if (window.TLFS) return;
+  var de = document.documentElement;
+  var REQ = de.requestFullscreen || de.webkitRequestFullscreen ||
+    de.msRequestFullscreen || de.mozRequestFullScreen;
+  var EX = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.msExitFullscreen || document.mozCancelFullScreen;
+  var blocked = !REQ || !EX || de.fullscreenEnabled === false;
+  var ICON = "\u2922"; /* narrow hosts (side stripes, icon bars) get the glyph plus a
+                          translated aria-label instead of the word */
+  var btns = [], cbs = [], queued = false, styleDone = false;
+
+  function isFull() {
+    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
+      de.msFullscreenElement || de.mozFullScreenElement);
+  }
+  function kit() {
+    var k = window.TLI18N;
+    return (k && typeof k.t === "function") ? k : null;
+  }
+  /* A missing key makes t() hand back the key name — that is not a label.
+     Pages that keep their own translation table (billiards, tilt, oilstorm) publish
+     TLFS_LABEL(key) instead of the kit; they win over the kit, English is the floor. */
+  function label() {
+    var want = isFull() ? "exitFullscreen" : "fullscreen";
+    var L = window.TLFS_LABEL;
+    if (typeof L === "function") {
+      try { var v = L(want); if (v && v !== want) return String(v) } catch (e) {}
+    }
+    var k = kit(), t = null;
+    if (k) { try { t = k.t(want) } catch (e) { t = null } }
+    if (!t || t === want) t = isFull() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+    return t;
+  }
+  function cssOnce() {
+    if (styleDone) return;
+    styleDone = true;
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlfs-float:hover{border-color:#ffd76a;color:#ffd76a}" +
+      ".tlfs-float[hidden]{display:none}";
+    document.head.appendChild(st);
+  }
+  function paint() {
+    var txt = label();
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      b.textContent = b.__tlfsIcon ? ICON : txt;
+      b.setAttribute("aria-label", txt);
+      b.setAttribute("aria-pressed", isFull() ? "true" : "false");
+    }
+  }
+  /* One pass per frame: fullscreenchange and visualViewport.resize often arrive
+     together, and dispatching resize from inside a resize listener would loop. */
+  function refit() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint();
+      for (var i = 0; i < cbs.length; i++) { try { cbs[i](isFull()) } catch (e) {} }
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("orientationchange"));
+    });
+  }
+  function toggle() {
+    if (blocked) return false;
+    var was = isFull();
+    try {
+      if (was) EX.call(document);
+      else { var p = REQ.call(de); if (p && p.catch) p.catch(function () {}) }
+    } catch (e) {}
+    /* the change event may never come (sandboxed frames, denied requests, some
+       headless shells that grant then silently drop): repaint the state we can
+       read twice, late enough to catch a transition nobody announced. */
+    setTimeout(refit, 220);
+    setTimeout(refit, 700);
+    return !was;
+  }
+
+  de.setAttribute("data-fs", "off");
+  ["fullscreenchange", "webkitfullscreenchange", "MSFullscreenChange", "mozfullscreenchange"]
+    .forEach(function (t) { document.addEventListener(t, refit, false) });
+  ["fullscreenerror", "webkitfullscreenerror"].forEach(function (t) {
+    document.addEventListener(t, function () { de.setAttribute("data-fs", "off"); paint() }, false)
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", refit, false);
+    window.visualViewport.addEventListener("scroll", function () {
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint(); /* an exit the browser never announced must still clear the label */
+    }, false);
+  }
+  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
+  }, false);
+  /* A language switch changes <html lang>: repaint from whatever table the page
+     uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
+     drive their toggle state off that attribute, and taking it would corrupt them. */
+  new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
+
+  window.TLFS = {
+    version: "2026.11.23.3",
+    supported: !blocked,
+    isFull: isFull,
+    label: label,
+    paint: paint,
+    toggle: toggle,
+    onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
+    /* just the size/orientation wiring, for a page with its own fullscreen button */
+    refitOnly: function () { paint(); return true },
+    /* put the button in `sel` (or float it when the selector matches nothing).
+       opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
+       puts the translated word in aria-label, for narrow hosts. */
+    mount: function (sel, opts) {
+      cssOnce();
+      var o = opts || {};
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = o.cls || "tlfs-float";
+      b.id = o.id || "tlfsBtn";
+      b.__tlfsIcon = !!o.icon;
+      if (o.float !== false && !o.cls) b.classList.add("tlfs-float");
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", label());
+      if (o.ariaLabel) b.setAttribute("data-aria", o.ariaLabel);
+      b.textContent = o.icon ? ICON : label();
+      /* a menu that starts the game on any tap (defender binds pointerdown on the
+         whole title screen) must not fire when the fullscreen button is pressed */
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("touchstart", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle() });
+      var host = sel ? document.querySelector(sel) : null;
+      if (host) {
+        if (o.prepend && host.firstChild) host.insertBefore(b, host.firstChild);
+        else host.appendChild(b);
+      } else {
+        b.classList.add("tlfs-float");
+        document.body.appendChild(b);
+      }
+      if (blocked) b.style.display = "none";
+      btns.push(b);
+      paint();
+      return b;
+    },
+    /* wire a button the page already has in its markup (keeps its own look) */
+    attach: function (el) {
+      cssOnce();
+      if (!el) return null;
+      if (blocked) { el.style.display = "none"; return el }
+      el.addEventListener("click", function (e) { e.preventDefault(); toggle() });
+      btns.push(el);
+      paint();
+      return el;
+    },
+    /* a rebuilt panel drops its children: re-add every button the page mounted */
+    reassert: function () {
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i];
+        if (!b.isConnected && b.__tlfsHost) {
+          var h = document.querySelector(b.__tlfsHost);
+          if (h) h.appendChild(b);
+        }
+      }
+      paint();
+      return btns.length
+    }
+  };
+  /* remember where each button was mounted so a panel rebuild can put it back */
+  var mount0 = window.TLFS.mount;
+  window.TLFS.mount = function (sel, opts) {
+    var b = mount0(sel, opts);
+    if (b) b.__tlfsHost = sel || "body";
+    return b;
+  };
+  var k = kit();
+  if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
+})();
+</script>
+<script>/* arena has its own FULLSCREEN buttons already — take only the re-fit wiring */
+TLFS.refitOnly();</script>
 </body>
 </html>

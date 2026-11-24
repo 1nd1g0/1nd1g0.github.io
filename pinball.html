@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#07080d">
 <title>STARDUST PINBALL — procedural 3D pinball</title>
-<meta name="version" content="2026.11.20.1">
+<meta name="version" content="2026.11.24.1">
 <style>
 :root{
   --dom:#ff6a00;--acc:#ffc400;--acc2:#ff2e3d;--field:#2a0f0a;--glow:#ff9a3c;
@@ -243,55 +243,55 @@ body.dbgOn #dbgRoot{display:block}
       <b>STARDUST&nbsp;PINBALL</b>
     </div>
     <div class="sp"></div>
-    <button class="ibtn" id="btnSound" title="Sound (M)" aria-pressed="true">
+    <button class="ibtn" id="btnSound" data-tip="tipSound" aria-pressed="true">
       <svg viewBox="0 0 24 24" id="icoSndOn"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9c1.4 1.6 1.4 4.4 0 6M18.5 6.5c2.8 3 2.8 8 0 11"/></svg>
       <svg viewBox="0 0 24 24" id="icoSndOff" style="display:none"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
     </button>
-    <button class="ibtn" id="btnCam" title="Camera (C)"><svg viewBox="0 0 24 24"><path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.4"/></svg></button>
-    <button class="ibtn" id="btnPause" title="Pause (P)"><svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
-    <button class="ibtn" id="btnHelp" title="Help"><svg viewBox="0 0 24 24"><path d="M9 9.5a3 3 0 1 1 4.6 2.5c-1 .7-1.6 1.3-1.6 2.5"/><circle cx="12" cy="18" r=".6" fill="currentColor"/></svg></button>
-    <button class="ibtn" id="btnFull" title="Fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    <button class="ibtn" id="btnCam" data-tip="tipCam"><svg viewBox="0 0 24 24"><path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.4"/></svg></button>
+    <button class="ibtn" id="btnPause" data-tip="tipPause"><svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
+    <button class="ibtn" id="btnHelp" data-tip="help"><svg viewBox="0 0 24 24"><path d="M9 9.5a3 3 0 1 1 4.6 2.5c-1 .7-1.6 1.3-1.6 2.5"/><circle cx="12" cy="18" r=".6" fill="currentColor"/></svg></button>
+    <button class="ibtn" id="btnFull" data-tip="fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
   </div>
   <div id="hudBar">
-    <div id="scoreBlock"><div id="score">0</div><div id="hiscore">HIGH 0</div></div>
+    <div id="scoreBlock"><div id="score">0</div><div id="hiscore"><span data-t="hiWord">HIGH</span> 0</div></div>
     <div id="chipBlock">
       <span class="chip" id="ballDots"><i></i><i></i><i></i></span>
       <span class="chip" id="multChip">X1</span>
-      <span class="chip">LOCKS<span class="lockdot" id="lock0"></span><span class="lockdot" id="lock1"></span></span>
-      <span class="chip" id="saveChip">SHOOT AGAIN</span>
-      <span class="chip" id="mbChip">MULTIBALL</span>
-      <span class="chip" id="extraChip">EXTRA BALL</span>
-      <span id="tableChip">TABLE</span>
+      <span class="chip"><span data-t="locks">LOCKS</span><span class="lockdot" id="lock0"></span><span class="lockdot" id="lock1"></span></span>
+      <span class="chip" id="saveChip" data-t="shootAgain">SHOOT AGAIN</span>
+      <span class="chip" id="mbChip" data-t="multiball">MULTIBALL</span>
+      <span class="chip" id="extraChip" data-t="extraBall">EXTRA BALL</span>
+      <span id="tableChip" data-t="tableWord">TABLE</span>
     </div>
   </div>
   <div id="announce"></div>
   <div id="floaters"></div>
-  <div id="tiltStamp">TILT</div>
-  <div class="hint" id="hintL"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>FLIP</div>
-  <div class="hint" id="hintR"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>FLIP</div>
-  <button id="btnNudge"><span>NUDGE</span><span id="heatDots"><i></i><i></i><i></i></span></button>
-  <button id="btnLaunch"><div id="launchFill"></div><span id="launchLabel">HOLD<br>TO<br>LAUNCH</span></button>
+  <div id="tiltStamp" data-t="stampTilt">TILT</div>
+  <div class="hint" id="hintL"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span data-t="flip">FLIP</span></div>
+  <div class="hint" id="hintR"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg><span data-t="flip">FLIP</span></div>
+  <button id="btnNudge"><span data-t="nudge">NUDGE</span><span id="heatDots"><i></i><i></i><i></i></span></button>
+  <button id="btnLaunch"><div id="launchFill"></div><span id="launchLabel" data-t="launchLbl">HOLD TO LAUNCH</span></button>
 </div>
 
 <div id="patchBar">
-  <div class="pcRow"><button class="pcBtn" id="pcZoomOut" title="Zoom out (wheel / pinch)">-</button><span id="pcZoomVal" title="Reset zoom + orbit">128%</span><button class="pcBtn" id="pcZoomIn" title="Zoom in (wheel / pinch)">+</button></div>
-  <div class="pcRow"><button class="pcBtn" id="pcDyn" title="Dynamic ball-follow camera">DYN</button><button class="pcBtn" id="pcTilt" title="Tilt &amp; motion studio">TILT</button><button class="pcBtn" id="pcEco" title="Power saver">ECO</button></div>
+  <div class="pcRow"><button class="pcBtn" id="pcZoomOut" data-tip="tipZoomOut">-</button><span id="pcZoomVal" data-tip="tipZoomReset">128%</span><button class="pcBtn" id="pcZoomIn" data-tip="tipZoomIn">+</button></div>
+  <div class="pcRow"><button class="pcBtn" id="pcDyn" data-t="dyn" data-tip="tipDynCam">DYN</button><button class="pcBtn" id="pcTilt" data-t="pcTiltWord" data-tip="tipTiltStudio">TILT</button><button class="pcBtn" id="pcEco" data-t="eco" data-tip="tipEco">ECO</button></div>
 </div>
 
 <div id="dbgRoot">
-  <div id="dbgBadge"><span class="dbgDot"></span><b>DEBUG</b><span>build <i id="dbgBuild">-</i></span><span><i id="dbgFps">-</i> fps</span><span id="dbgState">-</span><span id="dbgCounts">-</span></div>
+  <div id="dbgBadge"><span class="dbgDot"></span><b data-t="dbg">DEBUG</b><span><span data-t="buildLbl">build</span> <i id="dbgBuild">-</i></span><span><i id="dbgFps">-</i> fps</span><span id="dbgState">-</span><span id="dbgCounts">-</span></div>
   <div id="dbgTools">
-    <button class="dbgChip on" id="dbgColliders">COLLIDERS</button>
-    <button class="dbgChip" id="dbgLabels">LABELS</button>
-    <button class="dbgChip" id="dbgVectors">VECTORS</button>
-    <button class="dbgChip" id="dbgGrid">GRID</button>
-    <button class="dbgChip" id="dbgFreeze">FREEZE</button>
-    <button class="dbgChip" id="dbgClear">CLEAR</button>
-    <button class="dbgChip" id="dbgOff">EXIT</button>
-    <select id="dbgPick" title="Pick an object by id"></select>
+    <button class="dbgChip on" id="dbgColliders" data-t="dColliders">COLLIDERS</button>
+    <button class="dbgChip" id="dbgLabels" data-t="dLabels">LABELS</button>
+    <button class="dbgChip" id="dbgVectors" data-t="dVectors">VECTORS</button>
+    <button class="dbgChip" id="dbgGrid" data-t="dGrid">GRID</button>
+    <button class="dbgChip" id="dbgFreeze" data-t="dFreeze">FREEZE</button>
+    <button class="dbgChip" id="dbgClear" data-t="dClear">CLEAR</button>
+    <button class="dbgChip" id="dbgOff" data-t="exit">EXIT</button>
+    <select id="dbgPick" data-tip="tipPick"></select>
   </div>
   <div id="dbgDock"></div>
-  <div id="dbgHint">RIGHT-CLICK inspect &middot; MIDDLE-CLICK pin &middot; MIDDLE-DRAG orbit &middot; LEFT-CLICK still plays &middot; F2/F3/F4/F6 overlays &middot; F7 freeze &middot; Esc clear</div>
+  <div id="dbgHint" data-t="dbgHintTxt">RIGHT-CLICK inspect &middot; MIDDLE-CLICK pin &middot; MIDDLE-DRAG orbit &middot; LEFT-CLICK still plays &middot; F2/F3/F4/F6 overlays &middot; F7 freeze &middot; Esc clear</div>
   <div id="dbgTip"></div>
 </div>
 
@@ -299,134 +299,697 @@ body.dbgOn #dbgRoot{display:block}
   <div class="card">
     <div class="logoRow"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="url(#lg1)"/><ellipse cx="16" cy="16" rx="14.5" ry="5.5" fill="none" style="stroke:var(--acc2)" stroke-width="1.6" transform="rotate(-22 16 16)"/></svg></div>
     <h1 class="title">STARDUST<br>PINBALL</h1>
-    <div class="tagline">every seed forges a new machine &mdash; <b id="menuTheme">SOLAR FLARE</b></div>
-    <div class="fieldLabel">Table seed</div>
+    <div class="tagline"><span data-t="tagline">every seed forges a new machine —</span> <b id="menuTheme">SOLAR FLARE</b></div>
+    <div class="fieldLabel" data-t="seedLbl">Table seed</div>
     <div class="seedRow">
       <input id="seedInput" maxlength="20" spellcheck="false" autocapitalize="characters" autocomplete="off" value="">
-      <button class="ibtn" id="btnDice" title="Random table"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.6" cy="8.6" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.4" cy="15.4" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.4" cy="8.6" r="1.4" fill="currentColor" stroke="none"/><circle cx="8.6" cy="15.4" r="1.4" fill="currentColor" stroke="none"/></svg></button>
+      <button class="ibtn" id="btnDice" data-tip="diceTip"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.6" cy="8.6" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.4" cy="15.4" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.4" cy="8.6" r="1.4" fill="currentColor" stroke="none"/><circle cx="8.6" cy="15.4" r="1.4" fill="currentColor" stroke="none"/></svg></button>
     </div>
-    <div class="fieldLabel">Difficulty</div>
-    <div class="seg" id="diffSeg"><button data-d="easy">EASY</button><button data-d="classic" class="on">CLASSIC</button><button data-d="wild">WILD</button></div>
-    <div id="diffDesc">the real thing &mdash; 8s ball save</div>
-    <button class="btn" id="btnStart">&#9654; &nbsp;Start Game</button>
-    <a class="btn ghost" id="btnHome" href="https://1nd1g0.github.io/">&#8962; Home</a>
-    <div class="menuHigh">HIGH SCORE&nbsp; <b id="menuHigh">0</b></div>
+    <div class="fieldLabel" data-t="difficulty">Difficulty</div>
+    <div class="seg" id="diffSeg"><button data-d="easy" data-t="easy">EASY</button><button data-d="classic" class="on" data-t="dClassic">CLASSIC</button><button data-d="wild" data-t="dWild">WILD</button></div>
+    <div id="diffDesc" data-t="descClassic">the real thing - 8s ball save</div>
+    <button class="btn" id="btnStart">&#9654; &nbsp;<span data-t="startGame">Start Game</span></button>
+    <a class="btn ghost" id="btnHome" href="https://1nd1g0.github.io/">&#8962; <span data-t="home">Home</span></a>
+    <div class="menuHigh"><span data-t="highScoreLbl">HIGH SCORE</span>&nbsp; <b id="menuHigh">0</b></div>
     <div class="keysGrid">
-      <div><b>Z</b>/<b>&#8679;L</b> left flipper</div><div><b>/</b>/<b>&#8679;R</b> right flipper</div>
-      <div><b>SPACE</b> hold + release: launch</div><div><b>&#8592;&#8593;&#8594;</b> nudge (careful: tilt!)</div>
-      <div><b>C</b> camera &nbsp;<b>P</b> pause</div><div><b>+/&#8722;</b> zoom &nbsp;<b>V</b> dynamic cam</div>
-      <div><b>Wheel / pinch</b> zoom</div><div><b>?d</b> debug: right-click inspect</div>
+      <div><b>Z</b>/<b>&#8679;L</b> <span data-t="kLeft">left flipper</span></div><div><b>/</b>/<b>&#8679;R</b> <span data-t="kRight">right flipper</span></div>
+      <div><b>SPACE</b> <span data-t="kLaunch">hold + release: launch</span></div><div><b>&#8592;&#8593;&#8594;</b> <span data-t="kNudge">nudge (careful: tilt!)</span></div>
+      <div><b>C</b> <span data-t="kCam">camera</span> &nbsp;<b>P</b> <span data-t="kPause">pause</span></div><div><b>+/&#8722;</b> <span data-t="kZoom">zoom</span> &nbsp;<b>V</b> <span data-t="kDyn">dynamic cam</span></div>
+      <div><b>Wheel / pinch</b> <span data-t="kZoom">zoom</span></div><div><b>?d</b> <span data-t="kDbg">debug: right-click inspect</span></div>
     </div>
-    <div class="footNote">100% procedural &middot; own webgl engine &middot; offline &middot; no assets</div>
+    <div class="footNote" data-t="footNote">100% procedural &middot; own webgl engine &middot; offline &middot; no assets</div>
   </div>
 </div>
 
 <div class="ov hide" id="pauseOv">
   <div class="card">
-    <h2 class="ovTitle">PAUSED</h2>
-    <button class="btn" id="btnResume">Resume</button>
-    <div class="btnRow"><button class="btn ghost" id="btnRestart">Restart</button><button class="btn ghost" id="btnPauseNew">New Table</button></div>
-    <div class="fieldLabel">Render quality</div>
-    <div class="seg" id="qualSeg"><button data-q="low">LOW</button><button data-q="high" class="on">HIGH</button></div>
-    <div class="btnRow"><button class="btn ghost" id="btnPauseSound">Sound: ON</button><button class="btn ghost" id="btnPauseCam">Camera</button></div>
-    <button class="btn ghost" id="btnPauseMenu">Main Menu</button>
+    <h2 class="ovTitle" data-t="paused">PAUSED</h2>
+    <button class="btn" id="btnResume" data-t="resume">Resume</button>
+    <div class="btnRow"><button class="btn ghost" id="btnRestart" data-t="restart">Restart</button><button class="btn ghost" id="btnPauseNew" data-t="newTable">New Table</button></div>
+    <div class="fieldLabel" data-t="qualLbl">Render quality</div>
+    <div class="seg" id="qualSeg"><button data-q="low" data-t="low">LOW</button><button data-q="high" class="on" data-t="high">HIGH</button></div>
+    <div class="btnRow"><button class="btn ghost" id="btnPauseSound">Sound: ON</button><button class="btn ghost" id="btnPauseCam" data-t="camLbl">Camera</button></div>
+    <button class="btn ghost" id="btnPauseMenu" data-t="mainMenu">Main Menu</button>
   </div>
 </div>
 
 <div class="ov hide" id="overOv">
   <div class="card">
-    <div id="overTitle">GAME OVER</div>
+    <div id="overTitle" data-t="gameOver">GAME OVER</div>
     <div id="finalScore">0</div>
     <div id="overHigh">HIGH 0</div>
-    <div id="newRecord">&#9733; NEW RECORD &#9733;</div>
-    <div class="statRow"><div class="stat"><b id="stBump">0</b><span>BUMPERS</span></div><div class="stat"><b id="stRamp">0</b><span>RAMP SHOTS</span></div><div class="stat"><b id="stJack">0</b><span>JACKPOTS</span></div></div>
-    <button class="btn" id="btnReplay">Replay This Table</button>
-    <div class="btnRow"><button class="btn ghost" id="btnOverNew">New Table</button><button class="btn ghost" id="btnOverMenu">Menu</button></div>
+    <div id="newRecord">&#9733; <span data-t="newRecord">NEW RECORD</span> &#9733;</div>
+    <div class="statRow"><div class="stat"><b id="stBump">0</b><span data-t="stBump">BUMPERS</span></div><div class="stat"><b id="stRamp">0</b><span data-t="stRamp">RAMP SHOTS</span></div><div class="stat"><b id="stJack">0</b><span data-t="stJack">JACKPOTS</span></div></div>
+    <button class="btn" id="btnReplay" data-t="replay">Replay This Table</button>
+    <div class="btnRow"><button class="btn ghost" id="btnOverNew" data-t="newTable">New Table</button><button class="btn ghost" id="btnOverMenu" data-t="menu">Menu</button></div>
   </div>
 </div>
 
 <div class="ov hide" id="helpOv">
   <div class="card">
-    <h2 class="ovTitle">HOW TO PLAY</h2>
+    <h2 class="ovTitle" data-t="howToPlay">HOW TO PLAY</h2>
     <div id="helpBody">
-      <h3>Controls</h3>
+      <h3 data-t="hControls">Controls</h3>
       <table>
-        <tr><td><b>Z</b> / <b>Left Shift</b> / tap or left-click left half</td><td>LEFT FLIPPER</td></tr>
-        <tr><td><b>/</b> / <b>Right Shift</b> / tap or left-click right half</td><td>RIGHT FLIPPER</td></tr>
-        <tr><td><b>Space</b> hold &amp; release / LAUNCH button</td><td>PLUNGER</td></tr>
-        <tr><td><b>&#8592; &#8593; &#8594;</b> / NUDGE button</td><td>NUDGE</td></tr>
-        <tr><td><b>C</b> camera &middot; <b>P</b> pause &middot; <b>M</b> mute &middot; <b>V</b> dynamic cam</td><td>SYSTEM</td></tr>
-        <tr><td><b>Wheel / pinch / + &#8722;</b></td><td>ZOOM</td></tr>
+        <tr><td><b>Z</b> / <b>Left Shift</b> / <span data-t="tapLeft">tap or left-click left half</span></td><td data-t="rLeftFlip">LEFT FLIPPER</td></tr>
+        <tr><td><b>/</b> / <b>Right Shift</b> / <span data-t="tapRight">tap or left-click right half</span></td><td data-t="rRightFlip">RIGHT FLIPPER</td></tr>
+        <tr><td><b>Space</b> <span data-t="holdRelease">hold &amp; release</span> / <span data-t="launchBtnWord">LAUNCH button</span></td><td data-t="rPlunger">PLUNGER</td></tr>
+        <tr><td><b>&#8592; &#8593; &#8594;</b> / <span data-t="nudge">NUDGE</span></td><td data-t="rNudgeBtn">NUDGE</td></tr>
+        <tr><td><b>C</b> <span data-t="kCam">camera</span> &middot; <b>P</b> <span data-t="kPause">pause</span> &middot; <b>M</b> <span data-t="kMute">mute</span> &middot; <b>V</b> <span data-t="kDyn">dynamic cam</span></td><td data-t="rSystem">SYSTEM</td></tr>
+        <tr><td><b>Wheel / pinch / + &#8722;</b></td><td data-t="rZoom">ZOOM</td></tr>
       </table>
-      <h3>Debug mode (?d)</h3>
+      <h3 data-t="hDebug">Debug mode (?d)</h3>
       <table>
-        <tr><td><b>Right-click</b> an object</td><td>INSPECT</td></tr>
-        <tr><td><b>Middle-click</b> an object</td><td>PIN CARD</td></tr>
-        <tr><td><b>Middle-drag</b></td><td>ORBIT CAMERA</td></tr>
-        <tr><td><b>Alt + Left-click</b></td><td>INSPECT</td></tr>
-        <tr><td><b>F2/F3/F4/F6</b> overlays &middot; <b>F7</b> freeze &middot; <b>Esc</b> clear</td><td>DEBUG</td></tr>
+        <tr><td><b>Right-click</b> <span data-t="anObject">an object</span></td><td data-t="rInspect">INSPECT</td></tr>
+        <tr><td><b>Middle-click</b> <span data-t="anObject">an object</span></td><td data-t="rPin">PIN CARD</td></tr>
+        <tr><td><b>Middle-drag</b></td><td data-t="rOrbit">ORBIT CAMERA</td></tr>
+        <tr><td><b>Alt + Left-click</b></td><td data-t="rInspect">INSPECT</td></tr>
+        <tr><td><b>F2/F3/F4/F6</b> <span data-t="kOverlays">overlays</span> &middot; <b>F7</b> <span data-t="dFreeze">FREEZE</span> &middot; <b>Esc</b> <span data-t="dClear">CLEAR</span></td><td data-t="rDebug">DEBUG</td></tr>
       </table>
-      <p>Left-click always keeps playing, so inspecting never costs you a ball. Inspector cards show live clearance widths for both inlanes.</p>
-      <h3>Table features</h3>
-      <p>Every seed builds a unique machine: pop bumpers, slingshots, a tinted-glass <b>ramp</b>, a <b>spinner</b> lane, a <b>drop-target bank</b>, top rollover lanes and a <b>saucer</b>. Flipper buttons change the blinking <b>skill-shot</b> lane while the ball waits on the plunger. Both orbit returns are welded to the outer wall and feed an inlane, and every generated feature is clearance-solved so no wedge can trap the ball.</p>
-      <h3>Scoring</h3>
+      <p data-t="inspectNote">Left-click always keeps playing, so inspecting never costs you a ball. Inspector cards show live clearance widths for both inlanes.</p>
+      <h3 data-t="hFeatures">Table features</h3>
+      <p id="helpFeat">Every seed builds a unique machine: pop bumpers, slingshots, a tinted-glass <b>ramp</b>, a <b>spinner</b> lane, a <b>drop-target bank</b>, top rollover lanes and a <b>saucer</b>. Flipper buttons change the blinking <b>skill-shot</b> lane while the ball waits on the plunger. Both orbit returns are welded to the outer wall and feed an inlane, and every generated feature is clearance-solved so no wedge can trap the ball.</p>
+      <h3 data-t="hScoring">Scoring</h3>
       <table>
-        <tr><td>Pop bumper</td><td>1,000</td></tr><tr><td>Slingshot</td><td>500</td></tr>
-        <tr><td>Spinner (per half-turn)</td><td>200</td></tr><tr><td>Rollover lane</td><td>2,000</td></tr>
-        <tr><td>Skill shot</td><td>25,000</td></tr><tr><td>Drop target</td><td>5,000</td></tr>
-        <tr><td>Bank complete</td><td>25,000 + MULT</td></tr><tr><td>Ramp</td><td>15,000 / lit 50,000</td></tr>
-        <tr><td>Saucer</td><td>10,000</td></tr><tr><td>LOCK x2 &rarr; MULTIBALL jackpot</td><td>100,000</td></tr>
+        <tr><td data-t="popBumper">Pop bumper</td><td>1,000</td></tr><tr><td data-t="slingshot">Slingshot</td><td>500</td></tr>
+        <tr><td data-t="spinnerHalf">Spinner (per half-turn)</td><td>200</td></tr><tr><td data-t="rolloverLane">Rollover lane</td><td>2,000</td></tr>
+        <tr><td data-t="skillShot">Skill shot</td><td>25,000</td></tr><tr><td data-t="dropTarget">Drop target</td><td>5,000</td></tr>
+        <tr><td data-t="bankComplete">Bank complete</td><td>25,000 + MULT</td></tr><tr><td data-t="rampLbl">Ramp</td><td>15,000 / <span data-t="litWord">lit</span> 50,000</td></tr>
+        <tr><td data-t="saucerLbl">Saucer</td><td>10,000</td></tr><tr><td data-t="lockJack">LOCK x2 &rarr; MULTIBALL jackpot</td><td>100,000</td></tr>
       </table>
-      <h3>Rules</h3>
-      <p>Light all top lanes to raise the <b>multiplier</b>. Clear the drop bank to light <b>LOCK</b> at the saucer &mdash; lock two balls for <b>3-ball multiball</b>, where every ramp shot pays the jackpot. End-of-ball <b>bonus &times; multiplier</b>. An <b>extra ball</b> is awarded at the seed's secret score. Three quick nudges = <b>TILT</b>.</p>
+      <h3 data-t="hRules">Rules</h3>
+      <p id="helpRules">Light all top lanes to raise the <b>multiplier</b>. Clear the drop bank to light <b>LOCK</b> at the saucer &mdash; lock two balls for <b>3-ball multiball</b>, where every ramp shot pays the jackpot. End-of-ball <b>bonus &times; multiplier</b>. An <b>extra ball</b> is awarded at the seed's secret score. Three quick nudges = <b>TILT</b>.</p>
     </div>
-    <button class="btn ghost" id="btnHelpClose">Close</button>
+    <button class="btn ghost" id="btnHelpClose" data-t="close">Close</button>
   </div>
 </div>
 
 <div class="ov hide" id="tiltOv">
   <div class="card">
-    <h2 class="ovTitle">TILT &amp; MOTION STUDIO</h2>
-    <div class="tzStatus" id="tzStatus">Whole-machine tilt is off. Enable gyro tilt, or camera motion tracking on devices without a gyroscope.</div>
+    <h2 class="ovTitle" data-t="tzTitle">TILT &amp; MOTION STUDIO</h2>
+    <div class="tzStatus" id="tzStatus" data-t="tzStatus">Whole-machine tilt is off. Enable gyro tilt, or camera motion tracking on devices without a gyroscope.</div>
     <video id="tzCamPreview" playsinline muted></video>
     <div class="tzPad"><div class="tzCross"></div><div class="tzCross h"></div><div class="tzTarget" id="tzTarget" style="left:50%;top:50%"></div><div class="tzMarker" id="tzMarker" style="left:50%;top:50%"></div></div>
     <div class="tzGrid">
-      <div class="tzStat"><b id="tzSrc">OFF</b><span>SOURCE</span></div>
-      <div class="tzStat"><b id="tzXY">0.00 / 0.00</b><span>TILT X / Y</span></div>
-      <div class="tzStat"><b id="tzSigns">+ + / + +</b><span>GYRO / CAM SIGN</span></div>
-      <div class="tzStat"><b id="tzAgree">-</b><span>AGREEMENT</span></div>
+      <div class="tzStat"><b id="tzSrc">OFF</b><span data-t="srcLbl">SOURCE</span></div>
+      <div class="tzStat"><b id="tzXY">0.00 / 0.00</b><span data-t="xyLbl">TILT X / Y</span></div>
+      <div class="tzStat"><b id="tzSigns">+ + / + +</b><span data-t="signLbl">GYRO / CAM SIGN</span></div>
+      <div class="tzStat"><b id="tzAgree">-</b><span data-t="agreeLbl">AGREEMENT</span></div>
     </div>
     <div class="tzChecks">
-      <label><input type="checkbox" id="tzGyro">Gyro / accelerometer tilt</label>
-      <label><input type="checkbox" id="tzCam">Camera motion tracking</label>
-      <label><input type="checkbox" id="tzParallax" checked>Parallax camera</label>
-      <label><input type="checkbox" id="tzBall" checked>Tilt affects ball</label>
+      <label><input type="checkbox" id="tzGyro"><span data-t="chkGyro">Gyro / accelerometer tilt</span></label>
+      <label><input type="checkbox" id="tzCam"><span data-t="chkCam">Camera motion tracking</span></label>
+      <label><input type="checkbox" id="tzParallax" checked><span data-t="chkPara">Parallax camera</span></label>
+      <label><input type="checkbox" id="tzBall" checked><span data-t="chkBall">Tilt affects ball</span></label>
     </div>
-    <div class="fieldLabel">Sensitivity <span id="tzSensVal">100%</span></div>
+    <div class="fieldLabel"><span data-t="sensLbl">Sensitivity</span> <span id="tzSensVal">100%</span></div>
     <input type="range" id="tzSens" min="0.3" max="2.5" step="0.05" value="1">
-    <div class="fieldLabel">Dead zone <span id="tzDeadVal">6%</span></div>
+    <div class="fieldLabel"><span data-t="deadLbl">Dead zone</span> <span id="tzDeadVal">6%</span></div>
     <input type="range" id="tzDead" min="0" max="0.25" step="0.01" value="0.06">
     <div class="tzChecks">
-      <label><input type="checkbox" id="tzGX">Mirror gyro X</label><label><input type="checkbox" id="tzGY">Mirror gyro Y</label>
-      <label><input type="checkbox" id="tzCX">Mirror camera X</label><label><input type="checkbox" id="tzCY">Mirror camera Y</label>
+      <label><input type="checkbox" id="tzGX"><span data-t="mGX">Mirror gyro X</span></label><label><input type="checkbox" id="tzGY"><span data-t="mGY">Mirror gyro Y</span></label>
+      <label><input type="checkbox" id="tzCX"><span data-t="mCX">Mirror camera X</span></label><label><input type="checkbox" id="tzCY"><span data-t="mCY">Mirror camera Y</span></label>
     </div>
-    <div class="btnRow"><button class="btn ghost" id="tzZero">Hold-still zero</button><button class="btn ghost" id="tzAuto">Auto-calibrate</button></div>
-    <div class="btnRow"><button class="btn ghost" id="tzMarkerCal">Marker calibration</button><button class="btn ghost" id="tzFuse">Fuse / agree signs</button></div>
-    <button class="btn" id="tzClose">Done</button>
-    <div id="tzHint">Auto-calibrate asks you to hold still (gravity align + drift zero), then tilt right / left / up / down. Camera and gyro channels are compared; opposite channels are mirrored until they agree, then merged. Marker calibration guides the dot to nominated targets to learn scale, zero and mirroring (selfie cameras mirror X by default).</div>
+    <div class="btnRow"><button class="btn ghost" id="tzZero" data-t="tzZero">Hold-still zero</button><button class="btn ghost" id="tzAuto" data-t="tzAuto">Auto-calibrate</button></div>
+    <div class="btnRow"><button class="btn ghost" id="tzMarkerCal" data-t="tzMarker">Marker calibration</button><button class="btn ghost" id="tzFuse" data-t="tzFuse">Fuse / agree signs</button></div>
+    <button class="btn" id="tzClose" data-t="done">Done</button>
+    <div id="tzHint" data-t="tzHint">Auto-calibrate asks you to hold still (gravity align + drift zero), then tilt right / left / up / down. Camera and gyro channels are compared; opposite channels are mirrored until they agree, then merged. Marker calibration guides the dot to nominated targets to learn scale, zero and mirroring (selfie cameras mirror X by default).</div>
   </div>
 </div>
 
 <div id="toast"></div>
-<div id="loading"><div class="orb"></div><p>POWERING ON&hellip;</p></div>
+<div id="loading"><div class="orb"></div><p data-t="powering">POWERING ON&hellip;</p></div>
 <div id="fallback"><div class="card">
-  <h2 class="ovTitle" id="fbTitle">RENDERER ERROR</h2>
-  <p style="color:#aab3c6;font-size:13px;line-height:1.6">The machine could not start. The exact reason is below.</p>
+  <h2 class="ovTitle" id="fbTitle" data-t="fbTitle">RENDERER ERROR</h2>
+  <p style="color:#aab3c6;font-size:13px;line-height:1.6" data-t="fbMsg">The machine could not start. The exact reason is below.</p>
   <div id="fbDetail"></div>
-  <button class="btn" id="fbRetry">Retry</button>
-  <button class="btn ghost" id="fbLow">Retry in low-spec mode</button>
+  <button class="btn" id="fbRetry" data-t="retry">Retry</button>
+  <button class="btn ghost" id="fbLow" data-t="fbLow">Retry in low-spec mode</button>
 </div></div>
 
+<!-- inlined i18n.js — the source of truth is i18n.js: edit that file and re-inline this block -->
+<script>
+/* ============================================================================
+   i18n.js — shared language kit for every page of this site.
+   Language code decision tree (identical everywhere, in this order):
+     0. any technical problem with this kit -> English
+     1. URL ?language=xx      (a region suffix is fine: pt-BR, zh-CN)
+     2. localStorage['tll:lang']
+     3. the browser's language list (navigator.languages, then navigator.language)
+     4. English
+   A code outside CODES is dropped, not trusted, so the next level decides. Only
+   the picker button writes storage, so a ?language= link never overwrites the
+   visitor's saved choice.
+
+   Page usage
+     <script src="i18n.js"><\/script>            BEFORE the game script
+     <script>TLI18N.add({en:{k:"Text"},es:{...},pt:{...},ru:{...},zh:{...}})<\/script>
+     markup:  <b data-t="score">SCORE</b>  <button data-tip="help">?</button>
+              <input data-ph="name">  <i data-aria="pause">  <img data-alt="car">
+     js:      el.textContent=TLI18N.t("gameOver");
+              el.innerHTML="<b>"+TLI18N.t("best")+": "+n+"</b>";
+              ctx.fillText(TLI18N.t("paused"),x,y);
+     canvas / innerHTML redraws: TLI18N.onChange(()=>redrawAll());
+     pick a host for the language button: TLI18N.mount("#startPanel")
+       (omit it and the kit parks a pill in the lower-left corner)
+   Keys missing from a non-English table fall back to English, so a half
+   translated table still runs. Values for *Fmt keys carry {placeholders}.
+   ========================================================================= */
+(function(){
+"use strict";
+var KEY="tll:lang", CODES=["en","es","pt","ru","zh"];
+var LANGS=[ // code · name in its own language · that word for "language" · its flag
+ ['en','English','Language','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0,0 60,40M60,0 0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 60,40M60,0 0,40" stroke="#C8102E" stroke-width="3.2"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="13"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="8"/></svg>'],
+ ['es','Español','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#AA151B"/><path d="M0,10H60M0,30H60" stroke="#F1BF00" stroke-width="20"/>  </svg>'],
+ ['pt','Português','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="40" fill="#046A38"/><rect x="24" width="36" height="40" fill="#DA291C"/><circle cx="24" cy="20" r="7.5" fill="#FEDF00" stroke="#046A38" stroke-width="1.4"/><path d="M24,14.5 24,22.5M20.5,17.5H27.5" stroke="#DA291C" stroke-width="2.2" fill="none"/></svg>'],
+ ['ru','Русский','Язык','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.34" width="60" height="13.33" fill="#0039A6"/><rect y="26.67" width="60" height="13.33" fill="#D52B1E"/></svg>'],
+ ['zh','中文','语言','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#EE1C25"/><circle cx="10" cy="10" r="5.6" fill="#FFDC00"/><circle cx="21" cy="6" r="2.1" fill="#FFDC00"/><circle cx="26" cy="11.5" r="2.1" fill="#FFDC00"/><circle cx="26" cy="18.5" r="2.1" fill="#FFDC00"/><circle cx="21" cy="24" r="2.1" fill="#FFDC00"/></svg>']
+];
+/* ---- shared vocabulary: the same word means the same thing in every game.
+       Values carry no glyphs — pages keep their ⌂ ▶ ■ icons in the markup. ---- */
+var COMMON={
+en:{
+ paused:"PAUSED",pause:"PAUSE",resume:"RESUME",start:"START",play:"PLAY",home:"HOME",menu:"MENU",
+ options:"OPTIONS",settings:"SETTINGS",help:"HELP",howToPlay:"HOW TO PLAY",rules:"RULES",controls:"CONTROLS",
+ keys:"KEYS",gamepad:"GAMEPAD",mouse:"MOUSE",touch:"TOUCH",
+ sound:"SOUND",music:"MUSIC",sfx:"SOUND FX",on:"ON",off:"OFF",fullscreen:"FULLSCREEN",exitFullscreen:"EXIT FULLSCREEN",
+ difficulty:"DIFFICULTY",easy:"EASY",normal:"NORMAL",hard:"HARD",low:"LOW",high:"HIGH",
+ score:"SCORE",best:"BEST",hiScore:"HIGH SCORE",level:"LEVEL",lives:"LIVES",time:"TIME",
+ speed:"SPEED",round:"ROUND",wave:"WAVE",seed:"SEED",newSeed:"NEW SEED",
+ restart:"RESTART",retry:"RETRY",continue:"CONTINUE",tryAgain:"TRY AGAIN",nextLevel:"NEXT LEVEL",
+ gameOver:"GAME OVER",youWin:"YOU WIN",youLose:"GAME OVER",clear:"CLEARED",
+ fire:"FIRE",jump:"JUMP",back:"BACK",exit:"EXIT",close:"CLOSE",ok:"OK",cancel:"CANCEL",
+ loading:"LOADING",shots:"SHOTS",moves:"MOVES",power:"POWER",angle:"ANGLE",
+ langTitle:"LANGUAGE",langNote:"Choose your language — it is remembered, and it applies to this game and to the whole catalogue.",
+ langBack:"CHANGE LANGUAGE",players:"PLAYERS",player:"PLAYER",you:"YOU",cpu:"CPU",random:"RANDOM"},
+es:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INICIO",play:"JUGAR",home:"INICIO",menu:"MENÚ",
+ options:"OPCIONES",settings:"AJUSTES",help:"AYUDA",howToPlay:"CÓMO JUGAR",rules:"REGLAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"MANDO",mouse:"RATÓN",touch:"TÁCTIL",
+ sound:"SONIDO",music:"MÚSICA",sfx:"EFECTOS",on:"ACTIVO",off:"APAGADO",fullscreen:"PANTALLA COMPLETA",exitFullscreen:"SALIR DE PANTALLA COMPLETA",
+ difficulty:"DIFICULTAD",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAJO",high:"ALTO",
+ score:"PUNTOS",best:"RÉCORD",hiScore:"RÉCORD",level:"NIVEL",lives:"VIDAS",time:"TIEMPO",
+ speed:"VELOCIDAD",round:"RONDA",wave:"OLEADA",seed:"SEMILLA",newSeed:"NUEVA SEMILLA",
+ restart:"REINICIAR",retry:"REINTENTAR",continue:"CONTINUAR",tryAgain:"INTÉNTALO OTRA VEZ",nextLevel:"SIGUIENTE NIVEL",
+ gameOver:"FIN DEL JUEGO",youWin:"¡GANASTE!",youLose:"FIN DEL JUEGO",clear:"SUPERADO",
+ fire:"DISPARO",jump:"SALTAR",back:"ATRÁS",exit:"SALIR",close:"CERRAR",ok:"ACEPTAR",cancel:"CANCELAR",
+ loading:"CARGANDO",shots:"LANZAMIENTOS",moves:"MOVIMIENTOS",power:"FUERZA",angle:"ÁNGULO",
+ langTitle:"IDIOMA",langNote:"Elige tu idioma: se recuerda y se aplica a este juego y a todo el catálogo.",
+ langBack:"CAMBIAR IDIOMA",players:"JUGADORES",player:"JUGADOR",you:"TÚ",cpu:"CPU",random:"ALEATORIO"},
+pt:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INÍCIO",play:"JOGAR",home:"INÍCIO",menu:"MENU",
+ options:"OPÇÕES",settings:"CONFIGURAÇÕES",help:"AJUDA",howToPlay:"COMO JOGAR",rules:"REGRAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"CONTROLE",mouse:"MOUSE",touch:"TOQUE",
+ sound:"SOM",music:"MÚSICA",sfx:"EFEITOS",on:"LIGADO",off:"DESLIGADO",fullscreen:"TELA CHEIA",exitFullscreen:"SAIR DA TELA CHEIA",
+ difficulty:"DIFICULDADE",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAIXO",high:"ALTO",
+ score:"PONTOS",best:"RECORDE",hiScore:"RECORDE",level:"NÍVEL",lives:"VIDAS",time:"TEMPO",
+ speed:"VELOCIDADE",round:"RODADA",wave:"ONDA",seed:"SEMENTE",newSeed:"NOVA SEMENTE",
+ restart:"REINICIAR",retry:"TENTAR DE NOVO",continue:"CONTINUAR",tryAgain:"TENTE DE NOVO",nextLevel:"PRÓXIMO NÍVEL",
+ gameOver:"FIM DE JOGO",youWin:"VOCÊ VENCEU",youLose:"FIM DE JOGO",clear:"COMPLETO",
+ fire:"DISPARO",jump:"SALTAR",back:"VOLTAR",exit:"SAIR",close:"FECHAR",ok:"OK",cancel:"CANCELAR",
+ loading:"CARREGANDO",shots:"BATIDAS",moves:"JOGADAS",power:"FORÇA",angle:"ÂNGULO",
+ langTitle:"IDIOMA",langNote:"Escolha seu idioma: ele é lembrado e vale para este jogo e para todo o catálogo.",
+ langBack:"MUDAR IDIOMA",players:"JOGADORES",player:"JOGADOR",you:"VOCÊ",cpu:"CPU",random:"ALEATÓRIO"},
+ru:{
+ paused:"ПАУЗА",pause:"ПАУЗА",resume:"ПРОДОЛЖИТЬ",start:"СТАРТ",play:"ИГРАТЬ",home:"ДОМОЙ",menu:"МЕНЮ",
+ options:"НАСТРОЙКИ",settings:"НАСТРОЙКИ",help:"ПОМОЩЬ",howToPlay:"КАК ИГРАТЬ",rules:"ПРАВИЛА",controls:"УПРАВЛЕНИЕ",
+ keys:"КЛАВИШИ",gamepad:"ГЕЙМПАД",mouse:"МЫШЬ",touch:"СЕНСОР",
+ sound:"ЗВУК",music:"МУЗЫКА",sfx:"ЗВУКИ",on:"ВКЛ",off:"ВЫКЛ",fullscreen:"НА ВЕСЬ ЭКРАН",exitFullscreen:"ВЫЙТИ С ЭКРАНА",
+ difficulty:"СЛОЖНОСТЬ",easy:"ЛЕГКО",normal:"НОРМА",hard:"СЛОЖНО",low:"НИЗ",high:"ВЕРХ",
+ score:"СЧЁТ",best:"РЕКОРД",hiScore:"РЕКОРД",level:"УРОВЕНЬ",lives:"ЖИЗНИ",time:"ВРЕМЯ",
+ speed:"СКОРОСТЬ",round:"РАУНД",wave:"ВОЛНА",seed:"КОД УРОВНЯ",newSeed:"НОВЫЙ КОД",
+ restart:"ЗАНОВО",retry:"ЕЩЁ РАЗ",continue:"ПРОДОЛЖИТЬ",tryAgain:"ПОПРОБУЙ ЕЩЁ",nextLevel:"СЛЕДУЮЩИЙ УРОВЕНЬ",
+ gameOver:"КОНЕЦ",youWin:"ПОБЕДА",youLose:"КОНЕЦ",clear:"УРОВЕНЬ ПРОЙДЕН",
+ fire:"ОГОНЬ",jump:"ПРЫЖОК",back:"НАЗАД",exit:"ВЫХОД",close:"ЗАКРЫТЬ",ok:"ОК",cancel:"ОТМЕНА",
+ loading:"ЗАГРУЗКА",shots:"УДАРЫ",moves:"ХОДЫ",power:"СИЛА",angle:"УГОЛ",
+ langTitle:"ЯЗЫК",langNote:"Выберите язык — он запоминается и действует для этой игры и для всего каталога.",
+ langBack:"СМЕНИТЬ ЯЗЫК",players:"ИГРОКИ",player:"ИГРОК",you:"ВЫ",cpu:"БОТ",random:"СЛУЧАЙНО"},
+zh:{
+ paused:"暂停",pause:"暂停",resume:"继续",start:"开始",play:"开始游戏",home:"主页",menu:"菜单",
+ options:"选项",settings:"设置",help:"帮助",howToPlay:"怎么玩",rules:"规则",controls:"操作",
+ keys:"按键",gamepad:"手柄",mouse:"鼠标",touch:"触摸",
+ sound:"声音",music:"音乐",sfx:"音效",on:"开",off:"关",fullscreen:"全屏",exitFullscreen:"退出全屏",
+ difficulty:"难度",easy:"简单",normal:"普通",hard:"困难",low:"低",high:"高",
+ score:"得分",best:"最高分",hiScore:"最高分",level:"关卡",lives:"生命",time:"时间",
+ speed:"速度",round:"回合",wave:"波次",seed:"种子",newSeed:"新种子",
+ restart:"重新开始",retry:"重试",continue:"继续",tryAgain:"再试一次",nextLevel:"下一关",
+ gameOver:"游戏结束",youWin:"胜利",youLose:"游戏结束",clear:"过关",
+ fire:"射击",jump:"跳跃",back:"返回",exit:"退出",close:"关闭",ok:"确定",cancel:"取消",
+ loading:"加载中",shots:"击球",moves:"步数",power:"力量",angle:"角度",
+ langTitle:"语言",langNote:"选择语言：会被记住，并用于这个游戏和整个游戏目录。",
+ langBack:"更换语言",players:"玩家",player:"玩家",you:"你",cpu:"电脑",random:"随机"}
+};
+var PAGE={en:{},es:{},pt:{},ru:{},zh:{}};
+function lget(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+function lset(v){try{localStorage.setItem(KEY,v)}catch(e){}}
+var code=null;
+/* A browser language list -> a supported code, or null when it says nothing
+   usable. "pt-BR", "ru_RU", "zh-CN" all match on their 2-letter base. */
+function fromBrowser(){
+ try{
+  var list=null;
+  if(navigator&&Array.isArray(navigator.languages)&&navigator.languages.length)list=navigator.languages;
+  else if(navigator)list=[navigator.language||navigator.userLanguage||""];
+  for(var i=0;i<(list||[]).length;i++){
+   var c=String(list[i]||"").toLowerCase().slice(0,2);
+   if(CODES.indexOf(c)>=0)return c;
+  }
+ }catch(e){}
+ return null;
+}
+(function(){
+ try{
+  var c=null,m=/[?&]language=([a-zA-Z]{2,3})/.exec(location.search||"");
+  if(m)c=m[1].toLowerCase().slice(0,2);           // ?language=pt-BR counts as pt
+  if(c&&CODES.indexOf(c)<0)c=null;
+  if(!c){var s=(lget()||"").toLowerCase().slice(0,2);if(CODES.indexOf(s)>=0)c=s;}
+  if(!c)c=fromBrowser();
+  code=c||"en";
+ }catch(e){code="en";} // a broken lookup speaks English, never nothing
+})();
+function raw(k){
+ var t=PAGE[code]?PAGE[code][k]:null; if(t!=null)return t;
+ t=COMMON[code]?COMMON[code][k]:null; if(t!=null)return t;
+ t=PAGE.en[k]; if(t!=null)return t;
+ t=COMMON.en[k]; return t==null?null:t;
+}
+var hooks=[];
+var API={
+ version:"2026.11.22.2", codes:CODES.slice(), langs:LANGS,
+ lang:function(){return code},
+ browserLang:function(){return fromBrowser()},
+ t:function(k,v){var s;try{s=raw(k)}catch(e){code="en";try{s=raw(k)}catch(e2){s=null}}
+  if(s==null)s=k;var o=v||{};for(var p in o)s=s.split("{"+p+"}").join(String(o[p]));return s},
+ flag:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][3];return ""},
+ name:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][2];return c},
+ add:function(tab){for(var c in tab){if(!PAGE[c])continue;for(var k in tab[c])PAGE[c][k]=tab[c][k];}
+  try{API.apply()}catch(e){}},
+ /* read the tables (the developer harness edits texts through these) */
+ keys:function(c){var out=[],seen={};try{var src=[PAGE[c],COMMON[c],PAGE.en,COMMON.en];
+  for(var i=0;i<src.length;i++)for(var k in src[i])if(!seen[k]){seen[k]=1;out.push(k)}out.sort();}catch(e){}
+  return out},
+ table:function(){var o={};try{for(var i=0;i<CODES.length;i++){var c=CODES[i],m={},s=[COMMON[c],PAGE[c],COMMON.en,PAGE.en];
+  for(var j=0;j<s.length;j++)for(var k in s[j])if(m[k]==null&&s[j][k]!=null)m[k]=s[j][k];o[c]=m;}}catch(e){}
+  return o},
+ setKey:function(c,k,v){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;
+  try{(PAGE[c]=PAGE[c]||{})[k]=String(v);}catch(e){return;}
+  try{API.apply()}catch(e){}
+  for(var i=0;i<hooks.length;i++)try{hooks[i](code)}catch(e){}},
+ onChange:function(f){hooks.push(f)},
+ set:function(c){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;code=c;lset(c);
+  try{API.apply()}catch(e){}for(var i=0;i<hooks.length;i++)try{hooks[i](c)}catch(e){}},
+ apply:function(root){
+  if(document.documentElement)document.documentElement.lang=code;
+  var r=root||document;
+  var set=function(e,attr,put){var v=raw(e.getAttribute(attr));if(v!=null)put(e,v);};
+  var all=[];
+  if(r.nodeType===1)all.push(r);
+  if(r.querySelectorAll)all=all.concat([].slice.call(r.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]")));
+  for(var i=0;i<all.length;i++){var e=all[i];
+   try{
+    if(e.hasAttribute("data-t"))set(e,"data-t",function(n,v){n.textContent=v});
+    if(e.hasAttribute("data-ph"))set(e,"data-ph",function(n,v){n.placeholder=v});
+    if(e.hasAttribute("data-tip"))set(e,"data-tip",function(n,v){n.title=v});
+    if(e.hasAttribute("data-aria"))set(e,"data-aria",function(n,v){n.setAttribute("aria-label",v)});
+    if(e.hasAttribute("data-alt"))set(e,"data-alt",function(n,v){n.alt=v});
+   }catch(e2){} // one odd node never aborts the pass
+  }
+  if(pill){try{pill.innerHTML=API.flag(code)+"<span>"+API.name(code)+"</span>";pill.title=API.t("langTitle");}catch(e){}}
+ },
+ mount:function(sel){hostSel=sel;ensurePill();},
+};
+/* ---------------- language button + picker overlay ---------------- */
+var hostSel=null,pill=null,ov=null;
+var CSS=".tlbtn{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(20,24,22,.72);flex:0 0 auto;align-self:center;"
+ +"border:1px solid #3a463f;border-radius:6px;color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:1px;"
+ +"cursor:pointer;line-height:1;width:auto;max-width:100%}.tlbtn:hover,.tlbtn:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}"
+ +".tlbtn svg{width:22px;height:15px;border:1px solid #2e3a34;border-radius:2px;display:block}"
+ +".tlfix{position:fixed;left:12px;bottom:12px;z-index:2147483000}"
+ +".tlov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;"
+ +"background:rgba(4,7,6,.86);padding:16px}.tlov[hidden]{display:none}"
+ +".tlpanel{max-width:660px;width:100%;background:#141816;border:1px solid #3a463f;border-radius:12px;"
+ +"padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.6);color:#c9d2cb;font:inherit;text-align:center}"
+ +".tlpanel h2{margin:0 0 6px;font-size:20px;letter-spacing:4px;color:#ffd76a}"
+ +".tlpanel p{margin:0 0 16px;font-size:12px;line-height:1.6;color:#8a948e}"
+ +".tlgrid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}"
+ +".tlb{width:132px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;"
+ +"background:rgba(20,24,22,.7);border:1px solid #3a463f;border-radius:8px;cursor:pointer;color:#c9d2cb;font:inherit}"
+ +".tlb:hover,.tlb:focus{border-color:#ffd76a;color:#f4e9c8;outline:none;box-shadow:0 0 14px rgba(255,215,106,.18)}"
+ +".tlb svg{width:50px;height:34px;border:1px solid #2e3a34;border-radius:4px;display:block}"
+ +".tlb b{font-size:13px;color:#f4e9c8}.tlb span{font-size:10px;letter-spacing:1px;color:#8a948e}"
+ +".tlx{margin-top:16px;padding:7px 20px;background:none;border:1px solid #3a463f;border-radius:6px;"
+ +"color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:2px;cursor:pointer}"
+ +".tlx:hover,.tlx:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}";
+function style(){if(document.getElementById("tlcss"))return;var s=document.createElement("style");s.id="tlcss";s.textContent=CSS;document.head.appendChild(s);}
+function ensurePill(){
+ if(pill)return;
+ var host=hostSel?document.querySelector(hostSel):null;
+ if(!host&&document.readyState==="loading")return; // retried at DOMContentLoaded
+ style();
+ pill=document.createElement("button");
+ pill.type="button";pill.className="tlbtn";pill.setAttribute("aria-haspopup","dialog");
+ if(!host){pill.className="tlbtn tlfix";document.body.appendChild(pill);}
+ else host.insertBefore(pill,host.firstChild);
+ pill.onclick=openOv;
+ API.apply();
+}
+function openOv(){
+ if(!ov){
+  ov=document.createElement("div");ov.className="tlov";ov.hidden=true;
+  var p=document.createElement("div");p.className="tlpanel";
+  var h=document.createElement("h2");h.setAttribute("data-t","langTitle");p.appendChild(h);
+  var np=document.createElement("p");np.setAttribute("data-t","langNote");p.appendChild(np);
+  var g=document.createElement("div");g.className="tlgrid";
+  for(var i=0;i<LANGS.length;i++){
+   var b=document.createElement("button");b.type="button";b.className="tlb";b.dataset.lang=LANGS[i][0];
+   b.innerHTML=LANGS[i][3]+"<b>"+LANGS[i][1]+"</b><span>"+LANGS[i][2]+"</span>";g.appendChild(b);
+  }
+  p.appendChild(g);
+  var x=document.createElement("button");x.type="button";x.className="tlx";x.setAttribute("data-t","close");p.appendChild(x);
+  ov.appendChild(p);document.body.appendChild(ov);
+  g.onclick=function(e){var b=e.target;while(b&&b!==g&&!b.dataset.lang)b=b.parentNode;if(b&&b.dataset.lang){API.set(b.dataset.lang);closeOv();}};
+  x.onclick=closeOv;
+  ov.onclick=function(e){if(e.target===ov)closeOv();};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ov&&!ov.hidden)closeOv();});
+ }
+ API.apply(ov);
+ ov.hidden=false;
+}
+function closeOv(){if(ov)ov.hidden=true;}
+function boot(){
+ try{ensurePill();API.apply();}
+ catch(e){code="en";try{ensurePill();API.apply();}catch(e2){}} // rule 0: English on any kit fault
+}
+/* keep freshly added nodes translated without the page calling apply() */
+new MutationObserver(function(ms){
+ if(!pill)return;
+ try{
+  for(var i=0;i<ms.length;i++){var n=ms[i].addedNodes;
+   for(var j=0;j<n.length;j++){var e=n[j];
+    if(e.nodeType!==1)continue;
+    if(e.matches&&e.matches("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]"))API.apply(e);
+    else if(e.querySelectorAll&&e.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]").length)API.apply(e);
+   }}
+ }catch(e){}
+}).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+window.TLI18N=API;
+})();
+</script>
+<script>
+/* If i18n.js is missing or only half-loaded, the game still runs: this stub
+   keeps the same API, pins English, and serves the en table this page registers
+   below via add(). */
+if(!window.TLI18N||typeof window.TLI18N.add!=="function"||typeof window.TLI18N.t!=="function"||typeof window.TLI18N.apply!=="function"||typeof window.TLI18N.mount!=="function"){(function(){var T={en:{}};window.TLI18N={version:"en-fallback",codes:["en"],langs:[["en","EN","English",""]],
+add:function(tab){for(var c in tab){T[c]=Object.assign(T[c]||{},tab[c]);}},
+t:function(k,v){var s=(T.en&&T.en[k]!=null)?T.en[k]:k,o=v||{};for(var p in o)s=String(s).split("{"+p+"}").join(String(o[p]));return s},
+flag:function(){return "";},name:function(c){return c;},lang:function(){return "en";},
+set:function(){},onChange:function(){},apply:function(){},mount:function(){}};})();}
+</script>
+<script>
+TLI18N.add({
+en:{
+ hiWord:"HIGH", locks:"LOCKS", shootAgain:"SHOOT AGAIN", multiball:"MULTIBALL", extraBall:"EXTRA BALL", tableWord:"TABLE",
+ tapLeft:"tap or left-click left half", tapRight:"tap or left-click right half", holdRelease:"hold & release", launchBtnWord:"LAUNCH button",
+ anObject:"an object", kOverlays:"overlays", kMute:"mute", litWord:"lit", dEasy:"EASY",
+ launchFull:"FULL<br>POWER", launchRelease:"RELEASE!", toastPinned:"Pinned {n}", toastInspect:"Inspecting {n}",
+ stampTilt:"TILT", flip:"FLIP", nudge:"NUDGE", launchLbl:"HOLD TO LAUNCH",
+ tipSound:"Sound (M)", tipCam:"Camera (C)", tipPause:"Pause (P)",
+ tipZoomOut:"Zoom out (wheel / pinch)", tipZoomReset:"Reset zoom + orbit", tipZoomIn:"Zoom in (wheel / pinch)",
+ tipDynCam:"Dynamic ball-follow camera", tipTiltStudio:"Tilt & motion studio", tipEco:"Power saver", tipPick:"Pick an object by id",
+ pickNone:"-- pick object --", dbg:"DEBUG", buildLbl:"build", dColliders:"COLLIDERS", dLabels:"LABELS", dVectors:"VECTORS",
+ dGrid:"GRID", dFreeze:"FREEZE", dClear:"CLEAR",
+ dbgHintTxt:"RIGHT-CLICK inspect · MIDDLE-CLICK pin · MIDDLE-DRAG orbit · LEFT-CLICK still plays · F2/F3/F4/F6 overlays · F7 freeze · Esc clear",
+ pcTiltWord:"TILT", dyn:"DYN", eco:"ECO",
+ tagline:"every seed forges a new machine —", seedLbl:"Table seed", diceTip:"Random table",
+ dClassic:"CLASSIC", dWild:"WILD",
+ descEasy:"wide 12s ball save / center post / gentle slope", descClassic:"the real thing - 8s ball save", descWild:"steep slope / hungry outlanes / 5s save",
+ startGame:"Start Game", highScoreLbl:"HIGH SCORE",
+ kLeft:"left flipper", kRight:"right flipper", kLaunch:"hold + release: launch", kNudge:"nudge (careful: tilt!)",
+ kCam:"camera", kPause:"pause", kZoom:"zoom", kDyn:"dynamic cam", kDbg:"debug: right-click inspect",
+ footNote:"100% procedural · own WebGL engine · offline · no assets",
+ newTable:"New Table", qualLbl:"Render quality", camLbl:"Camera", mainMenu:"Main Menu",
+ newRecord:"NEW RECORD", stBump:"BUMPERS", stRamp:"RAMP SHOTS", stJack:"JACKPOTS", replay:"Replay This Table",
+ hControls:"Controls", hDebug:"Debug mode (?d)", hFeatures:"Table features", hScoring:"Scoring", hRules:"Rules",
+ rLeftFlip:"LEFT FLIPPER", rRightFlip:"RIGHT FLIPPER", rPlunger:"PLUNGER", rNudgeBtn:"NUDGE", rSystem:"SYSTEM", rZoom:"ZOOM",
+ rInspect:"INSPECT", rPin:"PIN CARD", rOrbit:"ORBIT CAMERA", rDebug:"DEBUG",
+ inspectNote:"Left-click always keeps playing, so inspecting never costs you a ball. Inspector cards show live clearance widths for both inlanes.",
+ featuresPara:"Every seed builds a unique machine: pop bumpers, slingshots, a tinted-glass <b>ramp</b>, a <b>spinner</b> lane, a <b>drop-target bank</b>, top rollover lanes and a <b>saucer</b>. Flipper buttons change the blinking <b>skill-shot</b> lane while the ball waits on the plunger. Both orbit returns are welded to the outer wall and feed an inlane, and every generated feature is clearance-solved so no wedge can trap the ball.",
+ popBumper:"Pop bumper", slingshot:"Slingshot", spinnerHalf:"Spinner (per half-turn)", rolloverLane:"Rollover lane",
+ skillShot:"Skill shot", dropTarget:"Drop target", bankComplete:"Bank complete", rampLbl:"Ramp", saucerLbl:"Saucer",
+ lockJack:"LOCK x2 → MULTIBALL jackpot",
+ rulesPara:"Light all top lanes to raise the <b>multiplier</b>. Clear the drop bank to light <b>LOCK</b> at the saucer — lock two balls for <b>3-ball multiball</b>, where every ramp shot pays the jackpot. End-of-ball <b>bonus × multiplier</b>. An <b>extra ball</b> is awarded at the seed's secret score. Three quick nudges = <b>TILT</b>.",
+ tzTitle:"TILT & MOTION STUDIO", tzStatus:"Whole-machine tilt is off. Enable gyro tilt, or camera motion tracking on devices without a gyroscope.",
+ srcLbl:"SOURCE", xyLbl:"TILT X / Y", signLbl:"GYRO / CAM SIGN", agreeLbl:"AGREEMENT",
+ chkGyro:"Gyro / accelerometer tilt", chkCam:"Camera motion tracking", chkPara:"Parallax camera", chkBall:"Tilt affects ball",
+ sensLbl:"Sensitivity", deadLbl:"Dead zone", mGX:"Mirror gyro X", mGY:"Mirror gyro Y", mCX:"Mirror camera X", mCY:"Mirror camera Y",
+ tzZero:"Hold-still zero", tzAuto:"Auto-calibrate", tzMarker:"Marker calibration", tzFuse:"Fuse / agree signs", done:"Done",
+ tzHint:"Auto-calibrate asks you to hold still (gravity align + drift zero), then tilt right / left / up / down. Camera and gyro channels are compared; opposite channels are mirrored until they agree, then merged. Marker calibration guides the dot to nominated targets to learn scale, zero and mirroring (selfie cameras mirror X by default).",
+ tzNoCam:"Camera API unavailable on this device/browser.", tzNoPerm:"Camera permission denied or unavailable.",
+ tzZeroed:"Zeroed to your current grip. Re-zero whenever your grip changes.", tzEnableFirst:"Enable gyro or camera first.",
+ tzHoldStill:"Hold still - gravity aligning and zeroing drift.", tzAutoDone:"Auto-calibration complete. Channels mirrored to the expected directions.",
+ tzTiltDir:"Tilt {d} and hold for 1 second.", dirR:"RIGHT", dirL:"LEFT", dirU:"UP", dirD:"DOWN",
+ tzGuide:"Guide the glowing marker onto the dashed target and hold.", tzEnableBoth:"Enable both gyro and camera to fuse signs.",
+ tzMoveNat:"Move naturally for 3 seconds - comparing channel directions.", tzFuseDone:"Fusion complete. Opposite channels mirrored; inputs merged.",
+ tzMarkerDone:"Marker calibration complete.",
+ tzActive:"Sources active. Re-calibrate any time.", tzEnableSrc:"Enable a source, then run Auto-calibrate or Marker calibration.",
+ powering:"POWERING ON…", fbTitle:"RENDERER ERROR", fbMsg:"The machine could not start. The exact reason is below.",
+ fbLow:"Retry in low-spec mode", unknownErr:"Unknown error.", errStartup:"STARTUP ERROR", errWebgl:"WEBGL UNAVAILABLE",
+ errShader:"SHADER ERROR", errCtx:"CONTEXT RESTORE ERROR",
+ noCtxMsg:"The browser returned no WebGL context after multiple attempts.",
+ aExtra:"EXTRA BALL!", aHigh:"HIGH SCORE!", aSkill:"SKILL SHOT!", aMult:"MULTIPLIER X{n}", aLanes:"LANES 10,000",
+ aBank:"BANK CLEARED!", aLockLit:"LOCK IS LIT", aBallLock:"BALL {n} LOCKED", aJackpot:"JACKPOT!", aMultiball:"MULTIBALL!",
+ aRampJack:"RAMP JACKPOT!", aLitRamp:"LIT RAMP 50,000", aMultOver:"MULTIBALL OVER", aSaved:"BALL SAVED", aBonus:"BONUS {v}",
+ aAgain:"SHOOT AGAIN!", aBall:"BALL {n}", aCareful:"CAREFUL!", aTilt:"TILT", aPull:"BALL 1 - PULL PLUNGER",
+ perf:"PERFORMANCE MODE ENABLED", toastDbg:"DEBUG | right-click inspect | middle-click pin | middle-drag orbit",
+ toastCopied:"Copied {id} as JSON", toastClip:"Clipboard blocked", toastCam:"CAMERA: {n}", toastForged:"TABLE FORGED: {name}",
+ ctxLost:"GPU CONTEXT LOST - RECOVERING…", gfxRestored:"GRAPHICS RESTORED"},
+es:{
+ hiWord:"RÉCORD", locks:"BLOQUEOS", shootAgain:"TIRO DE NUEVO", multiball:"MULTIBOLA", extraBall:"BOLA EXTRA", tableWord:"TABLA",
+ tapLeft:"toca o clic izquierdo en la mitad izquierda", tapRight:"toca o clic izquierdo en la mitad derecha", holdRelease:"mantén y suelta", launchBtnWord:"botón LANZAR",
+ anObject:"un objeto", kOverlays:"capas", kMute:"silencio", litWord:"iluminado", dEasy:"FÁCIL",
+ launchFull:"FUERZA<br>MÁX", launchRelease:"¡SUELTA!", toastPinned:"Fijado {n}", toastInspect:"Inspeccionando {n}",
+ stampTilt:"TILT", flip:"FLIP", nudge:"EMPUJÓN", launchLbl:"MANTÉN PULSADO PARA LANZAR",
+ tipSound:"Sonido (M)", tipCam:"Cámara (C)", tipPause:"Pausa (P)",
+ tipZoomOut:"Alejar (rueda / pinza)", tipZoomReset:"Restablecer zoom + órbita", tipZoomIn:"Acercar (rueda / pinza)",
+ tipDynCam:"Cámara dinámica que sigue la bola", tipTiltStudio:"Estudio de tilt y movimiento", tipEco:"Ahorro de energía", tipPick:"Elege un objeto por id",
+ pickNone:"-- elegir objeto --", dbg:"DEBUG", buildLbl:"build", dColliders:"COLISIONES", dLabels:"ETIQUETAS", dVectors:"VECTORES",
+ dGrid:"REJILLA", dFreeze:"CONGELAR", dClear:"LIMPIAR",
+ dbgHintTxt:"CLIC DERECHO inspeccionar · CLIC CENTRAL fijar · ARRASTRE CENTRAL orbitar · CLIC IZQUIERDO sigue jugando · F2/F3/F4/F6 capas · F7 congelar · Esc limpiar",
+ pcTiltWord:"TILT", dyn:"DIN", eco:"ECO",
+ tagline:"cada semilla forja una máquina nueva —", seedLbl:"Semilla de la tabla", diceTip:"Tabla aleatoria",
+ dClassic:"CLÁSICO", dWild:"LOCURA",
+ descEasy:"salva bolas de 12 s / poste central / pendiente suave", descClassic:"lo de verdad - salva bolas de 8 s", descWild:"pendiente pronunciada / outlanes voraces / salva 5 s",
+ startGame:"Empezar", highScoreLbl:"RÉCORD",
+ kLeft:"flipper izquierdo", kRight:"flipper derecho", kLaunch:"mantén y suelta: lanzar", kNudge:"empujón (¡cuidado: tilt!)",
+ kCam:"cámara", kPause:"pausa", kZoom:"zoom", kDyn:"cámara dinámica", kDbg:"debug: clic derecho inspeccionar",
+ footNote:"100% procedural · motor WebGL propio · sin conexión · sin recursos",
+ newTable:"Tabla nueva", qualLbl:"Calidad de render", camLbl:"Cámara", mainMenu:"Menú principal",
+ newRecord:"NUEVO RÉCORD", stBump:"CHUTOS", stRamp:"TIROS DE RAMPA", stJack:"JACKPOTS", replay:"Repetir esta tabla",
+ hControls:"Controles", hDebug:"Modo debug (?d)", hFeatures:"Rasgos de la tabla", hScoring:"Puntuación", hRules:"Reglas",
+ rLeftFlip:"FLIPPER IZQUIERDO", rRightFlip:"FLIPPER DERECHO", rPlunger:"LANZADOR", rNudgeBtn:"EMPUJÓN", rSystem:"SISTEMA", rZoom:"ZOOM",
+ rInspect:"INSPECCIONAR", rPin:"FIJAR TARJETA", rOrbit:"ORBITAR CÁMARA", rDebug:"DEBUG",
+ inspectNote:"El clic izquierdo siempre sigue jugando, así que inspeccionar nunca te cuesta una bola. Las tarjetas del inspector muestran anchuras reales de paso en ambos inlanes.",
+ featuresPara:"Cada semilla construye una máquina única: pop bumpers, slingshots, una <b>rampa</b> de cristal tintado, un carril de <b>spinner</b>, un <b>bloque de dianas</b>, carriles de rollover arriba y una <b>saucer</b>. Los botones del flipper cambian el carril parpadeante del <b>skill shot</b> mientras la bola espera en el lanzador. Las dos retornas de órbita van soldadas a la pared exterior y alimentan un inlane, y cada rasgo generado se resuelve en clearance para que ninguna cuña atrape la bola.",
+ popBumper:"Pop bumper", slingshot:"Slingshot", spinnerHalf:"Spinner (por media vuelta)", rolloverLane:"Carril de rollover",
+ skillShot:"Skill shot", dropTarget:"Diana", bankComplete:"Bloque completo", rampLbl:"Rampa", saucerLbl:"Saucer",
+ lockJack:"LOCK x2 → jackpot de MULTIBOLA",
+ rulesPara:"Enciende todos los carriles superiores para subir el <b>multiplicador</b>. limpia el bloque de dianas para encender <b>LOCK</b> en la saucer — bloquea dos bolas para el <b>multibola de 3</b>, donde cada tiro de rampa paga el jackpot. Al final de bola, <b>bonus × multiplicador</b>. Una <b>bola extra</b> se concede en la puntuación secreta de la semilla. Tres empujones rápidos = <b>TILT</b>.",
+ tzTitle:"ESTUDIO DE TILT Y MOVIMIENTO", tzStatus:"El tilt de toda la máquina está apagado. Activa el tilt por giroscopio, o el seguimiento de movimiento por cámara en dispositivos sin giroscopio.",
+ srcLbl:"FUENTE", xyLbl:"TILT X / Y", signLbl:"SIGNO GIRO / CÁM.", agreeLbl:"ACUERDO",
+ chkGyro:"Tilt por giroscopio / acelerómetro", chkCam:"Seguimiento de movimiento por cámara", chkPara:"Cámara con paralaje", chkBall:"El tilt afecta a la bola",
+ sensLbl:"Sensibilidad", deadLbl:"Zona muerta", mGX:"Reflejar giroscopio X", mGY:"Reflejar giroscopio Y", mCX:"Reflejar cámara X", mCY:"Reflejar cámara Y",
+ tzZero:"Cero con máquina quieta", tzAuto:"Auto-calibrar", tzMarker:"Calibración con marcador", tzFuse:"Fusionar / acordar signos", done:"Hecho",
+ tzHint:"Auto-calibrar te pide mantener quieto (gravedad se alinea y la deriva se pone a cero) y luego inclinar derecha / izquierda / arriba / abajo. Las cámaras y el giroscopio se comparan; los canales opuestos se reflejan hasta coincidir y luego se fusionan. La calibración con marcador guía el punto a objetivos fijados para aprender escala, cero y reflejo (las cámaras selfie reflejan X por defecto).",
+ tzNoCam:"La API de cámara no está disponible en este dispositivo/navegador.", tzNoPerm:"Permiso de cámara denegado o no disponible.",
+ tzZeroed:"Cero fijado con tu agarre actual. Re-cero cuando cambie el agarre.", tzEnableFirst:"Activa primero el giroscopio o la cámara.",
+ tzHoldStill:"Mantén quieto - alineando gravedad y poniendo deriva a cero.", tzAutoDone:"Auto-calibración completa. Canales reflejados a las direcciones esperadas.",
+ tzTiltDir:"Inclina {d} y mantén 1 segundo.", dirR:"DERECHA", dirL:"IZQUIERDA", dirU:"ARRIBA", dirD:"ABAJO",
+ tzGuide:"Guía el marcador brillante hasta la diana discontinua y mantén.", tzEnableBoth:"Activa giroscopio y cámara para fusionar signos.",
+ tzMoveNat:"Muévete con naturalidad 3 segundos - comparando direcciones de canales.", tzFuseDone:"Fusión completa. Canales opuestos reflejados; entradas fusionadas.",
+ tzMarkerDone:"Calibración con marcador completa.",
+ tzActive:"Fuentes activas. Recalibra cuando quieras.", tzEnableSrc:"Activa una fuente y ejecuta Auto-calibrar o Calibración con marcador.",
+ powering:"ENCENDIENDO…", fbTitle:"ERROR DEL RENDER", fbMsg:"La máquina no pudo arrancar. El motivo exacto está abajo.",
+ fbLow:"Reintentar en modo de bajos recursos", unknownErr:"Error desconocido.", errStartup:"ERROR DE ARRANQUE", errWebgl:"WEBGL NO DISPONIBLE",
+ errShader:"ERROR DE SOMBRA", errCtx:"ERROR AL RESTAURAR CONTEXTO",
+ noCtxMsg:"El navegador no devolvió un contexto WebGL tras varios intentos.",
+ aExtra:"¡BOLA EXTRA!", aHigh:"¡RÉCORD!", aSkill:"¡SKILL SHOT!", aMult:"MULTIPLICADOR X{n}", aLanes:"CARRILES 10.000",
+ aBank:"¡BLOQUE COMPLETO!", aLockLit:"LOCK ENCENDIDO", aBallLock:"BOLA {n} BLOQUEADA", aJackpot:"¡JACKPOT!", aMultiball:"¡MULTIBOLA!",
+ aRampJack:"¡JACKPOT DE RAMPA!", aLitRamp:"RAMPA ENCENDIDA 50.000", aMultOver:"FIN DEL MULTIBOLA", aSaved:"BOLA SALVADA", aBonus:"BONUS {v}",
+ aAgain:"¡TIRO DE NUEVO!", aBall:"BOLA {n}", aCareful:"¡CUIDADO!", aTilt:"TILT", aPull:"BOLA 1 - TIRA DEL LANZADOR",
+ perf:"MODO DE RENDIMIENTO ACTIVADO", toastDbg:"DEBUG | clic derecho inspeccionar | clic central fijar | arrastre central orbitar",
+ toastCopied:"{id} copiado como JSON", toastClip:"Portapapeles bloqueado", toastCam:"CÁMARA: {n}", toastForged:"TABLA FORJADA: {name}",
+ ctxLost:"CONTEXTO DE GPU PERDIDO - RECUPERANDO…", gfxRestored:"GRÁFICOS RESTAURADOS"},
+pt:{
+ hiWord:"RECORDE", locks:"TRAVAS", multiball:"MULTIBOLA", shootAgain:"ARREESSENDE", extraBall:"BOLA EXTRA", tableWord:"MESA",
+ tapLeft:"toque ou clique esquerdo na metade esquerda", tapRight:"toque ou clique esquerdo na metade direita", holdRelease:"segure e solte", launchBtnWord:"botão LANÇAR",
+ anObject:"um objeto", kOverlays:"camadas", kMute:"silêncio", litWord:"iluminado", dEasy:"FÁCIL",
+ launchFull:"FORÇA<br>MÁX", launchRelease:"SOLTE!", toastPinned:"Fixado {n}", toastInspect:"Inspecionando {n}",
+ stampTilt:"TILT", flip:"FLIP", nudge:"EMPURRÃO", launchLbl:"SEGURE PARA LANÇAR",
+ tipSound:"Som (M)", tipCam:"Câmera (C)", tipPause:"Pausa (P)",
+ tipZoomOut:"Alejar (roda / pinça)", tipZoomReset:"Resetar zoom + órbita", tipZoomIn:"Aproximar (roda / pinça)",
+ tipDynCam:"Câmera dinâmica que segue a bola", tipTiltStudio:"Estúdio de tilt e movimento", tipEco:"Economia de energia", tipPick:"Escolha um objeto pelo id",
+ pickNone:"-- escolher objeto --", dbg:"DEBUG", buildLbl:"build", dColliders:"COLISÕES", dLabels:"RÓTULOS", dVectors:"VETORES",
+ dGrid:"GRADE", dFreeze:"CONGELAR", dClear:"LIMPAR",
+ dbgHintTxt:"CLIQUE DIREITO inspecionar · CLIQUE DO MEIO fixar · ARRASTRO DO MEIO orbitar · CLIQUE ESQUERDO continua jogando · F2/F3/F4/F6 camadas · F7 congelar · Esc limpar",
+ pcTiltWord:"TILT", dyn:"DIN", eco:"ECO",
+ tagline:"cada semente forja uma máquina nova —", seedLbl:"Semente da mesa", diceTip:"Mesa aleatória",
+ dClassic:"CLÁSSICO", dWild:"LOUCURA",
+ descEasy:"salva-bola de 12 s / poste central / inclinação suave", descClassic:"o de verdade - salva-bola de 8 s", descWild:"inclinação íngreme / outlanes famintos / salva 5 s",
+ startGame:"Começar", highScoreLbl:"RECORDE",
+ kLeft:"flipper esquerdo", kRight:"flipper direito", kLaunch:"segure e solte: lançar", kNudge:"empurrão (cuidado: tilt!)",
+ kCam:"câmera", kPause:"pausa", kZoom:"zoom", kDyn:"câmera dinâmica", kDbg:"debug: clique direito inspecionar",
+ footNote:"100% procedural · motor WebGL próprio · offline · sem recursos",
+ newTable:"Mesa nova", qualLbl:"Qualidade de render", camLbl:"Câmera", mainMenu:"Menu principal",
+ newRecord:"NOVO RECORDE", stBump:"BUMPERs", stRamp:"TIRADAS DE RAMP", stJack:"JACKPOTS", replay:"Repetir esta mesa",
+ hControls:"Controles", hDebug:"Modo debug (?d)", hFeatures:"Recursos da mesa", hScoring:"Pontuação", hRules:"Regras",
+ rLeftFlip:"FLIPPER ESQUERDO", rRightFlip:"FLIPPER DIREITO", rPlunger:"LANÇADOR", rNudgeBtn:"EMPURRÃO", rSystem:"SISTEMA", rZoom:"ZOOM",
+ rInspect:"INSPECIONAR", rPin:"FIXAR CARTÃO", rOrbit:"ORBITAR CÂMERA", rDebug:"DEBUG",
+ inspectNote:"O clique esquerdo sempre mantém o jogo, então inspecionar nunca custa uma bola. Os cartões do inspetor mostram as larguras reais de passagem nos dois inlanes.",
+ featuresPara:"Cada semente constrói uma máquina única: pop bumpers, slingshots, uma <b>rampa</b> de vidro tingido, uma corrida de <b>spinner</b>, uma <b>banco de alvos</b>, corridas de rollover no topo e uma <b>saucer</b>. Os botões do flipper mudam a corrida piscante do <b>skill shot</b> enquanto a bola espera no lançador. Os dois retornos de órbita são soldados à parede externa e alimentam um inlane, e cada recurso gerado é resolvido em clearance para nenhuma cunha prender a bola.",
+ popBumper:"Pop bumper", slingshot:"Slingshot", spinnerHalf:"Spinner (por meia volta)", rolloverLane:"Corrida de rollover",
+ skillShot:"Skill shot", dropTarget:"Alvo móvel", bankComplete:"Banco completo", rampLbl:"Rampa", saucerLbl:"Saucer",
+ lockJack:"LOCK x2 → jackpot de MULTIBOLA",
+ rulesPara:"Acenda todas as corridas do topo para subir o <b>multiplicador</b>. Limpe o banco de alvos para acender <b>LOCK</b> na saucer — trave duas bolas para o <b>multibola de 3</b>, em que cada tirada de rampa paga o jackpot. No fim da bola, <b>bônus × multiplicador</b>. Uma <b>bola extra</b> é concedida na pontuação secreta da semente. Três empurrões rápidos = <b>TILT</b>.",
+ tzTitle:"ESTÚDIO DE TILT E MOVIMENTO", tzStatus:"O tilt da máquina inteira está desligado. Ative o tilt por giroscópio, ou rastreamento de movimento por câmera em dispositivos sem giroscópio.",
+ srcLbl:"FONTE", xyLbl:"TILT X / Y", signLbl:"SINAL GIRO / CÂM.", agreeLbl:"ACORDO",
+ chkGyro:"Tilt por giroscópio / acelerômetro", chkCam:"Rastreamento de movimento por câmera", chkPara:"Câmera com paralaxe", chkBall:"Tilt afeta a bola",
+ sensLbl:"Sensibilidade", deadLbl:"Zona morta", mGX:"Espelhar giroscópio X", mGY:"Espelhar giroscópio Y", mCX:"Espelhar câmera X", mCY:"Espelhar câmera Y",
+ tzZero:"Zero com máquina parada", tzAuto:"Auto-calibrar", tzMarker:"Calibração com marcador", tzFuse:"Fundir / acordar sinais", done:"Pronto",
+ tzHint:"A auto-calibração pede que você fique parado (gravidade se alinha e a deriva vai a zero) e depois incline direita / esquerda / cima / baixo. Câmera e giroscópio são comparados; canais opostos são espelhados até concordar e então fundidos. A calibração com marcador guia o ponto aos alvos definidos para aprender escala, zero e espelhamento (câmeras selfie espelham X por padrão).",
+ tzNoCam:"A API de câmera não está disponível neste dispositivo/navegador.", tzNoPerm:"Permissão de câmera negada ou indisponível.",
+ tzZeroed:"Zero definido com a sua pegada atual. Refaça o zero quando a pegada mudar.", tzEnableFirst:"Ative o giroscópio ou a câmera primeiro.",
+ tzHoldStill:"Fique parado - alinhando gravidade e zerando a deriva.", tzAutoDone:"Auto-calibração completa. Canais espelhados nas direções esperadas.",
+ tzTiltDir:"Incline {d} e segure por 1 segundo.", dirR:"DIREITA", dirL:"ESQUERDA", dirU:"CIMA", dirD:"BAIXO",
+ tzGuide:"Guie o marcador brilhante até o alvo tracejado e segure.", tzEnableBoth:"Ative giroscópio e câmera para fundir sinais.",
+ tzMoveNat:"Mova-se naturalmente por 3 segundos - comparando direções dos canais.", tzFuseDone:"Fusão completa. Canais opostos espelhados; entradas fundidas.",
+ tzMarkerDone:"Calibração com marcador completa.",
+ tzActive:"Fontes ativas. Recalibre quando quiser.", tzEnableSrc:"Ative uma fonte e rode Auto-calibrar ou Calibração com marcador.",
+ powering:"LIGANDO…", fbTitle:"ERRO DO RENDER", fbMsg:"A máquina não conseguiu iniciar. O motivo exato está abaixo.",
+ fbLow:"Tentar de novo em modo de baixo recurso", unknownErr:"Erro desconhecido.", errStartup:"ERRO DE INICIALIZAÇÃO", errWebgl:"WEBGL INDISPONÍVEL",
+ errShader:"ERRO DE SOMBRA", errCtx:"ERRO AO RESTAURAR CONTEXTO",
+ noCtxMsg:"O navegador não devolveu um contexto WebGL após várias tentativas.",
+ aExtra:"BOLA EXTRA!", aHigh:"RECORDE!", aSkill:"SKILL SHOT!", aMult:"MULTIPLICADOR X{n}", aLanes:"CORRIDAS 10.000",
+ aBank:"BANCO LIMPO!", aLockLit:"LOCK ACESO", aBallLock:"BOLA {n} TRAVADA", aJackpot:"JACKPOT!", aMultiball:"MULTIBOLA!",
+ aRampJack:"JACKPOT DE RAMP!", aLitRamp:"RAMP ACESA 10.000", aMultOver:"FIM DO MULTIBOLA", aSaved:"BOLA SALVA", aBonus:"BÔNUS {v}",
+ aAgain:"ARREESSENDE!", aBall:"BOLA {n}", aCareful:"CUIDADO!", aTilt:"TILT", aPull:"BOLA 1 - PUXE O LANÇADOR",
+ perf:"MODO DE DESEMPENHO ATIVADO", toastDbg:"DEBUG | clique direito inspecionar | clique do meio fixar | arrasto do meio orbitar",
+ toastCopied:"{id} copiado como JSON", toastClip:"Área de transferência bloqueada", toastCam:"CÂMERA: {n}", toastForged:"MESA FORJADA: {name}",
+ ctxLost:"CONTEXTO DA GPU PERDIDO - RECUPERANDO…", gfxRestored:"GRÁFICOS RESTAURADOS"},
+ru:{
+ hiWord:"РЕКОРД", locks:"ЗАХВАТЫ", shootAgain:"БРОСК ЕЩЁ", multiball:"МУЛЬТИШАР", extraBall:"ДОП. ШАР", tableWord:"СТОЛ",
+ tapLeft:"касание или левый клик по левой половине", tapRight:"касание или левый клик по правой половине", holdRelease:"зажмите и отпустите", launchBtnWord:"кнопка ЗАПУСК",
+ anObject:"объект", kOverlays:"оверлеи", kMute:"звук выкл", litWord:"зажжён", dEasy:"ЛЕГКО",
+ launchFull:"ПОЛНАЯ<br>МОЩЬ", launchRelease:"ОТПУСК!", toastPinned:"Закреплено {n}", toastInspect:"Инспекция: {n}",
+ stampTilt:"ТИЛЬТ", flip:"ФЛИП", nudge:"ТОЛЧОК", launchLbl:"УДЕРЖИ ДЛЯ ЗАПУСКА",
+ tipSound:"Звук (M)", tipCam:"Камера (C)", tipPause:"Пауза (P)",
+ tipZoomOut:"Отдалить (колесо / щипок)", tipZoomReset:"Сброс зума + орбиты", tipZoomIn:"Приблизить (колесо / щипок)",
+ tipDynCam:"Динамическая камера за шаром", tipTiltStudio:"Студия тильта и движения", tipEco:"Экономия энергии", tipPick:"Выбрать объект по id",
+ pickNone:"-- выбрать объект --", dbg:"ОТЛАДКА", buildLbl:"сборка", dColliders:"КОЛЛИДЕРЫ", dLabels:"МЕТКИ", dVectors:"ВЕКТОРЫ",
+ dGrid:"СЕТКА", dFreeze:"ЗАМОРОЗКА", dClear:"ОЧИСТКА",
+ dbgHintTxt:"ПРАВАЯ кнопка осмотр · СРЕДНЯЯ кнопка закрепить · СРЕДНЯЯ тягло орбита · ЛЕВАЯ кнопка игра идёт · F2/F3/F4/F6 слои · F7 стоп · Esc очистить",
+ pcTiltWord:"ТИЛЬТ", dyn:"ДИН", eco:"ЭКО",
+ tagline:"каждый код кует новую машину —", seedLbl:"Код стола", diceTip:"Случайный стол",
+ dClassic:"КЛАССИКА", dWild:"АХА",
+ descEasy:"сейв шара 12 с / центральный столбик / пологий склон", descClassic:"как надо - сейв шара 8 с", descWild:"крутой склон / прожорливые аутлейны / сейв 5 с",
+ startGame:"Начать", highScoreLbl:"РЕКОРД",
+ kLeft:"левый флиппер", kRight:"правый флиппер", kLaunch:"удержать и отпустить: запуск", kNudge:"толчок (осторожно: тильт!)",
+ kCam:"камера", kPause:"пауза", kZoom:"зум", kDyn:"динам. камера", kDbg:"отладка: правая кнопка осмотр",
+ footNote:"100% процедурно · свой WebGL-движок · без сети · без ассетов",
+ newTable:"Новый стол", qualLbl:"Качество рендера", camLbl:"Камера", mainMenu:"Главное меню",
+ newRecord:"НОВЫЙ РЕКОРД", stBump:"БАНПЕРЫ", stRamp:"БРОСКИ РАМПЫ", stJack:"ДЖЕКПОТЫ", replay:"Повторить этот стол",
+ hControls:"Управление", hDebug:"Режим отладки (?d)", hFeatures:"Фичи стола", hScoring:"Счёт", hRules:"Правила",
+ rLeftFlip:"ЛЕВЫЙ ФЛИППЕР", rRightFlip:"ПРАВЫЙ ФЛИППЕР", rPlunger:"ПУЛАНЖЕР", rNudgeBtn:"ТОЛЧОК", rSystem:"СИСТЕМА", rZoom:"ЗУМ",
+ rInspect:"ОСМОТР", rPin:"ЗАКРЕПИТЬ КАРТУ", rOrbit:"ОРБИТА КАМЕРЫ", rDebug:"ОТЛАДКА",
+ inspectNote:"Левая кнопка всегда продолжает игру, поэтому осмотр не стоит вам шара. Карты инспектора показывают реальные проходы обоих инлейнов.",
+ featuresPara:"Каждый код строит уникальную машину: банперы, слингшоты, <b>рампа</b> из тонированного стекла, дорожка <b>спинера</b>, <b>банк дроп-таргетов</b>, верхние ролловеры и <b>сот</b>. Кнопки флипперов меняют мигающую дорожку <b>скид-шота</b>, пока шар ждёт на пуланжере. Оба орбитальных возврата приварены к внешней стенке и ведут в инлейн, а каждая сгенерированная фича решена по клиренсу, чтобы ни один клин не зажал шар.",
+ popBumper:"Банпер", slingshot:"Слингшот", spinnerHalf:"Спинер (за пол-оборота)", rolloverLane:"Ролловер",
+ skillShot:"Скид-шот", dropTarget:"Дроп-таргет", bankComplete:"Банк закрыт", rampLbl:"Рампа", saucerLbl:"Сот",
+ lockJack:"ЗАХВАТ x2 → джекпот МУЛЬТИШАРА",
+ rulesPara:"Зажги все верхние дорожки, чтобы поднять <b>множитель</b>. Закрой банк дроп-таргетов, чтобы зажечь <b>ЗАХВАТ</b> в соте — захвати два шара для <b>3-шарового мультимшара</b>, где каждый бросок рампы платит джекпот. В конце шара <b>бонус × множитель</b>. <b>Доп. шар</b> выдаётся на секретном счёте зерна. Три быстрых толчка = <b>ТИЛЬТ</b>.",
+ tzTitle:"СТУДИЯ ТИЛЬТА И ДВИЖЕНИЯ", tzStatus:"Тильт всей машины выключен. Включите тильт по гироскопу или отслеживание движения камерой на устройствах без гироскопа.",
+ srcLbl:"ИСТОЧНИК", xyLbl:"ТИЛЬТ X / Y", signLbl:"ЗНАКИ ГИРО / КАМ.", agreeLbl:"СОВПАДЕНИЕ",
+ chkGyro:"Тильт по гироскопу / акселерометру", chkCam:"Отслеживание движения камерой", chkPara:"Параллакс-камера", chkBall:"Тильт влияет на шар",
+ sensLbl:"Чувствительность", deadLbl:"Мёртвая зона", mGX:"Зеркалить гироскоп X", mGY:"Зеркалить гироскоп Y", mCX:"Зеркалить камеру X", mCY:"Зеркалить камеру Y",
+ tzZero:"Ноль при покое", tzAuto:"Автокалибровка", tzMarker:"Калибровка маркером", tzFuse:"Слить / согласить знаки", done:"Готово",
+ tzHint:"Автокалибровка просит удерживать покой (гравитация выравнивается, дрейф уходит в ноль), затем наклонить вправо / влево / вверх / вниз. Каналы камеры и гироскопа сравниваются; противоположные зеркалятся, пока не совпадут, затем сливаются. Калибровка маркером ведёт точку по заданным целям, чтобы выучить масштаб, ноль и зеркало (фронтальные камеры зеркалят X по умолчанию).",
+ tzNoCam:"API камеры недоступно на этом устройстве/в браузере.", tzNoPerm:"Доступ к камере отклонён или недоступен.",
+ tzZeroed:"Ноль по вашему текущему захвату. Сбрасывайте ноль, когда меняется захват.", tzEnableFirst:"Сначала включите гироскоп или камеру.",
+ tzHoldStill:"Удерживайте покой - выравниваем гравитацию и обнуляем дрейф.", tzAutoDone:"Автокалибровка завершена. Каналы зеркалены в ожидаемые направления.",
+ tzTiltDir:"Наклоните {d} и держите 1 секунду.", dirR:"ПРАВО", dirL:"ЛЕВО", dirU:"ВВЕРХ", dirD:"ВНИЗ",
+ tzGuide:"Ведите светящийся маркер на пунктирную цель и держите.", tzEnableBoth:"Включите и гироскоп, и камеру, чтобы согласить знаки.",
+ tzMoveNat:"Двигайтесь естественно 3 секунды - сравниваем направления каналов.", tzFuseDone:"Слияние завершено. Противоположные каналы зеркалены; входы слиты.",
+ tzMarkerDone:"Калибровка маркером завершена.",
+ tzActive:"Источники активны. Перекалибруйте в любое время.", tzEnableSrc:"Включите источник, затем запустите Автокалибровку или Калибровку маркером.",
+ powering:"ВКЛЮЧАЮ…", fbTitle:"ОШИБКА РЕНДЕРА", fbMsg:"Машина не смогла запуститься. Точная причина ниже.",
+ fbLow:"Повторить в слабом режиме", unknownErr:"Неизвестная ошибка.", errStartup:"ОШИБКА ЗАПУСКА", errWebgl:"WEBGL НЕДОСТУПЕН",
+ errShader:"ОШИБКА ШЕЙДЕРА", errCtx:"ОШИБКА ВОССТАНОВЛЕНИЯ КОНТЕКСТА",
+ noCtxMsg:"Браузер не вернул контекст WebGL после нескольких попыток.",
+ aExtra:"ДОП. ШАР!", aHigh:"РЕКОРД!", aSkill:"СКИД-ШОТ!", aMult:"МНОЖИТЕЛЬ X{n}", aLanes:"ДОРОЖКИ 10 000",
+ aBank:"БАНК ЗАКРЫТ!", aLockLit:"ЗАХВАТ ЗАЖЖЕН", aBallLock:"ШАР {n} ЗАХВАЧЕН", aJackpot:"ДЖЕКПОТ!", aMultiball:"МУЛЬТИШАР!",
+ aRampJack:"ДЖЕКПОТ РАМПЫ!", aLitRamp:"ЗАЖЖЕННАЯ РАМПА 50 000", aMultOver:"МУЛЬТИШАР ОКОНЧЕН", aSaved:"ШАР СПАСЁН", aBonus:"БОНУС {v}",
+ aAgain:"БРОСК ЕЩЁ!", aBall:"ШАР {n}", aCareful:"ОСТОРОЖНО!", aTilt:"ТИЛЬТ", aPull:"ШАР 1 - ТЯНИ ПУЛАНЖЕР",
+ perf:"РЕЖИМ ПРОИЗВОДИТЕЛЬНОСТИ ВКЛЮЧЕН", toastDbg:"ОТЛАДКА | правая кнопка осмотр | средняя кнопка закрепить | средняя тягло орбита",
+ toastCopied:"{id} скопирован как JSON", toastClip:"Буфер обмена закрыт", toastCam:"КАМЕРА: {n}", toastForged:"СТОЛ ВЫКУТ: {name}",
+ ctxLost:"КОНТЕКСТ GPU ПОТЕРЯН - ВОССТАНОВЛЕНИЕ…", gfxRestored:"ГРАФИКА ВОССТАНОВЛЕНА"},
+zh:{
+ hiWord:"最高分", locks:"锁球", shootAgain:"再投一次", multiball:"多球", extraBall:"加球", tableWord:"球台",
+ tapLeft:"轻触或左键点按左半边", tapRight:"轻触或左键点按右半边", holdRelease:"按住并松开", launchBtnWord:"发射按钮",
+ anObject:"一个物体", kOverlays:"叠加层", kMute:"静音", litWord:"已点亮", dEasy:"简单",
+ launchFull:"满力<br>蓄能", launchRelease:"松开！", toastPinned:"已固定 {n}", toastInspect:"检查 {n}",
+ stampTilt:"倾斜犯规", flip:"挡板", nudge:"晃动", launchLbl:"按住发射",
+ tipSound:"声音 (M)", tipCam:"相机 (C)", tipPause:"暂停 (P)",
+ tipZoomOut:"缩小（滚轮 / 双指捏合）", tipZoomReset:"重置缩放与旋转", tipZoomIn:"放大（滚轮 / 双指捏合）",
+ tipDynCam:"动态跟随球相机", tipTiltStudio:"倾斜与动作工作室", tipEco:"省电模式", tipPick:"按 id 选择对象",
+ pickNone:"-- 选择对象 --", dbg:"调试", buildLbl:"构建", dColliders:"碰撞体", dLabels:"标签", dVectors:"向量",
+ dGrid:"网格", dFreeze:"冻结", dClear:"清除",
+ dbgHintTxt:"右键 检视 · 中键 固定卡片 · 中键拖拽 旋转 · 左键 仍可玩 · F2/F3/F4/F6 叠加层 · F7 冻结 · Esc 清除",
+ pcTiltWord:"倾斜", dyn:"动态", eco:"省电",
+ tagline:"每个种子都打造一台新机器 —", seedLbl:"球台种子", diceTip:"随机球台",
+ dClassic:"经典", dWild:"狂野",
+ descEasy:"12 秒接球 / 中柱 / 缓坡", descClassic:"正宗难度 - 8 秒接球", descWild:"陡坡 / 贪婪外道 / 5 秒接球",
+ startGame:"开始游戏", highScoreLbl:"最高分",
+ kLeft:"左挡板", kRight:"右挡板", kLaunch:"按住后放开：发射", kNudge:"晃动（小心：倾斜犯规！）",
+ kCam:"相机", kPause:"暂停", kZoom:"缩放", kDyn:"动态相机", kDbg:"调试：右键检视",
+ footNote:"100% 程序化 · 自研 WebGL 引擎 · 离线 · 无素材",
+ newTable:"新球台", qualLbl:"渲染质量", camLbl:"相机", mainMenu:"主菜单",
+ newRecord:"新纪录", stBump:"弹柱", stRamp:"斜坡进球", stJack:"大奖", replay:"重玩此球台",
+ hControls:"操作", hDebug:"调试模式 (?d)", hFeatures:"球台特色", hScoring:"计分", hRules:"规则",
+ rLeftFlip:"左挡板", rRightFlip:"右挡板", rPlunger:"发射器", rNudgeBtn:"晃动", rSystem:"系统", rZoom:"缩放",
+ rInspect:"检视", rPin:"固定卡片", rOrbit:"旋转相机", rDebug:"调试",
+ inspectNote:"左键始终继续游戏，所以检视绝不会让你丢球。检视卡片会显示两条内道的实时通行宽度。",
+ featuresPara:"每个种子都建成独一无二的机器：弹柱、弹弓、<b>彩色玻璃斜坡</b>、<b>转盘</b>道、<b>落靶组</b>、顶部滚道和一个<b>洞口</b>。球在发射器上等待时，挡板按钮会切换闪烁的<b>技巧射门</b>道。两条绕行回轨焊在外墙上并通入内道，每个生成的部件都经过通行度求解，不会有楔形卡住球。",
+ popBumper:"弹柱", slingshot:"弹弓", spinnerHalf:"转盘（每半圈）", rolloverLane:"滚道",
+ skillShot:"技巧射门", dropTarget:"落靶", bankComplete:"落靶组完成", rampLbl:"斜坡", saucerLbl:"洞口",
+ lockJack:"锁球 x2 → 多球大奖",
+ rulesPara:"点亮全部顶部球道可提升<b>倍数</b>。完成落靶组会在洞口点亮 <b>锁球</b> — 锁两颗球进入<b>三球多球</b>，此时每次斜坡进球都拿大奖。每球结束有<b>奖励分 × 倍数</b>。达到种子的隐藏分数会得<b>加球</b>。连续三次快速晃动 = <b>倾斜犯规</b>。",
+ tzTitle:"倾斜与动作工作室", tzStatus:"整台机器的倾斜已关闭。请启用陀螺仪倾斜，或在没有陀螺仪的设备上启用相机动作追踪。",
+ srcLbl:"来源", xyLbl:"倾斜 X / Y", signLbl:"陀螺 / 相机 符号", agreeLbl:"一致度",
+ chkGyro:"陀螺仪 / 加速度计倾斜", chkCam:"相机动作追踪", chkPara:"视差相机", chkBall:"倾斜影响球",
+ sensLbl:"灵敏度", deadLbl:"死区", mGX:"镜像陀螺 X", mGY:"镜像陀螺 Y", mCX:"镜像相机 X", mCY:"镜像相机 Y",
+ tzZero:"静止归零", tzAuto:"自动校准", tzMarker:"标记点校准", tzFuse:"融合 / 统一符号", done:"完成",
+ tzHint:"自动校准会请你保持静止（重力对齐并使漂移归零），然后向右 / 左 / 上 / 下倾斜。相机与陀螺仪通道会互相比较；相反的通道会镜像直到一致，然后融合。标记点校准引导亮点到指定目标，以学习比例、零点与镜像（自拍相机默认镜像 X）。",
+ tzNoCam:"此设备或浏览器不支持相机 API。", tzNoPerm:"相机权限被拒绝或不可用。",
+ tzZeroed:"已按当前握姿归零。握姿变化时请重新归零。", tzEnableFirst:"请先启用陀螺仪或相机。",
+ tzHoldStill:"请保持静止 - 正在对齐重力并使漂移归零。", tzAutoDone:"自动校准完成。通道已镜像到预期方向。",
+ tzTiltDir:"向{d}倾斜并保持 1 秒。", dirR:"右", dirL:"左", dirU:"上", dirD:"下",
+ tzGuide:"把发光标记引导到虚线目标并保持。", tzEnableBoth:"要统一符号请同时启用陀螺仪和相机。",
+ tzMoveNat:"自然地移动 3 秒 - 正在比较各通道方向。", tzFuseDone:"融合完成。相反通道已镜像；输入已合并。",
+ tzMarkerDone:"标记点校准完成。",
+ tzActive:"数据源已启用。可随时重新校准。", tzEnableSrc:"启用一个数据源，然后运行自动校准或标记点校准。",
+ powering:"开机中…", fbTitle:"渲染器错误", fbMsg:"机器无法启动。确切原因见下方。",
+ fbLow:"以低配模式重试", unknownErr:"未知错误。", errStartup:"启动错误", errWebgl:"WebGL 不可用",
+ errShader:"着色器错误", errCtx:"上下文恢复错误",
+ noCtxMsg:"浏览器多次尝试后仍未返回 WebGL 上下文。",
+ aExtra:"加球！", aHigh:"新纪录！", aSkill:"技巧射门！", aMult:"倍数 X{n}", aLanes:"滚道 10,000",
+ aBank:"落靶组完成！", aLockLit:"锁球已点亮", aBallLock:"第 {n} 球已锁定", aJackpot:"大奖！", aMultiball:"多球！",
+ aRampJack:"斜坡大奖！", aLitRamp:"点亮斜坡 50,000", aMultOver:"多球结束", aSaved:"球已救回", aBonus:"奖励分 {v}",
+ aAgain:"再投一次！", aBall:"第 {n} 球", aCareful:"小心！", aTilt:"倾斜犯规", aPull:"第 1 球 - 拉动发射器",
+ perf:"已启用性能模式", toastDbg:"调试 | 右键检视 | 中键固定 | 中键拖拽旋转",
+ toastCopied:"已复制 {id} 为 JSON", toastClip:"剪贴板被阻止", toastCam:"相机：{n}", toastForged:"球台已生成：{name}",
+ ctxLost:"GPU 上下文丢失 - 正在恢复…", gfxRestored:"图形已恢复"}
+});
+</script>
 <script>
 "use strict";
 (function(){
@@ -458,7 +1021,7 @@ function xmur3(str){var h=1779033703^str.length;for(var i=0;i<str.length;i++){h=
 function mulberry32(a){return function(){a|=0;a=(a+0x6D2B79F5)|0;var t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return ((t^(t>>>14))>>>0)/4294967296;};}
 var SEEDA=["VEGA","NOVA","ORION","LYRA","ATLAS","RIGEL","DRACO","ALTIX","CERES","JUNO","HALO","PYXIS","ARGO","MIRA","CASTOR","POLARIS"];
 function randomSeed(){return SEEDA[(Math.random()*SEEDA.length)|0]+"-"+(1000+((Math.random()*9000)|0));}
-function fatal(title,detail){$("loading").className="done";$("fallback").style.display="flex";$("fbTitle").textContent=title;$("fbDetail").textContent=detail||"Unknown error.";}
+function fatal(title,detail){$("loading").className="done";$("fallback").style.display="flex";$("fbTitle").textContent=title;$("fbDetail").textContent=detail||TLI18N.t("unknownErr");}
 $("fbRetry").addEventListener("click",function(){location.reload();});
 $("fbLow").addEventListener("click",function(){store("qual","low");location.reload();});
 
@@ -514,6 +1077,8 @@ var DIFFS={
  classic:{save:8,g:1.4,power:1.06,post:false,label:"the real thing - 8s ball save"},
  wild:{save:5,g:1.56,power:1.14,post:false,label:"steep slope / hungry outlanes / 5s save"}
 };
+var DIFKEY={easy:"dEasy",classic:"dClassic",wild:"dWild"};
+var DESCKEY={easy:"descEasy",classic:"descClassic",wild:"descWild"};
 
 /* ---------------- state ---------------- */
 var G={state:"menu",seed:"",diff:"classic",qual:load("qual","high"),autoQual:load("qual","")==="",
@@ -528,7 +1093,7 @@ var L=null,R2=Math.random,BALL_R=0.026,MAXV=4.6,DT=1/120;
 var held={l:false,r:false},isTouch=("ontouchstart" in window)||(navigator.maxTouchPoints>0);
 var PERF={last:0,pauseDrawn:false,eco:load("eco","0")==="1"};
 var dynCam={x:0,z:0};
-window.onerror=function(msg,src2,line){if(!G.booted)fatal("STARTUP ERROR",String(msg)+"\nLine: "+line);return false;};
+window.onerror=function(msg,src2,line){if(!G.booted)fatal(TLI18N.t("errStartup"),String(msg)+"\nLine: "+line);return false;};
 
 /* ---------------- audio ---------------- */
 var A={ctx:null,on:load("mute","0")!=="1",master:null,sfx:null,mus:null,noise:null,last:{},chordT:0,chordI:0,prog:null,started:false};
@@ -554,7 +1119,7 @@ A.duck=function(v){if(A.mus){try{var t=A.ctx.currentTime;A.mus.gain.cancelSchedu
 A.setMute=function(m){A.on=!m;store("mute",m?"1":"0");
   if(A.master){try{var t=A.ctx.currentTime;A.master.gain.cancelScheduledValues(t);A.master.gain.setValueAtTime(A.master.gain.value,t);A.master.gain.linearRampToValueAtTime(A.on?0.85:0,t+0.06);}catch(e){}}
   $("icoSndOn").style.display=A.on?"":"none";$("icoSndOff").style.display=A.on?"none":"";
-  $("btnSound").setAttribute("aria-pressed",A.on?"true":"false");$("btnPauseSound").textContent="Sound: "+(A.on?"ON":"OFF");};
+  $("btnSound").setAttribute("aria-pressed",A.on?"true":"false");$("btnPauseSound").textContent=TLI18N.t("sound")+": "+(A.on?TLI18N.t("on"):TLI18N.t("off"));};
 A.gate=function(k,ms){var t=NOW();if(A.last[k]&&t-A.last[k]<ms)return false;A.last[k]=t;return true;};
 A.tone=function(f,type,dur,vol,slide,delay){if(!A.ctx||!A.on)return;try{
   var t=A.ctx.currentTime+(delay||0),o=A.ctx.createOscillator(),g=A.ctx.createGain();
@@ -1542,8 +2107,8 @@ function addScore(n,x,y,z,col){
  if(G.tilted||G.state!=="play")return;
  var v=Math.round(n*G.mult);G.score+=v;G.dmdDirty=true;
  if(x!==undefined)floater("+"+fmt(v),x,y,z,col);
- if(!G.extraGiven&&G.score>=L.extraAt){G.extraGiven=true;G.extraPending=true;announce("EXTRA BALL!",SEM.ok);SFX.extra();flashGI(0.9);updChips();}
- if(!G.hiBeaten&&G.hi>0&&G.score>G.hi){G.hiBeaten=true;announce("HIGH SCORE!",SEM.warn);SFX.record();}}
+ if(!G.extraGiven&&G.score>=L.extraAt){G.extraGiven=true;G.extraPending=true;announce(TLI18N.t("aExtra"),SEM.ok);SFX.extra();flashGI(0.9);updChips();}
+ if(!G.hiBeaten&&G.hi>0&&G.score>G.hi){G.hiBeaten=true;announce(TLI18N.t("aHigh"),SEM.warn);SFX.record();}}
 function onBumper(b){if(G.tilted)return;b.flash=1;G.stats.bump++;addScore(b.val,b.x,0.09,b.y-0.9);G.bonus+=100;
  SFX.bump(b.idx);shake(0.003);flashGI(0.12);spawnParts(b.x,0.08,b.y-0.9,6,L.theme._acc,0.9);addGlow(b.x,0.09,b.y-0.9,0.24,L.theme._glow,0.9,0.18);}
 function onSling(s,x,y){if(G.tilted)return;addScore(500,x,0.06,y-0.9);G.bonus+=50;SFX.sling();shake(0.004);flashGI(0.15);
@@ -1552,12 +2117,12 @@ function onRollover(i){
  if(G.tilted)return;
  var ln=L.lanes[i];SFX.roll();addGlow(ln.x,0.03,ln.y-0.9,0.14,L.theme._acc,0.8,0.3);
  if(G.skillT>0){G.skillT=0;
-  if(i===G.skillLane){addScore(25000,ln.x,0.05,ln.y-0.9,SEM.warn);announce("SKILL SHOT!",SEM.warn);SFX.bank();flashGI(0.6);return;}}
+  if(i===G.skillLane){addScore(25000,ln.x,0.05,ln.y-0.9,SEM.warn);announce(TLI18N.t("aSkill"),SEM.warn);SFX.bank();flashGI(0.6);return;}}
  if(!G.lanes[i]){G.lanes[i]=true;G.dmdDirty=true;}
  addScore(2000,ln.x,0.05,ln.y-0.9);G.bonus+=500;
  if(G.lanes[0]&&G.lanes[1]&&G.lanes[2]){G.lanes=[false,false,false];
-  if(G.mult<6){G.mult++;announce("MULTIPLIER X"+G.mult,SEM.info);SFX.bank();flashGI(0.5);}
-  else{addScore(10000);announce("LANES 10,000",SEM.info);}
+  if(G.mult<6){G.mult++;announce(TLI18N.t("aMult",{n:G.mult}),SEM.info);SFX.bank();flashGI(0.5);}
+  else{addScore(10000);announce(TLI18N.t("aLanes"),SEM.info);}
   updChips();}}
 function hitTarget(t){
  if(G.tilted)return;
@@ -1567,8 +2132,8 @@ function hitTarget(t){
  var all=true;for(var i=0;i<L.targets.length;i++)if(L.targets[i].up)all=false;
  if(all){addScore(25000,L.bank.cx,0.08,L.bank.cy-0.9,SEM.warn);
   if(G.mult<6){G.mult++;updChips();}
-  announce("BANK CLEARED!",SEM.warn);SFX.bank();flashGI(0.7);G.rampLit=true;
-  if(G.locks<2&&!G.multiball){G.lockLit=true;G.jackLit=false;announce("LOCK IS LIT",SEM.info);}else G.jackLit=true;
+  announce(TLI18N.t("aBank"),SEM.warn);SFX.bank();flashGI(0.7);G.rampLit=true;
+  if(G.locks<2&&!G.multiball){G.lockLit=true;G.jackLit=false;announce(TLI18N.t("aLockLit"),SEM.info);}else G.jackLit=true;
   G.bankResetT=1.4;}}
 function resetBank(){for(var i=0;i<L.targets.length;i++){L.targets[i].up=true;L.targets[i].seg.on=true;G.dropState[i]=true;}SFX.bankReset();}
 function resetBankQuiet(){for(var i=0;i<L.targets.length;i++){L.targets[i].up=true;L.targets[i].seg.on=true;L.targets[i].drop=0;G.dropState[i]=true;}}
@@ -1577,19 +2142,19 @@ function captureSaucer(b){
  if(G.tilted){b.state="held";b.heldT=0.35;return;}
  addGlow(sc.x,0.05,sc.y-0.9,0.25,L.theme._acc2,1,0.4);
  if(G.lockLit&&!G.multiball){
-  G.lockLit=false;G.locks++;updChips();SFX.lock();announce("BALL "+G.locks+" LOCKED",SEM.info);flashGI(0.6);
+  G.lockLit=false;G.locks++;updChips();SFX.lock();announce(TLI18N.t("aBallLock",{n:G.locks}),SEM.info);flashGI(0.6);
   removeBall(b);
   if(G.locks>=2)startMultiball();
   else if(G.balls.length===0)addTimer(0.9,function(){endOfBall(true);});
   return;}
  if(G.jackLit){G.jackLit=false;G.stats.jack++;addScore(100000,sc.x,0.1,sc.y-0.9,SEM.warn);
-  announce("JACKPOT!",SEM.warn);SFX.jackpot();flashGI(1.1);shake(0.02);spawnParts(sc.x,0.08,sc.y-0.9,14,L.theme._acc,1.4);
+  announce(TLI18N.t("aJackpot"),SEM.warn);SFX.jackpot();flashGI(1.1);shake(0.02);spawnParts(sc.x,0.08,sc.y-0.9,14,L.theme._acc,1.4);
   if(G.multiball)addTimer(3.5,function(){if(G.multiball)G.jackLit=true;});}
  else{addScore(G.multiball?15000:10000,sc.x,0.08,sc.y-0.9);SFX.kick();}
  b.state="held";b.heldT=G.multiball?0.35:0.9;}
 function startMultiball(){
  G.locks=0;G.multiball=true;G.jackLit=true;G.saveT=0;updChips();
- announce("MULTIBALL!",SEM.warn);SFX.multiball();flashGI(1.3);shake(0.02);
+ announce(TLI18N.t("aMultiball"),SEM.warn);SFX.multiball();flashGI(1.3);shake(0.02);
  for(var i=0;i<3;i++)addTimer(0.3+i*0.55,function(){
   var sc=L.saucer,b=newBallObj(sc.x,sc.y);
   b.vx=-sc.side*0.5+(R2()-0.5)*0.3;b.vy=1.6;b.h=0.03;b.vh=1.2;
@@ -1598,8 +2163,8 @@ function onRampComplete(){
  if(G.tilted)return;
  G.stats.ramp++;G.bonus+=2000;
  var ex=L.mirror?L.lower.R.inlaneCx:L.lower.L.inlaneCx;
- if(G.multiball){G.stats.jack++;addScore(100000,L.ramp.mx,0.25,0.5,SEM.warn);announce("RAMP JACKPOT!",SEM.warn);SFX.jackpot();flashGI(1.0);shake(0.015);}
- else if(G.rampLit){G.rampLit=false;addScore(50000,L.ramp.mx,0.25,0.5,SEM.warn);announce("LIT RAMP 50,000",SEM.warn);SFX.ramp();flashGI(0.7);}
+ if(G.multiball){G.stats.jack++;addScore(100000,L.ramp.mx,0.25,0.5,SEM.warn);announce(TLI18N.t("aRampJack"),SEM.warn);SFX.jackpot();flashGI(1.0);shake(0.015);}
+ else if(G.rampLit){G.rampLit=false;addScore(50000,L.ramp.mx,0.25,0.5,SEM.warn);announce(TLI18N.t("aLitRamp"),SEM.warn);SFX.ramp();flashGI(0.7);}
  else{addScore(15000,L.ramp.mx,0.25,0.5);SFX.ramp();flashGI(0.3);}
  spawnParts(ex,0.1,0.54,8,L.theme._acc,1.0);}
 function removeBall(b){var i=G.balls.indexOf(b);if(i>=0)G.balls.splice(i,1);}
@@ -1607,28 +2172,28 @@ function drainBall(b){
  if(b.state==="dead")return;
  b.state="dead";removeBall(b);SFX.drain();shake(0.012);
  if(G.balls.length>0){
-  if(G.multiball&&G.balls.length===1){G.multiball=false;G.jackLit=false;announce("MULTIBALL OVER",SEM.info);updChips();}
+  if(G.multiball&&G.balls.length===1){G.multiball=false;G.jackLit=false;announce(TLI18N.t("aMultOver"),SEM.info);updChips();}
   return;}
  if(G.multiball){G.multiball=false;G.jackLit=false;updChips();}
- if(G.saveT>0&&!G.tilted){announce("BALL SAVED",SEM.ok);SFX.save();
+ if(G.saveT>0&&!G.tilted){announce(TLI18N.t("aSaved"),SEM.ok);SFX.save();
   addTimer(0.7,function(){servePlunger();addTimer(0.4,function(){launchBall(1);});});return;}
  endOfBall(false);}
 function endOfBall(locked){
  G.tilted=false;$("tiltStamp").className="";G.tiltHeat=0;updHeat();G.saveT=0;G.skillT=0;uiLaunch(false);
  var total=G.bonus*G.mult;
- if(total>0&&!locked){G.tally={left:total,step:Math.max(250,Math.ceil(total/18)),tick:0};announce("BONUS "+fmt(total),SEM.info);}
+ if(total>0&&!locked){G.tally={left:total,step:Math.max(250,Math.ceil(total/18)),tick:0};announce(TLI18N.t("aBonus",{v:fmt(total)}),SEM.info);}
  else{G.tally=null;nextBall();}}
 function nextBall(){
  G.tally=null;
- if(G.extraPending){G.extraPending=false;announce("SHOOT AGAIN!",SEM.ok);SFX.extra();}
+ if(G.extraPending){G.extraPending=false;announce(TLI18N.t("aAgain"),SEM.ok);SFX.extra();}
  else{G.ballNum++;if(G.ballNum>3){gameOver();return;}}
  G.mult=1;G.bonus=0;G.lanes=[false,false,false];G.rampLit=false;G.jackLit=false;G.lockLit=false;G.bankResetT=-1;
- resetBankQuiet();G.timers.length=0;updChips();announce("BALL "+G.ballNum,"var(--acc)");servePlunger();}
+ resetBankQuiet();G.timers.length=0;updChips();announce(TLI18N.t("aBall",{n:G.ballNum}),"var(--acc)");servePlunger();}
 function gameOver(){
  G.state="over";G.timers.length=0;uiLaunch(false);$("btnNudge").className="";SFX.over();
  var rec=G.score>G.hi;
  if(rec){G.hi=Math.round(G.score);store("hs",String(G.hi));}
- $("finalScore").textContent=fmt(G.score);$("overHigh").textContent="HIGH "+fmt(G.hi);
+ $("finalScore").textContent=fmt(G.score);$("overHigh").textContent=TLI18N.t("hiWord")+" "+fmt(G.hi);
  $("newRecord").style.display=rec?"block":"none";if(rec)SFX.record();
  $("stBump").textContent=G.stats.bump;$("stRamp").textContent=G.stats.ramp;$("stJack").textContent=G.stats.jack;
  $("menuHigh").textContent=fmt(G.hi);updChips();showOv("overOv");G.dmdDirty=true;}
@@ -1640,10 +2205,10 @@ function nudge(dx,dy){
  if(!live)return;
  SFX.nudge();shake(0.012);G.roll+=dx*0.05;G.tiltHeat+=1;updHeat();
  if(G.tiltHeat>=3)doTilt();
- else if(G.tiltHeat>=2){announce("CAREFUL!",SEM.warn);SFX.warn();}}
+ else if(G.tiltHeat>=2){announce(TLI18N.t("aCareful"),SEM.warn);SFX.warn();}}
 function doTilt(){
  G.tilted=true;G.tiltHeat=3;G.bonus=0;updHeat();$("tiltStamp").className="show";
- announce("TILT",SEM.bad);SFX.tilt();G.giT=0.35;G.saveT=0;G.dmdDirty=true;
+ announce(TLI18N.t("aTilt"),SEM.bad);SFX.tilt();G.giT=0.35;G.saveT=0;G.dmdDirty=true;
  for(var i=0;i<L.flippers.length;i++)L.flippers[i].pressed=false;}
 function updHeat(){var d=$("heatDots").children;for(var i=0;i<3;i++)d[i].className=i<G.tiltHeat?(G.tiltHeat>=3?"hot":"on"):"";}
 
@@ -1658,7 +2223,7 @@ function startGame(){
  for(var i=0;i<L.bumpers.length;i++)L.bumpers[i].flash=0;
  for(i=0;i<L.flippers.length;i++){L.flippers[i].pressed=false;L.flippers[i].th=L.flippers[i].rest;L.flippers[i].w=0;}
  updChips();updHeat();hideOv("menu");hideOv("overOv");hideOv("pauseOv");hideOv("helpOv");hideOv("tiltOv");
- $("btnNudge").className="show";announce("BALL 1 - PULL PLUNGER","var(--acc)");servePlunger();G.dmdDirty=true;
+ $("btnNudge").className="show";announce(TLI18N.t("aPull"),"var(--acc)");servePlunger();G.dmdDirty=true;
  if(isTouch){$("hintL").className="hint show";$("hintR").className="hint show";
   setTimeout(function(){$("hintL").className="hint";$("hintR").className="hint";},5000);}}
 function commitAndStart(){
@@ -1675,9 +2240,9 @@ function pauseGame(){if(G.state!=="play")return;G.state="pause";showOv("pauseOv"
 function resumeGame(){if(G.state!=="pause")return;G.state="play";hideOv("pauseOv");A.duck(0.16);}
 function showOv(id){$(id).className="ov";}
 function hideOv(id){$(id).className="ov hide";}
-function uiLaunch(show){$("btnLaunch").className=show?"show":"";if(!show){$("launchFill").style.height="0%";$("launchLabel").innerHTML="HOLD<br>TO<br>LAUNCH";}}
+function uiLaunch(show){$("btnLaunch").className=show?"show":"";if(!show){$("launchFill").style.height="0%";$("launchLabel").innerHTML=TLI18N.t("launchLbl");}}
 function updChips(){
- $("score").textContent=fmt(G.disp);$("hiscore").textContent="HIGH "+fmt(Math.max(G.hi,G.score));
+ $("score").textContent=fmt(G.disp);$("hiscore").textContent=TLI18N.t("hiWord")+" "+fmt(Math.max(G.hi,G.score));
  $("multChip").textContent="X"+G.mult;$("multChip").className=G.mult>1?"chip hot":"chip";
  var dots=$("ballDots").children;
  for(var i=0;i<3;i++)dots[i].className=(i+1<G.ballNum||G.state==="over")?"used":(i+1===G.ballNum?"cur":"");
@@ -1689,7 +2254,7 @@ function applyTheme(){
  r.setProperty("--dom",th.dom);r.setProperty("--acc",th.acc);r.setProperty("--acc2",th.acc2);
  r.setProperty("--field",th.field[1]);r.setProperty("--glow",th.glow);r.setProperty("--bg",th.bg);
  $("menuTheme").textContent=th.name;
- $("tableChip").textContent="TABLE "+th.name+" / SEED "+L.seed+" / "+G.diff.toUpperCase();
+ $("tableChip").textContent=TLI18N.t("tableWord")+" "+th.name+" / "+TLI18N.t("seed")+" "+L.seed+" / "+TLI18N.t(DIFKEY[G.diff]).toUpperCase();
  var mt=document.querySelector("meta[name=theme-color]");if(mt)mt.setAttribute("content",th.bg);}
 var buildBusy=false;
 function buildTable(seed,diff){
@@ -1709,7 +2274,7 @@ function setQual(q,auto){
  var qb=$("qualSeg").children;
  for(var i=0;i<qb.length;i++)qb[i].className=qb[i].getAttribute("data-q")===q?"on":"";
  if(TEX.pf){updTex(TEX.pf,genPlayfield());updTex(TEX.bg,genBackglass());}
- resize();if(auto)toast("PERFORMANCE MODE ENABLED");}
+ resize();if(auto)toast(TLI18N.t("perf"));}
 
 /* ---------------- tilt / motion ---------------- */
 var TILT={x:0,y:0,gx:0,gy:0,cx:0,cy:0,gyroOn:false,camOn:false,parallax:true,ball:true,
@@ -1732,14 +2297,14 @@ window.addEventListener("deviceorientation",function(e){
 var CAM={active:false,video:null,ctx:null,prev:null,w:64,h:48,stream:null,vx:0,vy:0,last:0};
 function startCam(){
  if(CAM.active)return;
- if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){tzSet("Camera API unavailable on this device/browser.");return;}
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){tzSet(TLI18N.t("tzNoCam"));return;}
  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:320},height:{ideal:240}},audio:false}).then(function(st){
   CAM.stream=st;var v=$("tzCamPreview");v.srcObject=st;v.style.display="block";
   try{v.play();}catch(e){}
   CAM.video=v;
   var c=document.createElement("canvas");c.width=CAM.w;c.height=CAM.h;
   CAM.ctx=c.getContext("2d");CAM.prev=null;CAM.active=true;TILT.camOn=true;tzUI();
- })["catch"](function(){tzSet("Camera permission denied or unavailable.");TILT.camOn=false;tzUI();});}
+ })["catch"](function(){tzSet(TLI18N.t("tzNoPerm"));TILT.camOn=false;tzUI();});}
 function stopCam(){
  if(CAM.stream){try{var tr=CAM.stream.getTracks();for(var i=0;i<tr.length;i++)tr[i].stop();}catch(e){}}
  CAM.active=false;TILT.camOn=false;CAM.stream=null;
@@ -1793,20 +2358,21 @@ function tzUI(){
  e=$("tzMarker");if(e){e.style.left=(50+TILT.x*42)+"%";e.style.top=(50+TILT.y*42)+"%";}
  var pb=$("pcTilt");if(pb)pb.className="pcBtn"+((TILT.gyroOn||TILT.camOn)?" on":"");}
 function tzOpen(){if(G.state==="play")pauseGame();showOv("tiltOv");
- tzSet(TILT.gyroOn||TILT.camOn?"Sources active. Re-calibrate any time.":"Enable a source, then run Auto-calibrate or Marker calibration.");tzUI();}
+ tzSet(TILT.gyroOn||TILT.camOn?TLI18N.t("tzActive"):TLI18N.t("tzEnableSrc"));tzUI();}
 function tzZero(){
  TILT.zeroG+=TILT.rawGx*28;TILT.zeroB+=TILT.rawGy*28;
  TILT.cx=0;TILT.cy=0;CAM.vx=0;CAM.vy=0;saveTilt();
- tzSet("Zeroed to your current grip. Re-zero whenever your grip changes.");tzUI();}
+ tzSet(TLI18N.t("tzZeroed"));tzUI();}
 var autoQ=["right","left","up","down"],autoI=0,autoS=null;
+var DIRKEY={right:"dirR",left:"dirL",up:"dirU",down:"dirD"};
 function avg(a){if(!a.length)return 0;var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s/a.length;}
 function tzAuto(){
- if(!TILT.gyroOn&&!TILT.camOn){tzSet("Enable gyro or camera first.");return;}
- autoI=0;tzSet("Hold still - gravity aligning and zeroing drift.");
+ if(!TILT.gyroOn&&!TILT.camOn){tzSet(TLI18N.t("tzEnableFirst"));return;}
+ autoI=0;tzSet(TLI18N.t("tzHoldStill"));
  setTimeout(function(){tzZero();autoStep();},1200);}
 function autoStep(){
- if(autoI>=autoQ.length){saveTilt();tzSet("Auto-calibration complete. Channels mirrored to the expected directions.");tzUI();return;}
- tzSet("Tilt "+autoQ[autoI].toUpperCase()+" and hold for 1 second.");
+ if(autoI>=autoQ.length){saveTilt();tzSet(TLI18N.t("tzAutoDone"));tzUI();return;}
+ tzSet(TLI18N.t("tzTiltDir",{d:TLI18N.t(DIRKEY[autoQ[autoI]])}));
  autoS={gx:[],gy:[],cx:[],cy:[]};
  var iv=setInterval(function(){autoS.gx.push(TILT.rawGx);autoS.gy.push(TILT.rawGy);autoS.cx.push(TILT.rawCx);autoS.cy.push(TILT.rawCy);},60);
  setTimeout(function(){
@@ -1817,16 +2383,16 @@ function autoStep(){
   if(ey!==0){if(TILT.gyroOn&&Math.abs(gy)>0.05)TILT.gsy=gy*ey>0?1:-1;if(TILT.camOn&&Math.abs(cy)>0.05)TILT.csy=cy*ey>0?1:-1;}
   autoI++;setTimeout(autoStep,400);},1100);}
 var markQ=[[0,0],[0.7,0],[-0.7,0],[0,-0.7],[0,0.7]],markI=0,markHold=0,markOn=false;
-function tzMarkerCal(){markOn=true;markI=0;markHold=0;tzSet("Guide the glowing marker onto the dashed target and hold.");placeTarget();}
+function tzMarkerCal(){markOn=true;markI=0;markHold=0;tzSet(TLI18N.t("tzGuide"));placeTarget();}
 function placeTarget(){var t=$("tzTarget");if(t){t.style.left=(50+markQ[markI][0]*42)+"%";t.style.top=(50+markQ[markI][1]*42)+"%";}}
 function tzFuse(){
- if(!TILT.gyroOn||!TILT.camOn){tzSet("Enable both gyro and camera to fuse signs.");return;}
- tzSet("Move naturally for 3 seconds - comparing channel directions.");
+ if(!TILT.gyroOn||!TILT.camOn){tzSet(TLI18N.t("tzEnableBoth"));return;}
+ tzSet(TLI18N.t("tzMoveNat"));
  var sx=0,sy=0,n=0;
  var iv=setInterval(function(){sx+=TILT.gx*TILT.cx;sy+=TILT.gy*TILT.cy;n++;},60);
  setTimeout(function(){clearInterval(iv);
   if(n){if(sx<0)TILT.csx=-TILT.csx;if(sy<0)TILT.csy=-TILT.csy;TILT.agree=1;}
-  saveTilt();tzSet("Fusion complete. Opposite channels mirrored; inputs merged.");tzUI();},3000);}
+  saveTilt();tzSet(TLI18N.t("tzFuseDone"));tzUI();},3000);}
 
 /* ---------------- camera ---------------- */
 function computeCam(t){
@@ -2373,8 +2939,8 @@ DBG.copy=function(id){
  try{
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt);
   else{var ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);}
-  toast("Copied "+id+" as JSON");
- }catch(e){toast("Clipboard blocked");}};
+  toast(TLI18N.t("toastCopied",{id:id}));
+ }catch(e){toast(TLI18N.t("toastClip"));}};
 DBG.promote=function(id){DBG.sel=DBG.sel.filter(function(x){return x!==id;});DBG.sel.push(id);DBG.sync();};
 DBG.add=function(id,multi){
  if(!multi)DBG.sel=[id];
@@ -2403,7 +2969,7 @@ DBG.pick=function(e,multi){
  var mx=e.clientX-r.left,my=e.clientY-r.top;
  DBG.refresh();
  var hit=DBG.hit(mx,my);
- if(hit){DBG.add(hit.id,multi);toast((multi?"Pinned ":"Inspecting ")+hit.cls+" | "+hit.id);}
+ if(hit){DBG.add(hit.id,multi);toast((multi?TLI18N.t("toastPinned",{n:hit.cls}):TLI18N.t("toastInspect",{n:hit.cls}))+" | "+hit.id);}
  else DBG.add("table",multi);};
 DBG.rebuilt=function(){try{DBG.refresh();DBG.fillPick();DBG.sync();}catch(e){}};
 DBG.fillPick=function(){
@@ -2411,7 +2977,7 @@ DBG.fillPick=function(){
  DBG.refresh();
  var groups={},i,g,txt;
  for(i=0;i<DBG.cat.length;i++){var c=DBG.cat[i];if(!groups[c.cls])groups[c.cls]=[];groups[c.cls].push(c);}
- txt='<option value="">-- pick object --</option>';
+ txt='<option value="">'+TLI18N.t("pickNone")+'</option>';
  for(g in groups){
   txt+='<optgroup label="'+g+' ('+groups[g].length+')">';
   for(i=0;i<groups[g].length;i++)txt+='<option value="'+groups[g][i].id+'">'+groups[g][i].id+' | '+groups[g][i].name+'</option>';
@@ -2570,7 +3136,7 @@ DBG.init=function(){
  if(p)p.addEventListener("change",function(){if(this.value){DBG.add(this.value,true);this.value="";}});
  DBG.chips();
  setTimeout(function(){try{DBG.refresh();DBG.fillPick();DBG.add("table",false);
-  toast("DEBUG | right-click inspect | middle-click pin | middle-drag orbit");}catch(e){}},500);
+  toast(TLI18N.t("toastDbg"));}catch(e){}},500);
  setInterval(function(){
   if(!L)return;
   try{
@@ -2599,7 +3165,7 @@ DBG.init=function(){
  G.dbg=DBG;};
 
 /* ---------------- UI ---------------- */
-function cycleCam(){G.cam=(G.cam+1)%3;G.orbitYaw=0;G.orbitPitch=0;SFX.click();toast("CAMERA: "+G.camName[G.cam]);}
+function cycleCam(){G.cam=(G.cam+1)%3;G.orbitYaw=0;G.orbitPitch=0;SFX.click();toast(TLI18N.t("toastCam",{n:G.camName[G.cam]}));}
 function on(id,ev,fn){var e=$(id);if(e)e.addEventListener(ev,fn);}
 function pcUpdateAll(){
  pcUpdateZoom();
@@ -2610,7 +3176,7 @@ function bindUI(){
  on("btnStart","click",function(){A.init();A.resume();SFX.click();this.blur();commitAndStart();});
  on("btnDice","click",function(){SFX.click();this.blur();var b=$("btnDice");b.className="ibtn spin";
   setTimeout(function(){b.className="ibtn";},420);
-  var s=randomSeed();$("seedInput").value=s;buildTable(s,G.diff);toast("TABLE FORGED: "+L.theme.name);});
+  var s=randomSeed();$("seedInput").value=s;buildTable(s,G.diff);toast(TLI18N.t("toastForged",{name:L.theme.name}));});
  var seedT=null;
  $("seedInput").addEventListener("input",function(){
   var v=this.value.toUpperCase().replace(/[^A-Z0-9\- ]/g,"");this.value=v;
@@ -2622,7 +3188,7 @@ function bindUI(){
   SFX.click();this.blur();
   for(var j=0;j<db.length;j++)db[j].className="";
   btn.className="on";G.diff=btn.getAttribute("data-d");
-  $("diffDesc").textContent=DIFFS[G.diff].label;buildTable(G.seed,G.diff);});})(db[i]);
+  $("diffDesc").textContent=TLI18N.t(DESCKEY[G.diff]);buildTable(G.seed,G.diff);});})(db[i]);
  on("btnSound","click",function(){A.init();A.resume();A.setMute(A.on);this.blur();});
  on("btnPauseSound","click",function(){A.init();A.resume();A.setMute(A.on);this.blur();});
  on("btnCam","click",function(){cycleCam();this.blur();});
@@ -2677,7 +3243,7 @@ function bindUI(){
     var dx=TILT.x-markQ[markI][0],dy=TILT.y-markQ[markI][1];
     if(dx*dx+dy*dy<0.02){markHold++;
      if(markHold>10){markI++;markHold=0;
-      if(markI>=markQ.length){markOn=false;saveTilt();tzSet("Marker calibration complete.");}
+      if(markI>=markQ.length){markOn=false;saveTilt();tzSet(TLI18N.t("tzMarkerDone"));}
       else placeTarget();}}
     else markHold=0;}}
  },80);
@@ -2695,7 +3261,7 @@ function update(dt){
  if(G.charging&&hasPlunger){
   G.charge=Math.min(1,G.charge+dt/1.1);SFX.charge();
   $("launchFill").style.height=(G.charge*100)+"%";
-  var lab=G.charge>=0.98?"FULL<br>POWER":"RELEASE!";
+  var lab=G.charge>=0.98?TLI18N.t("launchFull"):TLI18N.t("launchRelease");
   if(lab!==lastLaunchLabel){lastLaunchLabel=lab;$("launchLabel").innerHTML=lab;}
  } else if(hasPlunger&&G.charge>0&&!G.charging){G.charge=0;$("launchFill").style.height="0%";}
  L.plunger.ay=1.75+G.charge*0.055;L.plunger.by=L.plunger.ay;
@@ -2870,7 +3436,7 @@ function frame(now){
  if(frameN===2){var ld=$("loading");if(ld)ld.className="done";}}
 
 /* ---------------- context loss / boot ---------------- */
-canvas.addEventListener("webglcontextlost",function(e){e.preventDefault();G.glLost=true;if(G.state==="play")pauseGame();toast("GPU CONTEXT LOST - RECOVERING...");},false);
+canvas.addEventListener("webglcontextlost",function(e){e.preventDefault();G.glLost=true;if(G.state==="play")pauseGame();toast(TLI18N.t("ctxLost"));},false);
 canvas.addEventListener("webglcontextrestored",function(){
  try{
   G.glLost=false;RES={};TEX={pf:null,bg:null,dmd:null,glow:null,floor:null};
@@ -2879,12 +3445,12 @@ canvas.addEventListener("webglcontextrestored",function(){
   for(var i=0;i<L.targets.length;i++){var up=G.dropState[i]!==false;
    L.targets[i].up=up;L.targets[i].seg.on=up;L.targets[i].drop=up?0:0.055;}
   L.flippers[0].pressed=held.l;L.flippers[1].pressed=held.r;
-  resize();if(DBG.on)DBG.rebuilt();toast("GRAPHICS RESTORED");
- }catch(e){fatal("CONTEXT RESTORE ERROR",e.message||String(e));}},false);
+  resize();if(DBG.on)DBG.rebuilt();toast(TLI18N.t("gfxRestored"));
+ }catch(e){fatal(TLI18N.t("errCtx"),e.message||String(e));}},false);
 function boot(){
  try{
-  if(!initGL()){fatal("WEBGL UNAVAILABLE",glCreateMsg||"The browser returned no WebGL context after multiple attempts.");return;}
-  try{initProgram();}catch(e){fatal("SHADER ERROR",String(e.message||e)+"\nGPU: "+gpuInfo()+"\nPrecision: "+SHADER_PREC);return;}
+  if(!initGL()){fatal(TLI18N.t("errWebgl"),glCreateMsg||TLI18N.t("noCtxMsg"));return;}
+  try{initProgram();}catch(e){fatal(TLI18N.t("errShader"),String(e.message||e)+"\nGPU: "+gpuInfo()+"\nPrecision: "+SHADER_PREC);return;}
   var weak=(navigator.deviceMemory&&navigator.deviceMemory<=2)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=2);
   if(weak&&load("qual","")==="")G.qual="low";
   var seed=load("seed","");if(!seed)seed=randomSeed();
@@ -2893,14 +3459,27 @@ function boot(){
   $("seedInput").value=seed;
   var db=$("diffSeg").children,i;
   for(i=0;i<db.length;i++)db[i].className=db[i].getAttribute("data-d")===G.diff?"on":"";
-  $("diffDesc").textContent=DIFFS[G.diff].label;
+  $("diffDesc").textContent=TLI18N.t(DESCKEY[G.diff]);
   var qb=$("qualSeg").children;
   for(i=0;i<qb.length;i++)qb[i].className=qb[i].getAttribute("data-q")===G.qual?"on":"";
-  $("menuHigh").textContent=fmt(G.hi);$("hiscore").textContent="HIGH "+fmt(G.hi);
+  $("menuHigh").textContent=fmt(G.hi);$("hiscore").textContent=TLI18N.t("hiWord")+" "+fmt(G.hi);
   A.setMute(!A.on);
   buildTable(seed,G.diff);
   bindUI();
   DBG.init();
+  TLI18N.mount("#menu .card");
+  function uiLang(){
+   $("diffDesc").textContent=TLI18N.t(DESCKEY[G.diff]);
+   if(L)$("tableChip").textContent=TLI18N.t("tableWord")+" "+L.theme.name+" / "+TLI18N.t("seed")+" "+L.seed+" / "+TLI18N.t(DIFKEY[G.diff]).toUpperCase();
+   $("hiscore").textContent=TLI18N.t("hiWord")+" "+fmt(Math.max(G.hi,G.score));
+   $("overHigh").textContent=TLI18N.t("hiWord")+" "+fmt(G.hi);
+   $("btnPauseSound").textContent=TLI18N.t("sound")+": "+(A.on?TLI18N.t("on"):TLI18N.t("off"));
+   var f=$("helpFeat"),r=$("helpRules");if(f)f.innerHTML=TLI18N.t("featuresPara");if(r)r.innerHTML=TLI18N.t("rulesPara");
+   if(!G.charging)$("launchLabel").innerHTML=TLI18N.t("launchLbl");
+   lastLaunchLabel="";G.dmdDirty=true;
+  }
+  uiLang();
+  TLI18N.onChange(uiLang);
   resize();
   var unlock=function(){A.init();A.resume();};
   window.addEventListener("pointerdown",unlock,{passive:true});
@@ -2909,8 +3488,30 @@ function boot(){
   window.addEventListener("click",unlock,{passive:true});
   window.addEventListener("touchend",unlock,{passive:true});
   G.booted=true;lastT=NOW();RAF(frame);
- }catch(e){fatal("STARTUP ERROR",(e&&e.message?e.message:String(e))+"\nGPU: "+gpuInfo());}}
+ }catch(e){fatal(TLI18N.t("errStartup"),(e&&e.message?e.message:String(e))+"\nGPU: "+gpuInfo());}}
 setTimeout(boot,30);
+
+/* Developer harness bridge (?debug=dbg/pinball.js): names only, no logic, no
+   listeners. Game behaviour is identical with and without the debug parameter. */
+window.TLHOOK = {
+  get update() { return update }, set update(f) { update = f },
+  stepBall: stepBall, updFlipper: updFlipper, collideFlipper: collideFlipper,
+  launchBall: launchBall, servePlunger: servePlunger, newBallObj: newBallObj,
+  startGame: startGame, commitAndStart: commitAndStart, toMenu: toMenu,
+  pauseGame: pauseGame, resumeGame: resumeGame, nextBall: nextBall, drainBall: drainBall,
+  addScore: addScore, onBumper: onBumper, onSling: onSling, hitTarget: hitTarget,
+  resetBank: resetBank, resetBankQuiet: resetBankQuiet, startMultiball: startMultiball,
+  onRampComplete: onRampComplete, nudge: nudge, doTilt: doTilt, setQual: setQual,
+  pcSetZoom: pcSetZoom, buildTable: buildTable, updChips: updChips, updHeat: updHeat,
+  spawnParts: spawnParts, store: store, resize: resize, frame: frame, render: render,
+  get G() { return G }, get L() { return L }, get RULES() { return RULES }, get DIFFS() { return DIFFS },
+  get BALL_R() { return BALL_R }, set BALL_R(v) { BALL_R = v },
+  get MAXV() { return MAXV }, set MAXV(v) { MAXV = v },
+  get DT() { return DT }, get PASS() { return PASS },
+  get PERF() { return PERF }, get held() { return held }, get dynCam() { return dynCam },
+  get isTouch() { return isTouch }, get gl() { return gl }
+};
+
 })();
 </script>
 <script>
@@ -2950,5 +3551,233 @@ else seen(cur);
 }).catch(function () {});
 })();
 </script>
+<script>
+/* Developer harness. ?debug=dbg/pinball.js loads the shared engine dbg/_harness.js
+   then that script: live panel with state, elements, layout per screen mode,
+   texts, balance, cheats, JSON export. No parameter or missing script = the
+   page behaves exactly as without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
+</script>
+<!-- inlined fs.js — the source of truth is fs.js: edit that file and re-inline this block -->
+<script>
+/* fs.js — the one fullscreen control every page shares.
+
+   Two jobs:
+
+   1. A toggle button. `TLFS.mount("#opts", {cls:"btn"})` puts it inside a menu or
+      title panel using that page's own button class; `TLFS.mount()` alone floats a
+      small icon button in the bottom-right corner; `{icon:true}` swaps the word for
+      a ⤢ glyph and moves it into `aria-label` for narrow hosts. The wording is the
+      shared translation key `fullscreen` / `exitFullscreen` — from the i18n kit, from
+      a page table published through `TLFS_LABEL(key)`, or English as the floor — and
+      a change of `<html lang>` repaints it. Where the Fullscreen API is missing the
+      button hides itself instead of lying.
+
+   2. Re-fit on every usable-area change. Entering or leaving fullscreen, an
+      orientation flip, and a mobile browser bar hiding or showing all change the
+      area the game has to fill — and the bar case does not always fire a plain
+      `resize`. This file listens to `fullscreenchange` (all vendor spellings) and
+      to `visualViewport.resize`, then re-applies `<html data-fs>` and dispatches
+      `resize` (plus `orientationchange`) once per frame, so the page's own layout
+      code runs. `TLFS.refitOnly()` gives a page that already has its own
+      fullscreen button just that wiring, without a second button.
+
+   Nothing here reads game state, and a page that never calls mount/refitOnly gets
+   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+(function () {
+  if (window.TLFS) return;
+  var de = document.documentElement;
+  var REQ = de.requestFullscreen || de.webkitRequestFullscreen ||
+    de.msRequestFullscreen || de.mozRequestFullScreen;
+  var EX = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.msExitFullscreen || document.mozCancelFullScreen;
+  var blocked = !REQ || !EX || de.fullscreenEnabled === false;
+  var ICON = "\u2922"; /* narrow hosts (side stripes, icon bars) get the glyph plus a
+                          translated aria-label instead of the word */
+  var btns = [], cbs = [], queued = false, styleDone = false;
+
+  function isFull() {
+    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
+      de.msFullscreenElement || de.mozFullScreenElement);
+  }
+  function kit() {
+    var k = window.TLI18N;
+    return (k && typeof k.t === "function") ? k : null;
+  }
+  /* A missing key makes t() hand back the key name — that is not a label.
+     Pages that keep their own translation table (billiards, tilt, oilstorm) publish
+     TLFS_LABEL(key) instead of the kit; they win over the kit, English is the floor. */
+  function label() {
+    var want = isFull() ? "exitFullscreen" : "fullscreen";
+    var L = window.TLFS_LABEL;
+    if (typeof L === "function") {
+      try { var v = L(want); if (v && v !== want) return String(v) } catch (e) {}
+    }
+    var k = kit(), t = null;
+    if (k) { try { t = k.t(want) } catch (e) { t = null } }
+    if (!t || t === want) t = isFull() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+    return t;
+  }
+  function cssOnce() {
+    if (styleDone) return;
+    styleDone = true;
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlfs-float:hover{border-color:#ffd76a;color:#ffd76a}" +
+      ".tlfs-float[hidden]{display:none}";
+    document.head.appendChild(st);
+  }
+  function paint() {
+    var txt = label();
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      b.textContent = b.__tlfsIcon ? ICON : txt;
+      b.setAttribute("aria-label", txt);
+      b.setAttribute("aria-pressed", isFull() ? "true" : "false");
+    }
+  }
+  /* One pass per frame: fullscreenchange and visualViewport.resize often arrive
+     together, and dispatching resize from inside a resize listener would loop. */
+  function refit() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint();
+      for (var i = 0; i < cbs.length; i++) { try { cbs[i](isFull()) } catch (e) {} }
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("orientationchange"));
+    });
+  }
+  function toggle() {
+    if (blocked) return false;
+    var was = isFull();
+    try {
+      if (was) EX.call(document);
+      else { var p = REQ.call(de); if (p && p.catch) p.catch(function () {}) }
+    } catch (e) {}
+    /* the change event may never come (sandboxed frames, denied requests, some
+       headless shells that grant then silently drop): repaint the state we can
+       read twice, late enough to catch a transition nobody announced. */
+    setTimeout(refit, 220);
+    setTimeout(refit, 700);
+    return !was;
+  }
+
+  de.setAttribute("data-fs", "off");
+  ["fullscreenchange", "webkitfullscreenchange", "MSFullscreenChange", "mozfullscreenchange"]
+    .forEach(function (t) { document.addEventListener(t, refit, false) });
+  ["fullscreenerror", "webkitfullscreenerror"].forEach(function (t) {
+    document.addEventListener(t, function () { de.setAttribute("data-fs", "off"); paint() }, false)
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", refit, false);
+    window.visualViewport.addEventListener("scroll", function () {
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint(); /* an exit the browser never announced must still clear the label */
+    }, false);
+  }
+  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
+  }, false);
+  /* A language switch changes <html lang>: repaint from whatever table the page
+     uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
+     drive their toggle state off that attribute, and taking it would corrupt them. */
+  new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
+
+  window.TLFS = {
+    version: "2026.11.23.3",
+    supported: !blocked,
+    isFull: isFull,
+    label: label,
+    paint: paint,
+    toggle: toggle,
+    onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
+    /* just the size/orientation wiring, for a page with its own fullscreen button */
+    refitOnly: function () { paint(); return true },
+    /* put the button in `sel` (or float it when the selector matches nothing).
+       opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
+       puts the translated word in aria-label, for narrow hosts. */
+    mount: function (sel, opts) {
+      cssOnce();
+      var o = opts || {};
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = o.cls || "tlfs-float";
+      b.id = o.id || "tlfsBtn";
+      b.__tlfsIcon = !!o.icon;
+      if (o.float !== false && !o.cls) b.classList.add("tlfs-float");
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", label());
+      if (o.ariaLabel) b.setAttribute("data-aria", o.ariaLabel);
+      b.textContent = o.icon ? ICON : label();
+      /* a menu that starts the game on any tap (defender binds pointerdown on the
+         whole title screen) must not fire when the fullscreen button is pressed */
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("touchstart", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle() });
+      var host = sel ? document.querySelector(sel) : null;
+      if (host) {
+        if (o.prepend && host.firstChild) host.insertBefore(b, host.firstChild);
+        else host.appendChild(b);
+      } else {
+        b.classList.add("tlfs-float");
+        document.body.appendChild(b);
+      }
+      if (blocked) b.style.display = "none";
+      btns.push(b);
+      paint();
+      return b;
+    },
+    /* wire a button the page already has in its markup (keeps its own look) */
+    attach: function (el) {
+      cssOnce();
+      if (!el) return null;
+      if (blocked) { el.style.display = "none"; return el }
+      el.addEventListener("click", function (e) { e.preventDefault(); toggle() });
+      btns.push(el);
+      paint();
+      return el;
+    },
+    /* a rebuilt panel drops its children: re-add every button the page mounted */
+    reassert: function () {
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i];
+        if (!b.isConnected && b.__tlfsHost) {
+          var h = document.querySelector(b.__tlfsHost);
+          if (h) h.appendChild(b);
+        }
+      }
+      paint();
+      return btns.length
+    }
+  };
+  /* remember where each button was mounted so a panel rebuild can put it back */
+  var mount0 = window.TLFS.mount;
+  window.TLFS.mount = function (sel, opts) {
+    var b = mount0(sel, opts);
+    if (b) b.__tlfsHost = sel || "body";
+    return b;
+  };
+  var k = kit();
+  if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
+})();
+</script>
+<script>/* pinball has its own icon fullscreen button — only the shared re-fit wiring */
+TLFS.refitOnly();</script>
 </body>
 </html>

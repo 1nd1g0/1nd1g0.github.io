@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <title>Grid Lemmings — Camera, Home, Fullscreen</title>
-<meta name="version" content="2026.11.07.1">
+<meta name="version" content="2026.11.24.1">
 <style>
   html,body{
     margin:0;padding:0;height:100%;overflow:hidden;
@@ -254,38 +254,39 @@
 <body>
 
 <div id="top">
+  <div id="tlHost" style="position:fixed;left:12px;bottom:12px;z-index:120"></div>
   <div id="hud">
-    <span>LEVEL <b id="lv">1</b></span>
-    <span>TIME <b id="tm">0:00</b></span>
-    <span>SAVED <b id="sv">0</b>/<b id="tt">0</b></span>
-    <span>GOAL <b id="goal">50%</b></span>
-    <span>LOST <b id="lo">0</b></span>
-    <span>LEFT <b id="lf">0</b></span>
+    <span><span data-t="level">LEVEL</span> <b id="lv">1</b></span>
+    <span><span data-t="time">TIME</span> <b id="tm">0:00</b></span>
+    <span><span data-t="savedLbl">SAVED</span> <b id="sv">0</b>/<b id="tt">0</b></span>
+    <span><span data-t="goalLbl">GOAL</span> <b id="goal">50%</b></span>
+    <span><span data-t="lostLbl">LOST</span> <b id="lo">0</b></span>
+    <span><span data-t="leftLbl">LEFT</span> <b id="lf">0</b></span>
   </div>
 
   <div class="box">
-    <span>LEVEL SEED</span>
-    <input id="seedInput" type="text" placeholder="blank=random" autocomplete="off">
-    <button id="seedRnd" class="miniBtn">RND</button>
+    <span data-t="seedLbl">LEVEL SEED</span>
+    <input id="seedInput" type="text" placeholder="blank=random" data-ph="phSeed" autocomplete="off">
+    <button id="seedRnd" class="miniBtn" data-t="rnd">RND</button>
   </div>
 
   <div class="box">
-    <span>MUSIC SEED</span>
-    <input id="musicSeedInput" type="text" placeholder="blank=random" autocomplete="off">
-    <button id="musicSeedRnd" class="miniBtn">RND</button>
+    <span data-t="musicLbl">MUSIC SEED</span>
+    <input id="musicSeedInput" type="text" placeholder="blank=random" data-ph="phSeed" autocomplete="off">
+    <button id="musicSeedRnd" class="miniBtn" data-t="rnd">RND</button>
   </div>
 
   <div class="box">
-    <span>GRID</span>
+    <span data-t="gridLbl">GRID</span>
     <input id="colsInput" type="number" min="20" max="80" value="40">
     <input id="rowsInput" type="number" min="12" max="45" value="22">
     <input id="tileInput" type="number" min="8" max="32" value="16">
-    <button id="applySizeBtn" class="miniBtn">SET</button>
+    <button id="applySizeBtn" class="miniBtn"><span data-t="setBtn">SET</span></button>
   </div>
 
   <div class="box">
-    <button id="timerBtn" class="miniBtn">TIMER ON</button>
-    <button id="helpBtn" class="miniBtn">HELP</button>
+    <button id="timerBtn" class="miniBtn"><span data-t="timerOn">TIMER ON</span></button>
+    <button id="helpBtn" class="miniBtn"><span data-t="help">HELP</span></button>
   </div>
 </div>
 
@@ -294,7 +295,7 @@
   <div id="msg"></div>
 
   <div id="cheat">
-    <b>KEYBOARD / CONTROLS</b><br>
+    <div id="cheatHtml"><b>KEYBOARD / CONTROLS</b><br>
     1..8 — select skill<br>
     Tap lemming — assign skill<br>
     Drag empty area — pan<br>
@@ -311,10 +312,11 @@
     H — toggle this help<br>
     HOME / FULLSCREEN appear on title and pause
   </div>
+  </div>
 
   <div id="overlay">
-    <button id="homeBtn">HOME</button>
-    <button id="fsBtn">FULLSCREEN</button>
+    <button id="homeBtn"><span data-t="home">HOME</span></button>
+    <button id="fsBtn"><span data-t="fullscreen">FULLSCREEN</span></button>
   </div>
 </div>
 
@@ -331,18 +333,342 @@
   </div>
 
   <div class="group" id="playGroup">
-    <button id="pauseBtn">PAUSE</button>
+    <button id="pauseBtn"><span data-t="pauseLbl">PAUSE</span></button>
     <button id="speedBtn">1X</button>
-    <button id="ffBtn">FAST ▶▶ HOLD</button>
+    <button id="ffBtn"><span data-t="fastHold">FAST</span> ▶▶ <span data-t="holdLbl">HOLD</span></button>
     <button id="rateBtn">RATE 1X</button>
-    <button id="restartBtn">RESTART</button>
-    <button id="nextBtn">START</button>
-    <button id="muteBtn">SOUND ON</button>
+    <button id="restartBtn"><span data-t="restart">RESTART</span></button>
+    <button id="nextBtn"><span data-t="start">START</span></button>
+    <button id="muteBtn"><span data-t="soundOn">SOUND ON</span></button>
   </div>
 </div>
 
+<!-- inlined i18n.js — the source of truth is i18n.js: edit that file and re-inline this block -->
 <script>
-(() => {
+/* ============================================================================
+   i18n.js — shared language kit for every page of this site.
+   Language code decision tree (identical everywhere, in this order):
+     0. any technical problem with this kit -> English
+     1. URL ?language=xx      (a region suffix is fine: pt-BR, zh-CN)
+     2. localStorage['tll:lang']
+     3. the browser's language list (navigator.languages, then navigator.language)
+     4. English
+   A code outside CODES is dropped, not trusted, so the next level decides. Only
+   the picker button writes storage, so a ?language= link never overwrites the
+   visitor's saved choice.
+
+   Page usage
+     <script src="i18n.js"><\/script>            BEFORE the game script
+     <script>TLI18N.add({en:{k:"Text"},es:{...},pt:{...},ru:{...},zh:{...}})<\/script>
+     markup:  <b data-t="score">SCORE</b>  <button data-tip="help">?</button>
+              <input data-ph="name">  <i data-aria="pause">  <img data-alt="car">
+     js:      el.textContent=TLI18N.t("gameOver");
+              el.innerHTML="<b>"+TLI18N.t("best")+": "+n+"</b>";
+              ctx.fillText(TLI18N.t("paused"),x,y);
+     canvas / innerHTML redraws: TLI18N.onChange(()=>redrawAll());
+     pick a host for the language button: TLI18N.mount("#startPanel")
+       (omit it and the kit parks a pill in the lower-left corner)
+   Keys missing from a non-English table fall back to English, so a half
+   translated table still runs. Values for *Fmt keys carry {placeholders}.
+   ========================================================================= */
+(function(){
+"use strict";
+var KEY="tll:lang", CODES=["en","es","pt","ru","zh"];
+var LANGS=[ // code · name in its own language · that word for "language" · its flag
+ ['en','English','Language','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0,0 60,40M60,0 0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 60,40M60,0 0,40" stroke="#C8102E" stroke-width="3.2"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="13"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="8"/></svg>'],
+ ['es','Español','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#AA151B"/><path d="M0,10H60M0,30H60" stroke="#F1BF00" stroke-width="20"/>  </svg>'],
+ ['pt','Português','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="40" fill="#046A38"/><rect x="24" width="36" height="40" fill="#DA291C"/><circle cx="24" cy="20" r="7.5" fill="#FEDF00" stroke="#046A38" stroke-width="1.4"/><path d="M24,14.5 24,22.5M20.5,17.5H27.5" stroke="#DA291C" stroke-width="2.2" fill="none"/></svg>'],
+ ['ru','Русский','Язык','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.34" width="60" height="13.33" fill="#0039A6"/><rect y="26.67" width="60" height="13.33" fill="#D52B1E"/></svg>'],
+ ['zh','中文','语言','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#EE1C25"/><circle cx="10" cy="10" r="5.6" fill="#FFDC00"/><circle cx="21" cy="6" r="2.1" fill="#FFDC00"/><circle cx="26" cy="11.5" r="2.1" fill="#FFDC00"/><circle cx="26" cy="18.5" r="2.1" fill="#FFDC00"/><circle cx="21" cy="24" r="2.1" fill="#FFDC00"/></svg>']
+];
+/* ---- shared vocabulary: the same word means the same thing in every game.
+       Values carry no glyphs — pages keep their ⌂ ▶ ■ icons in the markup. ---- */
+var COMMON={
+en:{
+ paused:"PAUSED",pause:"PAUSE",resume:"RESUME",start:"START",play:"PLAY",home:"HOME",menu:"MENU",
+ options:"OPTIONS",settings:"SETTINGS",help:"HELP",howToPlay:"HOW TO PLAY",rules:"RULES",controls:"CONTROLS",
+ keys:"KEYS",gamepad:"GAMEPAD",mouse:"MOUSE",touch:"TOUCH",
+ sound:"SOUND",music:"MUSIC",sfx:"SOUND FX",on:"ON",off:"OFF",fullscreen:"FULLSCREEN",exitFullscreen:"EXIT FULLSCREEN",
+ difficulty:"DIFFICULTY",easy:"EASY",normal:"NORMAL",hard:"HARD",low:"LOW",high:"HIGH",
+ score:"SCORE",best:"BEST",hiScore:"HIGH SCORE",level:"LEVEL",lives:"LIVES",time:"TIME",
+ speed:"SPEED",round:"ROUND",wave:"WAVE",seed:"SEED",newSeed:"NEW SEED",
+ restart:"RESTART",retry:"RETRY",continue:"CONTINUE",tryAgain:"TRY AGAIN",nextLevel:"NEXT LEVEL",
+ gameOver:"GAME OVER",youWin:"YOU WIN",youLose:"GAME OVER",clear:"CLEARED",
+ fire:"FIRE",jump:"JUMP",back:"BACK",exit:"EXIT",close:"CLOSE",ok:"OK",cancel:"CANCEL",
+ loading:"LOADING",shots:"SHOTS",moves:"MOVES",power:"POWER",angle:"ANGLE",
+ langTitle:"LANGUAGE",langNote:"Choose your language — it is remembered, and it applies to this game and to the whole catalogue.",
+ langBack:"CHANGE LANGUAGE",players:"PLAYERS",player:"PLAYER",you:"YOU",cpu:"CPU",random:"RANDOM"},
+es:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INICIO",play:"JUGAR",home:"INICIO",menu:"MENÚ",
+ options:"OPCIONES",settings:"AJUSTES",help:"AYUDA",howToPlay:"CÓMO JUGAR",rules:"REGLAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"MANDO",mouse:"RATÓN",touch:"TÁCTIL",
+ sound:"SONIDO",music:"MÚSICA",sfx:"EFECTOS",on:"ACTIVO",off:"APAGADO",fullscreen:"PANTALLA COMPLETA",exitFullscreen:"SALIR DE PANTALLA COMPLETA",
+ difficulty:"DIFICULTAD",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAJO",high:"ALTO",
+ score:"PUNTOS",best:"RÉCORD",hiScore:"RÉCORD",level:"NIVEL",lives:"VIDAS",time:"TIEMPO",
+ speed:"VELOCIDAD",round:"RONDA",wave:"OLEADA",seed:"SEMILLA",newSeed:"NUEVA SEMILLA",
+ restart:"REINICIAR",retry:"REINTENTAR",continue:"CONTINUAR",tryAgain:"INTÉNTALO OTRA VEZ",nextLevel:"SIGUIENTE NIVEL",
+ gameOver:"FIN DEL JUEGO",youWin:"¡GANASTE!",youLose:"FIN DEL JUEGO",clear:"SUPERADO",
+ fire:"DISPARO",jump:"SALTAR",back:"ATRÁS",exit:"SALIR",close:"CERRAR",ok:"ACEPTAR",cancel:"CANCELAR",
+ loading:"CARGANDO",shots:"LANZAMIENTOS",moves:"MOVIMIENTOS",power:"FUERZA",angle:"ÁNGULO",
+ langTitle:"IDIOMA",langNote:"Elige tu idioma: se recuerda y se aplica a este juego y a todo el catálogo.",
+ langBack:"CAMBIAR IDIOMA",players:"JUGADORES",player:"JUGADOR",you:"TÚ",cpu:"CPU",random:"ALEATORIO"},
+pt:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INÍCIO",play:"JOGAR",home:"INÍCIO",menu:"MENU",
+ options:"OPÇÕES",settings:"CONFIGURAÇÕES",help:"AJUDA",howToPlay:"COMO JOGAR",rules:"REGRAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"CONTROLE",mouse:"MOUSE",touch:"TOQUE",
+ sound:"SOM",music:"MÚSICA",sfx:"EFEITOS",on:"LIGADO",off:"DESLIGADO",fullscreen:"TELA CHEIA",exitFullscreen:"SAIR DA TELA CHEIA",
+ difficulty:"DIFICULDADE",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAIXO",high:"ALTO",
+ score:"PONTOS",best:"RECORDE",hiScore:"RECORDE",level:"NÍVEL",lives:"VIDAS",time:"TEMPO",
+ speed:"VELOCIDADE",round:"RODADA",wave:"ONDA",seed:"SEMENTE",newSeed:"NOVA SEMENTE",
+ restart:"REINICIAR",retry:"TENTAR DE NOVO",continue:"CONTINUAR",tryAgain:"TENTE DE NOVO",nextLevel:"PRÓXIMO NÍVEL",
+ gameOver:"FIM DE JOGO",youWin:"VOCÊ VENCEU",youLose:"FIM DE JOGO",clear:"COMPLETO",
+ fire:"DISPARO",jump:"SALTAR",back:"VOLTAR",exit:"SAIR",close:"FECHAR",ok:"OK",cancel:"CANCELAR",
+ loading:"CARREGANDO",shots:"BATIDAS",moves:"JOGADAS",power:"FORÇA",angle:"ÂNGULO",
+ langTitle:"IDIOMA",langNote:"Escolha seu idioma: ele é lembrado e vale para este jogo e para todo o catálogo.",
+ langBack:"MUDAR IDIOMA",players:"JOGADORES",player:"JOGADOR",you:"VOCÊ",cpu:"CPU",random:"ALEATÓRIO"},
+ru:{
+ paused:"ПАУЗА",pause:"ПАУЗА",resume:"ПРОДОЛЖИТЬ",start:"СТАРТ",play:"ИГРАТЬ",home:"ДОМОЙ",menu:"МЕНЮ",
+ options:"НАСТРОЙКИ",settings:"НАСТРОЙКИ",help:"ПОМОЩЬ",howToPlay:"КАК ИГРАТЬ",rules:"ПРАВИЛА",controls:"УПРАВЛЕНИЕ",
+ keys:"КЛАВИШИ",gamepad:"ГЕЙМПАД",mouse:"МЫШЬ",touch:"СЕНСОР",
+ sound:"ЗВУК",music:"МУЗЫКА",sfx:"ЗВУКИ",on:"ВКЛ",off:"ВЫКЛ",fullscreen:"НА ВЕСЬ ЭКРАН",exitFullscreen:"ВЫЙТИ С ЭКРАНА",
+ difficulty:"СЛОЖНОСТЬ",easy:"ЛЕГКО",normal:"НОРМА",hard:"СЛОЖНО",low:"НИЗ",high:"ВЕРХ",
+ score:"СЧЁТ",best:"РЕКОРД",hiScore:"РЕКОРД",level:"УРОВЕНЬ",lives:"ЖИЗНИ",time:"ВРЕМЯ",
+ speed:"СКОРОСТЬ",round:"РАУНД",wave:"ВОЛНА",seed:"КОД УРОВНЯ",newSeed:"НОВЫЙ КОД",
+ restart:"ЗАНОВО",retry:"ЕЩЁ РАЗ",continue:"ПРОДОЛЖИТЬ",tryAgain:"ПОПРОБУЙ ЕЩЁ",nextLevel:"СЛЕДУЮЩИЙ УРОВЕНЬ",
+ gameOver:"КОНЕЦ",youWin:"ПОБЕДА",youLose:"КОНЕЦ",clear:"УРОВЕНЬ ПРОЙДЕН",
+ fire:"ОГОНЬ",jump:"ПРЫЖОК",back:"НАЗАД",exit:"ВЫХОД",close:"ЗАКРЫТЬ",ok:"ОК",cancel:"ОТМЕНА",
+ loading:"ЗАГРУЗКА",shots:"УДАРЫ",moves:"ХОДЫ",power:"СИЛА",angle:"УГОЛ",
+ langTitle:"ЯЗЫК",langNote:"Выберите язык — он запоминается и действует для этой игры и для всего каталога.",
+ langBack:"СМЕНИТЬ ЯЗЫК",players:"ИГРОКИ",player:"ИГРОК",you:"ВЫ",cpu:"БОТ",random:"СЛУЧАЙНО"},
+zh:{
+ paused:"暂停",pause:"暂停",resume:"继续",start:"开始",play:"开始游戏",home:"主页",menu:"菜单",
+ options:"选项",settings:"设置",help:"帮助",howToPlay:"怎么玩",rules:"规则",controls:"操作",
+ keys:"按键",gamepad:"手柄",mouse:"鼠标",touch:"触摸",
+ sound:"声音",music:"音乐",sfx:"音效",on:"开",off:"关",fullscreen:"全屏",exitFullscreen:"退出全屏",
+ difficulty:"难度",easy:"简单",normal:"普通",hard:"困难",low:"低",high:"高",
+ score:"得分",best:"最高分",hiScore:"最高分",level:"关卡",lives:"生命",time:"时间",
+ speed:"速度",round:"回合",wave:"波次",seed:"种子",newSeed:"新种子",
+ restart:"重新开始",retry:"重试",continue:"继续",tryAgain:"再试一次",nextLevel:"下一关",
+ gameOver:"游戏结束",youWin:"胜利",youLose:"游戏结束",clear:"过关",
+ fire:"射击",jump:"跳跃",back:"返回",exit:"退出",close:"关闭",ok:"确定",cancel:"取消",
+ loading:"加载中",shots:"击球",moves:"步数",power:"力量",angle:"角度",
+ langTitle:"语言",langNote:"选择语言：会被记住，并用于这个游戏和整个游戏目录。",
+ langBack:"更换语言",players:"玩家",player:"玩家",you:"你",cpu:"电脑",random:"随机"}
+};
+var PAGE={en:{},es:{},pt:{},ru:{},zh:{}};
+function lget(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+function lset(v){try{localStorage.setItem(KEY,v)}catch(e){}}
+var code=null;
+/* A browser language list -> a supported code, or null when it says nothing
+   usable. "pt-BR", "ru_RU", "zh-CN" all match on their 2-letter base. */
+function fromBrowser(){
+ try{
+  var list=null;
+  if(navigator&&Array.isArray(navigator.languages)&&navigator.languages.length)list=navigator.languages;
+  else if(navigator)list=[navigator.language||navigator.userLanguage||""];
+  for(var i=0;i<(list||[]).length;i++){
+   var c=String(list[i]||"").toLowerCase().slice(0,2);
+   if(CODES.indexOf(c)>=0)return c;
+  }
+ }catch(e){}
+ return null;
+}
+(function(){
+ try{
+  var c=null,m=/[?&]language=([a-zA-Z]{2,3})/.exec(location.search||"");
+  if(m)c=m[1].toLowerCase().slice(0,2);           // ?language=pt-BR counts as pt
+  if(c&&CODES.indexOf(c)<0)c=null;
+  if(!c){var s=(lget()||"").toLowerCase().slice(0,2);if(CODES.indexOf(s)>=0)c=s;}
+  if(!c)c=fromBrowser();
+  code=c||"en";
+ }catch(e){code="en";} // a broken lookup speaks English, never nothing
+})();
+function raw(k){
+ var t=PAGE[code]?PAGE[code][k]:null; if(t!=null)return t;
+ t=COMMON[code]?COMMON[code][k]:null; if(t!=null)return t;
+ t=PAGE.en[k]; if(t!=null)return t;
+ t=COMMON.en[k]; return t==null?null:t;
+}
+var hooks=[];
+var API={
+ version:"2026.11.22.2", codes:CODES.slice(), langs:LANGS,
+ lang:function(){return code},
+ browserLang:function(){return fromBrowser()},
+ t:function(k,v){var s;try{s=raw(k)}catch(e){code="en";try{s=raw(k)}catch(e2){s=null}}
+  if(s==null)s=k;var o=v||{};for(var p in o)s=s.split("{"+p+"}").join(String(o[p]));return s},
+ flag:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][3];return ""},
+ name:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][2];return c},
+ add:function(tab){for(var c in tab){if(!PAGE[c])continue;for(var k in tab[c])PAGE[c][k]=tab[c][k];}
+  try{API.apply()}catch(e){}},
+ /* read the tables (the developer harness edits texts through these) */
+ keys:function(c){var out=[],seen={};try{var src=[PAGE[c],COMMON[c],PAGE.en,COMMON.en];
+  for(var i=0;i<src.length;i++)for(var k in src[i])if(!seen[k]){seen[k]=1;out.push(k)}out.sort();}catch(e){}
+  return out},
+ table:function(){var o={};try{for(var i=0;i<CODES.length;i++){var c=CODES[i],m={},s=[COMMON[c],PAGE[c],COMMON.en,PAGE.en];
+  for(var j=0;j<s.length;j++)for(var k in s[j])if(m[k]==null&&s[j][k]!=null)m[k]=s[j][k];o[c]=m;}}catch(e){}
+  return o},
+ setKey:function(c,k,v){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;
+  try{(PAGE[c]=PAGE[c]||{})[k]=String(v);}catch(e){return;}
+  try{API.apply()}catch(e){}
+  for(var i=0;i<hooks.length;i++)try{hooks[i](code)}catch(e){}},
+ onChange:function(f){hooks.push(f)},
+ set:function(c){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;code=c;lset(c);
+  try{API.apply()}catch(e){}for(var i=0;i<hooks.length;i++)try{hooks[i](c)}catch(e){}},
+ apply:function(root){
+  if(document.documentElement)document.documentElement.lang=code;
+  var r=root||document;
+  var set=function(e,attr,put){var v=raw(e.getAttribute(attr));if(v!=null)put(e,v);};
+  var all=[];
+  if(r.nodeType===1)all.push(r);
+  if(r.querySelectorAll)all=all.concat([].slice.call(r.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]")));
+  for(var i=0;i<all.length;i++){var e=all[i];
+   try{
+    if(e.hasAttribute("data-t"))set(e,"data-t",function(n,v){n.textContent=v});
+    if(e.hasAttribute("data-ph"))set(e,"data-ph",function(n,v){n.placeholder=v});
+    if(e.hasAttribute("data-tip"))set(e,"data-tip",function(n,v){n.title=v});
+    if(e.hasAttribute("data-aria"))set(e,"data-aria",function(n,v){n.setAttribute("aria-label",v)});
+    if(e.hasAttribute("data-alt"))set(e,"data-alt",function(n,v){n.alt=v});
+   }catch(e2){} // one odd node never aborts the pass
+  }
+  if(pill){try{pill.innerHTML=API.flag(code)+"<span>"+API.name(code)+"</span>";pill.title=API.t("langTitle");}catch(e){}}
+ },
+ mount:function(sel){hostSel=sel;ensurePill();},
+};
+/* ---------------- language button + picker overlay ---------------- */
+var hostSel=null,pill=null,ov=null;
+var CSS=".tlbtn{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(20,24,22,.72);flex:0 0 auto;align-self:center;"
+ +"border:1px solid #3a463f;border-radius:6px;color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:1px;"
+ +"cursor:pointer;line-height:1;width:auto;max-width:100%}.tlbtn:hover,.tlbtn:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}"
+ +".tlbtn svg{width:22px;height:15px;border:1px solid #2e3a34;border-radius:2px;display:block}"
+ +".tlfix{position:fixed;left:12px;bottom:12px;z-index:2147483000}"
+ +".tlov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;"
+ +"background:rgba(4,7,6,.86);padding:16px}.tlov[hidden]{display:none}"
+ +".tlpanel{max-width:660px;width:100%;background:#141816;border:1px solid #3a463f;border-radius:12px;"
+ +"padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.6);color:#c9d2cb;font:inherit;text-align:center}"
+ +".tlpanel h2{margin:0 0 6px;font-size:20px;letter-spacing:4px;color:#ffd76a}"
+ +".tlpanel p{margin:0 0 16px;font-size:12px;line-height:1.6;color:#8a948e}"
+ +".tlgrid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}"
+ +".tlb{width:132px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;"
+ +"background:rgba(20,24,22,.7);border:1px solid #3a463f;border-radius:8px;cursor:pointer;color:#c9d2cb;font:inherit}"
+ +".tlb:hover,.tlb:focus{border-color:#ffd76a;color:#f4e9c8;outline:none;box-shadow:0 0 14px rgba(255,215,106,.18)}"
+ +".tlb svg{width:50px;height:34px;border:1px solid #2e3a34;border-radius:4px;display:block}"
+ +".tlb b{font-size:13px;color:#f4e9c8}.tlb span{font-size:10px;letter-spacing:1px;color:#8a948e}"
+ +".tlx{margin-top:16px;padding:7px 20px;background:none;border:1px solid #3a463f;border-radius:6px;"
+ +"color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:2px;cursor:pointer}"
+ +".tlx:hover,.tlx:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}";
+function style(){if(document.getElementById("tlcss"))return;var s=document.createElement("style");s.id="tlcss";s.textContent=CSS;document.head.appendChild(s);}
+function ensurePill(){
+ if(pill)return;
+ var host=hostSel?document.querySelector(hostSel):null;
+ if(!host&&document.readyState==="loading")return; // retried at DOMContentLoaded
+ style();
+ pill=document.createElement("button");
+ pill.type="button";pill.className="tlbtn";pill.setAttribute("aria-haspopup","dialog");
+ if(!host){pill.className="tlbtn tlfix";document.body.appendChild(pill);}
+ else host.insertBefore(pill,host.firstChild);
+ pill.onclick=openOv;
+ API.apply();
+}
+function openOv(){
+ if(!ov){
+  ov=document.createElement("div");ov.className="tlov";ov.hidden=true;
+  var p=document.createElement("div");p.className="tlpanel";
+  var h=document.createElement("h2");h.setAttribute("data-t","langTitle");p.appendChild(h);
+  var np=document.createElement("p");np.setAttribute("data-t","langNote");p.appendChild(np);
+  var g=document.createElement("div");g.className="tlgrid";
+  for(var i=0;i<LANGS.length;i++){
+   var b=document.createElement("button");b.type="button";b.className="tlb";b.dataset.lang=LANGS[i][0];
+   b.innerHTML=LANGS[i][3]+"<b>"+LANGS[i][1]+"</b><span>"+LANGS[i][2]+"</span>";g.appendChild(b);
+  }
+  p.appendChild(g);
+  var x=document.createElement("button");x.type="button";x.className="tlx";x.setAttribute("data-t","close");p.appendChild(x);
+  ov.appendChild(p);document.body.appendChild(ov);
+  g.onclick=function(e){var b=e.target;while(b&&b!==g&&!b.dataset.lang)b=b.parentNode;if(b&&b.dataset.lang){API.set(b.dataset.lang);closeOv();}};
+  x.onclick=closeOv;
+  ov.onclick=function(e){if(e.target===ov)closeOv();};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ov&&!ov.hidden)closeOv();});
+ }
+ API.apply(ov);
+ ov.hidden=false;
+}
+function closeOv(){if(ov)ov.hidden=true;}
+function boot(){
+ try{ensurePill();API.apply();}
+ catch(e){code="en";try{ensurePill();API.apply();}catch(e2){}} // rule 0: English on any kit fault
+}
+/* keep freshly added nodes translated without the page calling apply() */
+new MutationObserver(function(ms){
+ if(!pill)return;
+ try{
+  for(var i=0;i<ms.length;i++){var n=ms[i].addedNodes;
+   for(var j=0;j<n.length;j++){var e=n[j];
+    if(e.nodeType!==1)continue;
+    if(e.matches&&e.matches("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]"))API.apply(e);
+    else if(e.querySelectorAll&&e.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]").length)API.apply(e);
+   }}
+ }catch(e){}
+}).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+window.TLI18N=API;
+})();
+</script>
+<script>
+/* If i18n.js is missing or only half-loaded, the game still runs: this stub
+   keeps the same API, pins English, and serves the en table this page registers
+   below via add(). */
+if(!window.TLI18N||typeof window.TLI18N.add!=="function"||typeof window.TLI18N.t!=="function"||typeof window.TLI18N.apply!=="function"||typeof window.TLI18N.mount!=="function"){(function(){var T={en:{}};window.TLI18N={version:"en-fallback",codes:["en"],langs:[["en","EN","English",""]],
+add:function(tab){for(var c in tab){T[c]=Object.assign(T[c]||{},tab[c]);}},
+t:function(k,v){var s=(T.en&&T.en[k]!=null)?T.en[k]:k,o=v||{};for(var p in o)s=String(s).split("{"+p+"}").join(String(o[p]));return s},
+flag:function(){return "";},name:function(c){return c;},lang:function(){return "en";},
+set:function(){},onChange:function(){},apply:function(){},mount:function(){}};})();}
+</script>
+<script>
+/* === grid lemmings language pack === */
+TLI18N.add({
+  en:{ CHEAT: '<b>KEYBOARD / CONTROLS</b><br>1..8 — select skill<br>Tap lemming — assign skill<br>Drag empty area — pan<br>Wheel / pinch — zoom<br>+ / - — zoom in / out<br>0 — reset view<br>Arrows — pan, Shift = fast<br>P — pause / resume<br>F — toggle speed<br>SPACE hold — fast forward<br>R — restart level<br>N — next / retry<br>M — sound on/off<br>H — toggle this help<br>HOME / FULLSCREEN appear on title and pause',
+    savedLbl:'SAVED', soundOn:'SOUND ON', soundOff:'SOUND OFF', goalLbl:'GOAL', lostLbl:'LOST', leftLbl:'LEFT', seedLbl:'LEVEL SEED', musicLbl:'MUSIC SEED',
+    gridLbl:'GRID', rnd:'RND', phSeed:'blank=random', setBtn:'SET', timerOn:'TIMER ON', timerOff:'TIMER OFF',
+    fullscreen:'FULLSCREEN', exitFs:'EXIT FULLSCREEN', pauseLbl:'PAUSE', fastHold:'FAST', holdLbl:'HOLD', rateLbl:'RATE',
+    completeLbl:'COMPLETE', failLbl:'FAILED', savedFmt:'{s}/{t} saved', needFmt:'need {n}', timeOut:'TIME OUT',
+    rankPerfect:'PERFECT', rankGreat:'GREAT', rankOkay:'OKAY',
+    titleSub:'click / tap to start • drag to pan • wheel/pinch to zoom', levelMsgFmt:'LEVEL {n}',
+    sk_climb:'CLIMB', sk_float:'FLOAT', sk_bomb:'BOMB', sk_block:'BLOCK', sk_bash:'BASH', sk_dig:'DIG', sk_mine:'MINE', sk_build:'BUILD' },
+  es:{ CHEAT: '<b>TECLADO / CONTROLES</b><br>1..8 — elegir habilidad<br>Toque un lemming — asignar habilidad<br>Arrastra zona vacía — mover<br>Rueda / pellizco — zoom<br>+ / - — acercar / alejar<br>0 — reiniciar vista<br>Flechas — mover, Shift = rápido<br>P — pausa / continuar<br>F — alternar velocidad<br>ESPACIO mantener — avance rápido<br>R — reiniciar nivel<br>N — siguiente / reintentar<br>M — sonido on/off<br>H — mostrar u ocultar esta ayuda<br>INICIO / PANTALLA COMPLETA aparecen en el título y la pausa',
+    savedLbl:'SALVADOS', soundOn:'SONIDO ON', soundOff:'SONIDO OFF', goalLbl:'META', lostLbl:'PERDIDOS', leftLbl:'RESTAN', seedLbl:'SEMILLA NIVEL', musicLbl:'SEMILLA MÚSICA',
+    gridLbl:'CUADRÍCULA', rnd:'ALEAT', phSeed:'vacío=aleatorio', setBtn:'SET', timerOn:'TEMPORIZADOR ON', timerOff:'TEMPORIZADOR OFF',
+    fullscreen:'PANTALLA COMPLETA', exitFs:'SALIR DE PANTALLA', pauseLbl:'PAUSA', fastHold:'RÁPIDO', holdLbl:'MANTENER', rateLbl:'RITMO',
+    completeLbl:'¡COMPLETO!', failLbl:'FALLO', savedFmt:'{s}/{t} salvados', needFmt:'se necesitan {n}', timeOut:'TIEMPO AGOTADO',
+    rankPerfect:'PERFECTO', rankGreat:'GENIAL', rankOkay:'BIEN',
+    titleSub:'clic / toque para empezar • arrastra para mover • rueda / pellizco para acercar', levelMsgFmt:'NIVEL {n}',
+    sk_climb:'ESCALAR', sk_float:'FLOTAR', sk_bomb:'BOMBA', sk_block:'BLOQUEAR', sk_bash:'DEMOLER', sk_dig:'DIGAR', sk_mine:'MINAR', sk_build:'CONSTRUIR' },
+  pt:{ CHEAT: '<b>TECLADO / CONTROLES</b><br>1..8 — escolher habilidade<br>Toque um lemming — atribuir habilidade<br>Arraste área vazia — mover<br>Roda / pinça — zoom<br>+ / - — aproximar / afastar<br>0 — resetar visão<br>Setas — mover, Shift = rápido<br>P — pausar / continuar<br>F — alternar velocidade<br>ESPAÇO segure — avanço rápido<br>R — reiniciar nível<br>N — próximo / repetir<br>M — som on/off<br>H — mostrar ou ocultar esta ajuda<br>INÍCIO / TELA CHEIA aparecem no título e na pausa',
+    savedLbl:'SALVOS', soundOn:'SOM ON', soundOff:'SOM OFF', goalLbl:'META', lostLbl:'PEDIDOS', leftLbl:'RESTAM', seedLbl:'SEMENTE NÍVEL', musicLbl:'SEMENTE MÚSICA',
+    gridLbl:'GRADE', rnd:'ALEAT', phSeed:'vazio=aleatório', setBtn:'SET', timerOn:'TEMPO ON', timerOff:'TEMPO OFF',
+    fullscreen:'TELA CHEIA', exitFs:'SAIR DA TELA', pauseLbl:'PAUSA', fastHold:'RÁPIDO', holdLbl:'SEGURE', rateLbl:'RITMO',
+    completeLbl:'COMPLETO!', failLbl:'FALHOU', savedFmt:'{s}/{t} salvos', needFmt:'precisa {n}', timeOut:'TEMPO ESGOTADO',
+    rankPerfect:'PERFEITO', rankGreat:'ÓTIMO', rankOkay:'BEM',
+    titleSub:'clique / toque para iniciar • arraste para mover • roda / pinça para zoom', levelMsgFmt:'NÍVEL {n}',
+    sk_climb:'ESCALAR', sk_float:'FLOTAR', sk_bomb:'BOMBA', sk_block:'BLOQUEAR', sk_bash:'DEMOLIR', sk_dig:'DIGAR', sk_mine:'MINAR', sk_build:'CONSTRUIR' },
+  ru:{ CHEAT: '<b>КЛАВИШИ / УПРАВЛЕНИЕ</b><br>1..8 — выбрать умение<br>Тап лемминга — назначить умение<br>Тяните пустую зону — панорама<br>Колесо / щипок — зум<br>+ / - — приблизить / отдалить<br>0 — сброс вида<br>Стрелки — панорама, Shift = быстро<br>P — пауза / продолжить<br>F — переключить скорость<br>ПРОБЕЛ удерживать — перемотка<br>R — заново уровень<br>N — следующий / повтор<br>M — звук вкл/выкл<br>H — показать или скрыть эту справку<br>ДОМ / ПОЛНЫЙ ЭКРАН появляются на главном экране и паузе',
+    savedLbl:'СПАСЕНО', soundOn:'ЗВУК ВКЛ', soundOff:'ЗВУК ВЫКЛ', goalLbl:'ЦЕЛЬ', lostLbl:'ПОТЕРЯН', leftLbl:'ОСТАЛОСЬ', seedLbl:'КОД УРОВНЯ', musicLbl:'КОД МУЗЫКИ',
+    gridLbl:'СЕТКА', rnd:'СЛУЧ.', phSeed:'пусто=случай', setBtn:'ОК', timerOn:'ТАЙМЕР ВКЛ', timerOff:'ТАЙМЕР ВЫКЛ',
+    fullscreen:'НА ВЕСЬ ЭКРАН', exitFs:'ВЫЙТИ С ЭКРАНА', pauseLbl:'ПАУЗА', fastHold:'БЫСТРО', holdLbl:'УДЕРЖ.', rateLbl:'ТЕМП',
+    completeLbl:'ГОТОВО', failLbl:'ПРОВАЛ', savedFmt:'{s}/{t} спасено', needFmt:'нужно {n}', timeOut:'ВРЕМЯ ВЫШЛО',
+    rankPerfect:'ИДЕАЛЬНО', rankGreat:'ОТЛИЧНО', rankOkay:'ХОРОШО',
+    titleSub:'клик / тап — старт • тяните — панорама • колесо / щипок — зум', levelMsgFmt:'УРОВЕНЬ {n}',
+    sk_climb:'ЛЕЗТЬ', sk_float:'ПАРЕНИЕ', sk_bomb:'БОМБА', sk_block:'БЛОК', sk_bash:'ПРОЛОМ', sk_dig:'ЯМА', sk_mine:'ПОДКОП', sk_build:'КЛАДКА' },
+  zh:{ CHEAT: '<b>键盘 / 操作</b><br>1..8 — 选择技能<br>轻触 旅人 — 分配技能<br>拖动空白区 — 平移<br>滚轮 / 捏合 — 缩放<br>+ / - — 放大 / 缩小<br>0 — 重置视图<br>方向键 — 平移，Shift = 快速<br>P — 暂停 / 继续<br>F — 切换速度<br>空格 按住 — 快进<br>R — 重开关卡<br>N — 下一关 / 重试<br>M — 音效开/关<br>H — 显示或隐藏本帮助<br>主页 / 全屏 出现在标题与暂停时',
+    savedLbl:'已救', soundOn:'音效开', soundOff:'音效关', goalLbl:'目标', lostLbl:'损失', leftLbl:'剩余', seedLbl:'关卡种子', musicLbl:'音乐种子',
+    gridLbl:'网格', rnd:'随机', phSeed:'留空=随机', setBtn:'确定', timerOn:'计时 开', timerOff:'计时 关',
+    fullscreen:'全屏', exitFs:'退出全屏', pauseLbl:'暂停', fastHold:'快速', holdLbl:'按住', rateLbl:'速率',
+    completeLbl:'完成！', failLbl:'失败', savedFmt:'{s}/{t} 已救', needFmt:'需 {n}', timeOut:'时间到',
+    rankPerfect:'完美', rankGreat:'很好', rankOkay:'尚可',
+    titleSub:'点击 / 轻触 开始 • 拖动 平移 • 滚轮 / 捏合 缩放', levelMsgFmt:'关卡 {n}',
+    sk_climb:'攀爬', sk_float:'漂浮', sk_bomb:'炸弹', sk_block:'阻挡', sk_bash:'爆破', sk_dig:'挖掘', sk_mine:'挖矿', sk_build:'建造' }
+});
+TLI18N.mount('#tlHost');
+</script>
+<script>(() => {
 "use strict";
 
 // =========================================================
@@ -2486,10 +2812,24 @@ function formatTime(s){
   return `${m}:${ss}`;
 }
 
-function showMsg(html, frames=120){
+function showMsg(html, frames=120, build=null){
   msgEl.innerHTML = html;
   msgTimer = frames;
+  lastMsgBuild = build;
 }
+let lastMsgBuild = null;
+function tlResync(){
+  document.getElementById('cheatHtml').innerHTML = TLI18N.t('CHEAT');
+  updateSkillButtons();
+  updateMenus();
+  updateHUD();
+  muteBtn.textContent = soundOn ? TLI18N.t('soundOn') : TLI18N.t('soundOff');
+  timerBtn.textContent = timerEnabled ? TLI18N.t('timerOn') : TLI18N.t('timerOff');
+  rateBtn.textContent = TLI18N.t('rateLbl') + ' ' + spawnRate + 'X';
+  pauseBtn.textContent = paused ? TLI18N.t('resume') : TLI18N.t('pauseLbl');
+  if(msgTimer > 0 && lastMsgBuild) showMsg(lastMsgBuild(), msgTimer, lastMsgBuild);
+}
+TLI18N.onChange(tlResync);
 
 function updateCheat(){
   cheatEl.style.display = (gameState === "title" || cheatManual) ? "block" : "none";
@@ -2505,7 +2845,7 @@ function updateMenus(){
     lastOverlayShow = show;
   }
 
-  fsBtn.textContent = isFullscreen() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+  fsBtn.textContent = isFullscreen() ? TLI18N.t("exitFs") : TLI18N.t("fullscreen");
 }
 
 function updateHUD(){
@@ -2527,7 +2867,7 @@ function updateSkillButtons(){
     const count = skillCounts[sk] ?? 0;
     
     const textSpan = btn.querySelector('.btn-text');
-    const txt = `${sk.toUpperCase()} ${count}`;
+    const txt = TLI18N.t("sk_" + sk) + " " + count;
     
     if(textSpan) {
         textSpan.textContent = txt;
@@ -2562,8 +2902,8 @@ function resetSkillCounts(n){
 function togglePause(){
   if(gameState !== "play") return;
   paused = !paused;
-  pauseBtn.textContent = paused ? "RESUME" : "PAUSE";
-  if(paused) showMsg("PAUSED", 999999);
+  pauseBtn.textContent = paused ? TLI18N.t("resume") : TLI18N.t("pauseLbl");
+  if(paused) showMsg(TLI18N.t("paused"), 999999, ()=>TLI18N.t("paused"));
   else showMsg("", 0);
   updateMenus();
 }
@@ -2577,13 +2917,13 @@ function toggleSpeed(){
 function toggleRate(){
   rateIndex = (rateIndex + 1) % rateOptions.length;
   spawnRate = rateOptions[rateIndex];
-  rateBtn.textContent = "RATE " + spawnRate + "X";
+  rateBtn.textContent = TLI18N.t("rateLbl") + " " + spawnRate + "X";
   spawnInterval = Math.max(18, Math.floor(baseSpawnInterval / spawnRate));
 }
 
 function toggleTimer(){
   timerEnabled = !timerEnabled;
-  timerBtn.textContent = timerEnabled ? "TIMER ON" : "TIMER OFF";
+  timerBtn.textContent = timerEnabled ? TLI18N.t("timerOn") : TLI18N.t("timerOff");
 
   if(timerEnabled && timeLeft <= 0){
     timeLeft = defaultTimeForLevel(levelNum);
@@ -2608,9 +2948,9 @@ function startPlayFromTitle(){
   unlockAudio();
   gameState = "play";
   paused = false;
-  pauseBtn.textContent = "PAUSE";
-  nextBtn.textContent = "NEXT LEVEL";
-  showMsg(`LEVEL ${levelNum}`, 100);
+  pauseBtn.textContent = TLI18N.t("pauseLbl");
+  nextBtn.textContent = TLI18N.t("nextLevel");
+  showMsg(TLI18N.t("levelMsgFmt",{n:levelNum}), 100);
   updateMenus();
 }
 
@@ -2620,22 +2960,24 @@ function endLevel(timeout=false){
   if(saved >= goalSaved){
     gameState = "complete";
     stateTimer = 220;
-    nextBtn.textContent = "NEXT LEVEL";
+    nextBtn.textContent = TLI18N.t("nextLevel");
 
-    let rank = "OKAY";
-    if(saved === total) rank = "PERFECT";
-    else if(saved >= goalSaved + Math.max(2, Math.floor(total*0.2))) rank = "GREAT";
+    let rank = TLI18N.t("rankOkay");
+    if(saved === total) rank = TLI18N.t("rankPerfect");
+    else if(saved >= goalSaved + Math.max(2, Math.floor(total*0.2))) rank = TLI18N.t("rankGreat");
 
-    showMsg(`LEVEL ${levelNum} COMPLETE<br>${saved}/${total} saved — ${rank}${timeout ? "<br>TIME OUT" : ""}`, 999999);
+    const compBuild = () => TLI18N.t("levelMsgFmt",{n:levelNum}) + " " + TLI18N.t("completeLbl") + "<br>" + TLI18N.t("savedFmt",{s:saved,t:total}) + " — " + rank + (timeout ? "<br>" + TLI18N.t("timeOut") : "");
+    showMsg(compBuild(), 999999, compBuild);
   }else{
     gameState = "fail";
     stateTimer = 240;
-    nextBtn.textContent = "RETRY";
-    showMsg(`FAILED<br>${saved}/${total} saved, need ${goalSaved}${timeout ? "<br>TIME OUT" : ""}`, 999999);
+    nextBtn.textContent = TLI18N.t("retry");
+    const failBuild = () => TLI18N.t("failLbl") + "<br>" + TLI18N.t("savedFmt",{s:saved,t:total}) + ", " + TLI18N.t("needFmt",{n:goalSaved}) + (timeout ? "<br>" + TLI18N.t("timeOut") : "");
+    showMsg(failBuild(), 999999, failBuild);
   }
 
   paused = false;
-  pauseBtn.textContent = "PAUSE";
+  pauseBtn.textContent = TLI18N.t("pauseLbl");
   updateMenus();
 }
 
@@ -2680,7 +3022,7 @@ function loadLevel(n, playNow){
   stateTimer = 0;
   hoverLem = null;
   paused = false;
-  pauseBtn.textContent = "PAUSE";
+  pauseBtn.textContent = TLI18N.t("pauseLbl");
 
   resetSkillCounts(n);
 
@@ -2690,11 +3032,12 @@ function loadLevel(n, playNow){
   }
 
   if(gameState === "title"){
-    nextBtn.textContent = "START";
-    showMsg("GRID LEMMINGS<br><span style='font-size:15px'>click / tap to start • drag to pan • wheel/pinch to zoom</span>", 999999);
+    nextBtn.textContent = TLI18N.t("start");
+    const titleBuild = () => "GRID LEMMINGS<br><span style='font-size:15px'>" + TLI18N.t("titleSub") + "</span>";
+    showMsg(titleBuild(), 999999, titleBuild);
   }else{
-    nextBtn.textContent = "NEXT LEVEL";
-    showMsg(`LEVEL ${levelNum}`, 100);
+    nextBtn.textContent = TLI18N.t("nextLevel");
+    showMsg(TLI18N.t("levelMsgFmt",{n:levelNum}), 100);
   }
 
   fitCamera();
@@ -2991,7 +3334,7 @@ nextBtn.addEventListener("click", advance);
 muteBtn.addEventListener("click", ()=>{
   unlockAudio();
   soundOn = !soundOn;
-  muteBtn.textContent = soundOn ? "SOUND ON" : "SOUND OFF";
+  muteBtn.textContent = soundOn ? TLI18N.t("soundOn") : TLI18N.t("soundOff");
   if(musicGain) musicGain.gain.value = soundOn ? 0.28 : 0;
 });
 
@@ -3668,6 +4011,52 @@ computeMetrics();
 updateCanvasSize();
 loadLevel(1, false);
 requestAnimationFrame(frame);
+tlResync();
+
+/* Developer harness bridge (?debug=dbg/lemmings.js): names only, no logic, no
+   listeners. Game behaviour is identical with and without the debug parameter. */
+window.TLHOOK = {
+  get advance() { return advance }, set advance(f) { advance = f },
+  assignSkill: assignSkill, endLevel: endLevel, endLevelIfNeeded: endLevelIfNeeded,
+  loadLevel: loadLevel, genLevel: genLevel, createLem: createLem,
+  commitLevelSeed: commitLevelSeed, defaultTimeForLevel: defaultTimeForLevel,
+  get lems() { return lems },
+  get spawned() { return spawned }, set spawned(v) { spawned = v },
+  get saved() { return saved }, set saved(v) { saved = v },
+  get lost() { return lost }, set lost(v) { lost = v },
+  get total() { return total }, set total(v) { total = v },
+  get spawnTimer() { return spawnTimer }, set spawnTimer(v) { spawnTimer = v },
+  get spawnInterval() { return spawnInterval }, set spawnInterval(v) { spawnInterval = v },
+  get baseSpawnInterval() { return baseSpawnInterval }, set baseSpawnInterval(v) { baseSpawnInterval = v },
+  get spawnRate() { return spawnRate }, set spawnRate(v) { spawnRate = v },
+  get selectedSkill() { return selectedSkill }, set selectedSkill(v) { selectedSkill = v },
+  get skillCounts() { return skillCounts }, set skillCounts(v) { skillCounts = v },
+  get gameState() { return gameState }, set gameState(v) { gameState = v },
+  get levelNum() { return levelNum }, set levelNum(v) { levelNum = v },
+  get gameTime() { return gameTime },
+  get timeLeft() { return timeLeft }, set timeLeft(v) { timeLeft = v },
+  get goalPercent() { return goalPercent }, set goalPercent(v) { goalPercent = v },
+  get goalSaved() { return goalSaved }, set goalSaved(v) { goalSaved = v },
+  get timerEnabled() { return timerEnabled }, set timerEnabled(v) { timerEnabled = v },
+  get paused() { return paused }, set paused(v) { paused = v },
+  get speed() { return speed }, set speed(v) { speed = v },
+  get fastForward() { return fastForward }, set fastForward(v) { fastForward = v },
+  get COLS() { return COLS }, set COLS(v) { COLS = v },
+  get ROWS() { return ROWS }, set ROWS(v) { ROWS = v },
+  get TILE() { return TILE }, set TILE(v) { TILE = v },
+  get GW() { return GW }, get GH() { return GH },
+  get WALK_PPS() { return WALK_PPS }, set WALK_PPS(v) { WALK_PPS = v },
+  get GRAVITY() { return GRAVITY }, set GRAVITY(v) { GRAVITY = v },
+  get MAX_FALL() { return MAX_FALL }, set MAX_FALL(v) { MAX_FALL = v },
+  get FLOAT_FALL() { return FLOAT_FALL }, set FLOAT_FALL(v) { FLOAT_FALL = v },
+  get LETHAL_FALL() { return LETHAL_FALL }, set LETHAL_FALL(v) { LETHAL_FALL = v },
+  get BODY_H() { return BODY_H }, get BODY_W() { return BODY_W },
+  get levelSeed() { return levelSeed }, set levelSeed(v) { levelSeed = v },
+  get spawn() { return spawn }, set spawn(v) { spawn = v },
+  get exit() { return exit }, set exit(v) { exit = v },
+  SKILLS: SKILLS, speedOptions: speedOptions, rateOptions: rateOptions, FAST_SPEED: FAST_SPEED,
+  get terrain() { return terrain }, ctx: ctx, canvas: canvas
+};
 
 })();
 </script>
@@ -3708,5 +4097,233 @@ else seen(cur);
 }).catch(function () {});
 })();
 </script>
+<script>
+/* Developer harness. ?debug=dbg/lemmings.js loads the shared engine dbg/_harness.js
+   then that script: live panel with state, elements, layout per screen mode,
+   texts, balance, cheats, JSON export. No parameter or missing script = the
+   page behaves exactly as without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
+</script>
+<!-- inlined fs.js — the source of truth is fs.js: edit that file and re-inline this block -->
+<script>
+/* fs.js — the one fullscreen control every page shares.
+
+   Two jobs:
+
+   1. A toggle button. `TLFS.mount("#opts", {cls:"btn"})` puts it inside a menu or
+      title panel using that page's own button class; `TLFS.mount()` alone floats a
+      small icon button in the bottom-right corner; `{icon:true}` swaps the word for
+      a ⤢ glyph and moves it into `aria-label` for narrow hosts. The wording is the
+      shared translation key `fullscreen` / `exitFullscreen` — from the i18n kit, from
+      a page table published through `TLFS_LABEL(key)`, or English as the floor — and
+      a change of `<html lang>` repaints it. Where the Fullscreen API is missing the
+      button hides itself instead of lying.
+
+   2. Re-fit on every usable-area change. Entering or leaving fullscreen, an
+      orientation flip, and a mobile browser bar hiding or showing all change the
+      area the game has to fill — and the bar case does not always fire a plain
+      `resize`. This file listens to `fullscreenchange` (all vendor spellings) and
+      to `visualViewport.resize`, then re-applies `<html data-fs>` and dispatches
+      `resize` (plus `orientationchange`) once per frame, so the page's own layout
+      code runs. `TLFS.refitOnly()` gives a page that already has its own
+      fullscreen button just that wiring, without a second button.
+
+   Nothing here reads game state, and a page that never calls mount/refitOnly gets
+   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+(function () {
+  if (window.TLFS) return;
+  var de = document.documentElement;
+  var REQ = de.requestFullscreen || de.webkitRequestFullscreen ||
+    de.msRequestFullscreen || de.mozRequestFullScreen;
+  var EX = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.msExitFullscreen || document.mozCancelFullScreen;
+  var blocked = !REQ || !EX || de.fullscreenEnabled === false;
+  var ICON = "\u2922"; /* narrow hosts (side stripes, icon bars) get the glyph plus a
+                          translated aria-label instead of the word */
+  var btns = [], cbs = [], queued = false, styleDone = false;
+
+  function isFull() {
+    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
+      de.msFullscreenElement || de.mozFullScreenElement);
+  }
+  function kit() {
+    var k = window.TLI18N;
+    return (k && typeof k.t === "function") ? k : null;
+  }
+  /* A missing key makes t() hand back the key name — that is not a label.
+     Pages that keep their own translation table (billiards, tilt, oilstorm) publish
+     TLFS_LABEL(key) instead of the kit; they win over the kit, English is the floor. */
+  function label() {
+    var want = isFull() ? "exitFullscreen" : "fullscreen";
+    var L = window.TLFS_LABEL;
+    if (typeof L === "function") {
+      try { var v = L(want); if (v && v !== want) return String(v) } catch (e) {}
+    }
+    var k = kit(), t = null;
+    if (k) { try { t = k.t(want) } catch (e) { t = null } }
+    if (!t || t === want) t = isFull() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+    return t;
+  }
+  function cssOnce() {
+    if (styleDone) return;
+    styleDone = true;
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlfs-float:hover{border-color:#ffd76a;color:#ffd76a}" +
+      ".tlfs-float[hidden]{display:none}";
+    document.head.appendChild(st);
+  }
+  function paint() {
+    var txt = label();
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      b.textContent = b.__tlfsIcon ? ICON : txt;
+      b.setAttribute("aria-label", txt);
+      b.setAttribute("aria-pressed", isFull() ? "true" : "false");
+    }
+  }
+  /* One pass per frame: fullscreenchange and visualViewport.resize often arrive
+     together, and dispatching resize from inside a resize listener would loop. */
+  function refit() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint();
+      for (var i = 0; i < cbs.length; i++) { try { cbs[i](isFull()) } catch (e) {} }
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("orientationchange"));
+    });
+  }
+  function toggle() {
+    if (blocked) return false;
+    var was = isFull();
+    try {
+      if (was) EX.call(document);
+      else { var p = REQ.call(de); if (p && p.catch) p.catch(function () {}) }
+    } catch (e) {}
+    /* the change event may never come (sandboxed frames, denied requests, some
+       headless shells that grant then silently drop): repaint the state we can
+       read twice, late enough to catch a transition nobody announced. */
+    setTimeout(refit, 220);
+    setTimeout(refit, 700);
+    return !was;
+  }
+
+  de.setAttribute("data-fs", "off");
+  ["fullscreenchange", "webkitfullscreenchange", "MSFullscreenChange", "mozfullscreenchange"]
+    .forEach(function (t) { document.addEventListener(t, refit, false) });
+  ["fullscreenerror", "webkitfullscreenerror"].forEach(function (t) {
+    document.addEventListener(t, function () { de.setAttribute("data-fs", "off"); paint() }, false)
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", refit, false);
+    window.visualViewport.addEventListener("scroll", function () {
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint(); /* an exit the browser never announced must still clear the label */
+    }, false);
+  }
+  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
+  }, false);
+  /* A language switch changes <html lang>: repaint from whatever table the page
+     uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
+     drive their toggle state off that attribute, and taking it would corrupt them. */
+  new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
+
+  window.TLFS = {
+    version: "2026.11.23.3",
+    supported: !blocked,
+    isFull: isFull,
+    label: label,
+    paint: paint,
+    toggle: toggle,
+    onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
+    /* just the size/orientation wiring, for a page with its own fullscreen button */
+    refitOnly: function () { paint(); return true },
+    /* put the button in `sel` (or float it when the selector matches nothing).
+       opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
+       puts the translated word in aria-label, for narrow hosts. */
+    mount: function (sel, opts) {
+      cssOnce();
+      var o = opts || {};
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = o.cls || "tlfs-float";
+      b.id = o.id || "tlfsBtn";
+      b.__tlfsIcon = !!o.icon;
+      if (o.float !== false && !o.cls) b.classList.add("tlfs-float");
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", label());
+      if (o.ariaLabel) b.setAttribute("data-aria", o.ariaLabel);
+      b.textContent = o.icon ? ICON : label();
+      /* a menu that starts the game on any tap (defender binds pointerdown on the
+         whole title screen) must not fire when the fullscreen button is pressed */
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("touchstart", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle() });
+      var host = sel ? document.querySelector(sel) : null;
+      if (host) {
+        if (o.prepend && host.firstChild) host.insertBefore(b, host.firstChild);
+        else host.appendChild(b);
+      } else {
+        b.classList.add("tlfs-float");
+        document.body.appendChild(b);
+      }
+      if (blocked) b.style.display = "none";
+      btns.push(b);
+      paint();
+      return b;
+    },
+    /* wire a button the page already has in its markup (keeps its own look) */
+    attach: function (el) {
+      cssOnce();
+      if (!el) return null;
+      if (blocked) { el.style.display = "none"; return el }
+      el.addEventListener("click", function (e) { e.preventDefault(); toggle() });
+      btns.push(el);
+      paint();
+      return el;
+    },
+    /* a rebuilt panel drops its children: re-add every button the page mounted */
+    reassert: function () {
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i];
+        if (!b.isConnected && b.__tlfsHost) {
+          var h = document.querySelector(b.__tlfsHost);
+          if (h) h.appendChild(b);
+        }
+      }
+      paint();
+      return btns.length
+    }
+  };
+  /* remember where each button was mounted so a panel rebuild can put it back */
+  var mount0 = window.TLFS.mount;
+  window.TLFS.mount = function (sel, opts) {
+    var b = mount0(sel, opts);
+    if (b) b.__tlfsHost = sel || "body";
+    return b;
+  };
+  var k = kit();
+  if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
+})();
+</script>
+<script>/* lemmings has fsBtn already — only the shared re-fit wiring */
+TLFS.refitOnly();</script>
 </body>
 </html>

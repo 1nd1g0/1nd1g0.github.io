@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#141210">
 <title>Crystal Ball in a Tilted Maze</title>
-<meta name="version" content="2026.11.21.1">
+<meta name="version" content="2026.11.24.1">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;background:#0d0b08;color:#e8e0d0;
@@ -420,6 +420,7 @@ function buildTextures(seed){
 // Portuguese, Russian, Simplified Chinese.
 var TR={
 en:{
+ fullscreen:'FULLSCREEN',exitFullscreen:'EXIT FULLSCREEN',
 titleT:'Crystal Ball in a Tilted Maze',
 btnPlay:'PLAY',btnOptions:'SOUND & GRAPHICS',btnControls:'CONTROLS',btnGyro:'USE GYROSCOPE',btnCam:'USE CAMERA',btnHome:'HOME',btnMenu:'MENU',btnResume:'RESUME',btnRestart:'RESTART LEVEL',btnCal:'CALIBRATE',btnOptions2:'OPTIONS',btnClose:'CLOSE',btnStart:'START',btnCancel:'CANCEL',btnNext:'NEXT LEVEL',btnReplay:'REPLAY',btnLang:'LANGUAGE',
 hPause:'PAUSED',hWin:'LEVEL COMPLETE',hOpts:'OPTIONS',hSound:'SOUND',hGraphics:'GRAPHICS',hControls:'CONTROLS',hTune:'TUNE EACH INPUT',hHelp:'HOW EACH INPUT WORKS',hCal:'CALIBRATION',hLang:'LANGUAGE',
@@ -459,6 +460,7 @@ dL:'LEFT',dU:'UP',dR:'RIGHT',dD:'DOWN',
 langSub:'Choose your language — it is remembered for next time, and you can change it later from the title screen.'
 },
 es:{
+ fullscreen:'PANTALLA COMPLETA',exitFullscreen:'SALIR DE PANTALLA COMPLETA',
 titleT:'Bola de Cristal en un Laberinto Inclinado',
 btnPlay:'JUGAR',btnOptions:'SONIDO Y GRÁFICOS',btnControls:'CONTROLES',btnGyro:'USAR GIROSCOPIO',btnCam:'USAR CÁMARA',btnHome:'INICIO',btnMenu:'MENÚ',btnResume:'CONTINUAR',btnRestart:'REINICIAR NIVEL',btnCal:'CALIBRAR',btnOptions2:'OPCIONES',btnClose:'CERRAR',btnStart:'EMPEZAR',btnCancel:'CANCELAR',btnNext:'SIGUIENTE NIVEL',btnReplay:'REPETIR',btnLang:'IDIOMA',
 hPause:'PAUSA',hWin:'NIVEL COMPLETADO',hOpts:'OPCIONES',hSound:'SONIDO',hGraphics:'GRÁFICOS',hControls:'CONTROLES',hTune:'AJUSTA CADA CONTROL',hHelp:'CÓMO FUNCIONA CADA CONTROL',hCal:'CALIBRACIÓN',hLang:'IDIOMA',
@@ -498,6 +500,7 @@ dL:'IZQUIERDA',dU:'ARRIBA',dR:'DERECHA',dD:'ABAJO',
 langSub:'Elige tu idioma: se recordará para la próxima y podrás cambiarlo desde la pantalla de título.'
 },
 pt:{
+ fullscreen:'TELA CHEIA',exitFullscreen:'SAIR DA TELA CHEIA',
 titleT:'Bola de Cristal em um Labirinto Inclinado',
 btnPlay:'JOGAR',btnOptions:'SOM E GRÁFICOS',btnControls:'CONTROLES',btnGyro:'USAR GIROSCÓPIO',btnCam:'USAR CÂMERA',btnHome:'INÍCIO',btnMenu:'MENU',btnResume:'CONTINUAR',btnRestart:'REINICIAR FASE',btnCal:'CALIBRAR',btnOptions2:'OPÇÕES',btnClose:'FECHAR',btnStart:'INICIAR',btnCancel:'CANCELAR',btnNext:'PRÓXIMA FASE',btnReplay:'REPETIR',btnLang:'IDIOMA',
 hPause:'PAUSADO',hWin:'FASE CONCLUÍDA',hOpts:'OPÇÕES',hSound:'SOM',hGraphics:'GRÁFICOS',hControls:'CONTROLES',hTune:'AJUSTE CADA CONTROLE',hHelp:'COMO CADA CONTROLE FUNCIONA',hCal:'CALIBRAÇÃO',hLang:'IDIOMA',
@@ -537,13 +540,14 @@ dL:'ESQUERDA',dU:'PARA CIMA',dR:'DIREITA',dD:'PARA BAIXO',
 langSub:'Escolha seu idioma: ele fica lembrado para a próxima e você pode mudá-lo depois na tela de título.'
 },
 ru:{
+ fullscreen:'НА ВЕСЬ ЭКРАН',exitFullscreen:'ВЫЙТИ С ЭКРАНА',
 titleT:'Хрустальный шарик в наклонённом лабиринте',
-btnPlay:'ИГРАТЬ',btnOptions:'ЗВУК И ГРАФИКА',btnControls:'УПРАВЛЕНИЕ',btnGyro:'ДАТЧИК НАКЛОНА',btnCam:'КАМЕРА',btnHome:'ДОМОЙ',btnMenu:'МЕНЮ',btnResume:'ПРОДОЛЖИТЬ',btnRestart:'ЗАНОВО УРОВЕНЬ',btnCal:'КАЛИБРОВКА',btnOptions2:'НАСТРОЙКИ',btnClose:'ЗАКРЫТЬ',btnStart:'СТАРТ',btnCancel:'ОТМЕНА',btnNext:'СЛЕДУЮЩИЙ УРОВЕНЬ',btnReplay:'ПОВТОРИТЬ',btnLang:'ЯЗЫК',
+btnPlay:'ИГРАТЬ',btnOptions:'ЗВУК И ГРАФИКА',btnControls:'УПРАВЛЕНИЕ',btnGyro:'ДАТЧИК НАКЛОНА',btnCam:'КАМЕРА',btnHome:'ДОМОЙ',btnMenu:'МЕНЮ',btnResume:'ПРОДОЛЖИТЬ',btnRestart:'ПЕРЕЗАПУСТИТЬ',btnCal:'КАЛИБРОВКА',btnOptions2:'НАСТРОЙКИ',btnClose:'ЗАКРЫТЬ',btnStart:'СТАРТ',btnCancel:'ОТМЕНА',btnNext:'СЛЕДУЮЩИЙ УРОВЕНЬ',btnReplay:'ПОВТОР',btnLang:'ЯЗЫК',
 hPause:'ПАУЗА',hWin:'УРОВЕНЬ ПРОЙДЕН',hOpts:'НАСТРОЙКИ',hSound:'ЗВУК',hGraphics:'ГРАФИКА',hControls:'УПРАВЛЕНИЕ',hTune:'НАСТРОЙКА КАЖДОГО ВВОДА',hHelp:'КАК РАБОТАЕТ КАЖДЫЙ ВВОД',hCal:'КАЛИБРОВКА',hLang:'ЯЗЫК',
-menuSub:'Катите хрустальный шарик по деревянным лабиринтам, которые строит программа: ямы, вода, лёд, конвейеры, вентиляторы, осыпающиеся доски и подвижные преграды. Каждый уровень рождается из вашего зерна.',
-seedPh:'ЗЕРНО',lvStart:'начать с уровня',diceTip:'Случайное зерно',volume:'громкость',
+menuSub:'Катите хрустальный шарик по деревянным лабиринтам, которые строит программа: ямы, вода, лёд, конвейеры, вентиляторы, осыпающиеся доски и подвижные преграды. Каждый уровень рождается из кода уровня.',
+seedPh:'КОД УРОВНЯ',lvStart:'начать с уровня',diceTip:'Случайный код',volume:'громкость',
 sndOn:'ЗВУК: ВКЛ',sndOff:'ЗВУК: ВЫКЛ',vibOn:'ВИБРАЦИЯ: ВКЛ',vibOff:'ВИБРАЦИЯ: ВЫКЛ',
-preMax:'МАКСИМУМ',preHigh:'ВЫСОКАЯ',preMed:'СРЕДНЯЯ',preLow:'НИЗКАЯ (БЫСТРО)',
+preMax:'МАКСИМУМ',preHigh:'ВЕРХ',preMed:'СРЕД',preLow:'НИЗ (БЫСТРО)',
 fxNote:'Вся игра рисуется вживую кодом — никакой готовой графики. Выберите профиль выше или соберите свой вид, отметив ровно те эффекты, которые хотите; всё снятое тоже помогает слабым устройствам.',
 fxPar:'Объём 3D и грани стен',fxShadow:'Падающие тени',fxCaustic:'Световые пятна и каустики',fxSpec:'Блики',fxWater:'Анимация воды',fxRefl:'Отражения комнаты (нужна камера)',
 resLabel:'разрешение',resFull:'Полное (родное)',resHigh:'Высокое (75%)',resMed:'Среднее (66%)',resLow:'Низкое (50%)',
@@ -558,24 +562,25 @@ helpLight:'<b>Свет:</b> с включённой камерой игра на
 helpTilt:'<b>Датчик наклона:</b> нажмите «ДАТЧИК НАКЛОНА», держите устройство более-менее горизонтально. Пока вы неподвижны, игра сама тихонько выравнивает нейтральную точку; нажмите C, чтобы сделать это сразу, или КАЛИБРОВКА (на вкладках КАМЕРА и ДАТЧИК НАКЛОНА выше) — мастер на минуту, который выучит оси вашего устройства, его шум и зеркальность камеры. Всё сохраняется: у каждого игрока игра должна ощущаться одинаково.',
 helpKey:'<b>Клавиатура:</b> стрелки / WASD наклоняют доску. R — заново · C — заново вычислить · M — тишина · Esc — меню.',
 helpTouch:'<b>Мышь / сенсор:</b> зажмите и ведите пальцем или мышью по экрану — доска наклоняется вслед.',
-helpPad:'<b>Геймпад:</b> левый стик наклоняет, Start = меню, A = продолжить/заново, кнопка guide = случайное зерно. Крестовина наводит шарик меню.',
+helpPad:'<b>Геймпад:</b> левый стик наклоняет, Start = меню, A = продолжить/заново, кнопка guide = случайный код. Крестовина наводит шарик меню.',
 helpFall:'<b>Упали в яму?</b> Появитесь у последнего флажка-чекпоинта. Собирайте звёзды ради очков; дойдите до золотых ворот, чтобы пройти уровень.',
 calIntro:'Подстройте наклон/камеру под ВАШЕ устройство. Следуйте подсказкам на экране; результат сохраняется, и на любом устройстве игра ведёт себя одинаково.',
 calIntroW:'Подстройте наклон и камеру под ВАШЕ устройство. Следуйте подсказкам; результат сохраняется, и на любом устройстве игра ведёт себя одинаково.',
-hudLv:'УР',hudSeed:'ЗЕРНО',hudBest:'РЕКОРД',
+hudLv:'УР',hudSeed:'КОД УРОВНЯ',hudBest:'РЕКОРД',
 hintMain:'ведите пальцем · стрелки/WASD · геймпад · R заново · Esc меню',
 hintCamOn:'камера включена: наведите на фактурную сцену · наклоняйте устройство · C — центрировать',
 hintTilt:'Наклоняйте устройство плавно · нажмите C для центрации',recCam:'камера отцентрирована — держите устройство неподвижно',recGyro:'центр восстановлен — держите устройство ровно',tiltDeny:'разрешение на наклон не дано',noTilt:'НЕТ ДАТЧИКА НАКЛОНА',gyroOn:'НАКЛОН: ВКЛ (C=ЦЕНТР)',
-sumFmt:'зерно «{s}» уровень {n} ({w}×{h})',lTime:'время',lStars:'звёзды',lFalls:'падения',lSeed:'зерно',
+sumFmt:'код «{s}» уровень {n} ({w}×{h})',lTime:'время',lStars:'звёзды',lFalls:'падения',lSeed:'код',
 winDone:'УРОВЕНЬ {n} ПРОЙДЕН',winBest:' — НОВЫЙ РЕКОРД!',wReplay:'можно повторить!',
 camOn:'КАМЕРА: ВКЛ (C=ЦЕНТР)',camPrefix:'КАМЕРА: ',camFront:'CAM: ПЕРЕДНЯЯ',camBack:'CAM: ЗАДНЯЯ',camFrontTap:'CAM: ПЕРЕДНЯЯ (НАЖМИ=ЗАДНЯЯ)',camBackTap:'CAM: ЗАДНЯЯ (НАЖМИ=ПЕРЕДНЯЯ)',camHintP:'камера: ',
 cfNoCam:'КАМЕРА НЕ НАЙДЕНА',cfNoCamA:'её заняло другое приложение или драйвер',cfPlay:'ПРОСМОТР ЗАБЛОКИРОВАН',cfPlayA:'браузер запретил предпросмотр камеры',cfHttps:'НУЖЕН HTTPS',cfHttpsA:'откройте игру по адресу https или localhost',cfNoApi:'НЕ ПОДДЕРЖИВАЕТСЯ',cfNoApiA:'в этом браузере нет API камеры',cfDenied:'ДОСТУП ЗАПРЕЩЁН',cfDeniedA:'разрешите камеру в настройках сайта браузера',cfErr:'СБОЙ ЗАПРОСА КАМЕРЫ',cfErrA:'запрос камеры не удался',cfNoSig:'НЕТ СИГНАЛА',cfNoSigA:'камера не даёт кадров; возможно, она занята?',
 calHoldStart:'Держите устройство так, как вы играете, затем нажмите СТАРТ.',calNeutral:'ДЕРЖИТЕ УСТРОЙСТВО РОВНО И НЕПОДВИЖНО',calNoTiltCam:'В ЭТОМ УСТРОЙСТВЕ НЕТ ДАТЧИКА НАКЛОНА — включите КАМЕРУ, затем запустите КАЛИБРОВКУ, чтобы настроить только видеопоток.',calHold:'ДЕРЖИТЕ НЕПОДВИЖНО… ',calMoveRing:'ВЕДИТЕ ТОЧКУ В СВЕТЯЩЕЕСЯ КОЛЬЦО',calGot:'ГОТОВО — ',calNextTilt:'ДАЛЬШЕ: НАКЛОНИТЕ К НОВОМУ КОЛЬЦУ',calLastFlat:'ПОСЛЕДНИЙ ШАГ: ПОЛОЖИТЕ ПЛАШКО И НЕПОДВИЖНО',calMeas:'ИЗМЕРЯЮ ШУМ В ПОКОЕ… ',calCenterRing:'ДЕРЖИТЕ ТОЧКУ В ЦЕНТРАЛЬНОМ КОЛЬЦЕ',calFeedIntro:'Датчика наклона здесь нет — калибровка только видеопотока. Она узнаёт, зеркальна ли картинка вашей камеры.',calTurn:'МЕДЛЕННО ПОВЕРНИТЕ ',calGotReady:'ГОТОВО — ПРИГОТОВЬТЕСЬ: МЕДЛЕННО ПОВЕРНИТЕ ',calLost:'КАМЕРА ПОТЕРЯНА — НАВЕДИТЕ НА ФАКТУРНУЮ ОСВЕЩЁННУЮ СЦЕНУ',calNeedTurn:'НУЖНО ДВИЖЕНИЕ КАМЕРЫ — МЕДЛЕННО ПОВЕРНИТЕ {d} (или помашите рукой перед камерой, потом ПОВЕРНИТЕ)',calGotTurn:'ДАЛЬШЕ: МЕДЛЕННО ПОВЕРНИТЕ ',calFeedSaved:'Калибровка видеопотока сохранена для этого устройства.',calSaved:'Калибровка сохранена для этого устройства.',
-resFeed:'ВИДЕО: ',resMirrored:'ЗЕРКАЛЬНО',resNormal:'ОБЫЧНО',resKeep:' — УПРАВЛЕНИЕ НЕ ИЗМЕНЕНО',resNoMot:'ДВИЖЕНИЯ КАМЕРЫ НЕ ХВАТИЛО — НАСТРОЙКА ВИДЕО НЕ ИЗМЕНЕНА',resAxes:'ОСИ',resA:'A:',resB:'B:',resSwapped:'МЕНА',resStandard:'ОБЫЧНО',resFeedL:'ВИДЕО:',resNoise:'ШУМ:',
-dL:'ВЛЕВО',dU:'ВВЕРХ',dR:'ВПРАВО',dD:'ВНИЗ',
-langSub:'Выберите язык — он запомнится, и позже его можно сменить на титульном экране.'
+resFeed:'ВИДЕО: ',resMirrored:'ЗЕРКАЛЬНО',resNormal:'НОРМА',resKeep:' — УПРАВЛЕНИЕ НЕ ИЗМЕНЕНО',resNoMot:'ДВИЖЕНИЯ КАМЕРЫ НЕ ХВАТИЛО — НАСТРОЙКА ВИДЕО НЕ ИЗМЕНЕНА',resAxes:'ОСИ',resA:'A:',resB:'B:',resSwapped:'МЕНА',resStandard:'ОБЫЧНО',resFeedL:'ВИДЕО:',resNoise:'ШУМ:',
+dL:'ЛЕВО',dU:'ВВЕРХ',dR:'ПРАВО',dD:'ВНИЗ',
+langSub:'Выберите язык — он запомнится, и позже его можно сменить на главном экране.'
 },
 zh:{
+ fullscreen:'全屏',exitFullscreen:'退出全屏',
 titleT:'倾斜迷宫中的水晶球',
 btnPlay:'开始游戏',btnOptions:'声音与画面',btnControls:'操作方式',btnGyro:'使用陀螺仪',btnCam:'使用摄像头',btnHome:'主页',btnMenu:'菜单',btnResume:'继续',btnRestart:'重玩本关',btnCal:'校准',btnOptions2:'选项',btnClose:'关闭',btnStart:'开始',btnCancel:'取消',btnNext:'下一关',btnReplay:'重玩',btnLang:'语言',
 hPause:'已暂停',hWin:'关卡完成',hOpts:'选项',hSound:'声音',hGraphics:'画面',hControls:'操作方式',hTune:'逐项调节输入',hHelp:'每种操作说明',hCal:'校准',hLang:'语言',
@@ -2302,15 +2307,21 @@ function frame(ts){
 optLoad();ctlLoad(); // stored preferences: sound, haptics, graphics, input tunings
 AU.muted=OPT.muted;AU.vol=OPT.vol; // (calibration lives in its own stored key)
 resize();buildTextures('BOOT');
-// Language order: an explicit ?language=xx in the URL (the catalogue page
-// appends it to every game link once a language is chosen) beats the stored
-// choice; a code with no table is ignored rather than sticking. With neither
-// the game speaks English, and the language screen stays reachable from the
+// Language decision tree, identical to i18n.js: any fault -> English; else an
+// explicit ?language=xx (the catalogue page appends it to every game link once a
+// language is chosen), else the stored choice, else the browser's language list,
+// else English. A code with no table is dropped rather than sticking, so the
+// next level still gets a vote; the language screen stays reachable from the
 // title's language button (#langB2).
-var urlLang=((location.search.match(/[?&]language=([A-Za-z-]+)/)||[])[1]||'').toLowerCase();
-var savedLang=store('tll:lang');
+var urlLang=((location.search.match(/[?&]language=([A-Za-z-]+)/)||[])[1]||'').toLowerCase().slice(0,2);
+var savedLang=(store('tll:lang')||'').toLowerCase().slice(0,2);
+var navLang='';
+try{
+ var navList=(navigator&&navigator.languages&&navigator.languages.length)?navigator.languages:[(navigator&&(navigator.language||navigator.userLanguage))||''];
+ for(var nl=0;nl<navList.length;nl++){var nc=String(navList[nl]||'').toLowerCase().slice(0,2);if(TR[nc]){navLang=nc;break;}}
+}catch(e){navLang='';}
 langBuild();
-if(TR[urlLang])LANG=urlLang;else if(TR[savedLang])LANG=savedLang;else LANG='en';
+if(TR[urlLang])LANG=urlLang;else if(TR[savedLang])LANG=savedLang;else if(TR[navLang])LANG=navLang;else LANG='en';
 applyLang();show('menu',true);
 show('pause',false);show('win',false);
 $('seed').value=store('tll:lastseed')||randSeed();
@@ -2556,5 +2567,234 @@ else seen(cur);
 }).catch(function () {});
 })();
 </script>
+<script>
+/* Developer harness. ?debug=dbg/tilt.js loads the shared engine dbg/_harness.js
+   then that script: live panel with state, elements, layout per screen mode,
+   texts, balance, cheats, JSON export. No parameter or missing script = the
+   page behaves exactly as without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
+</script>
+<!-- inlined fs.js — the source of truth is fs.js: edit that file and re-inline this block -->
+<script>
+/* fs.js — the one fullscreen control every page shares.
+
+   Two jobs:
+
+   1. A toggle button. `TLFS.mount("#opts", {cls:"btn"})` puts it inside a menu or
+      title panel using that page's own button class; `TLFS.mount()` alone floats a
+      small icon button in the bottom-right corner; `{icon:true}` swaps the word for
+      a ⤢ glyph and moves it into `aria-label` for narrow hosts. The wording is the
+      shared translation key `fullscreen` / `exitFullscreen` — from the i18n kit, from
+      a page table published through `TLFS_LABEL(key)`, or English as the floor — and
+      a change of `<html lang>` repaints it. Where the Fullscreen API is missing the
+      button hides itself instead of lying.
+
+   2. Re-fit on every usable-area change. Entering or leaving fullscreen, an
+      orientation flip, and a mobile browser bar hiding or showing all change the
+      area the game has to fill — and the bar case does not always fire a plain
+      `resize`. This file listens to `fullscreenchange` (all vendor spellings) and
+      to `visualViewport.resize`, then re-applies `<html data-fs>` and dispatches
+      `resize` (plus `orientationchange`) once per frame, so the page's own layout
+      code runs. `TLFS.refitOnly()` gives a page that already has its own
+      fullscreen button just that wiring, without a second button.
+
+   Nothing here reads game state, and a page that never calls mount/refitOnly gets
+   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+(function () {
+  if (window.TLFS) return;
+  var de = document.documentElement;
+  var REQ = de.requestFullscreen || de.webkitRequestFullscreen ||
+    de.msRequestFullscreen || de.mozRequestFullScreen;
+  var EX = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.msExitFullscreen || document.mozCancelFullScreen;
+  var blocked = !REQ || !EX || de.fullscreenEnabled === false;
+  var ICON = "\u2922"; /* narrow hosts (side stripes, icon bars) get the glyph plus a
+                          translated aria-label instead of the word */
+  var btns = [], cbs = [], queued = false, styleDone = false;
+
+  function isFull() {
+    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
+      de.msFullscreenElement || de.mozFullScreenElement);
+  }
+  function kit() {
+    var k = window.TLI18N;
+    return (k && typeof k.t === "function") ? k : null;
+  }
+  /* A missing key makes t() hand back the key name — that is not a label.
+     Pages that keep their own translation table (billiards, tilt, oilstorm) publish
+     TLFS_LABEL(key) instead of the kit; they win over the kit, English is the floor. */
+  function label() {
+    var want = isFull() ? "exitFullscreen" : "fullscreen";
+    var L = window.TLFS_LABEL;
+    if (typeof L === "function") {
+      try { var v = L(want); if (v && v !== want) return String(v) } catch (e) {}
+    }
+    var k = kit(), t = null;
+    if (k) { try { t = k.t(want) } catch (e) { t = null } }
+    if (!t || t === want) t = isFull() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+    return t;
+  }
+  function cssOnce() {
+    if (styleDone) return;
+    styleDone = true;
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlfs-float:hover{border-color:#ffd76a;color:#ffd76a}" +
+      ".tlfs-float[hidden]{display:none}";
+    document.head.appendChild(st);
+  }
+  function paint() {
+    var txt = label();
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      b.textContent = b.__tlfsIcon ? ICON : txt;
+      b.setAttribute("aria-label", txt);
+      b.setAttribute("aria-pressed", isFull() ? "true" : "false");
+    }
+  }
+  /* One pass per frame: fullscreenchange and visualViewport.resize often arrive
+     together, and dispatching resize from inside a resize listener would loop. */
+  function refit() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint();
+      for (var i = 0; i < cbs.length; i++) { try { cbs[i](isFull()) } catch (e) {} }
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("orientationchange"));
+    });
+  }
+  function toggle() {
+    if (blocked) return false;
+    var was = isFull();
+    try {
+      if (was) EX.call(document);
+      else { var p = REQ.call(de); if (p && p.catch) p.catch(function () {}) }
+    } catch (e) {}
+    /* the change event may never come (sandboxed frames, denied requests, some
+       headless shells that grant then silently drop): repaint the state we can
+       read twice, late enough to catch a transition nobody announced. */
+    setTimeout(refit, 220);
+    setTimeout(refit, 700);
+    return !was;
+  }
+
+  de.setAttribute("data-fs", "off");
+  ["fullscreenchange", "webkitfullscreenchange", "MSFullscreenChange", "mozfullscreenchange"]
+    .forEach(function (t) { document.addEventListener(t, refit, false) });
+  ["fullscreenerror", "webkitfullscreenerror"].forEach(function (t) {
+    document.addEventListener(t, function () { de.setAttribute("data-fs", "off"); paint() }, false)
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", refit, false);
+    window.visualViewport.addEventListener("scroll", function () {
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint(); /* an exit the browser never announced must still clear the label */
+    }, false);
+  }
+  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
+  }, false);
+  /* A language switch changes <html lang>: repaint from whatever table the page
+     uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
+     drive their toggle state off that attribute, and taking it would corrupt them. */
+  new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
+
+  window.TLFS = {
+    version: "2026.11.23.3",
+    supported: !blocked,
+    isFull: isFull,
+    label: label,
+    paint: paint,
+    toggle: toggle,
+    onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
+    /* just the size/orientation wiring, for a page with its own fullscreen button */
+    refitOnly: function () { paint(); return true },
+    /* put the button in `sel` (or float it when the selector matches nothing).
+       opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
+       puts the translated word in aria-label, for narrow hosts. */
+    mount: function (sel, opts) {
+      cssOnce();
+      var o = opts || {};
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = o.cls || "tlfs-float";
+      b.id = o.id || "tlfsBtn";
+      b.__tlfsIcon = !!o.icon;
+      if (o.float !== false && !o.cls) b.classList.add("tlfs-float");
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", label());
+      if (o.ariaLabel) b.setAttribute("data-aria", o.ariaLabel);
+      b.textContent = o.icon ? ICON : label();
+      /* a menu that starts the game on any tap (defender binds pointerdown on the
+         whole title screen) must not fire when the fullscreen button is pressed */
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("touchstart", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle() });
+      var host = sel ? document.querySelector(sel) : null;
+      if (host) {
+        if (o.prepend && host.firstChild) host.insertBefore(b, host.firstChild);
+        else host.appendChild(b);
+      } else {
+        b.classList.add("tlfs-float");
+        document.body.appendChild(b);
+      }
+      if (blocked) b.style.display = "none";
+      btns.push(b);
+      paint();
+      return b;
+    },
+    /* wire a button the page already has in its markup (keeps its own look) */
+    attach: function (el) {
+      cssOnce();
+      if (!el) return null;
+      if (blocked) { el.style.display = "none"; return el }
+      el.addEventListener("click", function (e) { e.preventDefault(); toggle() });
+      btns.push(el);
+      paint();
+      return el;
+    },
+    /* a rebuilt panel drops its children: re-add every button the page mounted */
+    reassert: function () {
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i];
+        if (!b.isConnected && b.__tlfsHost) {
+          var h = document.querySelector(b.__tlfsHost);
+          if (h) h.appendChild(b);
+        }
+      }
+      paint();
+      return btns.length
+    }
+  };
+  /* remember where each button was mounted so a panel rebuild can put it back */
+  var mount0 = window.TLFS.mount;
+  window.TLFS.mount = function (sel, opts) {
+    var b = mount0(sel, opts);
+    if (b) b.__tlfsHost = sel || "body";
+    return b;
+  };
+  var k = kit();
+  if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
+})();
+</script>
+<script>/* tilt keeps its own table: hand the button label to it, then mount in OPTIONS */
+window.TLFS_LABEL=function(k){return typeof t==="function"?t(k):null};
+TLFS.mount("#opts",{cls:"btn sm"});</script>
 </body>
 </html>

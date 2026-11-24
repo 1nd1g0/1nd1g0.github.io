@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Te3s</title>
-<meta name="version" content="2026.11.07.1">
+<meta name="version" content="2026.11.24.1">
 <style>
 :root{
   --bg:#0a0a0f; --panel:#16161d; --accent:#00e5ff; --text:#e8e8f0; --border:#2c2c38;
@@ -16,6 +16,7 @@ body{background:var(--bg);color:var(--text);font-family:'Courier New',Courier,mo
 
 /* ---------- OVERLAYS ---------- */
 .overlay{position:absolute;inset:0;background:rgba(6,6,14,.96);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:300;padding:16px;overflow-y:auto;}
+#tlHost{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:400;display:flex;}
 .overlay.active{display:flex;}
 .overlay h1{font-size:56px;color:var(--accent);margin:0 0 6px;text-shadow:0 0 24px var(--accent);letter-spacing:6px;}
 .overlay .sub{color:#8899aa;margin:0 0 18px;font-size:14px;letter-spacing:2px;}
@@ -117,103 +118,103 @@ input[type=range]{width:140px;accent-color:var(--accent);}
   <!-- TITLE -->
   <div id="title-screen" class="overlay active">
     <h1>Te3s</h1>
-    <p class="sub">ULTIMATE PROCEDURAL TETRIS</p>
-    <button class="menu-btn" onclick="game.startMode('marathon')">🎮 Marathon</button>
-    <button class="menu-btn" onclick="game.startMode('sprint')">⚡ Sprint (40 Lines)</button>
-    <button class="menu-btn" onclick="game.startMode('grandmaster')">🏆 Grand Master (20G)</button>
-    <button class="menu-btn" onclick="game.startMode('zone')">🌀 Zone Mode</button>
-    <button class="menu-btn" onclick="game.startMode('ultra')">⏱ Ultra (2 min)</button>
-    <button class="menu-btn" onclick="game.startMode('garbage')">💀 Garbage Battle</button>
-    <button class="menu-btn" onclick="music.generate()">🎲 New Music</button>
-    <button class="menu-btn" onclick="ui.showOptions()">⚙ Options</button>
-    <button class="menu-btn" onclick="ui.showHelp()">❓ Help &amp; Features</button>
-    <a class="menu-btn" href="https://1nd1g0.github.io/">🏠 Home</a>
+    <p class="sub"><span data-t="sub">ULTIMATE PROCEDURAL TETRIS</span></p>
+    <button class="menu-btn" onclick="game.startMode('marathon')">🎮 <span data-t="mMarathon">Marathon</span></button>
+    <button class="menu-btn" onclick="game.startMode('sprint')">⚡ <span data-t="mSprint">Sprint (40 Lines)</span></button>
+    <button class="menu-btn" onclick="game.startMode('grandmaster')">🏆 <span data-t="mGM">Grand Master (20G)</span></button>
+    <button class="menu-btn" onclick="game.startMode('zone')">🌀 <span data-t="mZone">Zone Mode</span></button>
+    <button class="menu-btn" onclick="game.startMode('ultra')">⏱ <span data-t="mUltra">Ultra (2 min)</span></button>
+    <button class="menu-btn" onclick="game.startMode('garbage')">💀 <span data-t="mGarbage">Garbage Battle</span></button>
+    <button class="menu-btn" onclick="music.generate()">🎲 <span data-t="newMusic">New Music</span></button>
+    <button class="menu-btn" onclick="ui.showOptions()">⚙ <span data-t="options">Options</span></button>
+    <button class="menu-btn" onclick="ui.showHelp()">❓ <span data-t="helpFeat">Help &amp; Features</span></button>
+    <a class="menu-btn" href="https://1nd1g0.github.io/">🏠 <span data-t="home">Home</span></a>
   </div>
 
   <!-- PAUSE -->
   <div id="pause-screen" class="overlay">
-    <h1>⏸ PAUSED</h1>
-    <button class="menu-btn" onclick="game.resume()">▶ Resume</button>
-    <button class="menu-btn" onclick="game.restart()">🔄 Restart</button>
-    <button class="menu-btn" onclick="game.toMenu()">🏠 Main Menu</button>
-    <button class="menu-btn" onclick="music.generate()">🎲 New Music</button>
-    <button class="menu-btn" onclick="ui.showOptions()">⚙ Options</button>
-    <a class="menu-btn" href="https://1nd1g0.github.io/">🌐 Return Home</a>
+    <h1>⏸ <span data-t="paused">PAUSED</span></h1>
+    <button class="menu-btn" onclick="game.resume()">▶ <span data-t="resume">Resume</span></button>
+    <button class="menu-btn" onclick="game.restart()">🔄 <span data-t="restart">Restart</span></button>
+    <button class="menu-btn" onclick="game.toMenu()">🏠 <span data-t="mainMenu">Main Menu</span></button>
+    <button class="menu-btn" onclick="music.generate()">🎲 <span data-t="newMusic">New Music</span></button>
+    <button class="menu-btn" onclick="ui.showOptions()">⚙ <span data-t="options">Options</span></button>
+    <a class="menu-btn" href="https://1nd1g0.github.io/">🌐 <span data-t="returnHome">Return Home</span></a>
   </div>
 
   <!-- OPTIONS -->
   <div id="options-screen" class="overlay">
-    <h2>⚙ OPTIONS</h2>
+    <h2>⚙ <span data-t="options">OPTIONS</span></h2>
     <div class="options-group">
-      <div class="opt-row"><span>🎵 Music</span>
+      <div class="opt-row"><span>🎵 <span data-t="music">Music</span></span>
         <label class="switch"><input type="checkbox" id="opt-music" onchange="settings.musicOn=this.checked;settings.save();music.applyState();"><span class="slider"></span></label></div>
-      <div class="opt-row"><span>🎵 Vol</span>
+      <div class="opt-row"><span>🎵 <span data-t="vol">Vol</span></span>
         <input type="range" id="opt-musicvol" min="0" max="100" oninput="settings.musicVol=+this.value;settings.save();music.setVolumes();"></div>
-      <div class="opt-row"><span>🔊 Sound FX</span>
+      <div class="opt-row"><span>🔊 <span data-t="sfx">Sound FX</span></span>
         <label class="switch"><input type="checkbox" id="opt-sound" onchange="settings.soundOn=this.checked;settings.save();"><span class="slider"></span></label></div>
-      <div class="opt-row"><span>🔊 Vol</span>
+      <div class="opt-row"><span>🔊 <span data-t="vol">Vol</span></span>
         <input type="range" id="opt-sfxvol" min="0" max="100" oninput="settings.sfxVol=+this.value;settings.save();music.setVolumes();"></div>
-      <div class="opt-row"><span>👻 Ghost Piece</span>
+      <div class="opt-row"><span>👻 <span data-t="ghost">Ghost Piece</span></span>
         <label class="switch"><input type="checkbox" id="opt-ghost" onchange="settings.ghostOn=this.checked;settings.save();game.ghostOn=this.checked;"><span class="slider"></span></label></div>
     </div>
-    <button class="menu-btn" onclick="music.generate()">🎲 Generate New Music</button>
-    <button class="menu-btn" onclick="ui.closeOptions()">← Back</button>
+    <button class="menu-btn" onclick="music.generate()">🎲 <span data-t="genMusic">Generate New Music</span></button>
+    <button class="menu-btn" onclick="ui.closeOptions()">← <span data-t="back">Back</span></button>
   </div>
 
   <!-- HELP -->
   <div id="help-screen" class="overlay">
-    <h2>❓ Features &amp; Modes</h2>
+    <h2>❓ <span data-t="helpTitle">Features &amp; Modes</span></h2>
     <div class="help-content">
-      <h3>🎮 Non-Classic Features</h3>
+      <h3>🎮 <span data-t="helpNC">Non-Classic Features</span></h3>
       <ul>
-        <li><span class="tag">GUIDELINE</span><b>Ghost Piece</b> — translucent preview showing where the piece will land.</li>
-        <li><span class="tag">GUIDELINE</span><b>Hold Piece</b> — press C / H to reserve a piece (once per drop).</li>
-        <li><span class="tag">GUIDELINE</span><b>5-Next Queue</b> — see the next 5 pieces to plan ahead.</li>
-        <li><span class="tag">GUIDELINE</span><b>7-Bag Randomizer</b> — fair distribution of pieces.</li>
-        <li><span class="tag">GUIDELINE</span><b>SRS Wall Kicks</b> — 5-test kick tables for I and JLSTZ.</li>
-        <li><span class="tag">GUIDELINE</span><b>T-Spin Detection</b> — 3-corner rule, mini &amp; full, bonus points.</li>
-        <li><span class="tag">GUIDELINE</span><b>Back-to-Back</b> — consecutive Tetrises / T-Spins give 1.5× score.</li>
-        <li><span class="tag">GUIDELINE</span><b>Combo System</b> — consecutive clears build a combo multiplier.</li>
-        <li><span class="tag">EFFECT</span><b>Zone</b> — V / Z when meter full: time slows to 20% for 5s, board glows blue.</li>
-        <li><span class="tag">TGM</span><b>Grand Master Grade</b> — ranking from 9 up to GM.</li>
-        <li><span class="tag">TGM</span><b>20G Gravity</b> — pieces fall instantly at high levels.</li>
-        <li><span class="tag">TGM</span><b>Lock Delay + Move Reset</b> — locks after 500ms on ground OR 15 moves.</li>
-        <li><span class="tag">99</span><b>Garbage Lines</b> — rows with a gap injected from below; clearing delays waves.</li>
-        <li><span class="tag">CLASSIC</span><b>DAS/ARR</b> — 133ms auto-shift delay, 50ms repeat (touch: 220/60).</li>
+        <li><span class="tag">GUIDELINE</span><b><span data-t="ghost">Ghost Piece</span></b> — <span data-t="fGhostD">translucent preview showing where the piece will land.</span></li>
+        <li><span class="tag">GUIDELINE</span><b><span data-t="holdPiece">Hold Piece</span></b> — <span data-t="fHoldD">press C / H to reserve a piece (once per drop).</span></li>
+        <li><span class="tag">GUIDELINE</span><b><span data-t="fiveNext">5-Next Queue</span></b> — <span data-t="fNextD">see the next 5 pieces to plan ahead.</span></li>
+        <li><span class="tag">GUIDELINE</span><b><span data-t="sevenBag">7-Bag Randomizer</span></b> — <span data-t="fBagD">fair distribution of pieces.</span></li>
+        <li><span class="tag">GUIDELINE</span><b><span data-t="srs">SRS Wall Kicks</span></b> — <span data-t="fSrsD">5-test kick tables for I and JLSTZ.</span></li>
+        <li><span class="tag">GUIDELINE</span><b><span data-t="tspin">T-Spin Detection</span></b> — <span data-t="fTspinD">3-corner rule, mini &amp; full, bonus points.</span></li>
+        <li><span class="tag">GUIDELINE</span><b><span data-t="b2b">Back-to-Back</span></b> — <span data-t="fB2bD">consecutive Tetrises / T-Spins give 1.5× score.</span></li>
+        <li><span class="tag">GUIDELINE</span><b><span data-t="comboSys">Combo System</span></b> — <span data-t="fComboD">consecutive clears build a combo multiplier.</span></li>
+        <li><span class="tag">EFFECT</span><b><span data-t="zoneEff">Zone</span></b> — <span data-t="fZoneD">V / Z when meter full: time slows to 20% for 5s, board glows blue.</span></li>
+        <li><span class="tag">TGM</span><b><span data-t="gmGrade">Grand Master Grade</span></b> — <span data-t="fGradeD">ranking from 9 up to GM.</span></li>
+        <li><span class="tag">TGM</span><b><span data-t="g20">20G Gravity</span></b> — <span data-t="f20gD">pieces fall instantly at high levels.</span></li>
+        <li><span class="tag">TGM</span><b><span data-t="lockDelay">Lock Delay + Move Reset</span></b> — <span data-t="fLockD">locks after 500ms on ground OR 15 moves.</span></li>
+        <li><span class="tag">99</span><b><span data-t="garbageLines">Garbage Lines</span></b> — <span data-t="fGarbD">rows with a gap injected from below; clearing delays waves.</span></li>
+        <li><span class="tag">CLASSIC</span><b>DAS/ARR</b> — <span data-t="fDasD">133ms auto-shift delay, 50ms repeat (touch: 220/60).</span></li>
       </ul>
-      <h3>🎲 Game Modes</h3>
+      <h3>🎲 <span data-t="helpModes">Game Modes</span></h3>
       <ul>
-        <li>🎮 <b>Marathon</b> — endless. Level up every 10 lines.</li>
-        <li>⚡ <b>Sprint</b> — 40 lines as fast as possible.</li>
-        <li>🏆 <b>Grand Master</b> — 20G early, earn the GM grade.</li>
-        <li>🌀 <b>Zone</b> — charge the meter, activate slow-motion power.</li>
-        <li>⏱ <b>Ultra</b> — max score in 2 minutes.</li>
-        <li>💀 <b>Garbage Battle</b> — survive periodic garbage waves.</li>
+        <li>🎮 <b><span data-t="mMarathon">Marathon</span></b> — <span data-t="mMarathonD">endless. Level up every 10 lines.</span></li>
+        <li>⚡ <b><span data-t="mSprint">Sprint</span></b> — <span data-t="mSprintD">40 lines as fast as possible.</span></li>
+        <li>🏆 <b><span data-t="mGM">Grand Master</span></b> — <span data-t="mGMD">20G early, earn the GM grade.</span></li>
+        <li>🌀 <b><span data-t="mZone">Zone</span></b> — <span data-t="mZoneD">charge the meter, activate slow-motion power.</span></li>
+        <li>⏱ <b><span data-t="mUltra">Ultra</span></b> — <span data-t="mUltraD">max score in 2 minutes.</span></li>
+        <li>💀 <b><span data-t="mGarbage">Garbage Battle</span></b> — <span data-t="mGarbageD">survive periodic garbage waves.</span></li>
       </ul>
-      <h3> Controls</h3>
-      <p>← → ↓ move · Z/X rotate · C hold · Space drop · V zone · P pause<br>
-      Touch: cross = move / soft-drop / hard-drop, right buttons = rotate / hold / zone.</p>
+      <h3> <span data-t="controls">Controls</span></h3>
+      <p><span data-t="ctrl1">← → ↓ move · Z/X rotate · C hold · Space drop · V zone · P pause</span><br>
+      <span data-t="ctrl2">Touch: cross = move / soft-drop / hard-drop, right buttons = rotate / hold / zone.</span></p>
     </div>
-    <button class="menu-btn" onclick="ui.closeHelp()">← Back</button>
+    <button class="menu-btn" onclick="ui.closeHelp()">← <span data-t="back">Back</span></button>
   </div>
 
   <!-- GAME OVER -->
   <div id="gameover-screen" class="overlay">
-    <h1>GAME OVER</h1>
+    <h1><span data-t="gameOver">GAME OVER</span></h1>
     <h2 id="final-score">Score: 0</h2>
     <p class="sub" id="final-extra"></p>
-    <button class="menu-btn" onclick="game.restart()">🔄 Restart</button>
-    <button class="menu-btn" onclick="game.toMenu()">🏠 Main Menu</button>
+    <button class="menu-btn" onclick="game.restart()">🔄 <span data-t="restart">Restart</span></button>
+    <button class="menu-btn" onclick="game.toMenu()">🏠 <span data-t="mainMenu">Main Menu</span></button>
   </div>
 
   <!-- GAME -->
   <div id="game-layout">
     <div class="left-col">
-      <div class="vstat"><span class="lbl">SCORE</span> <b id="score">0</b></div>
-      <div class="vstat"><span class="lbl">LEVEL</span> <b id="level">1</b></div>
-      <div class="vstat"><span class="lbl">LINES</span> <b id="lines">0</b></div>
-      <div class="vstat" id="timer-wrap" style="display:none"><span class="lbl" id="timer-label">TIME</span> <b id="timer">0:00</b></div>
-      <div class="vstat" id="grade-wrap" style="display:none"><span class="lbl">GRADE</span> <b id="grade">9</b></div>
+      <div class="vstat"><span class="lbl" data-t="score">SCORE</span> <b id="score">0</b></div>
+      <div class="vstat"><span class="lbl" data-t="level">LEVEL</span> <b id="level">1</b></div>
+      <div class="vstat"><span class="lbl" data-t="linesLbl">LINES</span> <b id="lines">0</b></div>
+      <div class="vstat" id="timer-wrap" style="display:none"><span class="lbl" id="timer-label" data-t="time">TIME</span> <b id="timer">0:00</b></div>
+      <div class="vstat" id="grade-wrap" style="display:none"><span class="lbl" data-t="gradeLbl">GRADE</span> <b id="grade">9</b></div>
     </div>
 
     <div class="play-area" id="play-area">
@@ -221,9 +222,9 @@ input[type=range]{width:140px;accent-color:var(--accent);}
     </div>
 
     <div class="right-col">
-      <div class="rbox"><span class="rlbl">NEXT</span><canvas id="nextCanvas"></canvas></div>
-      <div class="rbox"><span class="rlbl">HOLD</span><canvas id="holdCanvas"></canvas></div>
-      <div class="rbox"><span class="rlbl">ZONE</span><div class="meter"><div id="zone-fill"></div></div></div>
+      <div class="rbox"><span class="rlbl" data-t="nextLbl">NEXT</span><canvas id="nextCanvas"></canvas></div>
+      <div class="rbox"><span class="rlbl" data-t="holdLbl">HOLD</span><canvas id="holdCanvas"></canvas></div>
+      <div class="rbox"><span class="rlbl" data-t="zoneLbl">ZONE</span><div class="meter"><div id="zone-fill"></div></div></div>
       <button class="pause-btn" onclick="game.pause()">⏸</button>
     </div>
 
@@ -245,13 +246,457 @@ input[type=range]{width:140px;accent-color:var(--accent);}
   </div>
 </div>
 
+<div id="tlHost"></div>
+<!-- inlined i18n.js — the source of truth is i18n.js: edit that file and re-inline this block -->
 <script>
-'use strict';
+/* ============================================================================
+   i18n.js — shared language kit for every page of this site.
+   Language code decision tree (identical everywhere, in this order):
+     0. any technical problem with this kit -> English
+     1. URL ?language=xx      (a region suffix is fine: pt-BR, zh-CN)
+     2. localStorage['tll:lang']
+     3. the browser's language list (navigator.languages, then navigator.language)
+     4. English
+   A code outside CODES is dropped, not trusted, so the next level decides. Only
+   the picker button writes storage, so a ?language= link never overwrites the
+   visitor's saved choice.
+
+   Page usage
+     <script src="i18n.js"><\/script>            BEFORE the game script
+     <script>TLI18N.add({en:{k:"Text"},es:{...},pt:{...},ru:{...},zh:{...}})<\/script>
+     markup:  <b data-t="score">SCORE</b>  <button data-tip="help">?</button>
+              <input data-ph="name">  <i data-aria="pause">  <img data-alt="car">
+     js:      el.textContent=TLI18N.t("gameOver");
+              el.innerHTML="<b>"+TLI18N.t("best")+": "+n+"</b>";
+              ctx.fillText(TLI18N.t("paused"),x,y);
+     canvas / innerHTML redraws: TLI18N.onChange(()=>redrawAll());
+     pick a host for the language button: TLI18N.mount("#startPanel")
+       (omit it and the kit parks a pill in the lower-left corner)
+   Keys missing from a non-English table fall back to English, so a half
+   translated table still runs. Values for *Fmt keys carry {placeholders}.
+   ========================================================================= */
+(function(){
+"use strict";
+var KEY="tll:lang", CODES=["en","es","pt","ru","zh"];
+var LANGS=[ // code · name in its own language · that word for "language" · its flag
+ ['en','English','Language','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0,0 60,40M60,0 0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 60,40M60,0 0,40" stroke="#C8102E" stroke-width="3.2"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="13"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="8"/></svg>'],
+ ['es','Español','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#AA151B"/><path d="M0,10H60M0,30H60" stroke="#F1BF00" stroke-width="20"/>  </svg>'],
+ ['pt','Português','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="40" fill="#046A38"/><rect x="24" width="36" height="40" fill="#DA291C"/><circle cx="24" cy="20" r="7.5" fill="#FEDF00" stroke="#046A38" stroke-width="1.4"/><path d="M24,14.5 24,22.5M20.5,17.5H27.5" stroke="#DA291C" stroke-width="2.2" fill="none"/></svg>'],
+ ['ru','Русский','Язык','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.34" width="60" height="13.33" fill="#0039A6"/><rect y="26.67" width="60" height="13.33" fill="#D52B1E"/></svg>'],
+ ['zh','中文','语言','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#EE1C25"/><circle cx="10" cy="10" r="5.6" fill="#FFDC00"/><circle cx="21" cy="6" r="2.1" fill="#FFDC00"/><circle cx="26" cy="11.5" r="2.1" fill="#FFDC00"/><circle cx="26" cy="18.5" r="2.1" fill="#FFDC00"/><circle cx="21" cy="24" r="2.1" fill="#FFDC00"/></svg>']
+];
+/* ---- shared vocabulary: the same word means the same thing in every game.
+       Values carry no glyphs — pages keep their ⌂ ▶ ■ icons in the markup. ---- */
+var COMMON={
+en:{
+ paused:"PAUSED",pause:"PAUSE",resume:"RESUME",start:"START",play:"PLAY",home:"HOME",menu:"MENU",
+ options:"OPTIONS",settings:"SETTINGS",help:"HELP",howToPlay:"HOW TO PLAY",rules:"RULES",controls:"CONTROLS",
+ keys:"KEYS",gamepad:"GAMEPAD",mouse:"MOUSE",touch:"TOUCH",
+ sound:"SOUND",music:"MUSIC",sfx:"SOUND FX",on:"ON",off:"OFF",fullscreen:"FULLSCREEN",exitFullscreen:"EXIT FULLSCREEN",
+ difficulty:"DIFFICULTY",easy:"EASY",normal:"NORMAL",hard:"HARD",low:"LOW",high:"HIGH",
+ score:"SCORE",best:"BEST",hiScore:"HIGH SCORE",level:"LEVEL",lives:"LIVES",time:"TIME",
+ speed:"SPEED",round:"ROUND",wave:"WAVE",seed:"SEED",newSeed:"NEW SEED",
+ restart:"RESTART",retry:"RETRY",continue:"CONTINUE",tryAgain:"TRY AGAIN",nextLevel:"NEXT LEVEL",
+ gameOver:"GAME OVER",youWin:"YOU WIN",youLose:"GAME OVER",clear:"CLEARED",
+ fire:"FIRE",jump:"JUMP",back:"BACK",exit:"EXIT",close:"CLOSE",ok:"OK",cancel:"CANCEL",
+ loading:"LOADING",shots:"SHOTS",moves:"MOVES",power:"POWER",angle:"ANGLE",
+ langTitle:"LANGUAGE",langNote:"Choose your language — it is remembered, and it applies to this game and to the whole catalogue.",
+ langBack:"CHANGE LANGUAGE",players:"PLAYERS",player:"PLAYER",you:"YOU",cpu:"CPU",random:"RANDOM"},
+es:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INICIO",play:"JUGAR",home:"INICIO",menu:"MENÚ",
+ options:"OPCIONES",settings:"AJUSTES",help:"AYUDA",howToPlay:"CÓMO JUGAR",rules:"REGLAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"MANDO",mouse:"RATÓN",touch:"TÁCTIL",
+ sound:"SONIDO",music:"MÚSICA",sfx:"EFECTOS",on:"ACTIVO",off:"APAGADO",fullscreen:"PANTALLA COMPLETA",exitFullscreen:"SALIR DE PANTALLA COMPLETA",
+ difficulty:"DIFICULTAD",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAJO",high:"ALTO",
+ score:"PUNTOS",best:"RÉCORD",hiScore:"RÉCORD",level:"NIVEL",lives:"VIDAS",time:"TIEMPO",
+ speed:"VELOCIDAD",round:"RONDA",wave:"OLEADA",seed:"SEMILLA",newSeed:"NUEVA SEMILLA",
+ restart:"REINICIAR",retry:"REINTENTAR",continue:"CONTINUAR",tryAgain:"INTÉNTALO OTRA VEZ",nextLevel:"SIGUIENTE NIVEL",
+ gameOver:"FIN DEL JUEGO",youWin:"¡GANASTE!",youLose:"FIN DEL JUEGO",clear:"SUPERADO",
+ fire:"DISPARO",jump:"SALTAR",back:"ATRÁS",exit:"SALIR",close:"CERRAR",ok:"ACEPTAR",cancel:"CANCELAR",
+ loading:"CARGANDO",shots:"LANZAMIENTOS",moves:"MOVIMIENTOS",power:"FUERZA",angle:"ÁNGULO",
+ langTitle:"IDIOMA",langNote:"Elige tu idioma: se recuerda y se aplica a este juego y a todo el catálogo.",
+ langBack:"CAMBIAR IDIOMA",players:"JUGADORES",player:"JUGADOR",you:"TÚ",cpu:"CPU",random:"ALEATORIO"},
+pt:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INÍCIO",play:"JOGAR",home:"INÍCIO",menu:"MENU",
+ options:"OPÇÕES",settings:"CONFIGURAÇÕES",help:"AJUDA",howToPlay:"COMO JOGAR",rules:"REGRAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"CONTROLE",mouse:"MOUSE",touch:"TOQUE",
+ sound:"SOM",music:"MÚSICA",sfx:"EFEITOS",on:"LIGADO",off:"DESLIGADO",fullscreen:"TELA CHEIA",exitFullscreen:"SAIR DA TELA CHEIA",
+ difficulty:"DIFICULDADE",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAIXO",high:"ALTO",
+ score:"PONTOS",best:"RECORDE",hiScore:"RECORDE",level:"NÍVEL",lives:"VIDAS",time:"TEMPO",
+ speed:"VELOCIDADE",round:"RODADA",wave:"ONDA",seed:"SEMENTE",newSeed:"NOVA SEMENTE",
+ restart:"REINICIAR",retry:"TENTAR DE NOVO",continue:"CONTINUAR",tryAgain:"TENTE DE NOVO",nextLevel:"PRÓXIMO NÍVEL",
+ gameOver:"FIM DE JOGO",youWin:"VOCÊ VENCEU",youLose:"FIM DE JOGO",clear:"COMPLETO",
+ fire:"DISPARO",jump:"SALTAR",back:"VOLTAR",exit:"SAIR",close:"FECHAR",ok:"OK",cancel:"CANCELAR",
+ loading:"CARREGANDO",shots:"BATIDAS",moves:"JOGADAS",power:"FORÇA",angle:"ÂNGULO",
+ langTitle:"IDIOMA",langNote:"Escolha seu idioma: ele é lembrado e vale para este jogo e para todo o catálogo.",
+ langBack:"MUDAR IDIOMA",players:"JOGADORES",player:"JOGADOR",you:"VOCÊ",cpu:"CPU",random:"ALEATÓRIO"},
+ru:{
+ paused:"ПАУЗА",pause:"ПАУЗА",resume:"ПРОДОЛЖИТЬ",start:"СТАРТ",play:"ИГРАТЬ",home:"ДОМОЙ",menu:"МЕНЮ",
+ options:"НАСТРОЙКИ",settings:"НАСТРОЙКИ",help:"ПОМОЩЬ",howToPlay:"КАК ИГРАТЬ",rules:"ПРАВИЛА",controls:"УПРАВЛЕНИЕ",
+ keys:"КЛАВИШИ",gamepad:"ГЕЙМПАД",mouse:"МЫШЬ",touch:"СЕНСОР",
+ sound:"ЗВУК",music:"МУЗЫКА",sfx:"ЗВУКИ",on:"ВКЛ",off:"ВЫКЛ",fullscreen:"НА ВЕСЬ ЭКРАН",exitFullscreen:"ВЫЙТИ С ЭКРАНА",
+ difficulty:"СЛОЖНОСТЬ",easy:"ЛЕГКО",normal:"НОРМА",hard:"СЛОЖНО",low:"НИЗ",high:"ВЕРХ",
+ score:"СЧЁТ",best:"РЕКОРД",hiScore:"РЕКОРД",level:"УРОВЕНЬ",lives:"ЖИЗНИ",time:"ВРЕМЯ",
+ speed:"СКОРОСТЬ",round:"РАУНД",wave:"ВОЛНА",seed:"КОД УРОВНЯ",newSeed:"НОВЫЙ КОД",
+ restart:"ЗАНОВО",retry:"ЕЩЁ РАЗ",continue:"ПРОДОЛЖИТЬ",tryAgain:"ПОПРОБУЙ ЕЩЁ",nextLevel:"СЛЕДУЮЩИЙ УРОВЕНЬ",
+ gameOver:"КОНЕЦ",youWin:"ПОБЕДА",youLose:"КОНЕЦ",clear:"УРОВЕНЬ ПРОЙДЕН",
+ fire:"ОГОНЬ",jump:"ПРЫЖОК",back:"НАЗАД",exit:"ВЫХОД",close:"ЗАКРЫТЬ",ok:"ОК",cancel:"ОТМЕНА",
+ loading:"ЗАГРУЗКА",shots:"УДАРЫ",moves:"ХОДЫ",power:"СИЛА",angle:"УГОЛ",
+ langTitle:"ЯЗЫК",langNote:"Выберите язык — он запоминается и действует для этой игры и для всего каталога.",
+ langBack:"СМЕНИТЬ ЯЗЫК",players:"ИГРОКИ",player:"ИГРОК",you:"ВЫ",cpu:"БОТ",random:"СЛУЧАЙНО"},
+zh:{
+ paused:"暂停",pause:"暂停",resume:"继续",start:"开始",play:"开始游戏",home:"主页",menu:"菜单",
+ options:"选项",settings:"设置",help:"帮助",howToPlay:"怎么玩",rules:"规则",controls:"操作",
+ keys:"按键",gamepad:"手柄",mouse:"鼠标",touch:"触摸",
+ sound:"声音",music:"音乐",sfx:"音效",on:"开",off:"关",fullscreen:"全屏",exitFullscreen:"退出全屏",
+ difficulty:"难度",easy:"简单",normal:"普通",hard:"困难",low:"低",high:"高",
+ score:"得分",best:"最高分",hiScore:"最高分",level:"关卡",lives:"生命",time:"时间",
+ speed:"速度",round:"回合",wave:"波次",seed:"种子",newSeed:"新种子",
+ restart:"重新开始",retry:"重试",continue:"继续",tryAgain:"再试一次",nextLevel:"下一关",
+ gameOver:"游戏结束",youWin:"胜利",youLose:"游戏结束",clear:"过关",
+ fire:"射击",jump:"跳跃",back:"返回",exit:"退出",close:"关闭",ok:"确定",cancel:"取消",
+ loading:"加载中",shots:"击球",moves:"步数",power:"力量",angle:"角度",
+ langTitle:"语言",langNote:"选择语言：会被记住，并用于这个游戏和整个游戏目录。",
+ langBack:"更换语言",players:"玩家",player:"玩家",you:"你",cpu:"电脑",random:"随机"}
+};
+var PAGE={en:{},es:{},pt:{},ru:{},zh:{}};
+function lget(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+function lset(v){try{localStorage.setItem(KEY,v)}catch(e){}}
+var code=null;
+/* A browser language list -> a supported code, or null when it says nothing
+   usable. "pt-BR", "ru_RU", "zh-CN" all match on their 2-letter base. */
+function fromBrowser(){
+ try{
+  var list=null;
+  if(navigator&&Array.isArray(navigator.languages)&&navigator.languages.length)list=navigator.languages;
+  else if(navigator)list=[navigator.language||navigator.userLanguage||""];
+  for(var i=0;i<(list||[]).length;i++){
+   var c=String(list[i]||"").toLowerCase().slice(0,2);
+   if(CODES.indexOf(c)>=0)return c;
+  }
+ }catch(e){}
+ return null;
+}
+(function(){
+ try{
+  var c=null,m=/[?&]language=([a-zA-Z]{2,3})/.exec(location.search||"");
+  if(m)c=m[1].toLowerCase().slice(0,2);           // ?language=pt-BR counts as pt
+  if(c&&CODES.indexOf(c)<0)c=null;
+  if(!c){var s=(lget()||"").toLowerCase().slice(0,2);if(CODES.indexOf(s)>=0)c=s;}
+  if(!c)c=fromBrowser();
+  code=c||"en";
+ }catch(e){code="en";} // a broken lookup speaks English, never nothing
+})();
+function raw(k){
+ var t=PAGE[code]?PAGE[code][k]:null; if(t!=null)return t;
+ t=COMMON[code]?COMMON[code][k]:null; if(t!=null)return t;
+ t=PAGE.en[k]; if(t!=null)return t;
+ t=COMMON.en[k]; return t==null?null:t;
+}
+var hooks=[];
+var API={
+ version:"2026.11.22.2", codes:CODES.slice(), langs:LANGS,
+ lang:function(){return code},
+ browserLang:function(){return fromBrowser()},
+ t:function(k,v){var s;try{s=raw(k)}catch(e){code="en";try{s=raw(k)}catch(e2){s=null}}
+  if(s==null)s=k;var o=v||{};for(var p in o)s=s.split("{"+p+"}").join(String(o[p]));return s},
+ flag:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][3];return ""},
+ name:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][2];return c},
+ add:function(tab){for(var c in tab){if(!PAGE[c])continue;for(var k in tab[c])PAGE[c][k]=tab[c][k];}
+  try{API.apply()}catch(e){}},
+ /* read the tables (the developer harness edits texts through these) */
+ keys:function(c){var out=[],seen={};try{var src=[PAGE[c],COMMON[c],PAGE.en,COMMON.en];
+  for(var i=0;i<src.length;i++)for(var k in src[i])if(!seen[k]){seen[k]=1;out.push(k)}out.sort();}catch(e){}
+  return out},
+ table:function(){var o={};try{for(var i=0;i<CODES.length;i++){var c=CODES[i],m={},s=[COMMON[c],PAGE[c],COMMON.en,PAGE.en];
+  for(var j=0;j<s.length;j++)for(var k in s[j])if(m[k]==null&&s[j][k]!=null)m[k]=s[j][k];o[c]=m;}}catch(e){}
+  return o},
+ setKey:function(c,k,v){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;
+  try{(PAGE[c]=PAGE[c]||{})[k]=String(v);}catch(e){return;}
+  try{API.apply()}catch(e){}
+  for(var i=0;i<hooks.length;i++)try{hooks[i](code)}catch(e){}},
+ onChange:function(f){hooks.push(f)},
+ set:function(c){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;code=c;lset(c);
+  try{API.apply()}catch(e){}for(var i=0;i<hooks.length;i++)try{hooks[i](c)}catch(e){}},
+ apply:function(root){
+  if(document.documentElement)document.documentElement.lang=code;
+  var r=root||document;
+  var set=function(e,attr,put){var v=raw(e.getAttribute(attr));if(v!=null)put(e,v);};
+  var all=[];
+  if(r.nodeType===1)all.push(r);
+  if(r.querySelectorAll)all=all.concat([].slice.call(r.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]")));
+  for(var i=0;i<all.length;i++){var e=all[i];
+   try{
+    if(e.hasAttribute("data-t"))set(e,"data-t",function(n,v){n.textContent=v});
+    if(e.hasAttribute("data-ph"))set(e,"data-ph",function(n,v){n.placeholder=v});
+    if(e.hasAttribute("data-tip"))set(e,"data-tip",function(n,v){n.title=v});
+    if(e.hasAttribute("data-aria"))set(e,"data-aria",function(n,v){n.setAttribute("aria-label",v)});
+    if(e.hasAttribute("data-alt"))set(e,"data-alt",function(n,v){n.alt=v});
+   }catch(e2){} // one odd node never aborts the pass
+  }
+  if(pill){try{pill.innerHTML=API.flag(code)+"<span>"+API.name(code)+"</span>";pill.title=API.t("langTitle");}catch(e){}}
+ },
+ mount:function(sel){hostSel=sel;ensurePill();},
+};
+/* ---------------- language button + picker overlay ---------------- */
+var hostSel=null,pill=null,ov=null;
+var CSS=".tlbtn{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(20,24,22,.72);flex:0 0 auto;align-self:center;"
+ +"border:1px solid #3a463f;border-radius:6px;color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:1px;"
+ +"cursor:pointer;line-height:1;width:auto;max-width:100%}.tlbtn:hover,.tlbtn:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}"
+ +".tlbtn svg{width:22px;height:15px;border:1px solid #2e3a34;border-radius:2px;display:block}"
+ +".tlfix{position:fixed;left:12px;bottom:12px;z-index:2147483000}"
+ +".tlov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;"
+ +"background:rgba(4,7,6,.86);padding:16px}.tlov[hidden]{display:none}"
+ +".tlpanel{max-width:660px;width:100%;background:#141816;border:1px solid #3a463f;border-radius:12px;"
+ +"padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.6);color:#c9d2cb;font:inherit;text-align:center}"
+ +".tlpanel h2{margin:0 0 6px;font-size:20px;letter-spacing:4px;color:#ffd76a}"
+ +".tlpanel p{margin:0 0 16px;font-size:12px;line-height:1.6;color:#8a948e}"
+ +".tlgrid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}"
+ +".tlb{width:132px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;"
+ +"background:rgba(20,24,22,.7);border:1px solid #3a463f;border-radius:8px;cursor:pointer;color:#c9d2cb;font:inherit}"
+ +".tlb:hover,.tlb:focus{border-color:#ffd76a;color:#f4e9c8;outline:none;box-shadow:0 0 14px rgba(255,215,106,.18)}"
+ +".tlb svg{width:50px;height:34px;border:1px solid #2e3a34;border-radius:4px;display:block}"
+ +".tlb b{font-size:13px;color:#f4e9c8}.tlb span{font-size:10px;letter-spacing:1px;color:#8a948e}"
+ +".tlx{margin-top:16px;padding:7px 20px;background:none;border:1px solid #3a463f;border-radius:6px;"
+ +"color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:2px;cursor:pointer}"
+ +".tlx:hover,.tlx:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}";
+function style(){if(document.getElementById("tlcss"))return;var s=document.createElement("style");s.id="tlcss";s.textContent=CSS;document.head.appendChild(s);}
+function ensurePill(){
+ if(pill)return;
+ var host=hostSel?document.querySelector(hostSel):null;
+ if(!host&&document.readyState==="loading")return; // retried at DOMContentLoaded
+ style();
+ pill=document.createElement("button");
+ pill.type="button";pill.className="tlbtn";pill.setAttribute("aria-haspopup","dialog");
+ if(!host){pill.className="tlbtn tlfix";document.body.appendChild(pill);}
+ else host.insertBefore(pill,host.firstChild);
+ pill.onclick=openOv;
+ API.apply();
+}
+function openOv(){
+ if(!ov){
+  ov=document.createElement("div");ov.className="tlov";ov.hidden=true;
+  var p=document.createElement("div");p.className="tlpanel";
+  var h=document.createElement("h2");h.setAttribute("data-t","langTitle");p.appendChild(h);
+  var np=document.createElement("p");np.setAttribute("data-t","langNote");p.appendChild(np);
+  var g=document.createElement("div");g.className="tlgrid";
+  for(var i=0;i<LANGS.length;i++){
+   var b=document.createElement("button");b.type="button";b.className="tlb";b.dataset.lang=LANGS[i][0];
+   b.innerHTML=LANGS[i][3]+"<b>"+LANGS[i][1]+"</b><span>"+LANGS[i][2]+"</span>";g.appendChild(b);
+  }
+  p.appendChild(g);
+  var x=document.createElement("button");x.type="button";x.className="tlx";x.setAttribute("data-t","close");p.appendChild(x);
+  ov.appendChild(p);document.body.appendChild(ov);
+  g.onclick=function(e){var b=e.target;while(b&&b!==g&&!b.dataset.lang)b=b.parentNode;if(b&&b.dataset.lang){API.set(b.dataset.lang);closeOv();}};
+  x.onclick=closeOv;
+  ov.onclick=function(e){if(e.target===ov)closeOv();};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ov&&!ov.hidden)closeOv();});
+ }
+ API.apply(ov);
+ ov.hidden=false;
+}
+function closeOv(){if(ov)ov.hidden=true;}
+function boot(){
+ try{ensurePill();API.apply();}
+ catch(e){code="en";try{ensurePill();API.apply();}catch(e2){}} // rule 0: English on any kit fault
+}
+/* keep freshly added nodes translated without the page calling apply() */
+new MutationObserver(function(ms){
+ if(!pill)return;
+ try{
+  for(var i=0;i<ms.length;i++){var n=ms[i].addedNodes;
+   for(var j=0;j<n.length;j++){var e=n[j];
+    if(e.nodeType!==1)continue;
+    if(e.matches&&e.matches("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]"))API.apply(e);
+    else if(e.querySelectorAll&&e.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]").length)API.apply(e);
+   }}
+ }catch(e){}
+}).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+window.TLI18N=API;
+})();
+</script>
+<script>
+/* If i18n.js is missing or only half-loaded, the game still runs: this stub
+   keeps the same API, pins English, and serves the en table this page registers
+   below via add(). */
+if(!window.TLI18N||typeof window.TLI18N.add!=="function"||typeof window.TLI18N.t!=="function"||typeof window.TLI18N.apply!=="function"||typeof window.TLI18N.mount!=="function"){(function(){var T={en:{}};window.TLI18N={version:"en-fallback",codes:["en"],langs:[["en","EN","English",""]],
+add:function(tab){for(var c in tab){T[c]=Object.assign(T[c]||{},tab[c]);}},
+t:function(k,v){var s=(T.en&&T.en[k]!=null)?T.en[k]:k,o=v||{};for(var p in o)s=String(s).split("{"+p+"}").join(String(o[p]));return s},
+flag:function(){return "";},name:function(c){return c;},lang:function(){return "en";},
+set:function(){},onChange:function(){},apply:function(){},mount:function(){}};})();}
+</script>
+<script>
+TLI18N.add({
+en:{
+ sub:"ULTIMATE PROCEDURAL TETRIS",
+ mMarathon:"Marathon", mSprint:"Sprint (40 Lines)", mGM:"Grand Master (20G)", mZone:"Zone Mode",
+ mUltra:"Ultra (2 min)", mGarbage:"Garbage Battle",
+ newMusic:"New Music", genMusic:"Generate New Music", helpFeat:"Help & Features",
+ returnHome:"Return Home", mainMenu:"Main Menu", vol:"Vol", ghost:"Ghost Piece",
+ helpTitle:"Features & Modes", helpNC:"Non-Classic Features", helpModes:"Game Modes",
+ ctrl1:"← → ↓ move · Z/X rotate · C hold · Space drop · V zone · P pause",
+ ctrl2:"Touch: cross = move / soft-drop / hard-drop, right buttons = rotate / hold / zone.",
+ linesLbl:"LINES", gradeLbl:"GRADE", nextLbl:"NEXT", holdLbl:"HOLD", zoneLbl:"ZONE", leftLbl:"LEFT",
+ holdPiece:"Hold Piece", fiveNext:"5-Next Queue", sevenBag:"7-Bag Randomizer", srs:"SRS Wall Kicks",
+ tspin:"T-Spin Detection", b2b:"Back-to-Back", comboSys:"Combo System", zoneEff:"Zone",
+ gmGrade:"Grand Master Grade", g20:"20G Gravity", lockDelay:"Lock Delay + Move Reset", garbageLines:"Garbage Lines",
+ fGhostD:"translucent preview showing where the piece will land.",
+ fHoldD:"press C / H to reserve a piece (once per drop).",
+ fNextD:"see the next 5 pieces to plan ahead.",
+ fBagD:"fair distribution of pieces.",
+ fSrsD:"5-test kick tables for I and JLSTZ.",
+ fTspinD:"3-corner rule, mini & full, bonus points.",
+ fB2bD:"consecutive Tetrises / T-Spins give 1.5x score.",
+ fComboD:"consecutive clears build a combo multiplier.",
+ fZoneD:"V / Z when meter full: time slows to 20% for 5s, board glows blue.",
+ fGradeD:"ranking from 9 up to GM.",
+ f20gD:"pieces fall instantly at high levels.",
+ fLockD:"locks after 500ms on ground OR 15 moves.",
+ fGarbD:"rows with a gap injected from below; clearing delays waves.",
+ fDasD:"133ms auto-shift delay, 50ms repeat (touch: 220/60).",
+ mMarathonD:"endless. Level up every 10 lines.", mSprintD:"40 lines as fast as possible.",
+ mGMD:"20G early, earn the GM grade.", mZoneD:"charge the meter, activate slow-motion power.",
+ mUltraD:"max score in 2 minutes.", mGarbageD:"survive periodic garbage waves.",
+ scoreFmt:"Score: {v}", timeFmt:"Time: {v}", gradeFmt:"Grade: {v}"
+},
+es:{
+ sub:"TETRIS ULTIMADO PROCEDURAL",
+ mMarathon:"Maratón", mSprint:"Sprint (40 líneas)", mGM:"Gran Maestro (20G)", mZone:"Modo Zona",
+ mUltra:"Ultra (2 min)", mGarbage:"Batalla de basura",
+ newMusic:"Nueva música", genMusic:"Generar nueva música", helpFeat:"Ayuda y funciones",
+ returnHome:"Volver a la web", mainMenu:"Menú principal", vol:"Vol", ghost:"Pieza fantasma",
+ helpTitle:"Funciones y modos", helpNC:"Funciones no clásicas", helpModes:"Modos de juego",
+ ctrl1:"← → ↓ mover · Z/X rotar · C reserva · Espacio caída · V zona · P pausa",
+ ctrl2:"Táctil: cruz = mover / caída suave / caída rápida, botones derechos = rotar / reservar / zona.",
+ linesLbl:"LÍNEAS", gradeLbl:"RANGO", nextLbl:"SIGUIENTE", holdLbl:"RESERVA", zoneLbl:"ZONA", leftLbl:"RESTA",
+ holdPiece:"Reserva de pieza", fiveNext:"Cola de 5 piezas", sevenBag:"Randomizador de 7 bagas", srs:"Kicks SRS",
+ tspin:"Detección T-Spin", b2b:"Consecutivas", comboSys:"Sistema de combos", zoneEff:"Zona",
+ gmGrade:"Rango Gran Maestro", g20:"Gravedad 20G", lockDelay:"Retardo de bloqueo + reinicio", garbageLines:"Líneas de basura",
+ fGhostD:"vista previa translúcida de donde caerá la pieza.",
+ fHoldD:"pulsa C / H para reservar una pieza (una vez por caída).",
+ fNextD:"ve las 5 piezas siguientes para planificar.",
+ fBagD:"reparto justo de las piezas.",
+ fSrsD:"tablas de kicks de 5 pruebas para I y JLSTZ.",
+ fTspinD:"regla de 3 esquinas, mini y completa, puntos extra.",
+ fB2bD:"Tetrises / T-Spins consecutivas dan 1,5x puntos.",
+ fComboD:"líneas seguidas acumulan un multiplicador de combo.",
+ fZoneD:"V / Z con el medidor lleno: el tiempo baja al 20% durante 5 s, el tablero brilla en azul.",
+ fGradeD:"rango desde 9 hasta GM.",
+ f20gD:"las piezas caen al instante en niveles altos.",
+ fLockD:"se bloquea tras 500 ms en el suelo O 15 movimientos.",
+ fGarbD:"filas con un hueco que entran desde abajo; limpiarlas retrasa las oleadas.",
+ fDasD:"retardo de auto-repetición 133 ms, repetición 50 ms (táctil: 220/60).",
+ mMarathonD:"infinito. Sube de nivel cada 10 líneas.", mSprintD:"40 líneas lo más rápido posible.",
+ mGMD:"20G desde el inicio, consigue el rango GM.", mZoneD:"llena el medidor y activa el tiempo lento.",
+ mUltraD:"máxima puntuación en 2 minutos.", mGarbageD:"sobrevive oleadas periódicas de basura.",
+ scoreFmt:"Puntos: {v}", timeFmt:"Tiempo: {v}", gradeFmt:"Rango: {v}"
+},
+pt:{
+ sub:"TETRIS ULTIMADO PROCEDURAL",
+ mMarathon:"Maratona", mSprint:"Sprint (40 linhas)", mGM:"Grão-Mestre (20G)", mZone:"Modo Zona",
+ mUltra:"Ultra (2 min)", mGarbage:"Batalha de lixo",
+ newMusic:"Nova música", genMusic:"Gerar nova música", helpFeat:"Ajuda e recursos",
+ returnHome:"Voltar ao site", mainMenu:"Menu principal", vol:"Vol", ghost:"Peça fantasma",
+ helpTitle:"Recursos e modos", helpNC:"Recursos não clássicos", helpModes:"Modos de jogo",
+ ctrl1:"← → ↓ mover · Z/X girar · C reserva · Espaço queda · V zona · P pausar",
+ ctrl2:"Toque: cruz = mover / queda suave / queda rápida, botões direitos = girar / reservar / zona.",
+ linesLbl:"LINHAS", gradeLbl:"RANGO", nextLbl:"PRÓXIMA", holdLbl:"RESERVA", zoneLbl:"ZONA", leftLbl:"RESTA",
+ holdPiece:"Reserva de peça", fiveNext:"Fila de 5 peças", sevenBag:"Randomizador 7 bags", srs:"Kicks SRS",
+ tspin:"Detecção de T-Spin", b2b:"Consecutivas", comboSys:"Sistema de combos", zoneEff:"Zona",
+ gmGrade:"Rango Grão-Mestre", g20:"Gravidade 20G", lockDelay:"Atraso de trava + reinício", garbageLines:"Linhas de lixo",
+ fGhostD:"prévia translúcida mostrando onde a peça vai cair.",
+ fHoldD:"pressione C / H para reservar uma peça (uma vez por queda).",
+ fNextD:"veja as 5 próximas peças para planejar.",
+ fBagD:"distribuição justa das peças.",
+ fSrsD:"tabelas de kicks com 5 testes para I e JLSTZ.",
+ fTspinD:"regra dos 3 cantos, mini e completa, pontos extras.",
+ fB2bD:"Tetrises / T-Spins consecutivas dão 1,5x pontos.",
+ fComboD:"limpezas seguidas criam um multiplicador de combo.",
+ fZoneD:"V / Z com o medidor cheio: o tempo cai para 20% por 5 s, o tablero brilha em azul.",
+ fGradeD:"ranking de 9 até GM.",
+ f20gD:"as peças caem instantaneamente em níveis altos.",
+ fLockD:"trava após 500 ms no chão OU 15 movimentos.",
+ fGarbD:"linhas com um buraco entram por baixo; limpar atrasa as ondas.",
+ fDasD:"atraso de auto-repetição 133 ms, repetição 50 ms (toque: 220/60).",
+ mMarathonD:"infinito. Suba de nível a cada 10 linhas.", mSprintD:"40 linhas o mais rápido possível.",
+ mGMD:"20G no início, alcance o rango GM.", mZoneD:"carregue o medidor e ative o tempo lento.",
+ mUltraD:"pontuação máxima em 2 minutos.", mGarbageD:"sobreviva a ondas periódicas de lixo.",
+ scoreFmt:"Pontos: {v}", timeFmt:"Tempo: {v}", gradeFmt:"Rango: {v}"
+},
+ru:{
+ sub:"УЛЬТРА-ПРОЦЕДУРНЫЙ ТЕТРИС",
+ mMarathon:"Марафон", mSprint:"Спринт (40 линий)", mGM:"Гранд Мастер (20G)", mZone:"Режим Зоны",
+ mUltra:"Ультра (2 мин)", mGarbage:"Битва мусора",
+ newMusic:"Новая музыка", genMusic:"Сгенерировать музыку", helpFeat:"Помощь и функции",
+ returnHome:"На сайт", mainMenu:"Главное меню", vol:"Громк.", ghost:"Призрак",
+ helpTitle:"Функции и режимы", helpNC:"Неклассические функции", helpModes:"Режимы игры",
+ ctrl1:"← → ↓ движение · Z/X поворот · C резерв · Пробел сброс · V зона · P пауза",
+ ctrl2:"Тач: крест = движение / мягкий сброс / жёсткий сброс, правые кнопки = поворот / резерв / зона.",
+ linesLbl:"ЛИНИИ", gradeLbl:"РАНГ", nextLbl:"СЛЕД.", holdLbl:"УДЕРЖ.", zoneLbl:"ЗОНА", leftLbl:"ОСТАЛОСЬ",
+ holdPiece:"Резерв фигуры", fiveNext:"Очередь из 5", sevenBag:"Рандомайзер 7 сумок", srs:"Кики SRS",
+ tspin:"Определение T-Spin", b2b:"Серия подряд", comboSys:"Система комбо", zoneEff:"Зона",
+ gmGrade:"Ранг Гранд Мастер", g20:"Гравитация 20G", lockDelay:"Задержка фиксации + сброс", garbageLines:"Мусорные линии",
+ fGhostD:"полупрозрачный силуэт: где фигура приземлится.",
+ fHoldD:"C / H — отложить фигуру (один раз за сброс).",
+ fNextD:"видно 5 следующих фигур — планируйте.",
+ fBagD:"честное распределение фигур.",
+ fSrsD:"таблицы киков с 5 проверками для I и JLSTZ.",
+ fTspinD:"правило 3 углов, мини и полный, бонусные очки.",
+ fB2bD:"повторные Тетрисы / T-Spin дают 1,5x очков.",
+ fComboD:"непрерывные очистки наращивают множитель комбо.",
+ fZoneD:"V / Z при полном индикаторе: время замедляется до 20% на 5 с, поле светится синим.",
+ fGradeD:"ранг от 9 до GM.",
+ f20gD:"на высоких уровнях фигуры падают мгновенно.",
+ fLockD:"фиксация после 500 мс на земле ИЛИ 15 движений.",
+ fGarbD:"ряды с дыркой приходят снизу; очистка откладывает волны.",
+ fDasD:"задержка авто-сдвига 133 мс, повтор 50 мс (тач: 220/60).",
+ mMarathonD:"бесконечно. Новый уровень каждые 10 линий.", mSprintD:"40 линий как можно быстрее.",
+ mGMD:"20G с начала, добейтесь ранга GM.", mZoneD:"наполните индикатор и включите замедление.",
+ mUltraD:"максимум очков за 2 минуты.", mGarbageD:"переживайте периодические волны мусора.",
+ scoreFmt:"Счёт: {v}", timeFmt:"Время: {v}", gradeFmt:"Ранг: {v}"
+},
+zh:{
+ sub:"终极程序化俄罗斯方块",
+ mMarathon:"马拉松", mSprint:"冲刺（40 行）", mGM:"宗师（20G）", mZone:"区域模式",
+ mUltra:"极限（2 分钟）", mGarbage:"垃圾大战",
+ newMusic:"新音乐", genMusic:"生成新音乐", helpFeat:"帮助与功能",
+ returnHome:"返回主页", mainMenu:"主菜单", vol:"音量", ghost:"幽灵块",
+ helpTitle:"功能与模式", helpNC:"非经典功能", helpModes:"游戏模式",
+ ctrl1:"← → ↓ 移动 · Z/X 旋转 · C 暂存 · 空格 硬降 · V 区域 · P 暂停",
+ ctrl2:"触屏：十字键 = 移动 / 软降 / 硬降，右侧按钮 = 旋转 / 暂存 / 区域。",
+ linesLbl:"行数", gradeLbl:"等级", nextLbl:"下一个", holdLbl:"暂存", zoneLbl:"区域", leftLbl:"剩余",
+ holdPiece:"暂存块", fiveNext:"五块预览", sevenBag:"7 袋随机", srs:"SRS 踢墙",
+ tspin:"T-Spin 判定", b2b:"连续消除", comboSys:"连击系统", zoneEff:"区域",
+ gmGrade:"宗师段位", g20:"20G 重力", lockDelay:"锁定延迟 + 重置", garbageLines:"垃圾行",
+ fGhostD:"半透明预览，显示落点。",
+ fHoldD:"按 C / H 暂存一个块（每次下落一次）。",
+ fNextD:"预览接下来 5 个块，提前规划。",
+ fBagD:"七袋公平分布。",
+ fSrsD:"I 与 JLSTZ 的五次踢墙表。",
+ fTspinD:"三角规则，迷你与完整，额外得分。",
+ fB2bD:"连续 Tetris / T-Spin 得 1.5 倍分。",
+ fComboD:"连续消除累积连击倍数。",
+ fZoneD:"计量满时按 V / Z：时间减速到 20% 持续 5 秒，盘面发蓝光。",
+ fGradeD:"段位从 9 到 GM。",
+ f20gD:"高等级时方块瞬间落下。",
+ fLockD:"落地 500 毫秒或 15 次移动后锁定。",
+ fGarbD:"下方推入带缺口的行；消除可延迟波次。",
+ fDasD:"自动移位延迟 133 毫秒，重复 50 毫秒（触屏：220/60）。",
+ mMarathonD:"无尽模式，每 10 行升级。", mSprintD:"以最快速度消 40 行。",
+ mGMD:"开局 20G，争取 GM 段位。", mZoneD:"充满计量条，启动慢动作。",
+ mUltraD:"两分钟内最高分。", mGarbageD:"抵御周期性垃圾波。",
+ scoreFmt:"得分：{v}", timeFmt:"时间：{v}", gradeFmt:"段位：{v}"
+}
+});
+TLI18N.mount("#tlHost");
+</script>
+<script>
 /* ================= SETTINGS ================= */
 const settings={
   musicOn:true,soundOn:true,ghostOn:true,musicVol:35,sfxVol:75,
   load(){try{const d=JSON.parse(localStorage.getItem('te3s_settings')||'null');if(d)Object.assign(this,d);}catch(e){}},
-  save(){localStorage.setItem('te3s_settings',JSON.stringify({musicOn:this.musicOn,soundOn:this.soundOn,ghostOn:this.ghostOn,musicVol:this.musicVol,sfxVol:this.sfxVol}));}
+  save(){try{localStorage.setItem('te3s_settings',JSON.stringify({musicOn:this.musicOn,soundOn:this.soundOn,ghostOn:this.ghostOn,musicVol:this.musicVol,sfxVol:this.sfxVol}));}catch(e){}}
 };
 settings.load();
 
@@ -362,7 +807,7 @@ class AudioEngine{
     this.song={tempo,stepDur:60/tempo/4,bars,barData,baseMidi:45+key};
     this.save();
   }
-  save(){localStorage.setItem('te3s_song',JSON.stringify(this.song));}
+  save(){try{localStorage.setItem('te3s_song',JSON.stringify(this.song));}catch(e){}}
   load(){
     try{const s=JSON.parse(localStorage.getItem('te3s_song')||'null');
       if(s&&s.barData&&s.barData.length)this.song=s;else this.generate();
@@ -660,7 +1105,7 @@ class Game{
     const tw=document.getElementById('timer-wrap');
     if(this.mode==='ultra'||this.mode==='sprint'){
       tw.style.display='';
-      document.getElementById('timer-label').textContent=this.mode==='ultra'?'LEFT':'TIME';
+      document.getElementById('timer-label').textContent=this.mode==='ultra'?TLI18N.t('leftLbl'):TLI18N.t('time');
       document.getElementById('timer').textContent=fmt(this.mode==='ultra'?this.timeRemaining:this.elapsed);
     }else tw.style.display='none';
     const gw=document.getElementById('grade-wrap');
@@ -807,14 +1252,24 @@ class Game{
     this.state='gameover';music.stop();music.sfx('gameover');
     document.getElementById('app').classList.remove('zone-active');
     let extra='';
-    if(this.mode==='sprint')extra='Time: '+fmt(this.elapsed);
-    if(this.mode==='grandmaster')extra='Grade: '+this.grade;
-    document.getElementById('final-score').textContent='Score: '+this.score;
+    if(this.mode==='sprint')extra=TLI18N.t('timeFmt',{v:fmt(this.elapsed)});
+    if(this.mode==='grandmaster')extra=TLI18N.t('gradeFmt',{v:this.grade});
+    document.getElementById('final-score').textContent=TLI18N.t('scoreFmt',{v:this.score});
     document.getElementById('final-extra').textContent=extra;
     ui.show('gameover-screen');
   }
 }
 const game=new Game();
+TLI18N.onChange(()=>{
+  game.updateStats();
+  if(game.state==='gameover'){
+    let extra='';
+    if(game.mode==='sprint')extra=TLI18N.t('timeFmt',{v:fmt(game.elapsed)});
+    if(game.mode==='grandmaster')extra=TLI18N.t('gradeFmt',{v:game.grade});
+    document.getElementById('final-score').textContent=TLI18N.t('scoreFmt',{v:game.score});
+    document.getElementById('final-extra').textContent=extra;
+  }
+});
 </script>
 <script>
 // self-update v3: one-time title-screen freshness check, two HEAD requests,
@@ -853,5 +1308,232 @@ else seen(cur);
 }).catch(function () {});
 })();
 </script>
+<script>
+/* Developer harness. ?debug=dbg/tetris2.js loads the shared engine dbg/_harness.js
+   then that script: live panel with state, elements, layout per screen mode,
+   texts, balance, cheats, JSON export. No parameter or missing script = the
+   page behaves exactly as without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
+</script>
+<!-- inlined fs.js — the source of truth is fs.js: edit that file and re-inline this block -->
+<script>
+/* fs.js — the one fullscreen control every page shares.
+
+   Two jobs:
+
+   1. A toggle button. `TLFS.mount("#opts", {cls:"btn"})` puts it inside a menu or
+      title panel using that page's own button class; `TLFS.mount()` alone floats a
+      small icon button in the bottom-right corner; `{icon:true}` swaps the word for
+      a ⤢ glyph and moves it into `aria-label` for narrow hosts. The wording is the
+      shared translation key `fullscreen` / `exitFullscreen` — from the i18n kit, from
+      a page table published through `TLFS_LABEL(key)`, or English as the floor — and
+      a change of `<html lang>` repaints it. Where the Fullscreen API is missing the
+      button hides itself instead of lying.
+
+   2. Re-fit on every usable-area change. Entering or leaving fullscreen, an
+      orientation flip, and a mobile browser bar hiding or showing all change the
+      area the game has to fill — and the bar case does not always fire a plain
+      `resize`. This file listens to `fullscreenchange` (all vendor spellings) and
+      to `visualViewport.resize`, then re-applies `<html data-fs>` and dispatches
+      `resize` (plus `orientationchange`) once per frame, so the page's own layout
+      code runs. `TLFS.refitOnly()` gives a page that already has its own
+      fullscreen button just that wiring, without a second button.
+
+   Nothing here reads game state, and a page that never calls mount/refitOnly gets
+   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+(function () {
+  if (window.TLFS) return;
+  var de = document.documentElement;
+  var REQ = de.requestFullscreen || de.webkitRequestFullscreen ||
+    de.msRequestFullscreen || de.mozRequestFullScreen;
+  var EX = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.msExitFullscreen || document.mozCancelFullScreen;
+  var blocked = !REQ || !EX || de.fullscreenEnabled === false;
+  var ICON = "\u2922"; /* narrow hosts (side stripes, icon bars) get the glyph plus a
+                          translated aria-label instead of the word */
+  var btns = [], cbs = [], queued = false, styleDone = false;
+
+  function isFull() {
+    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
+      de.msFullscreenElement || de.mozFullScreenElement);
+  }
+  function kit() {
+    var k = window.TLI18N;
+    return (k && typeof k.t === "function") ? k : null;
+  }
+  /* A missing key makes t() hand back the key name — that is not a label.
+     Pages that keep their own translation table (billiards, tilt, oilstorm) publish
+     TLFS_LABEL(key) instead of the kit; they win over the kit, English is the floor. */
+  function label() {
+    var want = isFull() ? "exitFullscreen" : "fullscreen";
+    var L = window.TLFS_LABEL;
+    if (typeof L === "function") {
+      try { var v = L(want); if (v && v !== want) return String(v) } catch (e) {}
+    }
+    var k = kit(), t = null;
+    if (k) { try { t = k.t(want) } catch (e) { t = null } }
+    if (!t || t === want) t = isFull() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+    return t;
+  }
+  function cssOnce() {
+    if (styleDone) return;
+    styleDone = true;
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlfs-float:hover{border-color:#ffd76a;color:#ffd76a}" +
+      ".tlfs-float[hidden]{display:none}";
+    document.head.appendChild(st);
+  }
+  function paint() {
+    var txt = label();
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      b.textContent = b.__tlfsIcon ? ICON : txt;
+      b.setAttribute("aria-label", txt);
+      b.setAttribute("aria-pressed", isFull() ? "true" : "false");
+    }
+  }
+  /* One pass per frame: fullscreenchange and visualViewport.resize often arrive
+     together, and dispatching resize from inside a resize listener would loop. */
+  function refit() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint();
+      for (var i = 0; i < cbs.length; i++) { try { cbs[i](isFull()) } catch (e) {} }
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("orientationchange"));
+    });
+  }
+  function toggle() {
+    if (blocked) return false;
+    var was = isFull();
+    try {
+      if (was) EX.call(document);
+      else { var p = REQ.call(de); if (p && p.catch) p.catch(function () {}) }
+    } catch (e) {}
+    /* the change event may never come (sandboxed frames, denied requests, some
+       headless shells that grant then silently drop): repaint the state we can
+       read twice, late enough to catch a transition nobody announced. */
+    setTimeout(refit, 220);
+    setTimeout(refit, 700);
+    return !was;
+  }
+
+  de.setAttribute("data-fs", "off");
+  ["fullscreenchange", "webkitfullscreenchange", "MSFullscreenChange", "mozfullscreenchange"]
+    .forEach(function (t) { document.addEventListener(t, refit, false) });
+  ["fullscreenerror", "webkitfullscreenerror"].forEach(function (t) {
+    document.addEventListener(t, function () { de.setAttribute("data-fs", "off"); paint() }, false)
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", refit, false);
+    window.visualViewport.addEventListener("scroll", function () {
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint(); /* an exit the browser never announced must still clear the label */
+    }, false);
+  }
+  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
+  }, false);
+  /* A language switch changes <html lang>: repaint from whatever table the page
+     uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
+     drive their toggle state off that attribute, and taking it would corrupt them. */
+  new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
+
+  window.TLFS = {
+    version: "2026.11.23.3",
+    supported: !blocked,
+    isFull: isFull,
+    label: label,
+    paint: paint,
+    toggle: toggle,
+    onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
+    /* just the size/orientation wiring, for a page with its own fullscreen button */
+    refitOnly: function () { paint(); return true },
+    /* put the button in `sel` (or float it when the selector matches nothing).
+       opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
+       puts the translated word in aria-label, for narrow hosts. */
+    mount: function (sel, opts) {
+      cssOnce();
+      var o = opts || {};
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = o.cls || "tlfs-float";
+      b.id = o.id || "tlfsBtn";
+      b.__tlfsIcon = !!o.icon;
+      if (o.float !== false && !o.cls) b.classList.add("tlfs-float");
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", label());
+      if (o.ariaLabel) b.setAttribute("data-aria", o.ariaLabel);
+      b.textContent = o.icon ? ICON : label();
+      /* a menu that starts the game on any tap (defender binds pointerdown on the
+         whole title screen) must not fire when the fullscreen button is pressed */
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("touchstart", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle() });
+      var host = sel ? document.querySelector(sel) : null;
+      if (host) {
+        if (o.prepend && host.firstChild) host.insertBefore(b, host.firstChild);
+        else host.appendChild(b);
+      } else {
+        b.classList.add("tlfs-float");
+        document.body.appendChild(b);
+      }
+      if (blocked) b.style.display = "none";
+      btns.push(b);
+      paint();
+      return b;
+    },
+    /* wire a button the page already has in its markup (keeps its own look) */
+    attach: function (el) {
+      cssOnce();
+      if (!el) return null;
+      if (blocked) { el.style.display = "none"; return el }
+      el.addEventListener("click", function (e) { e.preventDefault(); toggle() });
+      btns.push(el);
+      paint();
+      return el;
+    },
+    /* a rebuilt panel drops its children: re-add every button the page mounted */
+    reassert: function () {
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i];
+        if (!b.isConnected && b.__tlfsHost) {
+          var h = document.querySelector(b.__tlfsHost);
+          if (h) h.appendChild(b);
+        }
+      }
+      paint();
+      return btns.length
+    }
+  };
+  /* remember where each button was mounted so a panel rebuild can put it back */
+  var mount0 = window.TLFS.mount;
+  window.TLFS.mount = function (sel, opts) {
+    var b = mount0(sel, opts);
+    if (b) b.__tlfsHost = sel || "body";
+    return b;
+  };
+  var k = kit();
+  if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
+})();
+</script>
+<script>TLFS.mount("#options-screen",{cls:"menu-btn"});</script>
 </body>
 </html>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>PROPLOOP — FPV Stunt Simulator</title>
-<meta name="version" content="2026.11.20.2">
+<meta name="version" content="2026.11.24.1">
 <style>
 :root{--bg:#0b0e11;--panel:#12161bf2;--line:#2a323b;--line2:#3a444e;--txt:#dce5eb;--dim:#7f8d99;
 --amber:#ffb454;--org:#ff5f1f;--teal:#38e1c6;--red:#ff5252;
@@ -118,67 +118,756 @@ summary{cursor:pointer;font-size:11px;letter-spacing:2px;color:var(--teal)}
 <div id="statsBox" class="hud"></div>
 <div id="toast" class="hud"></div>
 <div id="cd" class="hud hide"></div>
-<div id="hintBar" class="hud">W/S THROTTLE · A/D YAW · ARROWS PITCH/ROLL · T ANGLE · C CAM · R RESET · ESC MENU</div>
+<div id="hintBar" class="hud" data-t="hintFmt">W/S THROTTLE · A/D YAW · ARROWS PITCH/ROLL · T ANGLE · C CAM · R RESET · ESC MENU</div>
 <div id="stickL" class="stick hide"><div class="knob" id="knobL"></div></div>
 <div id="stickR" class="stick hide"><div class="knob" id="knobR"></div></div>
 <div id="tbtns" class="hide">
-<button class="tbtn" id="tPause">MENU</button><button class="tbtn" id="tCam">CAM</button>
-<button class="tbtn" id="tReset">RST</button><button class="tbtn" id="tSnd">SND</button>
+<button class="tbtn" id="tPause" data-t="menu">MENU</button><button class="tbtn" id="tCam" data-t="cam">CAM</button>
+<button class="tbtn" id="tReset" data-t="rst">RST</button><button class="tbtn" id="tSnd" data-t="snd">SND</button>
 </div>
 <div id="menuOv" class="ov"><div class="panel">
 <h1>PROP<span>LOOP</span></h1>
-<div class="sub">FPV STUNT SIMULATOR // PROCEDURAL CIRCUITS</div>
+<div class="sub" data-t="sub">FPV STUNT SIMULATOR // PROCEDURAL CIRCUITS</div>
 <div class="hz"></div>
-<div class="boot">LINK <i>ESTABLISHED</i> · GPS <i>16 SAT</i> · VTX <i>5.8G CH-8</i> · GYRO <i>CAL OK</i></div>
-<div class="row"><span class="lbl">CIRCUIT SEED</span>
-<input type="text" id="seedInp" maxlength="24"><button class="btn" id="btnDice">⟳ RANDOM</button>
+<div class="boot" id="bootLine">LINK <i>ESTABLISHED</i> · GPS <i>16 SAT</i> · VTX <i>5.8G CH-8</i> · GYRO <i>CAL OK</i></div>
+<div class="row"><span class="lbl" data-t="circuitSeed">CIRCUIT SEED</span>
+<input type="text" id="seedInp" maxlength="24"><button class="btn" id="btnDice">⟳ <span data-t="random">RANDOM</span></button>
 <span class="best" id="bestLbl"></span></div>
-<div class="row"><span class="lbl">STYLE</span><div class="seg" id="styleSeg"></div></div>
-<div class="row"><span class="lbl">DIFFICULTY</span><input type="range" id="diffR" min="1" max="5" step="1"><span class="lbl" id="diffLbl" style="min-width:76px;color:var(--amber)"></span></div>
-<div class="row"><span class="lbl">TUNING</span><div class="seg" id="presetSeg"></div></div>
-<details><summary>▸ PHYSICS TUNING BENCH (ultra-real model)</summary>
+<div class="row"><span class="lbl" data-t="style">STYLE</span><div class="seg" id="styleSeg"></div></div>
+<div class="row"><span class="lbl" data-t="difficulty">DIFFICULTY</span><input type="range" id="diffR" min="1" max="5" step="1"><span class="lbl" id="diffLbl" style="min-width:76px;color:var(--amber)"></span></div>
+<div class="row"><span class="lbl" data-t="tuning">TUNING</span><div class="seg" id="presetSeg"></div></div>
+<details><summary data-t="bench1">▸ PHYSICS TUNING BENCH (ultra-real model)</summary>
 <div class="tGrid" id="tuneGrid"></div>
 <div class="tog" id="tuneTog"></div>
 <div class="row" style="margin-top:10px">
-<button class="btn" id="btnCopy">⧉ COPY CODE</button>
-<input type="text" id="codeInp" placeholder="TUNING PASSCODE" style="width:150px">
-<button class="btn" id="btnLoad">LOAD CODE</button>
-<button class="btn" id="btnExport">⇩ EXPORT FILE</button>
-<button class="btn" id="btnImport">⇧ IMPORT FILE</button>
+<button class="btn" id="btnCopy">⧉ <span data-t="copyCode">COPY CODE</span></button>
+<input type="text" id="codeInp" data-ph="passcode" placeholder="TUNING PASSCODE" style="width:150px">
+<button class="btn" id="btnLoad" data-t="loadCode">LOAD CODE</button>
+<button class="btn" id="btnExport">⇩ <span data-t="exportFile">EXPORT FILE</span></button>
+<button class="btn" id="btnImport">⇧ <span data-t="importFile">IMPORT FILE</span></button>
 <input type="file" id="fileInp" accept=".json,application/json" style="display:none">
 </div>
 <div class="row" id="slotRow" style="gap:6px;margin-top:2px"></div>
 </details>
-<details><summary>▸ GRAPHICS, INPUT &amp; CONTROLS</summary>
-<div class="row"><span class="lbl">QUALITY</span><div class="seg" id="qualSeg"></div></div>
-<div class="row"><span class="lbl">VIEW DIST</span><input type="range" id="vdR" min="150" max="500" step="10"></div>
+<details><summary data-t="bench2">▸ GRAPHICS, INPUT &amp; CONTROLS</summary>
+<div class="row"><span class="lbl" data-t="quality">QUALITY</span><div class="seg" id="qualSeg"></div></div>
+<div class="row"><span class="lbl" data-t="viewDist">VIEW DIST</span><input type="range" id="vdR" min="150" max="500" step="10"></div>
 <div class="tGrid" id="ctrlGrid"></div>
-<div class="help">
+<div class="help" id="helpBlock">
 <b>KEYBOARD</b> — W/S throttle · A/D yaw · ↑/↓ pitch · ←/→ roll · T self-level · C camera · R respawn · M mute · ESC pause<br>
 <b>GAMEPAD</b> — Mode-2 sticks (auto-detected) · <b>TOUCH</b> — dual sticks appear on phones/tablets<br>
 <b>TUNING</b> — share your setup via passcode, JSON file, or browser slots 1-3.<br>
 Every seed builds a brand-new stunt circuit: gates, rings, windmills, elevator gates, wrecking pendulums, tunnels, slalom.
 </div>
 </details>
-<div class="row" style="margin-top:18px"><button class="btn pri" id="btnStart">▶ ARM &amp; LAUNCH</button><a class="btn" id="btnHome" href="https://1nd1g0.github.io/">⌂ HOME</a></div>
+<div class="row" style="margin-top:18px"><button class="btn pri" id="btnStart">▶ <span data-t="armLaunch">ARM &amp; LAUNCH</span></button><a class="btn" id="btnHome" href="https://1nd1g0.github.io/">⌂ <span data-t="home">HOME</span></a></div>
 </div></div>
 <div id="pauseOv" class="ov hide"><div class="panel">
-<h1 style="font-size:40px">PAUSED</h1><div class="hz"></div>
+<h1 style="font-size:40px" data-t="paused">PAUSED</h1><div class="hz"></div>
 <div class="tGrid" id="quickGrid"></div>
 <div class="row" style="margin-top:16px">
-<button class="btn pri" id="btnResume">RESUME</button>
-<button class="btn" id="btnRestart">RESTART</button>
-<button class="btn" id="btnNewSeed">NEW SEED</button>
-<button class="btn" id="btnQuit">HANGAR</button>
+<button class="btn pri" id="btnResume" data-t="resume">RESUME</button>
+<button class="btn" id="btnRestart" data-t="restart">RESTART</button>
+<button class="btn" id="btnNewSeed" data-t="newSeed">NEW SEED</button>
+<button class="btn" id="btnQuit" data-t="hangar">HANGAR</button>
 </div>
 </div></div>
 <div id="finOv" class="ov hide"><div class="panel" style="text-align:center">
-<div class="big" id="finTitle">COURSE CLEAR</div>
+<div class="big" id="finTitle" data-t="courseClear">COURSE CLEAR</div>
 <div class="fin" id="finStats"></div>
-<button class="btn pri" id="btnRetry">⟲ RETRY SEED</button>
-<button class="btn" id="btnNext">⟳ NEW CIRCUIT</button>
-<button class="btn" id="btnMenu2">HANGAR</button>
+<button class="btn pri" id="btnRetry">⟲ <span data-t="retrySeed">RETRY SEED</span></button>
+<button class="btn" id="btnNext">⟳ <span data-t="newCircuit">NEW CIRCUIT</span></button>
+<button class="btn" id="btnMenu2" data-t="hangar">HANGAR</button>
 </div></div>
+<!-- inlined i18n.js — the source of truth is i18n.js: edit that file and re-inline this block -->
+<script>
+/* ============================================================================
+   i18n.js — shared language kit for every page of this site.
+   Language code decision tree (identical everywhere, in this order):
+     0. any technical problem with this kit -> English
+     1. URL ?language=xx      (a region suffix is fine: pt-BR, zh-CN)
+     2. localStorage['tll:lang']
+     3. the browser's language list (navigator.languages, then navigator.language)
+     4. English
+   A code outside CODES is dropped, not trusted, so the next level decides. Only
+   the picker button writes storage, so a ?language= link never overwrites the
+   visitor's saved choice.
+
+   Page usage
+     <script src="i18n.js"><\/script>            BEFORE the game script
+     <script>TLI18N.add({en:{k:"Text"},es:{...},pt:{...},ru:{...},zh:{...}})<\/script>
+     markup:  <b data-t="score">SCORE</b>  <button data-tip="help">?</button>
+              <input data-ph="name">  <i data-aria="pause">  <img data-alt="car">
+     js:      el.textContent=TLI18N.t("gameOver");
+              el.innerHTML="<b>"+TLI18N.t("best")+": "+n+"</b>";
+              ctx.fillText(TLI18N.t("paused"),x,y);
+     canvas / innerHTML redraws: TLI18N.onChange(()=>redrawAll());
+     pick a host for the language button: TLI18N.mount("#startPanel")
+       (omit it and the kit parks a pill in the lower-left corner)
+   Keys missing from a non-English table fall back to English, so a half
+   translated table still runs. Values for *Fmt keys carry {placeholders}.
+   ========================================================================= */
+(function(){
+"use strict";
+var KEY="tll:lang", CODES=["en","es","pt","ru","zh"];
+var LANGS=[ // code · name in its own language · that word for "language" · its flag
+ ['en','English','Language','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0,0 60,40M60,0 0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 60,40M60,0 0,40" stroke="#C8102E" stroke-width="3.2"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="13"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="8"/></svg>'],
+ ['es','Español','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#AA151B"/><path d="M0,10H60M0,30H60" stroke="#F1BF00" stroke-width="20"/>  </svg>'],
+ ['pt','Português','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="40" fill="#046A38"/><rect x="24" width="36" height="40" fill="#DA291C"/><circle cx="24" cy="20" r="7.5" fill="#FEDF00" stroke="#046A38" stroke-width="1.4"/><path d="M24,14.5 24,22.5M20.5,17.5H27.5" stroke="#DA291C" stroke-width="2.2" fill="none"/></svg>'],
+ ['ru','Русский','Язык','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.34" width="60" height="13.33" fill="#0039A6"/><rect y="26.67" width="60" height="13.33" fill="#D52B1E"/></svg>'],
+ ['zh','中文','语言','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#EE1C25"/><circle cx="10" cy="10" r="5.6" fill="#FFDC00"/><circle cx="21" cy="6" r="2.1" fill="#FFDC00"/><circle cx="26" cy="11.5" r="2.1" fill="#FFDC00"/><circle cx="26" cy="18.5" r="2.1" fill="#FFDC00"/><circle cx="21" cy="24" r="2.1" fill="#FFDC00"/></svg>']
+];
+/* ---- shared vocabulary: the same word means the same thing in every game.
+       Values carry no glyphs — pages keep their ⌂ ▶ ■ icons in the markup. ---- */
+var COMMON={
+en:{
+ paused:"PAUSED",pause:"PAUSE",resume:"RESUME",start:"START",play:"PLAY",home:"HOME",menu:"MENU",
+ options:"OPTIONS",settings:"SETTINGS",help:"HELP",howToPlay:"HOW TO PLAY",rules:"RULES",controls:"CONTROLS",
+ keys:"KEYS",gamepad:"GAMEPAD",mouse:"MOUSE",touch:"TOUCH",
+ sound:"SOUND",music:"MUSIC",sfx:"SOUND FX",on:"ON",off:"OFF",fullscreen:"FULLSCREEN",exitFullscreen:"EXIT FULLSCREEN",
+ difficulty:"DIFFICULTY",easy:"EASY",normal:"NORMAL",hard:"HARD",low:"LOW",high:"HIGH",
+ score:"SCORE",best:"BEST",hiScore:"HIGH SCORE",level:"LEVEL",lives:"LIVES",time:"TIME",
+ speed:"SPEED",round:"ROUND",wave:"WAVE",seed:"SEED",newSeed:"NEW SEED",
+ restart:"RESTART",retry:"RETRY",continue:"CONTINUE",tryAgain:"TRY AGAIN",nextLevel:"NEXT LEVEL",
+ gameOver:"GAME OVER",youWin:"YOU WIN",youLose:"GAME OVER",clear:"CLEARED",
+ fire:"FIRE",jump:"JUMP",back:"BACK",exit:"EXIT",close:"CLOSE",ok:"OK",cancel:"CANCEL",
+ loading:"LOADING",shots:"SHOTS",moves:"MOVES",power:"POWER",angle:"ANGLE",
+ langTitle:"LANGUAGE",langNote:"Choose your language — it is remembered, and it applies to this game and to the whole catalogue.",
+ langBack:"CHANGE LANGUAGE",players:"PLAYERS",player:"PLAYER",you:"YOU",cpu:"CPU",random:"RANDOM"},
+es:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INICIO",play:"JUGAR",home:"INICIO",menu:"MENÚ",
+ options:"OPCIONES",settings:"AJUSTES",help:"AYUDA",howToPlay:"CÓMO JUGAR",rules:"REGLAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"MANDO",mouse:"RATÓN",touch:"TÁCTIL",
+ sound:"SONIDO",music:"MÚSICA",sfx:"EFECTOS",on:"ACTIVO",off:"APAGADO",fullscreen:"PANTALLA COMPLETA",exitFullscreen:"SALIR DE PANTALLA COMPLETA",
+ difficulty:"DIFICULTAD",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAJO",high:"ALTO",
+ score:"PUNTOS",best:"RÉCORD",hiScore:"RÉCORD",level:"NIVEL",lives:"VIDAS",time:"TIEMPO",
+ speed:"VELOCIDAD",round:"RONDA",wave:"OLEADA",seed:"SEMILLA",newSeed:"NUEVA SEMILLA",
+ restart:"REINICIAR",retry:"REINTENTAR",continue:"CONTINUAR",tryAgain:"INTÉNTALO OTRA VEZ",nextLevel:"SIGUIENTE NIVEL",
+ gameOver:"FIN DEL JUEGO",youWin:"¡GANASTE!",youLose:"FIN DEL JUEGO",clear:"SUPERADO",
+ fire:"DISPARO",jump:"SALTAR",back:"ATRÁS",exit:"SALIR",close:"CERRAR",ok:"ACEPTAR",cancel:"CANCELAR",
+ loading:"CARGANDO",shots:"LANZAMIENTOS",moves:"MOVIMIENTOS",power:"FUERZA",angle:"ÁNGULO",
+ langTitle:"IDIOMA",langNote:"Elige tu idioma: se recuerda y se aplica a este juego y a todo el catálogo.",
+ langBack:"CAMBIAR IDIOMA",players:"JUGADORES",player:"JUGADOR",you:"TÚ",cpu:"CPU",random:"ALEATORIO"},
+pt:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INÍCIO",play:"JOGAR",home:"INÍCIO",menu:"MENU",
+ options:"OPÇÕES",settings:"CONFIGURAÇÕES",help:"AJUDA",howToPlay:"COMO JOGAR",rules:"REGRAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"CONTROLE",mouse:"MOUSE",touch:"TOQUE",
+ sound:"SOM",music:"MÚSICA",sfx:"EFEITOS",on:"LIGADO",off:"DESLIGADO",fullscreen:"TELA CHEIA",exitFullscreen:"SAIR DA TELA CHEIA",
+ difficulty:"DIFICULDADE",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAIXO",high:"ALTO",
+ score:"PONTOS",best:"RECORDE",hiScore:"RECORDE",level:"NÍVEL",lives:"VIDAS",time:"TEMPO",
+ speed:"VELOCIDADE",round:"RODADA",wave:"ONDA",seed:"SEMENTE",newSeed:"NOVA SEMENTE",
+ restart:"REINICIAR",retry:"TENTAR DE NOVO",continue:"CONTINUAR",tryAgain:"TENTE DE NOVO",nextLevel:"PRÓXIMO NÍVEL",
+ gameOver:"FIM DE JOGO",youWin:"VOCÊ VENCEU",youLose:"FIM DE JOGO",clear:"COMPLETO",
+ fire:"DISPARO",jump:"SALTAR",back:"VOLTAR",exit:"SAIR",close:"FECHAR",ok:"OK",cancel:"CANCELAR",
+ loading:"CARREGANDO",shots:"BATIDAS",moves:"JOGADAS",power:"FORÇA",angle:"ÂNGULO",
+ langTitle:"IDIOMA",langNote:"Escolha seu idioma: ele é lembrado e vale para este jogo e para todo o catálogo.",
+ langBack:"MUDAR IDIOMA",players:"JOGADORES",player:"JOGADOR",you:"VOCÊ",cpu:"CPU",random:"ALEATÓRIO"},
+ru:{
+ paused:"ПАУЗА",pause:"ПАУЗА",resume:"ПРОДОЛЖИТЬ",start:"СТАРТ",play:"ИГРАТЬ",home:"ДОМОЙ",menu:"МЕНЮ",
+ options:"НАСТРОЙКИ",settings:"НАСТРОЙКИ",help:"ПОМОЩЬ",howToPlay:"КАК ИГРАТЬ",rules:"ПРАВИЛА",controls:"УПРАВЛЕНИЕ",
+ keys:"КЛАВИШИ",gamepad:"ГЕЙМПАД",mouse:"МЫШЬ",touch:"СЕНСОР",
+ sound:"ЗВУК",music:"МУЗЫКА",sfx:"ЗВУКИ",on:"ВКЛ",off:"ВЫКЛ",fullscreen:"НА ВЕСЬ ЭКРАН",exitFullscreen:"ВЫЙТИ С ЭКРАНА",
+ difficulty:"СЛОЖНОСТЬ",easy:"ЛЕГКО",normal:"НОРМА",hard:"СЛОЖНО",low:"НИЗ",high:"ВЕРХ",
+ score:"СЧЁТ",best:"РЕКОРД",hiScore:"РЕКОРД",level:"УРОВЕНЬ",lives:"ЖИЗНИ",time:"ВРЕМЯ",
+ speed:"СКОРОСТЬ",round:"РАУНД",wave:"ВОЛНА",seed:"КОД УРОВНЯ",newSeed:"НОВЫЙ КОД",
+ restart:"ЗАНОВО",retry:"ЕЩЁ РАЗ",continue:"ПРОДОЛЖИТЬ",tryAgain:"ПОПРОБУЙ ЕЩЁ",nextLevel:"СЛЕДУЮЩИЙ УРОВЕНЬ",
+ gameOver:"КОНЕЦ",youWin:"ПОБЕДА",youLose:"КОНЕЦ",clear:"УРОВЕНЬ ПРОЙДЕН",
+ fire:"ОГОНЬ",jump:"ПРЫЖОК",back:"НАЗАД",exit:"ВЫХОД",close:"ЗАКРЫТЬ",ok:"ОК",cancel:"ОТМЕНА",
+ loading:"ЗАГРУЗКА",shots:"УДАРЫ",moves:"ХОДЫ",power:"СИЛА",angle:"УГОЛ",
+ langTitle:"ЯЗЫК",langNote:"Выберите язык — он запоминается и действует для этой игры и для всего каталога.",
+ langBack:"СМЕНИТЬ ЯЗЫК",players:"ИГРОКИ",player:"ИГРОК",you:"ВЫ",cpu:"БОТ",random:"СЛУЧАЙНО"},
+zh:{
+ paused:"暂停",pause:"暂停",resume:"继续",start:"开始",play:"开始游戏",home:"主页",menu:"菜单",
+ options:"选项",settings:"设置",help:"帮助",howToPlay:"怎么玩",rules:"规则",controls:"操作",
+ keys:"按键",gamepad:"手柄",mouse:"鼠标",touch:"触摸",
+ sound:"声音",music:"音乐",sfx:"音效",on:"开",off:"关",fullscreen:"全屏",exitFullscreen:"退出全屏",
+ difficulty:"难度",easy:"简单",normal:"普通",hard:"困难",low:"低",high:"高",
+ score:"得分",best:"最高分",hiScore:"最高分",level:"关卡",lives:"生命",time:"时间",
+ speed:"速度",round:"回合",wave:"波次",seed:"种子",newSeed:"新种子",
+ restart:"重新开始",retry:"重试",continue:"继续",tryAgain:"再试一次",nextLevel:"下一关",
+ gameOver:"游戏结束",youWin:"胜利",youLose:"游戏结束",clear:"过关",
+ fire:"射击",jump:"跳跃",back:"返回",exit:"退出",close:"关闭",ok:"确定",cancel:"取消",
+ loading:"加载中",shots:"击球",moves:"步数",power:"力量",angle:"角度",
+ langTitle:"语言",langNote:"选择语言：会被记住，并用于这个游戏和整个游戏目录。",
+ langBack:"更换语言",players:"玩家",player:"玩家",you:"你",cpu:"电脑",random:"随机"}
+};
+var PAGE={en:{},es:{},pt:{},ru:{},zh:{}};
+function lget(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+function lset(v){try{localStorage.setItem(KEY,v)}catch(e){}}
+var code=null;
+/* A browser language list -> a supported code, or null when it says nothing
+   usable. "pt-BR", "ru_RU", "zh-CN" all match on their 2-letter base. */
+function fromBrowser(){
+ try{
+  var list=null;
+  if(navigator&&Array.isArray(navigator.languages)&&navigator.languages.length)list=navigator.languages;
+  else if(navigator)list=[navigator.language||navigator.userLanguage||""];
+  for(var i=0;i<(list||[]).length;i++){
+   var c=String(list[i]||"").toLowerCase().slice(0,2);
+   if(CODES.indexOf(c)>=0)return c;
+  }
+ }catch(e){}
+ return null;
+}
+(function(){
+ try{
+  var c=null,m=/[?&]language=([a-zA-Z]{2,3})/.exec(location.search||"");
+  if(m)c=m[1].toLowerCase().slice(0,2);           // ?language=pt-BR counts as pt
+  if(c&&CODES.indexOf(c)<0)c=null;
+  if(!c){var s=(lget()||"").toLowerCase().slice(0,2);if(CODES.indexOf(s)>=0)c=s;}
+  if(!c)c=fromBrowser();
+  code=c||"en";
+ }catch(e){code="en";} // a broken lookup speaks English, never nothing
+})();
+function raw(k){
+ var t=PAGE[code]?PAGE[code][k]:null; if(t!=null)return t;
+ t=COMMON[code]?COMMON[code][k]:null; if(t!=null)return t;
+ t=PAGE.en[k]; if(t!=null)return t;
+ t=COMMON.en[k]; return t==null?null:t;
+}
+var hooks=[];
+var API={
+ version:"2026.11.22.2", codes:CODES.slice(), langs:LANGS,
+ lang:function(){return code},
+ browserLang:function(){return fromBrowser()},
+ t:function(k,v){var s;try{s=raw(k)}catch(e){code="en";try{s=raw(k)}catch(e2){s=null}}
+  if(s==null)s=k;var o=v||{};for(var p in o)s=s.split("{"+p+"}").join(String(o[p]));return s},
+ flag:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][3];return ""},
+ name:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][2];return c},
+ add:function(tab){for(var c in tab){if(!PAGE[c])continue;for(var k in tab[c])PAGE[c][k]=tab[c][k];}
+  try{API.apply()}catch(e){}},
+ /* read the tables (the developer harness edits texts through these) */
+ keys:function(c){var out=[],seen={};try{var src=[PAGE[c],COMMON[c],PAGE.en,COMMON.en];
+  for(var i=0;i<src.length;i++)for(var k in src[i])if(!seen[k]){seen[k]=1;out.push(k)}out.sort();}catch(e){}
+  return out},
+ table:function(){var o={};try{for(var i=0;i<CODES.length;i++){var c=CODES[i],m={},s=[COMMON[c],PAGE[c],COMMON.en,PAGE.en];
+  for(var j=0;j<s.length;j++)for(var k in s[j])if(m[k]==null&&s[j][k]!=null)m[k]=s[j][k];o[c]=m;}}catch(e){}
+  return o},
+ setKey:function(c,k,v){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;
+  try{(PAGE[c]=PAGE[c]||{})[k]=String(v);}catch(e){return;}
+  try{API.apply()}catch(e){}
+  for(var i=0;i<hooks.length;i++)try{hooks[i](code)}catch(e){}},
+ onChange:function(f){hooks.push(f)},
+ set:function(c){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;code=c;lset(c);
+  try{API.apply()}catch(e){}for(var i=0;i<hooks.length;i++)try{hooks[i](c)}catch(e){}},
+ apply:function(root){
+  if(document.documentElement)document.documentElement.lang=code;
+  var r=root||document;
+  var set=function(e,attr,put){var v=raw(e.getAttribute(attr));if(v!=null)put(e,v);};
+  var all=[];
+  if(r.nodeType===1)all.push(r);
+  if(r.querySelectorAll)all=all.concat([].slice.call(r.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]")));
+  for(var i=0;i<all.length;i++){var e=all[i];
+   try{
+    if(e.hasAttribute("data-t"))set(e,"data-t",function(n,v){n.textContent=v});
+    if(e.hasAttribute("data-ph"))set(e,"data-ph",function(n,v){n.placeholder=v});
+    if(e.hasAttribute("data-tip"))set(e,"data-tip",function(n,v){n.title=v});
+    if(e.hasAttribute("data-aria"))set(e,"data-aria",function(n,v){n.setAttribute("aria-label",v)});
+    if(e.hasAttribute("data-alt"))set(e,"data-alt",function(n,v){n.alt=v});
+   }catch(e2){} // one odd node never aborts the pass
+  }
+  if(pill){try{pill.innerHTML=API.flag(code)+"<span>"+API.name(code)+"</span>";pill.title=API.t("langTitle");}catch(e){}}
+ },
+ mount:function(sel){hostSel=sel;ensurePill();},
+};
+/* ---------------- language button + picker overlay ---------------- */
+var hostSel=null,pill=null,ov=null;
+var CSS=".tlbtn{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(20,24,22,.72);flex:0 0 auto;align-self:center;"
+ +"border:1px solid #3a463f;border-radius:6px;color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:1px;"
+ +"cursor:pointer;line-height:1;width:auto;max-width:100%}.tlbtn:hover,.tlbtn:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}"
+ +".tlbtn svg{width:22px;height:15px;border:1px solid #2e3a34;border-radius:2px;display:block}"
+ +".tlfix{position:fixed;left:12px;bottom:12px;z-index:2147483000}"
+ +".tlov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;"
+ +"background:rgba(4,7,6,.86);padding:16px}.tlov[hidden]{display:none}"
+ +".tlpanel{max-width:660px;width:100%;background:#141816;border:1px solid #3a463f;border-radius:12px;"
+ +"padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.6);color:#c9d2cb;font:inherit;text-align:center}"
+ +".tlpanel h2{margin:0 0 6px;font-size:20px;letter-spacing:4px;color:#ffd76a}"
+ +".tlpanel p{margin:0 0 16px;font-size:12px;line-height:1.6;color:#8a948e}"
+ +".tlgrid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}"
+ +".tlb{width:132px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;"
+ +"background:rgba(20,24,22,.7);border:1px solid #3a463f;border-radius:8px;cursor:pointer;color:#c9d2cb;font:inherit}"
+ +".tlb:hover,.tlb:focus{border-color:#ffd76a;color:#f4e9c8;outline:none;box-shadow:0 0 14px rgba(255,215,106,.18)}"
+ +".tlb svg{width:50px;height:34px;border:1px solid #2e3a34;border-radius:4px;display:block}"
+ +".tlb b{font-size:13px;color:#f4e9c8}.tlb span{font-size:10px;letter-spacing:1px;color:#8a948e}"
+ +".tlx{margin-top:16px;padding:7px 20px;background:none;border:1px solid #3a463f;border-radius:6px;"
+ +"color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:2px;cursor:pointer}"
+ +".tlx:hover,.tlx:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}";
+function style(){if(document.getElementById("tlcss"))return;var s=document.createElement("style");s.id="tlcss";s.textContent=CSS;document.head.appendChild(s);}
+function ensurePill(){
+ if(pill)return;
+ var host=hostSel?document.querySelector(hostSel):null;
+ if(!host&&document.readyState==="loading")return; // retried at DOMContentLoaded
+ style();
+ pill=document.createElement("button");
+ pill.type="button";pill.className="tlbtn";pill.setAttribute("aria-haspopup","dialog");
+ if(!host){pill.className="tlbtn tlfix";document.body.appendChild(pill);}
+ else host.insertBefore(pill,host.firstChild);
+ pill.onclick=openOv;
+ API.apply();
+}
+function openOv(){
+ if(!ov){
+  ov=document.createElement("div");ov.className="tlov";ov.hidden=true;
+  var p=document.createElement("div");p.className="tlpanel";
+  var h=document.createElement("h2");h.setAttribute("data-t","langTitle");p.appendChild(h);
+  var np=document.createElement("p");np.setAttribute("data-t","langNote");p.appendChild(np);
+  var g=document.createElement("div");g.className="tlgrid";
+  for(var i=0;i<LANGS.length;i++){
+   var b=document.createElement("button");b.type="button";b.className="tlb";b.dataset.lang=LANGS[i][0];
+   b.innerHTML=LANGS[i][3]+"<b>"+LANGS[i][1]+"</b><span>"+LANGS[i][2]+"</span>";g.appendChild(b);
+  }
+  p.appendChild(g);
+  var x=document.createElement("button");x.type="button";x.className="tlx";x.setAttribute("data-t","close");p.appendChild(x);
+  ov.appendChild(p);document.body.appendChild(ov);
+  g.onclick=function(e){var b=e.target;while(b&&b!==g&&!b.dataset.lang)b=b.parentNode;if(b&&b.dataset.lang){API.set(b.dataset.lang);closeOv();}};
+  x.onclick=closeOv;
+  ov.onclick=function(e){if(e.target===ov)closeOv();};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ov&&!ov.hidden)closeOv();});
+ }
+ API.apply(ov);
+ ov.hidden=false;
+}
+function closeOv(){if(ov)ov.hidden=true;}
+function boot(){
+ try{ensurePill();API.apply();}
+ catch(e){code="en";try{ensurePill();API.apply();}catch(e2){}} // rule 0: English on any kit fault
+}
+/* keep freshly added nodes translated without the page calling apply() */
+new MutationObserver(function(ms){
+ if(!pill)return;
+ try{
+  for(var i=0;i<ms.length;i++){var n=ms[i].addedNodes;
+   for(var j=0;j<n.length;j++){var e=n[j];
+    if(e.nodeType!==1)continue;
+    if(e.matches&&e.matches("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]"))API.apply(e);
+    else if(e.querySelectorAll&&e.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]").length)API.apply(e);
+   }}
+ }catch(e){}
+}).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+window.TLI18N=API;
+})();
+</script>
+<script>
+/* If i18n.js is missing or only half-loaded, the game still runs: this stub
+   keeps the same API, pins English, and serves the en table this page registers
+   below via add(). */
+if(!window.TLI18N||typeof window.TLI18N.add!=="function"||typeof window.TLI18N.t!=="function"||typeof window.TLI18N.apply!=="function"||typeof window.TLI18N.mount!=="function"){(function(){var T={en:{}};window.TLI18N={version:"en-fallback",codes:["en"],langs:[["en","EN","English",""]],
+add:function(tab){for(var c in tab){T[c]=Object.assign(T[c]||{},tab[c]);}},
+t:function(k,v){var s=(T.en&&T.en[k]!=null)?T.en[k]:k,o=v||{};for(var p in o)s=String(s).split("{"+p+"}").join(String(o[p]));return s},
+flag:function(){return "";},name:function(c){return c;},lang:function(){return "en";},
+set:function(){},onChange:function(){},apply:function(){},mount:function(){}};})();}
+</script>
+
+<script>
+TLI18N.add({
+'en':{
+    sub:'FPV STUNT SIMULATOR // PROCEDURAL CIRCUITS',
+    circuitSeed:'CIRCUIT SEED', fpsUnit:'FPS',
+    random:'RANDOM',
+    style:'STYLE',
+    tuning:'TUNING',
+    bench1:'▸ PHYSICS TUNING BENCH (ultra-real model)',
+    bench2:'▸ GRAPHICS, INPUT & CONTROLS',
+    copyCode:'COPY CODE',
+    passcode:'TUNING PASSCODE',
+    loadCode:'LOAD CODE',
+    exportFile:'EXPORT FILE',
+    importFile:'IMPORT FILE',
+    quality:'QUALITY',
+    viewDist:'VIEW DIST',
+    armLaunch:'ARM & LAUNCH',
+    hangar:'HANGAR',
+    courseClear:'COURSE CLEAR',
+    newRecord:'NEW RECORD',
+    retrySeed:'RETRY SEED',
+    newCircuit:'NEW CIRCUIT',
+    seed:'SEED',
+    gate:'GATE',
+    crashed:'CRASHED',
+    lowBatt:'LOW BATTERY',
+    propStrike:'PROP STRIKE',
+    angleMode:'ANGLE MODE',
+    acroMode:'ACRO MODE',
+    snd:'SND',
+    mute:'MUTE',
+    rst:'RST',
+    cam:'CAM',
+    reset:'RESET',
+    thrLbl:'THR',
+    motorsLbl:'MOTORS',
+    spdLbl:'SPD',
+    altLbl:'ALT',
+    batLbl:'BAT',
+    crashes:'CRASHES',
+    topSpeed:'TOP SPEED',
+    go:'GO!',
+    savedSlot:'SAVED SLOT {n}',
+    slotEmpty:'SLOT {n} EMPTY',
+    loadedSlot:'LOADED SLOT {n}',
+    slotBad:'SLOT {n} BAD',
+    slotError:'SLOT ERROR',
+    codeCopied:'CODE COPIED',
+    selectCopy:'SELECT+COPY FIELD',
+    tuningLoaded:'TUNING LOADED',
+    invalidCode:'INVALID CODE',
+    exported:'EXPORTED',
+    exportFailed:'EXPORT FAILED',
+    imported:'IMPORTED',
+    noTuning:'NO TUNING IN FILE',
+    badFile:'BAD FILE',
+    autoQual:'AUTO QUALITY DOWN',
+    slots:'SLOTS',
+    saveN:'SAVE {n}',
+    loadN:'LOAD {n}',
+    togAngle:'SELF-LEVEL (T)',
+    togAssist:'HOVER ASSIST',
+    togBattery:'BATTERY SIM',
+    noGL:'WebGL unavailable.',
+    opt_AUTO:'AUTO',
+    opt_RACE:'RACE',
+    opt_FREESTYLE:'FREESTYLE',
+    opt_CANYON:'CANYON',
+    opt_CINEWHOOP:'CINEWHOOP',
+    opt_CUSTOM:'CUSTOM',
+    opt_LOW:'LOW',
+    opt_MED:'MED',
+    opt_HIGH:'HIGH',
+    dn_BOBBER:'BOBBER',
+    dn_CRUISER:'CRUISER',
+    dn_ACE:'ACE',
+    dn_BANDIT:'BANDIT',
+    dn_MANIAC:'MANIAC',
+    helpBlock:'<b>KEYBOARD</b> — W/S throttle · A/D yaw · ↑/↓ pitch · ←/→ roll · T self-level · C camera · R respawn · M mute · ESC pause<br><b>GAMEPAD</b> — Mode-2 sticks (auto-detected) · <b>TOUCH</b> — dual sticks appear on phones/tablets<br><b>TUNING</b> — share your setup via passcode, JSON file, or browser slots 1-3.<br>Every seed builds a brand-new stunt circuit: gates, rings, windmills, elevator gates, wrecking pendulums, tunnels, slalom.',
+    bootLine:'LINK <i>ESTABLISHED</i> · GPS <i>16 SAT</i> · VTX <i>5.8G CH-8</i> · GYRO <i>CAL OK</i>',
+    hintFmt:'W/S THROTTLE · A/D YAW · ARROWS PITCH/ROLL · T ANGLE · C CAM · R RESET · ESC MENU'
+  },
+'es':{
+    sub:'SIMULADOR DE ACROFPV // CIRCUITOS PROCEDURALES',
+    circuitSeed:'SEMILLA DEL CIRCUITO',
+    random:'ALEATORIO',
+    style:'ESTILO',
+    tuning:'AJUSTE',
+    bench1:'▸ BANCO DE AJUSTE FÍSICO (modelo ultrarreal)',
+    bench2:'▸ GRÁFICOS, ENTRADA Y CONTROLES',
+    copyCode:'COPIAR CÓDIGO',
+    passcode:'CONTRASEÑA DE AJUSTE',
+    loadCode:'CARGAR CÓDIGO',
+    exportFile:'EXPORTAR ARCHIVO',
+    importFile:'IMPORTAR ARCHIVO',
+    quality:'CALIDAD',
+    viewDist:'DIST. VISIÓN',
+    armLaunch:'ARMAR Y LANZAR',
+    hangar:'HANGAR',
+    courseClear:'CIRCUITO COMPLETO',
+    newRecord:'¡NUEVO RÉCORD!',
+    retrySeed:'REINTENTAR SEMILLA',
+    newCircuit:'NUEVO CIRCUITO',
+    seed:'SEMILLA',
+    gate:'META',
+    crashed:'¡CHOQUE!',
+    lowBatt:'BATERÍA BAJA',
+    propStrike:'CHOQUE DE HÉLICE',
+    angleMode:'MODO ÁNGULO',
+    acroMode:'MODO ACRO',
+    snd:'SON',
+    mute:'SILENCIO',
+    rst:'RST',
+    cam:'CÁM',
+    reset:'REINICIO',
+    thrLbl:'GAS',
+    motorsLbl:'MOTORES',
+    spdLbl:'VEL',
+    altLbl:'ALT',
+    batLbl:'BAT',
+    crashes:'CHOQUES',
+    topSpeed:'VEL. MÁX.',
+    go:'¡VAMOS!',
+    savedSlot:'GUARDADO EN RANURA {n}',
+    slotEmpty:'RANURA {n} VACÍA',
+    loadedSlot:'RANURA {n} CARGADA',
+    slotBad:'RANURA {n} INVÁLIDA',
+    slotError:'ERROR DE RANURA',
+    codeCopied:'CÓDIGO COPIADO',
+    selectCopy:'SELECCIONA Y COPIA EL CAMPO',
+    tuningLoaded:'AJUSTE CARGADO',
+    invalidCode:'CÓDIGO INVÁLIDO',
+    exported:'EXPORTADO',
+    exportFailed:'EXPORTACIÓN FALLIDA',
+    imported:'IMPORTADO',
+    noTuning:'SIN AJUSTE EN EL ARCHIVO',
+    badFile:'ARCHIVO INVÁLIDO',
+    autoQual:'CALIDAD AUTO BAJA',
+    slots:'RANURAS',
+    saveN:'GUARDAR {n}',
+    loadN:'CARGAR {n}',
+    togAngle:'AUTO-NIVEL (T)',
+    togAssist:'ASISTENCIA DE HOVER',
+    togBattery:'SIMULACIÓN DE BATERÍA',
+    noGL:'WebGL no disponible.',
+    opt_AUTO:'AUTO',
+    opt_RACE:'CARRERA',
+    opt_FREESTYLE:'LIBRE',
+    opt_CANYON:'CANYON',
+    opt_CINEWHOOP:'CINEWHOOP',
+    opt_CUSTOM:'A MEDIDA',
+    opt_LOW:'BAJO',
+    opt_MED:'MEDIO',
+    opt_HIGH:'ALTO',
+    dn_BOBBER:'NEATO',
+    dn_CRUISER:'PILOTO',
+    dn_ACE:'AS',
+    dn_BANDIT:'BANDIDO',
+    dn_MANIAC:'MANIACO',
+    helpBlock:'<b>TECLADO</b> — W/S acelerador · A/D guñada · ↑/↓ cabeceo · ←/→ alabeo · T auto-nivel · C cámara · R reaparición · M silenciar · ESC pausa<br><b>MANDO</b> — palancas Mode-2 (detectado) · <b>TÁCTIL</b> — dos palancas en móviles y tablets<br><b>AJUSTE</b> — comparte tu configuración con passcode, archivo JSON o ranuras del navegador 1-3.<br>Cada semilla construye un circuito nuevo: puertas, anillos, molinos, puertas ascendentes, péndulos, túneles, eslalon.',
+    bootLine:'ENLACE <i>ACTIVO</i> · GPS <i>16 SAT</i> · VTX <i>5.8G CH-8</i> · GIRO <i>CAL OK</i>',
+    hintFmt:'W/S ACELERADOR · A/D GUÑADA · FLECHAS CABECEO/ALABEO · T ÁNGULO · C CÁM · R REINICIO · ESC MENÚ'
+  },
+'pt':{
+    sub:'SIMULADOR DE ACROFPV // CIRCUITOS PROCEDURAIS',
+    circuitSeed:'SEMENTE DA PISTA',
+    random:'ALEATÓRIO',
+    style:'ESTILO',
+    tuning:'AJUSTE',
+    bench1:'▸ BANCO DE AJUSTE DE FÍSICA (modelo ultra-real)',
+    bench2:'▸ GRÁFICOS, ENTRADA E CONTROLES',
+    copyCode:'COPIAR CÓDIGO',
+    passcode:'SENHA DE AJUSTE',
+    loadCode:'CARREGAR CÓDIGO',
+    exportFile:'EXPORTAR ARQUIVO',
+    importFile:'IMPORTAR ARQUIVO',
+    quality:'QUALIDADE',
+    viewDist:'DIST. VISUAL',
+    armLaunch:'ARMAR E LANÇAR',
+    hangar:'HANGAR',
+    courseClear:'CIRCUITO COMPLETO',
+    newRecord:'NOVO RECORDE',
+    retrySeed:'TENTAR MESMA SEMENTE',
+    newCircuit:'NOVA PISTA',
+    seed:'SEMENTE',
+    gate:'META',
+    crashed:'ACIDENTE!',
+    lowBatt:'BATERIA FRACA',
+    propStrike:'TOQUE DE HÉLICE',
+    angleMode:'MODO ÂNGULO',
+    acroMode:'MODO ACRO',
+    snd:'SON',
+    mute:'MUDO',
+    rst:'RST',
+    cam:'CÂM',
+    reset:'RESET',
+    thrLbl:'ACEL',
+    motorsLbl:'MOTORES',
+    spdLbl:'VEL',
+    altLbl:'ALT',
+    batLbl:'BAT',
+    crashes:'ACIDENTES',
+    topSpeed:'VEL. MÁX.',
+    go:'VAI!',
+    savedSlot:'SALVO NA RAIJA {n}',
+    slotEmpty:'RAIJA {n} VAZIA',
+    loadedSlot:'RAIJA {n} CARREGADA',
+    slotBad:'RAIJA {n} INVÁLIDA',
+    slotError:'ERRO DE RAIJA',
+    codeCopied:'CÓDIGO COPIADO',
+    selectCopy:'SELECIONE E COPIE O CAMPO',
+    tuningLoaded:'AJUSTE CARREGADO',
+    invalidCode:'CÓDIGO INVÁLIDO',
+    exported:'EXPORTADO',
+    exportFailed:'EXPORTAÇÃO FALHOU',
+    imported:'IMPORTADO',
+    noTuning:'SEM AJUSTE NO ARQUIVO',
+    badFile:'ARQUIVO INVÁLIDO',
+    autoQual:'QUALIDADE AUTO BAIXA',
+    slots:'RAIJAS',
+    saveN:'SALVAR {n}',
+    loadN:'CARREGAR {n}',
+    togAngle:'AUTO-NÍVEL (T)',
+    togAssist:'ASSISTÊNCIA DE HOVER',
+    togBattery:'SIMULAÇÃO DE BATERIA',
+    noGL:'WebGL indisponível.',
+    opt_AUTO:'AUTO',
+    opt_RACE:'CORRIDA',
+    opt_FREESTYLE:'LIVRE',
+    opt_CANYON:'CANYON',
+    opt_CINEWHOOP:'CINEWHOOP',
+    opt_CUSTOM:'PERSONALIZADO',
+    opt_LOW:'BAIXO',
+    opt_MED:'MÉDIO',
+    opt_HIGH:'ALTO',
+    dn_BOBBER:'INICIANTE',
+    dn_CRUISER:'PILOTO',
+    dn_ACE:'ÁS',
+    dn_BANDIT:'BANDIDO',
+    dn_MANIAC:'MANIACO',
+    helpBlock:'<b>TECLADO</b> — W/S acelerador · A/D guinada · ↑/↓ arfagem · ←/→ rolamento · T auto-nível · C câmera · R renascer · M silenciar · ESC pausa<br><b>CONTROLE</b> — sticks Mode-2 (detectado) · <b>TOQUE</b> — dois sticks aparecem em celulares e tablets<br><b>AJUSTE</b> — compartilhe sua configuração por passcode, arquivo JSON ou slots do navegador 1-3.<br>Cada semente cria um circuito novo: portões, anéis, moinhos, portões elevados, pêndulos, túneis, slalom.',
+    bootLine:'LINK <i>ATIVO</i> · GPS <i>16 SAT</i> · VTX <i>5.8G CH-8</i> · GIRO <i>CAL OK</i>',
+    hintFmt:'W/S ACELERADOR · A/D GUINADA · SETAS ARFAGEM/ROLAMENTO · T ÂNGULO · C CÂM · R RESET · ESC MENU'
+  },
+'ru':{
+    sub:'FPV ТРЮК-СИМУЛЯТОР // ПРОЦЕДУРНЫЕ ТРАССЫ',
+    circuitSeed:'КОД ТРАССЫ', fpsUnit:'К/С',
+    random:'СЛУЧАЙНО',
+    style:'СТИЛЬ',
+    tuning:'НАСТРОЙКА',
+    bench1:'▸ СТЕНД ФИЗИКИ (сверхреалистичная модель)',
+    bench2:'▸ ГРАФИКА, ВВОД И УПРАВЛЕНИЕ',
+    copyCode:'КОПИРОВАТЬ КОД',
+    passcode:'КОД НАСТРОЙКИ',
+    loadCode:'ЗАГРУЗИТЬ КОД',
+    exportFile:'ЭКСПОРТ ФАЙЛА',
+    importFile:'ИМПОРТ ФАЙЛА',
+    quality:'КАЧЕСТВО',
+    viewDist:'ДАЛЬНОСТЬ',
+    armLaunch:'ВЗВЕСТИ И ЗАПУСК',
+    hangar:'АНГАР',
+    courseClear:'ТРАССА ПРОЙДЕНА',
+    newRecord:'НОВЫЙ РЕКОРД',
+    retrySeed:'ПОВТОР С ТЕМ ЖЕ КОДОМ',
+    newCircuit:'НОВАЯ ТРАССА',
+    seed:'КОД УРОВНЯ',
+    gate:'ВОРОТА',
+    crashed:'РАЗБИЛСЯ',
+    lowBatt:'БАТАРЕЯ СЕЛА',
+    propStrike:'ЗАЦЕП ЛОПАСТЕЙ',
+    angleMode:'РЕЖИМ АНГЛА',
+    acroMode:'РЕЖИМ АКРО',
+    snd:'ЗВК',
+    mute:'ТИХО',
+    rst:'СБР',
+    cam:'КАМ',
+    reset:'СБРОС',
+    thrLbl:'ГАЗ',
+    motorsLbl:'МОТОРЫ',
+    spdLbl:'СКОР',
+    altLbl:'ВЫС',
+    batLbl:'БАТА',
+    crashes:'АВАРИИ',
+    topSpeed:'МАКС. СКОР.',
+    go:'СТАРТ!',
+    savedSlot:'СОХРАНЁН СЛОТ {n}',
+    slotEmpty:'СЛОТ {n} ПУСТ',
+    loadedSlot:'ЗАГРУЖЕН СЛОТ {n}',
+    slotBad:'СЛОТ {n} БИТ',
+    slotError:'ОШИБКА СЛОТА',
+    codeCopied:'КОД СКОПИРОВАН',
+    selectCopy:'ВЫДЕЛИ И СКОПИРУЙ ПОЛЕ',
+    tuningLoaded:'НАСТРОЙКА ЗАГРУЖЕНА',
+    invalidCode:'НЕВЕРНЫЙ КОД',
+    exported:'ЭКСПОРТИРОВАНО',
+    exportFailed:'ЭКСПОРТ НЕ УДАЛСЯ',
+    imported:'ИМПОРТИРОВАНО',
+    noTuning:'НЕТ НАСТРОЙКИ В ФАЙЛЕ',
+    badFile:'БИТЫЙ ФАЙЛ',
+    autoQual:'КАЧЕСТВО АВТО СНИЖЕНО',
+    slots:'СЛОТЫ',
+    saveN:'СОХРАНИТЬ {n}',
+    loadN:'ЗАГРУЗИТЬ {n}',
+    togAngle:'САМОВЫРАВНИВАНИЕ (T)',
+    togAssist:'ПОМОЩЬ В ХОВЕРЕ',
+    togBattery:'СИМУЛЯЦИЯ БАТАРЕИ',
+    noGL:'WebGL недоступен.',
+    opt_AUTO:'АВТО',
+    opt_RACE:'ГОНКА',
+    opt_FREESTYLE:'ФРИСТАЙЛ',
+    opt_CANYON:'КАНЬОН',
+    opt_CINEWHOOP:'СИНЕХОП',
+    opt_CUSTOM:'СВОЙ',
+    opt_LOW:'НИЗ',
+    opt_MED:'СРЕД',
+    opt_HIGH:'ВЕРХ',
+    dn_BOBBER:'НОВИЧОК',
+    dn_CRUISER:'КРУИЗЕР',
+    dn_ACE:'АС',
+    dn_BANDIT:'БАНДИТ',
+    dn_MANIAC:'МАНЬЯК',
+    helpBlock:'<b>КЛАВИАТУРА</b> — W/S газ · A/D рыскание · ↑/↓ тангаж · ←/→ крен · T самовыравнивание · C камера · R респаун · M звук · ESC пауза<br><b>ГЕЙМПАД</b> — стики Mode-2 (авто) · <b>СЕНСОР</b> — два стика на телефоне и планшете<br><b>НАСТРОЙКА</b> — делитесь конфигом кодом, JSON-файлом или слотами браузера 1-3.<br>Каждый код строит новую трассу: ворота, кольца, ветряки, поднимающиеся ворота, маятники, туннели, слалом.',
+    bootLine:'ЛИНК <i>УСТАНОВЛЕН</i> · GPS <i>16 СПУТ</i> · VTX <i>5.8G CH-8</i> · ГИРО <i>КАЛ OK</i>',
+    hintFmt:'W/S ГАЗ · A/D РЫСКАНИЕ · СТРЕЛКИ ТАНГАЖ/КРЕН · T АНГЛ · C КАМ · R СБРОС · ESC МЕНЮ'
+  },
+'zh':{
+    sub:'FPV 特技模拟器 // 程序化赛道',
+    circuitSeed:'赛道种子',
+    random:'随机',
+    style:'风格',
+    tuning:'调参',
+    bench1:'▸ 物理调参台（超真实模型）',
+    bench2:'▸ 图形、输入与操作',
+    copyCode:'复制代码',
+    passcode:'调参口令',
+    loadCode:'载入代码',
+    exportFile:'导出文件',
+    importFile:'导入文件',
+    quality:'画质',
+    viewDist:'视野距离',
+    armLaunch:'解锁起飞',
+    hangar:'机库',
+    courseClear:'赛道完成',
+    newRecord:'新纪录',
+    retrySeed:'用该种子重试',
+    newCircuit:'新赛道',
+    seed:'种子',
+    gate:'门',
+    crashed:'撞毁',
+    lowBatt:'电量低',
+    propStrike:'桨叶撞击',
+    angleMode:'角度模式',
+    acroMode:'ACRO 模式',
+    snd:'音效',
+    mute:'静音',
+    rst:'复位',
+    cam:'镜头',
+    reset:'复位',
+    thrLbl:'油门',
+    motorsLbl:'电机',
+    spdLbl:'速度',
+    altLbl:'高度',
+    batLbl:'电量',
+    crashes:'撞毁',
+    topSpeed:'最高速度',
+    go:'开始！',
+    savedSlot:'已存槽位 {n}',
+    slotEmpty:'槽位 {n} 空',
+    loadedSlot:'已载入槽位 {n}',
+    slotBad:'槽位 {n} 损坏',
+    slotError:'槽位错误',
+    codeCopied:'代码已复制',
+    selectCopy:'选中并复制字段',
+    tuningLoaded:'调参已载入',
+    invalidCode:'代码无效',
+    exported:'已导出',
+    exportFailed:'导出失败',
+    imported:'已导入',
+    noTuning:'文件中无调参',
+    badFile:'文件损坏',
+    autoQual:'画质自动降低',
+    slots:'槽位',
+    saveN:'保存 {n}',
+    loadN:'载入 {n}',
+    togAngle:'自稳 (T)',
+    togAssist:'悬停辅助',
+    togBattery:'电池模拟',
+    noGL:'WebGL 不可用。',
+    opt_AUTO:'自动',
+    opt_RACE:'比赛',
+    opt_FREESTYLE:'自由式',
+    opt_CANYON:'峡谷',
+    opt_CINEWHOOP:'航拍',
+    opt_CUSTOM:'自定义',
+    opt_LOW:'低',
+    opt_MED:'中',
+    opt_HIGH:'高',
+    dn_BOBBER:'新手',
+    dn_CRUISER:'巡航',
+    dn_ACE:'高手',
+    dn_BANDIT:'亡命',
+    dn_MANIAC:'疯狂',
+    helpBlock:'<b>键盘</b> — W/S 油门 · A/D 偏航 · ↑/↓ 俯仰 · ←/→ 横滚 · T 自稳 · C 镜头 · R 重生 · M 静音 · ESC 暂停<br><b>手柄</b> — Mode-2 摇杆（自动识别）· <b>触控</b> — 手机和平板出现双摇杆<br><b>调参</b> — 用口令、JSON 文件或浏览器槽位 1-3 分享你的设置。<br>每个种子都会生成全新特技赛道：门、环、风车、升降门、摆锤、隧道、蛇形柱。',
+    bootLine:'链路 <i>已建立</i> · GPS <i>16 星</i> · VTX <i>5.8G CH-8</i> · 陀螺仪 <i>校准完成</i>',
+    hintFmt:'W/S 油门 · A/D 偏航 · 方向键 俯仰/横滚 · T 角度模式 · C 镜头 · R 复位 · ESC 菜单'
+  }
+});
+</script>
 <script>
 (function(){'use strict';
 function $(id){return document.getElementById(id)}
@@ -242,7 +931,7 @@ var THEMES=[
 {gA:[.46,.52,.62],gB:[.78,.84,.92],rock:[.5,.54,.58],tree:[.14,.26,.24],fog:[.58,.66,.78],zen:[.18,.34,.44],hor:[.9,.92,.95],sun:[1,.9,.7],haze:[.7,.76,.82]}];
 var glc=$('gl'),hcv=$('hud'),gl=null;
 try{gl=glc.getContext('webgl',{antialias:S.quality==='HIGH',alpha:false,depth:true,stencil:false,powerPreference:'high-performance'})}catch(e){}
-if(!gl){document.body.innerHTML='<p style="padding:40px;font-family:monospace">WebGL unavailable.</p>';return}
+if(!gl){document.body.innerHTML='<p style="padding:40px;font-family:monospace">'+TLI18N.t('noGL')+'</p>';return}
 var extMinMax=gl.getExtension('EXT_blend_minmax');
 /* darker shadow color for better contrast against bright textured terrain */
 var SHC=[0.08,0.08,0.11];
@@ -874,9 +1563,9 @@ vboGlowB=gl.createBuffer();vboPts=gl.createBuffer()}
 for(i=0;i<dynObs.length;i++)dynObs[i].update(0);
 buildDroneMesh();
 particles.length=0;
-$('chipSeed').innerHTML='SEED <b>'+seedStr+'</b> · '+curStyle+' · '+DIFFS[S.diff];
+$('chipSeed').innerHTML=TLI18N.t('seed')+' <b>'+seedStr+'</b> · '+TLI18N.t('opt_'+curStyle)+' · '+TLI18N.t('dn_'+DIFFS[S.diff]);
 var bk=loadLS('pl_best_'+seedStr+'_'+S.diff);
-$('bestLbl').textContent=bk?('★ BEST '+(+bk).toFixed(2)+'s'):''}
+$('bestLbl').textContent=bk?('★ '+TLI18N.t('best')+' '+(+bk).toFixed(2)+'s'):''}
 var droneMesh=null,propMesh=null;
 function buildDroneMesh(){var A=newMesh(),ARM=.11,i;
 bBox(A,0,0,0,[1,0,0],[0,1,0],[0,0,1],.12,.04,.16,[.13,.14,.17]);
@@ -921,7 +1610,7 @@ function crash(){if(drone.crashed)return;drone.crashed=true;drone.crashT=1.15;cr
 drone.shake=1;burst(drone.p,26,[1,.6,.2],9);burst(drone.p,14,[.3,.3,.33],4);
 sndCrash();flashEl.style.opacity=.9;
 setTimeout(function(){flashEl.style.opacity=0},120);
-toast('CRASHED','bad')}
+toast(TLI18N.t('crashed'),'bad')}
 function respawn(){
 if(!gates.length){drone.p=[0,4,0];drone.v=[0,0,0];drone.w=[0,0,0];drone.q=[0,0,0,1];return}
 var g=gates[Math.max(0,gateIdx-1)]||gates[0],p,n;
@@ -997,7 +1686,7 @@ prevP=[d.p[0],d.p[1],d.p[2]];
 d.p[0]+=d.v[0]*dt;d.p[1]+=d.v[1]*dt;d.p[2]+=d.v[2]*dt;
 if(S.battery&&state==='fly'){
 d.charge=Math.max(0,d.charge-dt*(Ft/(4*Fmax))/240);
-if(d.charge<.2&&!lowBattWarned){lowBattWarned=true;toast('LOW BATTERY','bad')}}
+if(d.charge<.2&&!lowBattWarned){lowBattWarned=true;toast(TLI18N.t('lowBatt'),'bad')}}
 var spd=Math.hypot(d.v[0],d.v[1],d.v[2]);topSpd=Math.max(topSpd,spd);
 if(spd>3&&agl<1&&Ft>mass*G_ACC*1.2&&Math.random()<.3)
 burst([d.p[0],d.p[1]-.2,d.p[2]],1,[.6,.55,.45],2);
@@ -1025,7 +1714,7 @@ d.p[0]+=nx*pen;d.p[1]+=ny*pen;d.p[2]+=nz*pen;
 var vn2=d.v[0]*nx+d.v[1]*ny+d.v[2]*nz;
 if(vn2<0){d.v[0]-=nx*vn2*1.4;d.v[1]-=ny*vn2*1.4;d.v[2]-=nz*vn2*1.4;
 if(-vn2>5.5)crash();
-else if(-vn2>1.5){toast('PROP STRIKE','bad');d.shake=Math.max(d.shake,.5);
+else if(-vn2>1.5){toast(TLI18N.t('propStrike'),'bad');d.shake=Math.max(d.shake,.5);
 burst(d.p,6,[1,.7,.3],5)}}}
 continue}
 var lx=d.p[0]-b.c[0],ly=d.p[1]-b.c[1],lz=d.p[2]-b.c[2];
@@ -1048,7 +1737,7 @@ var vn3=d.v[0]*wx+d.v[1]*wy+d.v[2]*wz;
 if(vn3<0){d.v[0]-=wx*vn3*1.3;d.v[1]-=wy*vn3*1.3;d.v[2]-=wz*vn3*1.3;
 d.v[0]*=.85;d.v[1]*=.85;d.v[2]*=.85;
 if(-vn3>6)crash();
-else if(-vn3>1.6){toast('PROP STRIKE','bad');d.shake=Math.max(d.shake,.5);
+else if(-vn3>1.6){toast(TLI18N.t('propStrike'),'bad');d.shake=Math.max(d.shake,.5);
 burst(d.p,6,[1,.7,.3],5)}}}}}}
 function checkGates(){var g=gates[gateIdx];if(!g)return;
 var d=drone,p=g.p,n=g.n,yOff=g.yOff||0;
@@ -1063,7 +1752,7 @@ if(g.type==='ring'||g.type==='mill')hit=(latd*latd+hy*hy)<(g.R-.35)*(g.R-.35);
 else hit=Math.abs(latd)<g.hw-.1&&hy>-.8&&hy<g.gh+.6;
 if(hit){gateIdx++;sndGate();burst(d.p,10,[.3,1,.85],4);
 if(g.finish||gateIdx>=gates.length)finishRun();
-else toast('GATE '+gateIdx+'/'+gates.length,'')}}}
+else toast(TLI18N.t('gate')+' '+gateIdx+'/'+gates.length,'')}}}
 var particles=[];
 function burst(p,n,c,s){for(var i=0;i<n&&particles.length<280;i++){
 var a=Math.random()*6.283,b=Math.random()*3.14-.5,sp=(.4+Math.random())*s;
@@ -1119,7 +1808,7 @@ if(e.code==='Escape')togglePause();
 if(e.code==='KeyR'&&state==='fly')doRespawn();
 if(e.code==='KeyC')S.cam=(S.cam==='fpv')?'chase':'fpv';
 if(e.code==='KeyM'){S.sound=!S.sound;if(master)master.gain.value=S.sound?.75:0}
-if(e.code==='KeyT'){S.angleMode=!S.angleMode;toast(S.angleMode?'ANGLE MODE':'ACRO MODE','')}
+if(e.code==='KeyT'){S.angleMode=!S.angleMode;toast(TLI18N.t(S.angleMode?'angleMode':'acroMode'),'')}
 if(e.code==='ArrowUp'||e.code==='ArrowDown'||e.code==='ArrowLeft'||e.code==='ArrowRight'||e.code==='Space')e.preventDefault()});
 addEventListener('keyup',function(e){keys[e.code]=false});
 var touch={l:null,r:null,lv:[0,0],rv:[0,0]};
@@ -1175,8 +1864,8 @@ $('tCam').onclick=function(){S.cam=(S.cam==='fpv')?'chase':'fpv'};
 $('tReset').onclick=function(){doRespawn()};
 $('tSnd').onclick=function(e){S.sound=!S.sound;
 if(master)master.gain.value=S.sound?.75:0;
-e.target.textContent=S.sound?'SND':'MUTE'};
-function doRespawn(){if(state!=='fly')return;respawn();toast('RESET','')}
+e.target.textContent=S.sound?TLI18N.t('snd'):TLI18N.t('mute')};
+function doRespawn(){if(state!=='fly')return;respawn();toast(TLI18N.t('reset'),'')}
 var camPos=[0,40,90],camQ=[0,0,0,1],fovCur=80,menuAng=0,chasePos=[0,10,20];
 var proj=new Float32Array(16),view=new Float32Array(16),vp=new Float32Array(16);
 function setAttr(){gl.enableVertexAttribArray(LA);gl.enableVertexAttribArray(LN);gl.enableVertexAttribArray(LC);
@@ -1402,10 +2091,10 @@ var thr=clamp(inpState.t*.5+.5,0,1);
 hctx.fillStyle='rgba(20,24,28,.6)';hctx.fillRect(cxx-140,H-96,280,62);
 hctx.strokeStyle='rgba(255,205,120,.35)';hctx.lineWidth=1;hctx.strokeRect(cxx-140,H-96,280,62);
 hctx.font='9px monospace';hctx.fillStyle='rgba(255,205,120,.85)';hctx.textAlign='left';
-hctx.fillText('THR',cxx-132,H-82);
+hctx.fillText(TLI18N.t('thrLbl'),cxx-132,H-82);
 hctx.fillStyle='#2c343c';hctx.fillRect(cxx-132,H-76,264,8);
 hctx.fillStyle='#ffb454';hctx.fillRect(cxx-132,H-76,264*thr,8);
-hctx.fillStyle='rgba(255,205,120,.85)';hctx.fillText('MOTORS',cxx-132,H-52);
+hctx.fillStyle='rgba(255,205,120,.85)';hctx.fillText(TLI18N.t('motorsLbl'),cxx-132,H-52);
 for(var mi=0;mi<4;mi++){hctx.fillStyle='#2c343c';hctx.fillRect(cxx-70+mi*52,H-60,40,10);
 hctx.fillStyle=(mi%2)?'#38e1c6':'#ff8a3c';
 hctx.fillRect(cxx-70+mi*52,H-60,40*clamp(d.mot[mi],0,1),10)}
@@ -1439,13 +2128,13 @@ function updDOM(){domTick++;var d=drone;
 var tt=(racePhase==='race'||racePhase==='go')?runTime:0,str=fmtT(tt);
 if(str!==lastTimerStr){$('timer').textContent=str;lastTimerStr=str}
 if(domTick%6!==0)return;
-$('gateTxt').textContent='GATE '+Math.min(gateIdx,gates.length)+'/'+gates.length;
+$('gateTxt').textContent=TLI18N.t('gate')+' '+Math.min(gateIdx,gates.length)+'/'+gates.length;
 var spd=Math.hypot(d.v[0],d.v[1],d.v[2]);
 var volt=S.battery?(3.3+.9*d.charge).toFixed(2)+'V':'∞';
-$('statsBox').innerHTML='SPD <b>'+spd.toFixed(1)+'</b> m/s<br>ALT <b>'+
-Math.max(0,d.p[1]-terrainH(d.p[0],d.p[2])).toFixed(1)+'</b> m<br>BAT <b>'+volt+'</b>'+
-(S.angleMode?'<br><span style="color:var(--teal)">ANGLE MODE</span>':'');
-$('fpsChip').textContent=fpsVal+' FPS · '+((S.cam==='fpv')?'FPV':'CHASE')+' · '+inpSrc.toUpperCase()}
+$('statsBox').innerHTML=TLI18N.t('spdLbl')+' <b>'+spd.toFixed(1)+'</b> m/s<br>'+TLI18N.t('altLbl')+' <b>'+
+Math.max(0,d.p[1]-terrainH(d.p[0],d.p[2])).toFixed(1)+'</b> m<br>'+TLI18N.t('batLbl')+' <b>'+volt+'</b>'+
+(S.angleMode?'<br><span style="color:var(--teal)">'+TLI18N.t('angleMode')+'</span>':'');
+$('fpsChip').textContent=fpsVal+' '+TLI18N.t('fpsUnit')+' · '+((S.cam==='fpv')?'FPV':'CHASE')+' · '+inpSrc.toUpperCase()}
 var toastTO=null;
 function toast(txt,cls){var e=$('toast');e.textContent=txt;e.className='hud pop '+(cls||'');
 clearTimeout(toastTO);toastTO=setTimeout(function(){e.className='hud'},900)}
@@ -1460,9 +2149,9 @@ initAudio();if(AC&&AC.state==='suspended')AC.resume();paused=false}
 function finishRun(){gatesFinished=true;racePhase='done';state='finish';
 var key='pl_best_'+S.seed+'_'+S.diff,prev=loadLS(key),rec=false;
 if(!prev||runTime<+prev){store(key,runTime.toFixed(2));rec=true}
-$('finTitle').textContent=rec?'★ NEW RECORD ★':'COURSE CLEAR';
-$('finStats').innerHTML='TIME <b>'+fmtT(runTime)+'</b><br>CRASHES <b>'+crashes+
-'</b> · TOP SPEED <b>'+topSpd.toFixed(1)+' m/s</b><br>BEST <b>'+
+$('finTitle').textContent=rec?'★ '+TLI18N.t('newRecord')+' ★':TLI18N.t('courseClear');
+$('finStats').innerHTML=TLI18N.t('time')+' <b>'+fmtT(runTime)+'</b><br>'+TLI18N.t('crashes')+' <b>'+crashes+
+'</b> · '+TLI18N.t('topSpeed')+' <b>'+topSpd.toFixed(1)+' m/s</b><br>'+TLI18N.t('best')+' <b>'+
 (loadLS(key)||runTime.toFixed(2))+'s</b>';
 $('finOv').classList.remove('hide');sndGate();
 setTimeout(function(){sndBeep(1760,.3,.15)},150)}
@@ -1500,7 +2189,7 @@ inp.oninput=function(){S[k]=+inp.value;show();S.preset='CUSTOM';
 if(presetMark)presetMark('CUSTOM');saveS()};
 el.appendChild(row)})}
 function seg2(el,opts,cur,fn){el.innerHTML='';var map={};
-opts.forEach(function(o){var b=document.createElement('button');b.textContent=o;
+opts.forEach(function(o){var b=document.createElement('button');b.textContent=TLI18N.t('opt_'+o);
 if(o===cur)b.className='on';
 b.onclick=function(){fn(o)};
 el.appendChild(b);map[o]=b});
@@ -1516,60 +2205,66 @@ function readCode(c){try{c=(c||'').trim();
 if(c.indexOf('PL1.')!==0)return false;
 var j=JSON.parse(decodeURIComponent(escape(atob(c.slice(4)))));
 return applyPhy(j)}catch(e){return false}}
-function saveSlot(n){store('pl_slot_'+n,JSON.stringify(phyObj()));toast('SAVED SLOT '+n,'')}
+function saveSlot(n){store('pl_slot_'+n,JSON.stringify(phyObj()));toast(TLI18N.t('savedSlot',{n:n}),'')}
 function loadSlot(n){var s=loadLS('pl_slot_'+n);
-if(!s){toast('SLOT '+n+' EMPTY','bad');return}
-try{if(applyPhy(JSON.parse(s)))toast('LOADED SLOT '+n,'');else toast('SLOT '+n+' BAD','bad')}
-catch(e){toast('SLOT ERROR','bad')}}
+if(!s){toast(TLI18N.t('slotEmpty',{n:n}),'bad');return}
+try{if(applyPhy(JSON.parse(s)))toast(TLI18N.t('loadedSlot',{n:n}),'');else toast(TLI18N.t('slotBad',{n:n}),'bad')}
+catch(e){toast(TLI18N.t('slotError'),'bad')}}
 buildTune($('tuneGrid'),PHYS);
 buildTune($('quickGrid'),QUICK);
 buildTune($('ctrlGrid'),CTRL);
-presetMark=seg2($('presetSeg'),['RACE','FREESTYLE','CINEWHOOP','CUSTOM'],S.preset,function(p){
+function buildPresetSeg(){presetMark=seg2($('presetSeg'),['RACE','FREESTYLE','CINEWHOOP','CUSTOM'],S.preset,function(p){
 if(PRESETS[p])Object.assign(S,PRESETS[p]);
 S.preset=p;presetMark(p);
-buildTune($('tuneGrid'),PHYS);buildTune($('quickGrid'),QUICK);saveS()});
-[['angleMode','SELF-LEVEL (T)'],['assist','HOVER ASSIST'],['battery','BATTERY SIM']].forEach(function(tg){
-var l=document.createElement('label');
-l.innerHTML='<input type="checkbox" '+(S[tg[0]]?'checked':'')+'> '+tg[1];
+buildTune($('tuneGrid'),PHYS);buildTune($('quickGrid'),QUICK);saveS()})}
+buildPresetSeg();
+var TOGS=[['angleMode','togAngle'],['assist','togAssist'],['battery','togBattery']];
+function buildToggles(){var t=$('tuneTog');t.innerHTML='';
+TOGS.forEach(function(tg){var l=document.createElement('label');
+l.innerHTML='<input type="checkbox" '+(S[tg[0]]?'checked':'')+'> '+TLI18N.t(tg[1]);
 l.querySelector('input').onchange=function(e){S[tg[0]]=e.target.checked;saveS()};
-$('tuneTog').appendChild(l)});
+t.appendChild(l)})}
+buildToggles();
 $('btnCopy').onclick=function(){var c=makeCode();
 $('codeInp').value=c;
 try{$('codeInp').select();
 if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(c);
-toast('CODE COPIED','')}catch(e){toast('SELECT+COPY FIELD','bad')}};
+toast(TLI18N.t('codeCopied'),'')}catch(e){toast(TLI18N.t('selectCopy'),'bad')}};
 $('btnLoad').onclick=function(){
-if(readCode($('codeInp').value))toast('TUNING LOADED','');
-else toast('INVALID CODE','bad')};
+if(readCode($('codeInp').value))toast(TLI18N.t('tuningLoaded'),'');
+else toast(TLI18N.t('invalidCode'),'bad')};
 $('btnExport').onclick=function(){try{
 var blob=new Blob([JSON.stringify({v:1,phy:phyObj()},null,1)],{type:'application/json'});
 var a=document.createElement('a');a.href=URL.createObjectURL(blob);
 a.download='proploop-tuning.json';document.body.appendChild(a);a.click();
 setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},400);
-toast('EXPORTED','')}catch(e){toast('EXPORT FAILED','bad')}};
+toast(TLI18N.t('exported'),'')}catch(e){toast(TLI18N.t('exportFailed'),'bad')}};
 $('btnImport').onclick=function(){$('fileInp').click()};
 $('fileInp').onchange=function(e){var f=e.target.files&&e.target.files[0];
 if(!f)return;
 var rd=new FileReader();
 rd.onload=function(){try{var j=JSON.parse(String(rd.result));
-if(applyPhy(j.phy||j))toast('IMPORTED','');else toast('NO TUNING IN FILE','bad')}
-catch(err){toast('BAD FILE','bad')}};
+if(applyPhy(j.phy||j))toast(TLI18N.t('imported'),'');else toast(TLI18N.t('noTuning'),'bad')}
+catch(err){toast(TLI18N.t('badFile'),'bad')}};
 rd.readAsText(f);e.target.value=''};
-(function(){var sr=$('slotRow'),n;
-var lb=document.createElement('span');lb.className='lbl';lb.style.minWidth='40px';lb.textContent='SLOTS';
+function buildSlotRow(){var sr=$('slotRow'),n;sr.innerHTML='';
+var lb=document.createElement('span');lb.className='lbl';lb.style.minWidth='40px';lb.textContent=TLI18N.t('slots');
 sr.appendChild(lb);
 for(n=1;n<=3;n++){(function(nn){
-var b1=document.createElement('button');b1.className='btn sm';b1.textContent='SAVE '+nn;
+var b1=document.createElement('button');b1.className='btn sm';b1.textContent=TLI18N.t('saveN',{n:nn});
 b1.onclick=function(){saveSlot(nn)};
-var b2=document.createElement('button');b2.className='btn sm';b2.textContent='LOAD '+nn;
+var b2=document.createElement('button');b2.className='btn sm';b2.textContent=TLI18N.t('loadN',{n:nn});
 b2.onclick=function(){loadSlot(nn)};
-sr.appendChild(b1);sr.appendChild(b2)})(n)}})();
-var styleMark=seg2($('styleSeg'),['AUTO','RACE','FREESTYLE','CANYON'],S.style,function(v){
-S.style=v;styleMark(v);saveS();rebuild()});
-var qualMark=seg2($('qualSeg'),['LOW','MED','HIGH'],S.quality,function(v){
-S.quality=v;qualMark(v);saveS();resize();rebuild()});
+sr.appendChild(b1);sr.appendChild(b2)})(n)}}
+buildSlotRow();
+var styleMark,qualMark;
+function buildStyleSeg(){styleMark=seg2($('styleSeg'),['AUTO','RACE','FREESTYLE','CANYON'],S.style,function(v){
+S.style=v;styleMark(v);saveS();rebuild()})}
+function buildQualSeg(){qualMark=seg2($('qualSeg'),['LOW','MED','HIGH'],S.quality,function(v){
+S.quality=v;qualMark(v);saveS();resize();rebuild()})}
+buildStyleSeg();buildQualSeg();
 var diffR=$('diffR');diffR.value=S.diff;
-function updDiff(){$('diffLbl').textContent=DIFFS[S.diff]}
+function updDiff(){$('diffLbl').textContent=TLI18N.t('dn_'+DIFFS[S.diff])}
 updDiff();
 diffR.oninput=function(){S.diff=+diffR.value;updDiff();saveS();rebuild()};
 var vdR=$('vdR');vdR.value=S.viewDist;
@@ -1612,7 +2307,7 @@ if(fpsAcc>=.5){fpsVal=Math.round(fpsN/fpsAcc);fpsN=0;fpsAcc=0;
 if(state==='fly'&&fpsVal<32&&S.quality!=='LOW'){autoDrop++;
 if(autoDrop>4){S.quality=(S.quality==='HIGH')?'MED':'LOW';
 if(qualMark)qualMark(S.quality);saveS();
-resize();rebuild();autoDrop=0;toast('AUTO QUALITY DOWN','')}}
+resize();rebuild();autoDrop=0;toast(TLI18N.t('autoQual'),'')}}
 else autoDrop=0}
 if(!paused){
 stepInput(dtR);worldT+=dtR;
@@ -1622,7 +2317,7 @@ countT-=dtR;
 var c=Math.ceil(Math.max(.01,countT));
 $('cd').textContent=String(c);
 if(c!==cdLast){cdLast=c;sndBeep(520,.12,.15)}
-if(countT<=0){racePhase='go';goT=0;goPlayed=true;$('cd').textContent='GO!';sndBeep(880,.25,.16)}}
+if(countT<=0){racePhase='go';goT=0;goPlayed=true;$('cd').textContent=TLI18N.t('go');sndBeep(880,.25,.16)}}
 else if(racePhase==='go'){
 goT+=dtR;runTime+=dtR;
 if(goT>=.8){racePhase='race';$('cd').classList.add('hide')}}
@@ -1669,7 +2364,51 @@ try{genWorld(S.seed,S.diff,S.style)}catch(err){showDiag('BOOT WORLD: '+err.messa
 resize();
 respawn();
 holdY=drone.p[1];
+
+function tlResync(){
+  $('helpBlock').innerHTML=TLI18N.t('helpBlock');
+  $('bootLine').innerHTML=TLI18N.t('bootLine');
+  buildStyleSeg();buildQualSeg();buildPresetSeg();buildToggles();buildSlotRow();
+  updDiff();
+  $('gateTxt').textContent=TLI18N.t('gate')+' '+Math.min(gateIdx,gates.length)+'/'+gates.length;
+  $('tSnd').textContent=S.sound?TLI18N.t('snd'):TLI18N.t('mute');
+}
+TLI18N.mount('#menuOv .panel');
+TLI18N.onChange(tlResync);
 requestAnimationFrame(frame);
+tlResync();
+
+/* Developer harness bridge (?debug=dbg/quad.js): names only, no logic, no
+   listeners. Game behaviour is identical with and without the debug parameter. */
+window.TLHOOK = {
+  get physStep() { return physStep }, set physStep(f) { physStep = f },
+  get stepInput() { return stepInput }, set stepInput(f) { stepInput = f },
+  get crash() { return crash }, set crash(f) { crash = f },
+  resolveColliders: resolveColliders, respawn: respawn, doRespawn: doRespawn,
+  startRun: startRun, finishRun: finishRun, togglePause: togglePause,
+  render: render, drawHUD: drawHUD, frame: frame, resize: resize, rebuild: rebuild,
+  terrainH: terrainH, terrainN: terrainN, windV: windV, qRotV: qRotV,
+  buildPresetSeg: buildPresetSeg, buildQualSeg: buildQualSeg, buildStyleSeg: buildStyleSeg,
+  saveS: saveS, tlResync: tlResync,
+  drone: drone, S: S, PRESETS: PRESETS, QUAL: QUAL, DIFFS: DIFFS,
+  gates: gates, collGroups: collGroups, dynObs: dynObs, worldR: worldR, pathPts: pathPts,
+  closedPath: closedPath,
+  get state() { return state }, set state(v) { state = v },
+  get racePhase() { return racePhase }, set racePhase(v) { racePhase = v },
+  get runTime() { return runTime }, set runTime(v) { runTime = v },
+  get countT() { return countT }, set countT(v) { countT = v },
+  get goT() { return goT }, set goT(v) { goT = v },
+  get gateIdx() { return gateIdx }, set gateIdx(v) { gateIdx = v },
+  get crashes() { return crashes }, set crashes(v) { crashes = v },
+  get topSpd() { return topSpd }, set topSpd(v) { topSpd = v },
+  get gatesFinished() { return gatesFinished }, set gatesFinished(v) { gatesFinished = v },
+  get paused() { return paused }, set paused(v) { paused = v },
+  get holdY() { return holdY }, set holdY(v) { holdY = v },
+  get worldT() { return worldT }, set worldT(v) { worldT = v },
+  get lowBattWarned() { return lowBattWarned }, set lowBattWarned(v) { lowBattWarned = v },
+  inpState: inpState, inpTgt: inpTgt
+};
+
 })();
 </script>
 <script>
@@ -1709,5 +2448,232 @@ else seen(cur);
 }).catch(function () {});
 })();
 </script>
+<script>
+/* Developer harness. ?debug=dbg/quad.js loads the shared engine dbg/_harness.js
+   then that script: live panel with state, elements, layout per screen mode,
+   texts, balance, cheats, JSON export. No parameter or missing script = the
+   page behaves exactly as without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
+</script>
+<!-- inlined fs.js — the source of truth is fs.js: edit that file and re-inline this block -->
+<script>
+/* fs.js — the one fullscreen control every page shares.
+
+   Two jobs:
+
+   1. A toggle button. `TLFS.mount("#opts", {cls:"btn"})` puts it inside a menu or
+      title panel using that page's own button class; `TLFS.mount()` alone floats a
+      small icon button in the bottom-right corner; `{icon:true}` swaps the word for
+      a ⤢ glyph and moves it into `aria-label` for narrow hosts. The wording is the
+      shared translation key `fullscreen` / `exitFullscreen` — from the i18n kit, from
+      a page table published through `TLFS_LABEL(key)`, or English as the floor — and
+      a change of `<html lang>` repaints it. Where the Fullscreen API is missing the
+      button hides itself instead of lying.
+
+   2. Re-fit on every usable-area change. Entering or leaving fullscreen, an
+      orientation flip, and a mobile browser bar hiding or showing all change the
+      area the game has to fill — and the bar case does not always fire a plain
+      `resize`. This file listens to `fullscreenchange` (all vendor spellings) and
+      to `visualViewport.resize`, then re-applies `<html data-fs>` and dispatches
+      `resize` (plus `orientationchange`) once per frame, so the page's own layout
+      code runs. `TLFS.refitOnly()` gives a page that already has its own
+      fullscreen button just that wiring, without a second button.
+
+   Nothing here reads game state, and a page that never calls mount/refitOnly gets
+   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+(function () {
+  if (window.TLFS) return;
+  var de = document.documentElement;
+  var REQ = de.requestFullscreen || de.webkitRequestFullscreen ||
+    de.msRequestFullscreen || de.mozRequestFullScreen;
+  var EX = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.msExitFullscreen || document.mozCancelFullScreen;
+  var blocked = !REQ || !EX || de.fullscreenEnabled === false;
+  var ICON = "\u2922"; /* narrow hosts (side stripes, icon bars) get the glyph plus a
+                          translated aria-label instead of the word */
+  var btns = [], cbs = [], queued = false, styleDone = false;
+
+  function isFull() {
+    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
+      de.msFullscreenElement || de.mozFullScreenElement);
+  }
+  function kit() {
+    var k = window.TLI18N;
+    return (k && typeof k.t === "function") ? k : null;
+  }
+  /* A missing key makes t() hand back the key name — that is not a label.
+     Pages that keep their own translation table (billiards, tilt, oilstorm) publish
+     TLFS_LABEL(key) instead of the kit; they win over the kit, English is the floor. */
+  function label() {
+    var want = isFull() ? "exitFullscreen" : "fullscreen";
+    var L = window.TLFS_LABEL;
+    if (typeof L === "function") {
+      try { var v = L(want); if (v && v !== want) return String(v) } catch (e) {}
+    }
+    var k = kit(), t = null;
+    if (k) { try { t = k.t(want) } catch (e) { t = null } }
+    if (!t || t === want) t = isFull() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+    return t;
+  }
+  function cssOnce() {
+    if (styleDone) return;
+    styleDone = true;
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlfs-float:hover{border-color:#ffd76a;color:#ffd76a}" +
+      ".tlfs-float[hidden]{display:none}";
+    document.head.appendChild(st);
+  }
+  function paint() {
+    var txt = label();
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      b.textContent = b.__tlfsIcon ? ICON : txt;
+      b.setAttribute("aria-label", txt);
+      b.setAttribute("aria-pressed", isFull() ? "true" : "false");
+    }
+  }
+  /* One pass per frame: fullscreenchange and visualViewport.resize often arrive
+     together, and dispatching resize from inside a resize listener would loop. */
+  function refit() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint();
+      for (var i = 0; i < cbs.length; i++) { try { cbs[i](isFull()) } catch (e) {} }
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("orientationchange"));
+    });
+  }
+  function toggle() {
+    if (blocked) return false;
+    var was = isFull();
+    try {
+      if (was) EX.call(document);
+      else { var p = REQ.call(de); if (p && p.catch) p.catch(function () {}) }
+    } catch (e) {}
+    /* the change event may never come (sandboxed frames, denied requests, some
+       headless shells that grant then silently drop): repaint the state we can
+       read twice, late enough to catch a transition nobody announced. */
+    setTimeout(refit, 220);
+    setTimeout(refit, 700);
+    return !was;
+  }
+
+  de.setAttribute("data-fs", "off");
+  ["fullscreenchange", "webkitfullscreenchange", "MSFullscreenChange", "mozfullscreenchange"]
+    .forEach(function (t) { document.addEventListener(t, refit, false) });
+  ["fullscreenerror", "webkitfullscreenerror"].forEach(function (t) {
+    document.addEventListener(t, function () { de.setAttribute("data-fs", "off"); paint() }, false)
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", refit, false);
+    window.visualViewport.addEventListener("scroll", function () {
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint(); /* an exit the browser never announced must still clear the label */
+    }, false);
+  }
+  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
+  }, false);
+  /* A language switch changes <html lang>: repaint from whatever table the page
+     uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
+     drive their toggle state off that attribute, and taking it would corrupt them. */
+  new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
+
+  window.TLFS = {
+    version: "2026.11.23.3",
+    supported: !blocked,
+    isFull: isFull,
+    label: label,
+    paint: paint,
+    toggle: toggle,
+    onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
+    /* just the size/orientation wiring, for a page with its own fullscreen button */
+    refitOnly: function () { paint(); return true },
+    /* put the button in `sel` (or float it when the selector matches nothing).
+       opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
+       puts the translated word in aria-label, for narrow hosts. */
+    mount: function (sel, opts) {
+      cssOnce();
+      var o = opts || {};
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = o.cls || "tlfs-float";
+      b.id = o.id || "tlfsBtn";
+      b.__tlfsIcon = !!o.icon;
+      if (o.float !== false && !o.cls) b.classList.add("tlfs-float");
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", label());
+      if (o.ariaLabel) b.setAttribute("data-aria", o.ariaLabel);
+      b.textContent = o.icon ? ICON : label();
+      /* a menu that starts the game on any tap (defender binds pointerdown on the
+         whole title screen) must not fire when the fullscreen button is pressed */
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("touchstart", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle() });
+      var host = sel ? document.querySelector(sel) : null;
+      if (host) {
+        if (o.prepend && host.firstChild) host.insertBefore(b, host.firstChild);
+        else host.appendChild(b);
+      } else {
+        b.classList.add("tlfs-float");
+        document.body.appendChild(b);
+      }
+      if (blocked) b.style.display = "none";
+      btns.push(b);
+      paint();
+      return b;
+    },
+    /* wire a button the page already has in its markup (keeps its own look) */
+    attach: function (el) {
+      cssOnce();
+      if (!el) return null;
+      if (blocked) { el.style.display = "none"; return el }
+      el.addEventListener("click", function (e) { e.preventDefault(); toggle() });
+      btns.push(el);
+      paint();
+      return el;
+    },
+    /* a rebuilt panel drops its children: re-add every button the page mounted */
+    reassert: function () {
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i];
+        if (!b.isConnected && b.__tlfsHost) {
+          var h = document.querySelector(b.__tlfsHost);
+          if (h) h.appendChild(b);
+        }
+      }
+      paint();
+      return btns.length
+    }
+  };
+  /* remember where each button was mounted so a panel rebuild can put it back */
+  var mount0 = window.TLFS.mount;
+  window.TLFS.mount = function (sel, opts) {
+    var b = mount0(sel, opts);
+    if (b) b.__tlfsHost = sel || "body";
+    return b;
+  };
+  var k = kit();
+  if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
+})();
+</script>
+<script>TLFS.mount("#menuOv .panel",{cls:"btn"});</script>
 </body>
 </html>

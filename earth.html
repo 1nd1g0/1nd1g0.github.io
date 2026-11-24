@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#001018">
 <title>Burning Earth</title>
-<meta name="version" content="2026.11.20.2">
+<meta name="version" content="2026.11.24.1">
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#dff7ff;font:12px Consolas,Menlo,Monaco,monospace;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;user-select:none;touch-action:none;overscroll-behavior:none}
@@ -76,7 +76,7 @@ button:disabled{opacity:.4;cursor:default}
 </style>
 </head>
 <body>
-<button id="pauseBtn" class="hidden" type="button">Pause</button>
+<button id="pauseBtn" class="hidden" type="button" data-t="pause">Pause</button>
 <button id="cameraBtn" class="hidden" type="button">Camera:Planet</button>
 <canvas id="c"></canvas>
 <div id="labels"></div>
@@ -111,17 +111,17 @@ button:disabled{opacity:.4;cursor:default}
     </div>
     <div id="moveSide">
       <span id="moveTime">12s</span>
-      <button id="toggleModeBtn" type="button">Shoot</button>
-      <span class="tiny">Space / Select toggles. WASD, arrows, gamepad, D-pad.</span>
+      <button id="toggleModeBtn" type="button" data-t="modeShoot">Shoot</button>
+      <span class="tiny" data-t="toggleHint">Space / Select toggles. WASD, arrows, gamepad, D-pad.</span>
     </div>
   </div>
 
   <div id="shootUI" class="hidden">
-    <div class="ctl"><label for="elev">Elev</label><input id="elev" type="range" min="5" max="85" value="45"></div>
-    <div class="ctl"><label for="power">Pow</label><input id="power" type="range" min="10" max="100" value="55"></div>
-    <div class="ctl"><label for="direction">Dir</label><input id="direction" type="range" min="-180" max="180" value="0"></div>
-    <div class="ctl"><label for="weaponSelect">Wpn</label><select id="weaponSelect"></select></div>
-    <div class="ctl" id="fireCtl"><button id="fireBtn" type="button">FIRE</button></div>
+    <div class="ctl"><label for="elev" data-t="elevLbl">Elev</label><input id="elev" type="range" min="5" max="85" value="45"></div>
+    <div class="ctl"><label for="power" data-t="powLbl">Pow</label><input id="power" type="range" min="10" max="100" value="55"></div>
+    <div class="ctl"><label for="direction" data-t="dirLbl">Dir</label><input id="direction" type="range" min="-180" max="180" value="0"></div>
+    <div class="ctl"><label for="weaponSelect" data-t="wpnLbl">Wpn</label><select id="weaponSelect"></select></div>
+    <div class="ctl" id="fireCtl"><button id="fireBtn" type="button" data-t="fire">FIRE</button></div>
   </div>
 </div>
 
@@ -129,11 +129,11 @@ button:disabled{opacity:.4;cursor:default}
 
 <div id="pauseOverlay" class="ov hidden">
   <div class="pnl">
-    <div class="ph"><h2>Paused</h2></div>
+    <div class="ph"><h2 data-t="paused">Paused</h2></div>
     <div class="ps">
-      <div class="chk"><input id="pauseSoundChk" type="checkbox" checked><label for="pauseSoundChk">Sound</label></div>
-      <div class="chk"><input id="pauseHelperChk" type="checkbox" checked><label for="pauseHelperChk">Aim helpers</label></div>
-      <div class="hint">
+      <div class="chk"><input id="pauseSoundChk" type="checkbox" checked><label for="pauseSoundChk" data-t="sound">Sound</label></div>
+      <div class="chk"><input id="pauseHelperChk" type="checkbox" checked><label for="pauseHelperChk" data-t="aimHelpers">Aim helpers</label></div>
+      <div class="hint" data-t="pauseHint">
         Move phase: drive the tank, then toggle to shoot. Steeper slopes and water slow movement.
         Falling into pools damages tanks. Powerful weapons drain pools into solid pits.
         Burning trees and exhaust smoke show wind. Planet becomes x-ray when the predicted hit point
@@ -141,9 +141,9 @@ button:disabled{opacity:.4;cursor:default}
       </div>
     </div>
     <div class="pf grid2">
-      <button id="resumeBtn" class="wide" type="button">Resume</button>
-      <button id="titleBtn" type="button">Title</button>
-      <a id="homeLink" class="btn" href="https://1nd1g0.github.io/" target="_self">Home</a>
+      <button id="resumeBtn" class="wide" type="button" data-t="resume">Resume</button>
+      <button id="titleBtn" type="button" data-t="title">Title</button>
+      <a id="homeLink" class="btn" href="https://1nd1g0.github.io/" target="_self" data-t="home">Home</a>
     </div>
   </div>
 </div>
@@ -152,18 +152,18 @@ button:disabled{opacity:.4;cursor:default}
   <div class="pnl">
     <div class="ph"><h1>Burning Earth</h1></div>
     <div class="ps">
-      <div class="row"><label for="playerCount">Players</label><select id="playerCount"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+      <div class="row"><label for="playerCount" data-t="players">Players</label><select id="playerCount"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
       <div id="playerRows"></div>
-      <div class="row"><label for="qualitySelect">Graphics</label><select id="qualitySelect"><option value="auto">Auto</option><option value="low">Low</option><option value="medium">Balanced</option><option value="high">High</option></select><span id="perfNote" style="font-size:11px;color:#9fd8ef"></span></div>
+      <div class="row"><label for="qualitySelect" data-t="graphics">Graphics</label><select id="qualitySelect"><option value="auto" data-t="auto">Auto</option><option value="low" data-t="low">Low</option><option value="medium" data-t="balanced">Balanced</option><option value="high" data-t="high">High</option></select><span id="perfNote" style="font-size:11px;color:#9fd8ef"></span></div>
       <div class="hint">
-        Drag: rotate. Pinch/wheel: zoom.<br>
-        Tap a tank or use Camera button for player view.<br>
-        Ammo is finite and sized for perfect bullseye kills.<br>
-        Move, shoot, burn trees, drain water pools.<br>
-        Settings are stored in browser storage.
+        <span data-t="setupHint1">Drag: rotate. Pinch/wheel: zoom.</span><br>
+        <span data-t="setupHint2">Tap a tank or use Camera button for player view.</span><br>
+        <span data-t="setupHint3">Ammo is finite and sized for perfect bullseye kills.</span><br>
+        <span data-t="setupHint4">Move, shoot, burn trees, drain water pools.</span><br>
+        <span data-t="setupHint5">Settings are stored in browser storage.</span>
       </div>
     </div>
-    <div class="pf"><button id="startBtn" class="wide" type="button">Start Game</button><a class="btn wide" href="https://1nd1g0.github.io/" target="_self">Home</a></div>
+    <div class="pf"><button id="startBtn" class="wide" type="button" data-t="start">Start Game</button><a class="btn wide" href="https://1nd1g0.github.io/" target="_self" data-t="home">Home</a></div>
   </div>
 </div>
 
@@ -171,13 +171,442 @@ button:disabled{opacity:.4;cursor:default}
   <div class="pnl">
     <div class="ph"><h2 id="resultText">Result</h2></div>
     <div class="pf grid2">
-      <button id="rematchBtn" type="button">Rematch</button>
-      <button id="setupBtn" type="button">Title</button>
-      <a class="btn wide" href="https://1nd1g0.github.io/" target="_self">Home</a>
+      <button id="rematchBtn" type="button" data-t="rematch">Rematch</button>
+      <button id="setupBtn" type="button" data-t="title">Title</button>
+      <a class="btn wide" href="https://1nd1g0.github.io/" target="_self" data-t="home">Home</a>
     </div>
   </div>
 </div>
 
+<!-- inlined i18n.js — the source of truth is i18n.js: edit that file and re-inline this block -->
+<script>
+/* ============================================================================
+   i18n.js — shared language kit for every page of this site.
+   Language code decision tree (identical everywhere, in this order):
+     0. any technical problem with this kit -> English
+     1. URL ?language=xx      (a region suffix is fine: pt-BR, zh-CN)
+     2. localStorage['tll:lang']
+     3. the browser's language list (navigator.languages, then navigator.language)
+     4. English
+   A code outside CODES is dropped, not trusted, so the next level decides. Only
+   the picker button writes storage, so a ?language= link never overwrites the
+   visitor's saved choice.
+
+   Page usage
+     <script src="i18n.js"><\/script>            BEFORE the game script
+     <script>TLI18N.add({en:{k:"Text"},es:{...},pt:{...},ru:{...},zh:{...}})<\/script>
+     markup:  <b data-t="score">SCORE</b>  <button data-tip="help">?</button>
+              <input data-ph="name">  <i data-aria="pause">  <img data-alt="car">
+     js:      el.textContent=TLI18N.t("gameOver");
+              el.innerHTML="<b>"+TLI18N.t("best")+": "+n+"</b>";
+              ctx.fillText(TLI18N.t("paused"),x,y);
+     canvas / innerHTML redraws: TLI18N.onChange(()=>redrawAll());
+     pick a host for the language button: TLI18N.mount("#startPanel")
+       (omit it and the kit parks a pill in the lower-left corner)
+   Keys missing from a non-English table fall back to English, so a half
+   translated table still runs. Values for *Fmt keys carry {placeholders}.
+   ========================================================================= */
+(function(){
+"use strict";
+var KEY="tll:lang", CODES=["en","es","pt","ru","zh"];
+var LANGS=[ // code · name in its own language · that word for "language" · its flag
+ ['en','English','Language','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0,0 60,40M60,0 0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 60,40M60,0 0,40" stroke="#C8102E" stroke-width="3.2"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="13"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="8"/></svg>'],
+ ['es','Español','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#AA151B"/><path d="M0,10H60M0,30H60" stroke="#F1BF00" stroke-width="20"/>  </svg>'],
+ ['pt','Português','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="40" fill="#046A38"/><rect x="24" width="36" height="40" fill="#DA291C"/><circle cx="24" cy="20" r="7.5" fill="#FEDF00" stroke="#046A38" stroke-width="1.4"/><path d="M24,14.5 24,22.5M20.5,17.5H27.5" stroke="#DA291C" stroke-width="2.2" fill="none"/></svg>'],
+ ['ru','Русский','Язык','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.34" width="60" height="13.33" fill="#0039A6"/><rect y="26.67" width="60" height="13.33" fill="#D52B1E"/></svg>'],
+ ['zh','中文','语言','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#EE1C25"/><circle cx="10" cy="10" r="5.6" fill="#FFDC00"/><circle cx="21" cy="6" r="2.1" fill="#FFDC00"/><circle cx="26" cy="11.5" r="2.1" fill="#FFDC00"/><circle cx="26" cy="18.5" r="2.1" fill="#FFDC00"/><circle cx="21" cy="24" r="2.1" fill="#FFDC00"/></svg>']
+];
+/* ---- shared vocabulary: the same word means the same thing in every game.
+       Values carry no glyphs — pages keep their ⌂ ▶ ■ icons in the markup. ---- */
+var COMMON={
+en:{
+ paused:"PAUSED",pause:"PAUSE",resume:"RESUME",start:"START",play:"PLAY",home:"HOME",menu:"MENU",
+ options:"OPTIONS",settings:"SETTINGS",help:"HELP",howToPlay:"HOW TO PLAY",rules:"RULES",controls:"CONTROLS",
+ keys:"KEYS",gamepad:"GAMEPAD",mouse:"MOUSE",touch:"TOUCH",
+ sound:"SOUND",music:"MUSIC",sfx:"SOUND FX",on:"ON",off:"OFF",fullscreen:"FULLSCREEN",exitFullscreen:"EXIT FULLSCREEN",
+ difficulty:"DIFFICULTY",easy:"EASY",normal:"NORMAL",hard:"HARD",low:"LOW",high:"HIGH",
+ score:"SCORE",best:"BEST",hiScore:"HIGH SCORE",level:"LEVEL",lives:"LIVES",time:"TIME",
+ speed:"SPEED",round:"ROUND",wave:"WAVE",seed:"SEED",newSeed:"NEW SEED",
+ restart:"RESTART",retry:"RETRY",continue:"CONTINUE",tryAgain:"TRY AGAIN",nextLevel:"NEXT LEVEL",
+ gameOver:"GAME OVER",youWin:"YOU WIN",youLose:"GAME OVER",clear:"CLEARED",
+ fire:"FIRE",jump:"JUMP",back:"BACK",exit:"EXIT",close:"CLOSE",ok:"OK",cancel:"CANCEL",
+ loading:"LOADING",shots:"SHOTS",moves:"MOVES",power:"POWER",angle:"ANGLE",
+ langTitle:"LANGUAGE",langNote:"Choose your language — it is remembered, and it applies to this game and to the whole catalogue.",
+ langBack:"CHANGE LANGUAGE",players:"PLAYERS",player:"PLAYER",you:"YOU",cpu:"CPU",random:"RANDOM"},
+es:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INICIO",play:"JUGAR",home:"INICIO",menu:"MENÚ",
+ options:"OPCIONES",settings:"AJUSTES",help:"AYUDA",howToPlay:"CÓMO JUGAR",rules:"REGLAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"MANDO",mouse:"RATÓN",touch:"TÁCTIL",
+ sound:"SONIDO",music:"MÚSICA",sfx:"EFECTOS",on:"ACTIVO",off:"APAGADO",fullscreen:"PANTALLA COMPLETA",exitFullscreen:"SALIR DE PANTALLA COMPLETA",
+ difficulty:"DIFICULTAD",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAJO",high:"ALTO",
+ score:"PUNTOS",best:"RÉCORD",hiScore:"RÉCORD",level:"NIVEL",lives:"VIDAS",time:"TIEMPO",
+ speed:"VELOCIDAD",round:"RONDA",wave:"OLEADA",seed:"SEMILLA",newSeed:"NUEVA SEMILLA",
+ restart:"REINICIAR",retry:"REINTENTAR",continue:"CONTINUAR",tryAgain:"INTÉNTALO OTRA VEZ",nextLevel:"SIGUIENTE NIVEL",
+ gameOver:"FIN DEL JUEGO",youWin:"¡GANASTE!",youLose:"FIN DEL JUEGO",clear:"SUPERADO",
+ fire:"DISPARO",jump:"SALTAR",back:"ATRÁS",exit:"SALIR",close:"CERRAR",ok:"ACEPTAR",cancel:"CANCELAR",
+ loading:"CARGANDO",shots:"LANZAMIENTOS",moves:"MOVIMIENTOS",power:"FUERZA",angle:"ÁNGULO",
+ langTitle:"IDIOMA",langNote:"Elige tu idioma: se recuerda y se aplica a este juego y a todo el catálogo.",
+ langBack:"CAMBIAR IDIOMA",players:"JUGADORES",player:"JUGADOR",you:"TÚ",cpu:"CPU",random:"ALEATORIO"},
+pt:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INÍCIO",play:"JOGAR",home:"INÍCIO",menu:"MENU",
+ options:"OPÇÕES",settings:"CONFIGURAÇÕES",help:"AJUDA",howToPlay:"COMO JOGAR",rules:"REGRAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"CONTROLE",mouse:"MOUSE",touch:"TOQUE",
+ sound:"SOM",music:"MÚSICA",sfx:"EFEITOS",on:"LIGADO",off:"DESLIGADO",fullscreen:"TELA CHEIA",exitFullscreen:"SAIR DA TELA CHEIA",
+ difficulty:"DIFICULDADE",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAIXO",high:"ALTO",
+ score:"PONTOS",best:"RECORDE",hiScore:"RECORDE",level:"NÍVEL",lives:"VIDAS",time:"TEMPO",
+ speed:"VELOCIDADE",round:"RODADA",wave:"ONDA",seed:"SEMENTE",newSeed:"NOVA SEMENTE",
+ restart:"REINICIAR",retry:"TENTAR DE NOVO",continue:"CONTINUAR",tryAgain:"TENTE DE NOVO",nextLevel:"PRÓXIMO NÍVEL",
+ gameOver:"FIM DE JOGO",youWin:"VOCÊ VENCEU",youLose:"FIM DE JOGO",clear:"COMPLETO",
+ fire:"DISPARO",jump:"SALTAR",back:"VOLTAR",exit:"SAIR",close:"FECHAR",ok:"OK",cancel:"CANCELAR",
+ loading:"CARREGANDO",shots:"BATIDAS",moves:"JOGADAS",power:"FORÇA",angle:"ÂNGULO",
+ langTitle:"IDIOMA",langNote:"Escolha seu idioma: ele é lembrado e vale para este jogo e para todo o catálogo.",
+ langBack:"MUDAR IDIOMA",players:"JOGADORES",player:"JOGADOR",you:"VOCÊ",cpu:"CPU",random:"ALEATÓRIO"},
+ru:{
+ paused:"ПАУЗА",pause:"ПАУЗА",resume:"ПРОДОЛЖИТЬ",start:"СТАРТ",play:"ИГРАТЬ",home:"ДОМОЙ",menu:"МЕНЮ",
+ options:"НАСТРОЙКИ",settings:"НАСТРОЙКИ",help:"ПОМОЩЬ",howToPlay:"КАК ИГРАТЬ",rules:"ПРАВИЛА",controls:"УПРАВЛЕНИЕ",
+ keys:"КЛАВИШИ",gamepad:"ГЕЙМПАД",mouse:"МЫШЬ",touch:"СЕНСОР",
+ sound:"ЗВУК",music:"МУЗЫКА",sfx:"ЗВУКИ",on:"ВКЛ",off:"ВЫКЛ",fullscreen:"НА ВЕСЬ ЭКРАН",exitFullscreen:"ВЫЙТИ С ЭКРАНА",
+ difficulty:"СЛОЖНОСТЬ",easy:"ЛЕГКО",normal:"НОРМА",hard:"СЛОЖНО",low:"НИЗ",high:"ВЕРХ",
+ score:"СЧЁТ",best:"РЕКОРД",hiScore:"РЕКОРД",level:"УРОВЕНЬ",lives:"ЖИЗНИ",time:"ВРЕМЯ",
+ speed:"СКОРОСТЬ",round:"РАУНД",wave:"ВОЛНА",seed:"КОД УРОВНЯ",newSeed:"НОВЫЙ КОД",
+ restart:"ЗАНОВО",retry:"ЕЩЁ РАЗ",continue:"ПРОДОЛЖИТЬ",tryAgain:"ПОПРОБУЙ ЕЩЁ",nextLevel:"СЛЕДУЮЩИЙ УРОВЕНЬ",
+ gameOver:"КОНЕЦ",youWin:"ПОБЕДА",youLose:"КОНЕЦ",clear:"УРОВЕНЬ ПРОЙДЕН",
+ fire:"ОГОНЬ",jump:"ПРЫЖОК",back:"НАЗАД",exit:"ВЫХОД",close:"ЗАКРЫТЬ",ok:"ОК",cancel:"ОТМЕНА",
+ loading:"ЗАГРУЗКА",shots:"УДАРЫ",moves:"ХОДЫ",power:"СИЛА",angle:"УГОЛ",
+ langTitle:"ЯЗЫК",langNote:"Выберите язык — он запоминается и действует для этой игры и для всего каталога.",
+ langBack:"СМЕНИТЬ ЯЗЫК",players:"ИГРОКИ",player:"ИГРОК",you:"ВЫ",cpu:"БОТ",random:"СЛУЧАЙНО"},
+zh:{
+ paused:"暂停",pause:"暂停",resume:"继续",start:"开始",play:"开始游戏",home:"主页",menu:"菜单",
+ options:"选项",settings:"设置",help:"帮助",howToPlay:"怎么玩",rules:"规则",controls:"操作",
+ keys:"按键",gamepad:"手柄",mouse:"鼠标",touch:"触摸",
+ sound:"声音",music:"音乐",sfx:"音效",on:"开",off:"关",fullscreen:"全屏",exitFullscreen:"退出全屏",
+ difficulty:"难度",easy:"简单",normal:"普通",hard:"困难",low:"低",high:"高",
+ score:"得分",best:"最高分",hiScore:"最高分",level:"关卡",lives:"生命",time:"时间",
+ speed:"速度",round:"回合",wave:"波次",seed:"种子",newSeed:"新种子",
+ restart:"重新开始",retry:"重试",continue:"继续",tryAgain:"再试一次",nextLevel:"下一关",
+ gameOver:"游戏结束",youWin:"胜利",youLose:"游戏结束",clear:"过关",
+ fire:"射击",jump:"跳跃",back:"返回",exit:"退出",close:"关闭",ok:"确定",cancel:"取消",
+ loading:"加载中",shots:"击球",moves:"步数",power:"力量",angle:"角度",
+ langTitle:"语言",langNote:"选择语言：会被记住，并用于这个游戏和整个游戏目录。",
+ langBack:"更换语言",players:"玩家",player:"玩家",you:"你",cpu:"电脑",random:"随机"}
+};
+var PAGE={en:{},es:{},pt:{},ru:{},zh:{}};
+function lget(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+function lset(v){try{localStorage.setItem(KEY,v)}catch(e){}}
+var code=null;
+/* A browser language list -> a supported code, or null when it says nothing
+   usable. "pt-BR", "ru_RU", "zh-CN" all match on their 2-letter base. */
+function fromBrowser(){
+ try{
+  var list=null;
+  if(navigator&&Array.isArray(navigator.languages)&&navigator.languages.length)list=navigator.languages;
+  else if(navigator)list=[navigator.language||navigator.userLanguage||""];
+  for(var i=0;i<(list||[]).length;i++){
+   var c=String(list[i]||"").toLowerCase().slice(0,2);
+   if(CODES.indexOf(c)>=0)return c;
+  }
+ }catch(e){}
+ return null;
+}
+(function(){
+ try{
+  var c=null,m=/[?&]language=([a-zA-Z]{2,3})/.exec(location.search||"");
+  if(m)c=m[1].toLowerCase().slice(0,2);           // ?language=pt-BR counts as pt
+  if(c&&CODES.indexOf(c)<0)c=null;
+  if(!c){var s=(lget()||"").toLowerCase().slice(0,2);if(CODES.indexOf(s)>=0)c=s;}
+  if(!c)c=fromBrowser();
+  code=c||"en";
+ }catch(e){code="en";} // a broken lookup speaks English, never nothing
+})();
+function raw(k){
+ var t=PAGE[code]?PAGE[code][k]:null; if(t!=null)return t;
+ t=COMMON[code]?COMMON[code][k]:null; if(t!=null)return t;
+ t=PAGE.en[k]; if(t!=null)return t;
+ t=COMMON.en[k]; return t==null?null:t;
+}
+var hooks=[];
+var API={
+ version:"2026.11.22.2", codes:CODES.slice(), langs:LANGS,
+ lang:function(){return code},
+ browserLang:function(){return fromBrowser()},
+ t:function(k,v){var s;try{s=raw(k)}catch(e){code="en";try{s=raw(k)}catch(e2){s=null}}
+  if(s==null)s=k;var o=v||{};for(var p in o)s=s.split("{"+p+"}").join(String(o[p]));return s},
+ flag:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][3];return ""},
+ name:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][2];return c},
+ add:function(tab){for(var c in tab){if(!PAGE[c])continue;for(var k in tab[c])PAGE[c][k]=tab[c][k];}
+  try{API.apply()}catch(e){}},
+ /* read the tables (the developer harness edits texts through these) */
+ keys:function(c){var out=[],seen={};try{var src=[PAGE[c],COMMON[c],PAGE.en,COMMON.en];
+  for(var i=0;i<src.length;i++)for(var k in src[i])if(!seen[k]){seen[k]=1;out.push(k)}out.sort();}catch(e){}
+  return out},
+ table:function(){var o={};try{for(var i=0;i<CODES.length;i++){var c=CODES[i],m={},s=[COMMON[c],PAGE[c],COMMON.en,PAGE.en];
+  for(var j=0;j<s.length;j++)for(var k in s[j])if(m[k]==null&&s[j][k]!=null)m[k]=s[j][k];o[c]=m;}}catch(e){}
+  return o},
+ setKey:function(c,k,v){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;
+  try{(PAGE[c]=PAGE[c]||{})[k]=String(v);}catch(e){return;}
+  try{API.apply()}catch(e){}
+  for(var i=0;i<hooks.length;i++)try{hooks[i](code)}catch(e){}},
+ onChange:function(f){hooks.push(f)},
+ set:function(c){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;code=c;lset(c);
+  try{API.apply()}catch(e){}for(var i=0;i<hooks.length;i++)try{hooks[i](c)}catch(e){}},
+ apply:function(root){
+  if(document.documentElement)document.documentElement.lang=code;
+  var r=root||document;
+  var set=function(e,attr,put){var v=raw(e.getAttribute(attr));if(v!=null)put(e,v);};
+  var all=[];
+  if(r.nodeType===1)all.push(r);
+  if(r.querySelectorAll)all=all.concat([].slice.call(r.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]")));
+  for(var i=0;i<all.length;i++){var e=all[i];
+   try{
+    if(e.hasAttribute("data-t"))set(e,"data-t",function(n,v){n.textContent=v});
+    if(e.hasAttribute("data-ph"))set(e,"data-ph",function(n,v){n.placeholder=v});
+    if(e.hasAttribute("data-tip"))set(e,"data-tip",function(n,v){n.title=v});
+    if(e.hasAttribute("data-aria"))set(e,"data-aria",function(n,v){n.setAttribute("aria-label",v)});
+    if(e.hasAttribute("data-alt"))set(e,"data-alt",function(n,v){n.alt=v});
+   }catch(e2){} // one odd node never aborts the pass
+  }
+  if(pill){try{pill.innerHTML=API.flag(code)+"<span>"+API.name(code)+"</span>";pill.title=API.t("langTitle");}catch(e){}}
+ },
+ mount:function(sel){hostSel=sel;ensurePill();},
+};
+/* ---------------- language button + picker overlay ---------------- */
+var hostSel=null,pill=null,ov=null;
+var CSS=".tlbtn{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(20,24,22,.72);flex:0 0 auto;align-self:center;"
+ +"border:1px solid #3a463f;border-radius:6px;color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:1px;"
+ +"cursor:pointer;line-height:1;width:auto;max-width:100%}.tlbtn:hover,.tlbtn:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}"
+ +".tlbtn svg{width:22px;height:15px;border:1px solid #2e3a34;border-radius:2px;display:block}"
+ +".tlfix{position:fixed;left:12px;bottom:12px;z-index:2147483000}"
+ +".tlov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;"
+ +"background:rgba(4,7,6,.86);padding:16px}.tlov[hidden]{display:none}"
+ +".tlpanel{max-width:660px;width:100%;background:#141816;border:1px solid #3a463f;border-radius:12px;"
+ +"padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.6);color:#c9d2cb;font:inherit;text-align:center}"
+ +".tlpanel h2{margin:0 0 6px;font-size:20px;letter-spacing:4px;color:#ffd76a}"
+ +".tlpanel p{margin:0 0 16px;font-size:12px;line-height:1.6;color:#8a948e}"
+ +".tlgrid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}"
+ +".tlb{width:132px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;"
+ +"background:rgba(20,24,22,.7);border:1px solid #3a463f;border-radius:8px;cursor:pointer;color:#c9d2cb;font:inherit}"
+ +".tlb:hover,.tlb:focus{border-color:#ffd76a;color:#f4e9c8;outline:none;box-shadow:0 0 14px rgba(255,215,106,.18)}"
+ +".tlb svg{width:50px;height:34px;border:1px solid #2e3a34;border-radius:4px;display:block}"
+ +".tlb b{font-size:13px;color:#f4e9c8}.tlb span{font-size:10px;letter-spacing:1px;color:#8a948e}"
+ +".tlx{margin-top:16px;padding:7px 20px;background:none;border:1px solid #3a463f;border-radius:6px;"
+ +"color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:2px;cursor:pointer}"
+ +".tlx:hover,.tlx:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}";
+function style(){if(document.getElementById("tlcss"))return;var s=document.createElement("style");s.id="tlcss";s.textContent=CSS;document.head.appendChild(s);}
+function ensurePill(){
+ if(pill)return;
+ var host=hostSel?document.querySelector(hostSel):null;
+ if(!host&&document.readyState==="loading")return; // retried at DOMContentLoaded
+ style();
+ pill=document.createElement("button");
+ pill.type="button";pill.className="tlbtn";pill.setAttribute("aria-haspopup","dialog");
+ if(!host){pill.className="tlbtn tlfix";document.body.appendChild(pill);}
+ else host.insertBefore(pill,host.firstChild);
+ pill.onclick=openOv;
+ API.apply();
+}
+function openOv(){
+ if(!ov){
+  ov=document.createElement("div");ov.className="tlov";ov.hidden=true;
+  var p=document.createElement("div");p.className="tlpanel";
+  var h=document.createElement("h2");h.setAttribute("data-t","langTitle");p.appendChild(h);
+  var np=document.createElement("p");np.setAttribute("data-t","langNote");p.appendChild(np);
+  var g=document.createElement("div");g.className="tlgrid";
+  for(var i=0;i<LANGS.length;i++){
+   var b=document.createElement("button");b.type="button";b.className="tlb";b.dataset.lang=LANGS[i][0];
+   b.innerHTML=LANGS[i][3]+"<b>"+LANGS[i][1]+"</b><span>"+LANGS[i][2]+"</span>";g.appendChild(b);
+  }
+  p.appendChild(g);
+  var x=document.createElement("button");x.type="button";x.className="tlx";x.setAttribute("data-t","close");p.appendChild(x);
+  ov.appendChild(p);document.body.appendChild(ov);
+  g.onclick=function(e){var b=e.target;while(b&&b!==g&&!b.dataset.lang)b=b.parentNode;if(b&&b.dataset.lang){API.set(b.dataset.lang);closeOv();}};
+  x.onclick=closeOv;
+  ov.onclick=function(e){if(e.target===ov)closeOv();};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ov&&!ov.hidden)closeOv();});
+ }
+ API.apply(ov);
+ ov.hidden=false;
+}
+function closeOv(){if(ov)ov.hidden=true;}
+function boot(){
+ try{ensurePill();API.apply();}
+ catch(e){code="en";try{ensurePill();API.apply();}catch(e2){}} // rule 0: English on any kit fault
+}
+/* keep freshly added nodes translated without the page calling apply() */
+new MutationObserver(function(ms){
+ if(!pill)return;
+ try{
+  for(var i=0;i<ms.length;i++){var n=ms[i].addedNodes;
+   for(var j=0;j<n.length;j++){var e=n[j];
+    if(e.nodeType!==1)continue;
+    if(e.matches&&e.matches("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]"))API.apply(e);
+    else if(e.querySelectorAll&&e.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]").length)API.apply(e);
+   }}
+ }catch(e){}
+}).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+window.TLI18N=API;
+})();
+</script>
+<script>
+/* If i18n.js is missing or only half-loaded, the game still runs: this stub
+   keeps the same API, pins English, and serves the en table this page registers
+   below via add(). */
+if(!window.TLI18N||typeof window.TLI18N.add!=="function"||typeof window.TLI18N.t!=="function"||typeof window.TLI18N.apply!=="function"||typeof window.TLI18N.mount!=="function"){(function(){var T={en:{}};window.TLI18N={version:"en-fallback",codes:["en"],langs:[["en","EN","English",""]],
+add:function(tab){for(var c in tab){T[c]=Object.assign(T[c]||{},tab[c]);}},
+t:function(k,v){var s=(T.en&&T.en[k]!=null)?T.en[k]:k,o=v||{};for(var p in o)s=String(s).split("{"+p+"}").join(String(o[p]));return s},
+flag:function(){return "";},name:function(c){return c;},lang:function(){return "en";},
+set:function(){},onChange:function(){},apply:function(){},mount:function(){}};})();}
+</script>
+<script>
+TLI18N.add({
+en:{
+ // --- camera button + HUD tags
+ camShot:"Camera:Shot",camPlanet:"Camera:Planet",camPFmt:"Camera:P{p}",
+ hTag:"H",cpuTag:"CPU",human:"Human",humanMove:"Human move",humanShoot:"Human shoot",
+ // --- control panel
+ modeShoot:"Shoot",modeMove:"Move",toggleHint:"Space / Select toggles. WASD, arrows, gamepad, D-pad.",
+ elevLbl:"Elev",powLbl:"Pow",dirLbl:"Dir",wpnLbl:"Wpn",
+ // --- weapons
+ wpShell:"Shell",wpHeavy:"Heavy Shell",wpCluster:"Cluster Bomb",wpNapalm:"Napalm",
+ wpHoming:"Homing Missile",wpShotgun:"Shotgun",wpNuke:"Mini Nuke",
+ // --- pause panel
+ aimHelpers:"Aim helpers",
+ pauseHint:"Move phase: drive the tank, then toggle to shoot. Steeper slopes and water slow movement. Falling into pools damages tanks. Powerful weapons drain pools into solid pits. Burning trees and exhaust smoke show wind. Planet becomes x-ray when the predicted hit point is behind the horizon while cannon controls are used.",
+ title:"Title",
+ // --- setup panel
+ graphics:"Graphics",auto:"Auto",balanced:"Balanced",autoNoteFmt:"Auto: {q}",skill:"Skill",
+ setupHint1:"Drag: rotate. Pinch/wheel: zoom.",
+ setupHint2:"Tap a tank or use Camera button for player view.",
+ setupHint3:"Ammo is finite and sized for perfect bullseye kills.",
+ setupHint4:"Move, shoot, burn trees, drain water pools.",
+ setupHint5:"Settings are stored in browser storage.",
+ // --- banners + results
+ moveOver:"Move time over",turnFmt:"Player {p} turn",
+ result:"Result",winsFmt:"Player {p} ({h}) wins!",draw:"Draw!",drawNoAmmo:"Draw - no ammo",
+ rematch:"Rematch",
+ // --- graphics failures
+ glLost:"Graphics context lost. Reloading...",glNoWebGL:"WebGL is not supported.",
+ glShader:"Shader compilation failed.",glLink:"Program link failed."
+},
+es:{
+ // --- camera button + HUD tags
+ camShot:"Cámara:Disparo",camPlanet:"Cámara:Planeta",camPFmt:"Cámara:P{p}",
+ hTag:"HUM",cpuTag:"CPU",human:"Humano",humanMove:"mueve",humanShoot:"dispara",
+ // --- control panel
+ modeShoot:"Disparar",modeMove:"Mover",toggleHint:"Space / Select alternan. WASD, flechas, mando, D-pad.",
+ elevLbl:"Áng.",powLbl:"Pot.",dirLbl:"Dir.",wpnLbl:"Arma",
+ // --- weapons
+ wpShell:"Proyectil",wpHeavy:"Proyectil pesado",wpCluster:"Bomba de racimo",wpNapalm:"Napalm",
+ wpHoming:"Misil guiado",wpShotgun:"Escopeta",wpNuke:"Mini nuclear",
+ // --- pause panel
+ aimHelpers:"Ayuda de puntería",
+ pauseHint:"Fase de movimiento: conduce el tanque y cambia a disparo. Las pendientes fuertes y el agua frenan el tanque. Caer en charcos daña los tanques. Las armas potentes secan los charcos y dejan pozos duros. Los árboles ardiendo y el humo del escape indican el viento. El planeta se vuelve radiografía cuando el punto de impacto previsto queda tras el horizonte al usar el cañón.",
+ title:"Título",
+ // --- setup panel
+ graphics:"Gráficos",auto:"Auto",balanced:"Equilibrado",autoNoteFmt:"Auto: {q}",skill:"Nivel",
+ setupHint1:"Arrastra: gira. Pellizco/rueda: zoom.",
+ setupHint2:"Toca un tanque o usa el botón Cámara para la vista del jugador.",
+ setupHint3:"La munición es limitada y alcanza para un impacto perfecto.",
+ setupHint4:"Muévete, dispara, quema árboles, seca los charcos.",
+ setupHint5:"Los ajustes se guardan en el navegador.",
+ // --- banners + results
+ moveOver:"Se acabó el tiempo de movimiento",turnFmt:"Turno del jugador {p}",
+ result:"Resultado",winsFmt:"¡Gana el jugador {p} ({h})!",draw:"¡Empate!",drawNoAmmo:"Empate: sin munición",
+ rematch:"Revancha",
+ // --- graphics failures
+ glLost:"Se perdió el contexto gráfico. Recargando...",glNoWebGL:"WebGL no es compatible.",
+ glShader:"No se pudo compilar el sombreador.",glLink:"No se pudo enlazar el programa."
+},
+pt:{
+ // --- camera button + HUD tags
+ camShot:"Câmera:Disparo",camPlanet:"Câmera:Planeta",camPFmt:"Câmera:P{p}",
+ hTag:"HUM",cpuTag:"CPU",human:"Humano",humanMove:"move",humanShoot:"atira",
+ // --- control panel
+ modeShoot:"Atirar",modeMove:"Mover",toggleHint:"Space / Select alternam. WASD, setas, controle, D-pad.",
+ elevLbl:"Âng.",powLbl:"For.",dirLbl:"Dir.",wpnLbl:"Arma",
+ // --- weapons
+ wpShell:"Projétil",wpHeavy:"Projétil pesado",wpCluster:"Bomba de fragmentação",wpNapalm:"Napalm",
+ wpHoming:"Míssil guiado",wpShotgun:"Espingarda",wpNuke:"Mini nuclear",
+ // --- pause panel
+ aimHelpers:"Ajuda de mira",
+ pauseHint:"Fase de movimento: dirija o tanque e alterne para atirar. Encostas íngremes e água atrapalham o movimento. Cair em poças danifica os tanques. Armas potentes secam as poças e deixam buracos duros. Árvores em chamas e a fumaça do escapamento mostram o vento. O planeta fica de raio-X quando o ponto de impacto previsto some atrás do horizonte durante a mira.",
+ title:"Título",
+ // --- setup panel
+ graphics:"Gráficos",auto:"Auto",balanced:"Equilibrado",autoNoteFmt:"Auto: {q}",skill:"Nível",
+ setupHint1:"Arraste: gira. Pinça/roda: zoom.",
+ setupHint2:"Toque em um tanque ou use o botão Câmera para ver o jogador.",
+ setupHint3:"A munição é limitada e basta para um tiro perfeito.",
+ setupHint4:"Dirija, atire, incendeie árvores, seque as poças.",
+ setupHint5:"As configurações ficam no armazenamento do navegador.",
+ // --- banners + results
+ moveOver:"O tempo de movimento acabou",turnFmt:"Vez do jogador {p}",
+ result:"Resultado",winsFmt:"Jogador {p} ({h}) venceu!",draw:"Empate!",drawNoAmmo:"Empate: sem munição",
+ rematch:"Revanche",
+ // --- graphics failures
+ glLost:"Contexto gráfico perdido. Recarregando...",glNoWebGL:"WebGL não é suportado.",
+ glShader:"Falha ao compilar o sombreador.",glLink:"Falha ao vincular o programa."
+},
+ru:{
+ // --- camera button + HUD tags
+ camShot:"Камера:выстрел",camPlanet:"Камера:планета",camPFmt:"Камера:P{p}",
+ hTag:"ЧЕЛ",cpuTag:"БОТ",human:"Человек",humanMove:"ходит",humanShoot:"целится",
+ // --- control panel
+ modeShoot:"Прицел",modeMove:"Ход",toggleHint:"Space / Select — переключение. WASD, стрелки, геймпад, D-pad.",
+ elevLbl:"Угол",powLbl:"Сила",dirLbl:"Напр",wpnLbl:"Оруж",
+ // --- weapons
+ wpShell:"Снаряд",wpHeavy:"Тяжёлый снаряд",wpCluster:"Кассетная бомба",wpNapalm:"Напалм",
+ wpHoming:"Умная ракета",wpShotgun:"Дробовик",wpNuke:"Мини-ядерная бомба",
+ // --- pause panel
+ aimHelpers:"Подсказки прицела",
+ pauseHint:"Ход танка: поезжайте, затем переключитесь на стрельбу. Крутые склоны и вода мешают движению. Падение в лужу разрушает танк. Мощное оружие превращает лужи в сухие кратеры. Горящие деревья и дым из выхлопа показывают ветер. Планета становится прозрачной, когда точка попадания скрыта за горизонтом при наводке орудия.",
+ title:"Главный экран",
+ // --- setup panel
+ graphics:"Графика",auto:"Авто",balanced:"Средне",autoNoteFmt:"Авто: {q}",skill:"Уровень",
+ setupHint1:"Перетаскивание: поворот. Щипок/колесо: приближение.",
+ setupHint2:"Нажмите на танк или используйте кнопку «Камера» для вида игрока.",
+ setupHint3:"Боезапас ограничен: точный выстрел убивает с одного попадания.",
+ setupHint4:"Езжайте, стреляйте, поджигайте деревья, осушайте лужи.",
+ setupHint5:"Настройки сохраняются в браузере.",
+ // --- banners + results
+ moveOver:"Время хода вышло",turnFmt:"Ход игрока {p}",
+ result:"Итог",winsFmt:"Игрок {p} ({h}) победил!",draw:"Ничья!",drawNoAmmo:"Ничья — боезапас кончился",
+ rematch:"Реванш",
+ // --- graphics failures
+ glLost:"Контекст графики потерян. Перезагрузка...",glNoWebGL:"WebGL не поддерживается.",
+ glShader:"Не удалось скомпилировать шейдер.",glLink:"Не удалось связать программу."
+},
+zh:{
+ // --- camera button + HUD tags
+ camShot:"镜头：射击",camPlanet:"镜头：星球",camPFmt:"镜头：P{p}",
+ hTag:"人",cpuTag:"电脑",human:"人类",humanMove:"移动中",humanShoot:"瞄准中",
+ // --- control panel
+ modeShoot:"射击",modeMove:"移动",toggleHint:"Space/Select 切换模式。WASD、方向键、手柄、十字键。",
+ elevLbl:"仰角",powLbl:"力量",dirLbl:"方向",wpnLbl:"武器",
+ // --- weapons
+ wpShell:"炮弹",wpHeavy:"重炮弹",wpCluster:"集束炸弹",wpNapalm:"凝固汽油弹",
+ wpHoming:"追踪导弹",wpShotgun:"霰弹枪",wpNuke:"微型核弹",
+ // --- pause panel
+ aimHelpers:"瞄准辅助",
+ pauseHint:"移动阶段：先驾驶坦克，再切换到射击。陡坡和水洼会减慢移动。掉进水洼会损伤坦克。强力武器会把水洼炸成干坑。燃烧的树木和尾气能显示风向。使用火炮瞄准时，若预测落点藏在地平线后，星球会变成透视。",
+ title:"标题画面",
+ // --- setup panel
+ graphics:"画质",auto:"自动",balanced:"均衡",autoNoteFmt:"自动：{q}",skill:"水平",
+ setupHint1:"拖动：旋转。捏合/滚轮：缩放。",
+ setupHint2:"点选坦克或按「镜头」按钮进入玩家视角。",
+ setupHint3:"弹药有限，命中即可一击必杀。",
+ setupHint4:"移动、射击、烧树、排干水洼。",
+ setupHint5:"设置保存在浏览器中。",
+ // --- banners + results
+ moveOver:"移动时间结束",turnFmt:"玩家{p}的回合",
+ result:"结果",winsFmt:"玩家{p}（{h}）获胜！",draw:"平局！",drawNoAmmo:"平局：弹药耗尽",
+ rematch:"再战一局",
+ // --- graphics failures
+ glLost:"图形上下文丢失，正在重新加载...",glNoWebGL:"不支持 WebGL。",
+ glShader:"着色器编译失败。",glLink:"程序链接失败。"
+}
+});
+TLI18N.mount("#setupOverlay .pf");
+</script>
 <script>
 "use strict";
 
@@ -646,7 +1075,8 @@ function glFail(msg) {
     var m = D.createElement("div");
     m.id = "glMsg";
     m.className = "hint";
-    m.textContent = msg;
+    m.setAttribute("data-t", msg);
+    m.textContent = TLI18N.t(msg);
     p.appendChild(m);
   }
 }
@@ -991,7 +1421,7 @@ function initGL() {
   }
 
   if (!gl) {
-    glFail("WebGL is not supported.");
+    glFail("glNoWebGL");
     return false;
   }
 
@@ -1001,7 +1431,7 @@ function initGL() {
   var v = compileShader(vs, gl.VERTEX_SHADER);
   var f = compileShader(fs, gl.FRAGMENT_SHADER);
   if (!v || !f) {
-    glFail("Shader compilation failed.");
+    glFail("glShader");
     return false;
   }
 
@@ -1011,7 +1441,7 @@ function initGL() {
   gl.linkProgram(prog);
 
   if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-    glFail("Program link failed.");
+    glFail("glLink");
     return false;
   }
 
@@ -3160,6 +3590,21 @@ function fire(s, wi, elev, dir, power) {
   return true;
 }
 
+var resultSpec = null;
+
+function resetResult() {
+  resultSpec = null;
+  resultText.textContent = TLI18N.t("result");
+}
+
+function applyResult() {
+  if (!resultSpec) return;
+
+  resultText.textContent = resultSpec.win
+    ? TLI18N.t("winsFmt", { p: resultSpec.win, h: TLI18N.t(resultSpec.human ? "human" : "cpu") })
+    : TLI18N.t(resultSpec.key);
+}
+
 function gameOver() {
   if (state === "gameover") return true;
 
@@ -3180,9 +3625,10 @@ function gameOver() {
     hid(pauseOv, true);
     stopEngine();
 
-    resultText.textContent = a === 1
-      ? "Player " + (players.indexOf(win) + 1) + " (" + (win.human ? "Human" : "CPU") + ") wins!"
-      : "Draw!";
+    resultSpec = a === 1
+      ? { win: players.indexOf(win) + 1, human: win.human }
+      : { key: "draw" };
+    applyResult();
 
     hid(goOv, false);
     hudD = true;
@@ -3202,7 +3648,8 @@ function noAmmoEnd() {
   paused = false;
   hid(pauseOv, true);
   stopEngine();
-  resultText.textContent = "Draw - no ammo";
+  resultSpec = { key: "drawNoAmmo" };
+  applyResult();
   hid(goOv, false);
   hudD = true;
   updateUI();
@@ -3258,7 +3705,7 @@ function forceShoot() {
     moveTime = 0;
     stopEngine();
     updateUI();
-    banner("Move time over", 700);
+    banner(TLI18N.t("moveOver"), 700);
   }
 }
 
@@ -3310,7 +3757,7 @@ function beginTurn() {
   if (f >= 0) weaponSelect.value = f;
 
   hudD = true;
-  banner("Player " + (curIdx + 1) + " turn", 900);
+  banner(TLI18N.t("turnFmt", { p: curIdx + 1 }), 900);
 
   pAuto.on = true;
   pAuto.back = vn(curP.pos);
@@ -3362,7 +3809,7 @@ function buildHealth() {
 
     var nm = D.createElement("span");
     nm.className = "pname";
-    nm.textContent = "P" + (i + 1) + (p.human ? " H" : " CPU");
+    nm.textContent = "P" + (i + 1) + (p.human ? " " + TLI18N.t("hTag") : " " + TLI18N.t("cpuTag"));
 
     var bar = D.createElement("span");
     bar.className = "bar";
@@ -3391,7 +3838,7 @@ function buildLabels() {
 
     var nm = D.createElement("span");
     nm.className = "tagName";
-    nm.textContent = "P" + (i + 1) + (p.human ? "" : " CPU");
+    nm.textContent = "P" + (i + 1) + (p.human ? "" : " " + TLI18N.t("cpuTag"));
 
     var bar = D.createElement("span");
     bar.className = "tagBar";
@@ -3529,6 +3976,7 @@ function showSetup() {
 
   hid(setupOv, false);
   hid(goOv, true);
+  resetResult();
   snapCam();
   updateUI();
 }
@@ -3548,7 +3996,7 @@ function buildRows() {
     lbl.textContent = "P" + (i + 1);
 
     var sel = D.createElement("select");
-    sel.innerHTML = '<option value="human">Human</option><option value="cpu">CPU</option>';
+    sel.innerHTML = '<option value="human">' + TLI18N.t("human") + '</option><option value="cpu">' + TLI18N.t("cpu") + '</option>';
     sel.value = cfg.players[i].human ? "human" : "cpu";
 
     var wrap = D.createElement("span");
@@ -3560,7 +4008,10 @@ function buildRows() {
     sk.max = "100";
     sk.value = Math.round(cfg.players[i].skill * 100);
 
-    wrap.appendChild(D.createTextNode("Skill"));
+    var skLbl = D.createElement("span");
+    skLbl.setAttribute("data-t", "skill");
+    skLbl.textContent = TLI18N.t("skill");
+    wrap.appendChild(skLbl);
     wrap.appendChild(sk);
     wrap.style.display = sel.value === "cpu" ? "inline-flex" : "none";
 
@@ -3609,13 +4060,19 @@ function syncSetup() {
   saveCfg();
 }
 
+var WNAME = ["wpShell", "wpHeavy", "wpCluster", "wpNapalm", "wpHoming", "wpShotgun", "wpNuke"];
+
+function wname(i) {
+  return TLI18N.t(WNAME[i] || WEAPONS[i].name);
+}
+
 function populateWeapons() {
   weaponSelect.innerHTML = "";
 
   for (var i = 0; i < WEAPONS.length; i++) {
     var o = D.createElement("option");
     o.value = i;
-    o.textContent = WEAPONS[i].name;
+    o.textContent = wname(i);
     weaponSelect.appendChild(o);
   }
 }
@@ -3631,7 +4088,7 @@ function refreshWeaponSelect() {
   for (var i = 0; i < weaponSelect.options.length; i++) {
     var opt = weaponSelect.options[i];
     var cnt = curP && curP.ammo && curP.ammo[i] != null ? curP.ammo[i] : 0;
-    opt.textContent = WEAPONS[i].name + " (" + cnt + ")";
+    opt.textContent = wname(i) + " (" + cnt + ")";
     opt.disabled = cnt <= 0 || !can;
   }
 
@@ -3663,8 +4120,8 @@ function updateHUD() {
   turnSwatch.style.background = curP.colorCss;
   turnText.textContent = "P" + (curIdx + 1) + " " + (
     curP.human
-      ? (state === "move" ? "Human move" : "Human shoot")
-      : "CPU " + Math.round(curP.skill * 100) + "%"
+      ? (state === "move" ? TLI18N.t("humanMove") : TLI18N.t("humanShoot"))
+      : TLI18N.t("cpu") + " " + Math.round(curP.skill * 100) + "%"
   );
 
   for (var i = 0; i < players.length; i++) {
@@ -3720,7 +4177,7 @@ function updateUI() {
   hid(pauseOv, !paused);
 
   if (showCtrl && toggleModeBtn) {
-    toggleModeBtn.textContent = state === "move" ? "Shoot" : "Move";
+    toggleModeBtn.textContent = state === "move" ? TLI18N.t("modeShoot") : TLI18N.t("modeMove");
   }
 
   camText();
@@ -3730,10 +4187,10 @@ function updateUI() {
 function camText() {
   if (!cameraBtn) return;
 
-  if (sCam.on) cameraBtn.textContent = "Camera:Shot";
-  else if (focus === "planet") cameraBtn.textContent = "Camera:Planet";
-  else if (selP) cameraBtn.textContent = "Camera:P" + (selP.index + 1);
-  else cameraBtn.textContent = "Camera:Planet";
+  if (sCam.on) cameraBtn.textContent = TLI18N.t("camShot");
+  else if (focus === "planet") cameraBtn.textContent = TLI18N.t("camPlanet");
+  else if (selP) cameraBtn.textContent = TLI18N.t("camPFmt", { p: selP.index + 1 });
+  else cameraBtn.textContent = TLI18N.t("camPlanet");
 }
 
 function cancelAim() {
@@ -5042,7 +5499,7 @@ Cv.addEventListener("webglcontextlost", function (e) {
   if (e && e.cancelable) e.preventDefault();
 
   lost = true;
-  banner("Graphics context lost. Reloading...", 1200);
+  banner(TLI18N.t("glLost"), 1200);
 
   setTimeout(function () {
     W.location.reload();
@@ -5163,6 +5620,35 @@ addPress(toggleModeBtn, function () {
 
 bindDPad();
 
+var lastQ = "";
+
+function qname(k) {
+  return TLI18N.t(k === "medium" ? "balanced" : k);
+}
+
+function showPerfNote() {
+  perfNote.textContent = cfg.quality === "auto" ? TLI18N.t("autoNoteFmt", { q: qname(lastQ) }) : "";
+}
+
+function langUI() {
+  if (resultSpec) applyResult();
+  else resetResult();
+
+  buildRows();
+  refreshWeaponSelect();
+
+  if (players.length) {
+    buildHealth();
+    buildLabels();
+    if (curP) updateHUD();
+  }
+
+  showPerfNote();
+  updateUI();
+}
+
+TLI18N.onChange(langUI);
+
 playerCount.addEventListener("change", function () {
   var old = cfg.players.slice();
 
@@ -5190,11 +5676,8 @@ qualitySelect.addEventListener("change", function () {
 
   var q = cfg.quality === "auto" ? recQ() : cfg.quality;
 
-  if (cfg.quality === "auto") {
-    perfNote.textContent = "Auto: " + q;
-  } else {
-    perfNote.textContent = "";
-  }
+  lastQ = q;
+  showPerfNote();
 
   applyQual(q, true);
   helpKey = "";
@@ -5323,11 +5806,8 @@ function boot() {
 
   var q = cfg.quality === "auto" ? recQ() : cfg.quality;
 
-  if (cfg.quality === "auto") {
-    perfNote.textContent = "Auto: " + q;
-  } else {
-    perfNote.textContent = "";
-  }
+  lastQ = q;
+  showPerfNote();
 
   setQual(q);
 
@@ -5386,5 +5866,232 @@ else seen(cur);
 }).catch(function () {});
 })();
 </script>
+<script>
+/* Developer harness. ?debug=dbg/earth.js loads the shared engine dbg/_harness.js
+   then that script: live panel with state, elements, layout per screen mode,
+   texts, balance, cheats, JSON export. No parameter or missing script = the
+   page behaves exactly as without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
+</script>
+<!-- inlined fs.js — the source of truth is fs.js: edit that file and re-inline this block -->
+<script>
+/* fs.js — the one fullscreen control every page shares.
+
+   Two jobs:
+
+   1. A toggle button. `TLFS.mount("#opts", {cls:"btn"})` puts it inside a menu or
+      title panel using that page's own button class; `TLFS.mount()` alone floats a
+      small icon button in the bottom-right corner; `{icon:true}` swaps the word for
+      a ⤢ glyph and moves it into `aria-label` for narrow hosts. The wording is the
+      shared translation key `fullscreen` / `exitFullscreen` — from the i18n kit, from
+      a page table published through `TLFS_LABEL(key)`, or English as the floor — and
+      a change of `<html lang>` repaints it. Where the Fullscreen API is missing the
+      button hides itself instead of lying.
+
+   2. Re-fit on every usable-area change. Entering or leaving fullscreen, an
+      orientation flip, and a mobile browser bar hiding or showing all change the
+      area the game has to fill — and the bar case does not always fire a plain
+      `resize`. This file listens to `fullscreenchange` (all vendor spellings) and
+      to `visualViewport.resize`, then re-applies `<html data-fs>` and dispatches
+      `resize` (plus `orientationchange`) once per frame, so the page's own layout
+      code runs. `TLFS.refitOnly()` gives a page that already has its own
+      fullscreen button just that wiring, without a second button.
+
+   Nothing here reads game state, and a page that never calls mount/refitOnly gets
+   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+(function () {
+  if (window.TLFS) return;
+  var de = document.documentElement;
+  var REQ = de.requestFullscreen || de.webkitRequestFullscreen ||
+    de.msRequestFullscreen || de.mozRequestFullScreen;
+  var EX = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.msExitFullscreen || document.mozCancelFullScreen;
+  var blocked = !REQ || !EX || de.fullscreenEnabled === false;
+  var ICON = "\u2922"; /* narrow hosts (side stripes, icon bars) get the glyph plus a
+                          translated aria-label instead of the word */
+  var btns = [], cbs = [], queued = false, styleDone = false;
+
+  function isFull() {
+    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
+      de.msFullscreenElement || de.mozFullScreenElement);
+  }
+  function kit() {
+    var k = window.TLI18N;
+    return (k && typeof k.t === "function") ? k : null;
+  }
+  /* A missing key makes t() hand back the key name — that is not a label.
+     Pages that keep their own translation table (billiards, tilt, oilstorm) publish
+     TLFS_LABEL(key) instead of the kit; they win over the kit, English is the floor. */
+  function label() {
+    var want = isFull() ? "exitFullscreen" : "fullscreen";
+    var L = window.TLFS_LABEL;
+    if (typeof L === "function") {
+      try { var v = L(want); if (v && v !== want) return String(v) } catch (e) {}
+    }
+    var k = kit(), t = null;
+    if (k) { try { t = k.t(want) } catch (e) { t = null } }
+    if (!t || t === want) t = isFull() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+    return t;
+  }
+  function cssOnce() {
+    if (styleDone) return;
+    styleDone = true;
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlfs-float:hover{border-color:#ffd76a;color:#ffd76a}" +
+      ".tlfs-float[hidden]{display:none}";
+    document.head.appendChild(st);
+  }
+  function paint() {
+    var txt = label();
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      b.textContent = b.__tlfsIcon ? ICON : txt;
+      b.setAttribute("aria-label", txt);
+      b.setAttribute("aria-pressed", isFull() ? "true" : "false");
+    }
+  }
+  /* One pass per frame: fullscreenchange and visualViewport.resize often arrive
+     together, and dispatching resize from inside a resize listener would loop. */
+  function refit() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint();
+      for (var i = 0; i < cbs.length; i++) { try { cbs[i](isFull()) } catch (e) {} }
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("orientationchange"));
+    });
+  }
+  function toggle() {
+    if (blocked) return false;
+    var was = isFull();
+    try {
+      if (was) EX.call(document);
+      else { var p = REQ.call(de); if (p && p.catch) p.catch(function () {}) }
+    } catch (e) {}
+    /* the change event may never come (sandboxed frames, denied requests, some
+       headless shells that grant then silently drop): repaint the state we can
+       read twice, late enough to catch a transition nobody announced. */
+    setTimeout(refit, 220);
+    setTimeout(refit, 700);
+    return !was;
+  }
+
+  de.setAttribute("data-fs", "off");
+  ["fullscreenchange", "webkitfullscreenchange", "MSFullscreenChange", "mozfullscreenchange"]
+    .forEach(function (t) { document.addEventListener(t, refit, false) });
+  ["fullscreenerror", "webkitfullscreenerror"].forEach(function (t) {
+    document.addEventListener(t, function () { de.setAttribute("data-fs", "off"); paint() }, false)
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", refit, false);
+    window.visualViewport.addEventListener("scroll", function () {
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint(); /* an exit the browser never announced must still clear the label */
+    }, false);
+  }
+  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
+  }, false);
+  /* A language switch changes <html lang>: repaint from whatever table the page
+     uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
+     drive their toggle state off that attribute, and taking it would corrupt them. */
+  new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
+
+  window.TLFS = {
+    version: "2026.11.23.3",
+    supported: !blocked,
+    isFull: isFull,
+    label: label,
+    paint: paint,
+    toggle: toggle,
+    onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
+    /* just the size/orientation wiring, for a page with its own fullscreen button */
+    refitOnly: function () { paint(); return true },
+    /* put the button in `sel` (or float it when the selector matches nothing).
+       opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
+       puts the translated word in aria-label, for narrow hosts. */
+    mount: function (sel, opts) {
+      cssOnce();
+      var o = opts || {};
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = o.cls || "tlfs-float";
+      b.id = o.id || "tlfsBtn";
+      b.__tlfsIcon = !!o.icon;
+      if (o.float !== false && !o.cls) b.classList.add("tlfs-float");
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", label());
+      if (o.ariaLabel) b.setAttribute("data-aria", o.ariaLabel);
+      b.textContent = o.icon ? ICON : label();
+      /* a menu that starts the game on any tap (defender binds pointerdown on the
+         whole title screen) must not fire when the fullscreen button is pressed */
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("touchstart", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle() });
+      var host = sel ? document.querySelector(sel) : null;
+      if (host) {
+        if (o.prepend && host.firstChild) host.insertBefore(b, host.firstChild);
+        else host.appendChild(b);
+      } else {
+        b.classList.add("tlfs-float");
+        document.body.appendChild(b);
+      }
+      if (blocked) b.style.display = "none";
+      btns.push(b);
+      paint();
+      return b;
+    },
+    /* wire a button the page already has in its markup (keeps its own look) */
+    attach: function (el) {
+      cssOnce();
+      if (!el) return null;
+      if (blocked) { el.style.display = "none"; return el }
+      el.addEventListener("click", function (e) { e.preventDefault(); toggle() });
+      btns.push(el);
+      paint();
+      return el;
+    },
+    /* a rebuilt panel drops its children: re-add every button the page mounted */
+    reassert: function () {
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i];
+        if (!b.isConnected && b.__tlfsHost) {
+          var h = document.querySelector(b.__tlfsHost);
+          if (h) h.appendChild(b);
+        }
+      }
+      paint();
+      return btns.length
+    }
+  };
+  /* remember where each button was mounted so a panel rebuild can put it back */
+  var mount0 = window.TLFS.mount;
+  window.TLFS.mount = function (sel, opts) {
+    var b = mount0(sel, opts);
+    if (b) b.__tlfsHost = sel || "body";
+    return b;
+  };
+  var k = kit();
+  if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
+})();
+</script>
+<script>TLFS.mount("#setupOverlay .pnl",{cls:"btn"});</script>
 </body>
 </html>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#05070f">
 <title>SQUISHOID · soft-body arkanoid</title>
-<meta name="version" content="2026.11.07.1">
+<meta name="version" content="2026.11.24.1">
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%;overflow:hidden;background:#04060e}
@@ -187,6 +187,284 @@
   </div>
 </div>
 
+<!-- inlined i18n.js — the source of truth is i18n.js: edit that file and re-inline this block -->
+<script>
+/* ============================================================================
+   i18n.js — shared language kit for every page of this site.
+   Language code decision tree (identical everywhere, in this order):
+     0. any technical problem with this kit -> English
+     1. URL ?language=xx      (a region suffix is fine: pt-BR, zh-CN)
+     2. localStorage['tll:lang']
+     3. the browser's language list (navigator.languages, then navigator.language)
+     4. English
+   A code outside CODES is dropped, not trusted, so the next level decides. Only
+   the picker button writes storage, so a ?language= link never overwrites the
+   visitor's saved choice.
+
+   Page usage
+     <script src="i18n.js"><\/script>            BEFORE the game script
+     <script>TLI18N.add({en:{k:"Text"},es:{...},pt:{...},ru:{...},zh:{...}})<\/script>
+     markup:  <b data-t="score">SCORE</b>  <button data-tip="help">?</button>
+              <input data-ph="name">  <i data-aria="pause">  <img data-alt="car">
+     js:      el.textContent=TLI18N.t("gameOver");
+              el.innerHTML="<b>"+TLI18N.t("best")+": "+n+"</b>";
+              ctx.fillText(TLI18N.t("paused"),x,y);
+     canvas / innerHTML redraws: TLI18N.onChange(()=>redrawAll());
+     pick a host for the language button: TLI18N.mount("#startPanel")
+       (omit it and the kit parks a pill in the lower-left corner)
+   Keys missing from a non-English table fall back to English, so a half
+   translated table still runs. Values for *Fmt keys carry {placeholders}.
+   ========================================================================= */
+(function(){
+"use strict";
+var KEY="tll:lang", CODES=["en","es","pt","ru","zh"];
+var LANGS=[ // code · name in its own language · that word for "language" · its flag
+ ['en','English','Language','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0,0 60,40M60,0 0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 60,40M60,0 0,40" stroke="#C8102E" stroke-width="3.2"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="13"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="8"/></svg>'],
+ ['es','Español','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#AA151B"/><path d="M0,10H60M0,30H60" stroke="#F1BF00" stroke-width="20"/>  </svg>'],
+ ['pt','Português','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="40" fill="#046A38"/><rect x="24" width="36" height="40" fill="#DA291C"/><circle cx="24" cy="20" r="7.5" fill="#FEDF00" stroke="#046A38" stroke-width="1.4"/><path d="M24,14.5 24,22.5M20.5,17.5H27.5" stroke="#DA291C" stroke-width="2.2" fill="none"/></svg>'],
+ ['ru','Русский','Язык','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.34" width="60" height="13.33" fill="#0039A6"/><rect y="26.67" width="60" height="13.33" fill="#D52B1E"/></svg>'],
+ ['zh','中文','语言','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#EE1C25"/><circle cx="10" cy="10" r="5.6" fill="#FFDC00"/><circle cx="21" cy="6" r="2.1" fill="#FFDC00"/><circle cx="26" cy="11.5" r="2.1" fill="#FFDC00"/><circle cx="26" cy="18.5" r="2.1" fill="#FFDC00"/><circle cx="21" cy="24" r="2.1" fill="#FFDC00"/></svg>']
+];
+/* ---- shared vocabulary: the same word means the same thing in every game.
+       Values carry no glyphs — pages keep their ⌂ ▶ ■ icons in the markup. ---- */
+var COMMON={
+en:{
+ paused:"PAUSED",pause:"PAUSE",resume:"RESUME",start:"START",play:"PLAY",home:"HOME",menu:"MENU",
+ options:"OPTIONS",settings:"SETTINGS",help:"HELP",howToPlay:"HOW TO PLAY",rules:"RULES",controls:"CONTROLS",
+ keys:"KEYS",gamepad:"GAMEPAD",mouse:"MOUSE",touch:"TOUCH",
+ sound:"SOUND",music:"MUSIC",sfx:"SOUND FX",on:"ON",off:"OFF",fullscreen:"FULLSCREEN",exitFullscreen:"EXIT FULLSCREEN",
+ difficulty:"DIFFICULTY",easy:"EASY",normal:"NORMAL",hard:"HARD",low:"LOW",high:"HIGH",
+ score:"SCORE",best:"BEST",hiScore:"HIGH SCORE",level:"LEVEL",lives:"LIVES",time:"TIME",
+ speed:"SPEED",round:"ROUND",wave:"WAVE",seed:"SEED",newSeed:"NEW SEED",
+ restart:"RESTART",retry:"RETRY",continue:"CONTINUE",tryAgain:"TRY AGAIN",nextLevel:"NEXT LEVEL",
+ gameOver:"GAME OVER",youWin:"YOU WIN",youLose:"GAME OVER",clear:"CLEARED",
+ fire:"FIRE",jump:"JUMP",back:"BACK",exit:"EXIT",close:"CLOSE",ok:"OK",cancel:"CANCEL",
+ loading:"LOADING",shots:"SHOTS",moves:"MOVES",power:"POWER",angle:"ANGLE",
+ langTitle:"LANGUAGE",langNote:"Choose your language — it is remembered, and it applies to this game and to the whole catalogue.",
+ langBack:"CHANGE LANGUAGE",players:"PLAYERS",player:"PLAYER",you:"YOU",cpu:"CPU",random:"RANDOM"},
+es:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INICIO",play:"JUGAR",home:"INICIO",menu:"MENÚ",
+ options:"OPCIONES",settings:"AJUSTES",help:"AYUDA",howToPlay:"CÓMO JUGAR",rules:"REGLAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"MANDO",mouse:"RATÓN",touch:"TÁCTIL",
+ sound:"SONIDO",music:"MÚSICA",sfx:"EFECTOS",on:"ACTIVO",off:"APAGADO",fullscreen:"PANTALLA COMPLETA",exitFullscreen:"SALIR DE PANTALLA COMPLETA",
+ difficulty:"DIFICULTAD",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAJO",high:"ALTO",
+ score:"PUNTOS",best:"RÉCORD",hiScore:"RÉCORD",level:"NIVEL",lives:"VIDAS",time:"TIEMPO",
+ speed:"VELOCIDAD",round:"RONDA",wave:"OLEADA",seed:"SEMILLA",newSeed:"NUEVA SEMILLA",
+ restart:"REINICIAR",retry:"REINTENTAR",continue:"CONTINUAR",tryAgain:"INTÉNTALO OTRA VEZ",nextLevel:"SIGUIENTE NIVEL",
+ gameOver:"FIN DEL JUEGO",youWin:"¡GANASTE!",youLose:"FIN DEL JUEGO",clear:"SUPERADO",
+ fire:"DISPARO",jump:"SALTAR",back:"ATRÁS",exit:"SALIR",close:"CERRAR",ok:"ACEPTAR",cancel:"CANCELAR",
+ loading:"CARGANDO",shots:"LANZAMIENTOS",moves:"MOVIMIENTOS",power:"FUERZA",angle:"ÁNGULO",
+ langTitle:"IDIOMA",langNote:"Elige tu idioma: se recuerda y se aplica a este juego y a todo el catálogo.",
+ langBack:"CAMBIAR IDIOMA",players:"JUGADORES",player:"JUGADOR",you:"TÚ",cpu:"CPU",random:"ALEATORIO"},
+pt:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INÍCIO",play:"JOGAR",home:"INÍCIO",menu:"MENU",
+ options:"OPÇÕES",settings:"CONFIGURAÇÕES",help:"AJUDA",howToPlay:"COMO JOGAR",rules:"REGRAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"CONTROLE",mouse:"MOUSE",touch:"TOQUE",
+ sound:"SOM",music:"MÚSICA",sfx:"EFEITOS",on:"LIGADO",off:"DESLIGADO",fullscreen:"TELA CHEIA",exitFullscreen:"SAIR DA TELA CHEIA",
+ difficulty:"DIFICULDADE",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAIXO",high:"ALTO",
+ score:"PONTOS",best:"RECORDE",hiScore:"RECORDE",level:"NÍVEL",lives:"VIDAS",time:"TEMPO",
+ speed:"VELOCIDADE",round:"RODADA",wave:"ONDA",seed:"SEMENTE",newSeed:"NOVA SEMENTE",
+ restart:"REINICIAR",retry:"TENTAR DE NOVO",continue:"CONTINUAR",tryAgain:"TENTE DE NOVO",nextLevel:"PRÓXIMO NÍVEL",
+ gameOver:"FIM DE JOGO",youWin:"VOCÊ VENCEU",youLose:"FIM DE JOGO",clear:"COMPLETO",
+ fire:"DISPARO",jump:"SALTAR",back:"VOLTAR",exit:"SAIR",close:"FECHAR",ok:"OK",cancel:"CANCELAR",
+ loading:"CARREGANDO",shots:"BATIDAS",moves:"JOGADAS",power:"FORÇA",angle:"ÂNGULO",
+ langTitle:"IDIOMA",langNote:"Escolha seu idioma: ele é lembrado e vale para este jogo e para todo o catálogo.",
+ langBack:"MUDAR IDIOMA",players:"JOGADORES",player:"JOGADOR",you:"VOCÊ",cpu:"CPU",random:"ALEATÓRIO"},
+ru:{
+ paused:"ПАУЗА",pause:"ПАУЗА",resume:"ПРОДОЛЖИТЬ",start:"СТАРТ",play:"ИГРАТЬ",home:"ДОМОЙ",menu:"МЕНЮ",
+ options:"НАСТРОЙКИ",settings:"НАСТРОЙКИ",help:"ПОМОЩЬ",howToPlay:"КАК ИГРАТЬ",rules:"ПРАВИЛА",controls:"УПРАВЛЕНИЕ",
+ keys:"КЛАВИШИ",gamepad:"ГЕЙМПАД",mouse:"МЫШЬ",touch:"СЕНСОР",
+ sound:"ЗВУК",music:"МУЗЫКА",sfx:"ЗВУКИ",on:"ВКЛ",off:"ВЫКЛ",fullscreen:"НА ВЕСЬ ЭКРАН",exitFullscreen:"ВЫЙТИ С ЭКРАНА",
+ difficulty:"СЛОЖНОСТЬ",easy:"ЛЕГКО",normal:"НОРМА",hard:"СЛОЖНО",low:"НИЗ",high:"ВЕРХ",
+ score:"СЧЁТ",best:"РЕКОРД",hiScore:"РЕКОРД",level:"УРОВЕНЬ",lives:"ЖИЗНИ",time:"ВРЕМЯ",
+ speed:"СКОРОСТЬ",round:"РАУНД",wave:"ВОЛНА",seed:"КОД УРОВНЯ",newSeed:"НОВЫЙ КОД",
+ restart:"ЗАНОВО",retry:"ЕЩЁ РАЗ",continue:"ПРОДОЛЖИТЬ",tryAgain:"ПОПРОБУЙ ЕЩЁ",nextLevel:"СЛЕДУЮЩИЙ УРОВЕНЬ",
+ gameOver:"КОНЕЦ",youWin:"ПОБЕДА",youLose:"КОНЕЦ",clear:"УРОВЕНЬ ПРОЙДЕН",
+ fire:"ОГОНЬ",jump:"ПРЫЖОК",back:"НАЗАД",exit:"ВЫХОД",close:"ЗАКРЫТЬ",ok:"ОК",cancel:"ОТМЕНА",
+ loading:"ЗАГРУЗКА",shots:"УДАРЫ",moves:"ХОДЫ",power:"СИЛА",angle:"УГОЛ",
+ langTitle:"ЯЗЫК",langNote:"Выберите язык — он запоминается и действует для этой игры и для всего каталога.",
+ langBack:"СМЕНИТЬ ЯЗЫК",players:"ИГРОКИ",player:"ИГРОК",you:"ВЫ",cpu:"БОТ",random:"СЛУЧАЙНО"},
+zh:{
+ paused:"暂停",pause:"暂停",resume:"继续",start:"开始",play:"开始游戏",home:"主页",menu:"菜单",
+ options:"选项",settings:"设置",help:"帮助",howToPlay:"怎么玩",rules:"规则",controls:"操作",
+ keys:"按键",gamepad:"手柄",mouse:"鼠标",touch:"触摸",
+ sound:"声音",music:"音乐",sfx:"音效",on:"开",off:"关",fullscreen:"全屏",exitFullscreen:"退出全屏",
+ difficulty:"难度",easy:"简单",normal:"普通",hard:"困难",low:"低",high:"高",
+ score:"得分",best:"最高分",hiScore:"最高分",level:"关卡",lives:"生命",time:"时间",
+ speed:"速度",round:"回合",wave:"波次",seed:"种子",newSeed:"新种子",
+ restart:"重新开始",retry:"重试",continue:"继续",tryAgain:"再试一次",nextLevel:"下一关",
+ gameOver:"游戏结束",youWin:"胜利",youLose:"游戏结束",clear:"过关",
+ fire:"射击",jump:"跳跃",back:"返回",exit:"退出",close:"关闭",ok:"确定",cancel:"取消",
+ loading:"加载中",shots:"击球",moves:"步数",power:"力量",angle:"角度",
+ langTitle:"语言",langNote:"选择语言：会被记住，并用于这个游戏和整个游戏目录。",
+ langBack:"更换语言",players:"玩家",player:"玩家",you:"你",cpu:"电脑",random:"随机"}
+};
+var PAGE={en:{},es:{},pt:{},ru:{},zh:{}};
+function lget(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+function lset(v){try{localStorage.setItem(KEY,v)}catch(e){}}
+var code=null;
+/* A browser language list -> a supported code, or null when it says nothing
+   usable. "pt-BR", "ru_RU", "zh-CN" all match on their 2-letter base. */
+function fromBrowser(){
+ try{
+  var list=null;
+  if(navigator&&Array.isArray(navigator.languages)&&navigator.languages.length)list=navigator.languages;
+  else if(navigator)list=[navigator.language||navigator.userLanguage||""];
+  for(var i=0;i<(list||[]).length;i++){
+   var c=String(list[i]||"").toLowerCase().slice(0,2);
+   if(CODES.indexOf(c)>=0)return c;
+  }
+ }catch(e){}
+ return null;
+}
+(function(){
+ try{
+  var c=null,m=/[?&]language=([a-zA-Z]{2,3})/.exec(location.search||"");
+  if(m)c=m[1].toLowerCase().slice(0,2);           // ?language=pt-BR counts as pt
+  if(c&&CODES.indexOf(c)<0)c=null;
+  if(!c){var s=(lget()||"").toLowerCase().slice(0,2);if(CODES.indexOf(s)>=0)c=s;}
+  if(!c)c=fromBrowser();
+  code=c||"en";
+ }catch(e){code="en";} // a broken lookup speaks English, never nothing
+})();
+function raw(k){
+ var t=PAGE[code]?PAGE[code][k]:null; if(t!=null)return t;
+ t=COMMON[code]?COMMON[code][k]:null; if(t!=null)return t;
+ t=PAGE.en[k]; if(t!=null)return t;
+ t=COMMON.en[k]; return t==null?null:t;
+}
+var hooks=[];
+var API={
+ version:"2026.11.22.2", codes:CODES.slice(), langs:LANGS,
+ lang:function(){return code},
+ browserLang:function(){return fromBrowser()},
+ t:function(k,v){var s;try{s=raw(k)}catch(e){code="en";try{s=raw(k)}catch(e2){s=null}}
+  if(s==null)s=k;var o=v||{};for(var p in o)s=s.split("{"+p+"}").join(String(o[p]));return s},
+ flag:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][3];return ""},
+ name:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][2];return c},
+ add:function(tab){for(var c in tab){if(!PAGE[c])continue;for(var k in tab[c])PAGE[c][k]=tab[c][k];}
+  try{API.apply()}catch(e){}},
+ /* read the tables (the developer harness edits texts through these) */
+ keys:function(c){var out=[],seen={};try{var src=[PAGE[c],COMMON[c],PAGE.en,COMMON.en];
+  for(var i=0;i<src.length;i++)for(var k in src[i])if(!seen[k]){seen[k]=1;out.push(k)}out.sort();}catch(e){}
+  return out},
+ table:function(){var o={};try{for(var i=0;i<CODES.length;i++){var c=CODES[i],m={},s=[COMMON[c],PAGE[c],COMMON.en,PAGE.en];
+  for(var j=0;j<s.length;j++)for(var k in s[j])if(m[k]==null&&s[j][k]!=null)m[k]=s[j][k];o[c]=m;}}catch(e){}
+  return o},
+ setKey:function(c,k,v){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;
+  try{(PAGE[c]=PAGE[c]||{})[k]=String(v);}catch(e){return;}
+  try{API.apply()}catch(e){}
+  for(var i=0;i<hooks.length;i++)try{hooks[i](code)}catch(e){}},
+ onChange:function(f){hooks.push(f)},
+ set:function(c){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;code=c;lset(c);
+  try{API.apply()}catch(e){}for(var i=0;i<hooks.length;i++)try{hooks[i](c)}catch(e){}},
+ apply:function(root){
+  if(document.documentElement)document.documentElement.lang=code;
+  var r=root||document;
+  var set=function(e,attr,put){var v=raw(e.getAttribute(attr));if(v!=null)put(e,v);};
+  var all=[];
+  if(r.nodeType===1)all.push(r);
+  if(r.querySelectorAll)all=all.concat([].slice.call(r.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]")));
+  for(var i=0;i<all.length;i++){var e=all[i];
+   try{
+    if(e.hasAttribute("data-t"))set(e,"data-t",function(n,v){n.textContent=v});
+    if(e.hasAttribute("data-ph"))set(e,"data-ph",function(n,v){n.placeholder=v});
+    if(e.hasAttribute("data-tip"))set(e,"data-tip",function(n,v){n.title=v});
+    if(e.hasAttribute("data-aria"))set(e,"data-aria",function(n,v){n.setAttribute("aria-label",v)});
+    if(e.hasAttribute("data-alt"))set(e,"data-alt",function(n,v){n.alt=v});
+   }catch(e2){} // one odd node never aborts the pass
+  }
+  if(pill){try{pill.innerHTML=API.flag(code)+"<span>"+API.name(code)+"</span>";pill.title=API.t("langTitle");}catch(e){}}
+ },
+ mount:function(sel){hostSel=sel;ensurePill();},
+};
+/* ---------------- language button + picker overlay ---------------- */
+var hostSel=null,pill=null,ov=null;
+var CSS=".tlbtn{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(20,24,22,.72);flex:0 0 auto;align-self:center;"
+ +"border:1px solid #3a463f;border-radius:6px;color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:1px;"
+ +"cursor:pointer;line-height:1;width:auto;max-width:100%}.tlbtn:hover,.tlbtn:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}"
+ +".tlbtn svg{width:22px;height:15px;border:1px solid #2e3a34;border-radius:2px;display:block}"
+ +".tlfix{position:fixed;left:12px;bottom:12px;z-index:2147483000}"
+ +".tlov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;"
+ +"background:rgba(4,7,6,.86);padding:16px}.tlov[hidden]{display:none}"
+ +".tlpanel{max-width:660px;width:100%;background:#141816;border:1px solid #3a463f;border-radius:12px;"
+ +"padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.6);color:#c9d2cb;font:inherit;text-align:center}"
+ +".tlpanel h2{margin:0 0 6px;font-size:20px;letter-spacing:4px;color:#ffd76a}"
+ +".tlpanel p{margin:0 0 16px;font-size:12px;line-height:1.6;color:#8a948e}"
+ +".tlgrid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}"
+ +".tlb{width:132px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;"
+ +"background:rgba(20,24,22,.7);border:1px solid #3a463f;border-radius:8px;cursor:pointer;color:#c9d2cb;font:inherit}"
+ +".tlb:hover,.tlb:focus{border-color:#ffd76a;color:#f4e9c8;outline:none;box-shadow:0 0 14px rgba(255,215,106,.18)}"
+ +".tlb svg{width:50px;height:34px;border:1px solid #2e3a34;border-radius:4px;display:block}"
+ +".tlb b{font-size:13px;color:#f4e9c8}.tlb span{font-size:10px;letter-spacing:1px;color:#8a948e}"
+ +".tlx{margin-top:16px;padding:7px 20px;background:none;border:1px solid #3a463f;border-radius:6px;"
+ +"color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:2px;cursor:pointer}"
+ +".tlx:hover,.tlx:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}";
+function style(){if(document.getElementById("tlcss"))return;var s=document.createElement("style");s.id="tlcss";s.textContent=CSS;document.head.appendChild(s);}
+function ensurePill(){
+ if(pill)return;
+ var host=hostSel?document.querySelector(hostSel):null;
+ if(!host&&document.readyState==="loading")return; // retried at DOMContentLoaded
+ style();
+ pill=document.createElement("button");
+ pill.type="button";pill.className="tlbtn";pill.setAttribute("aria-haspopup","dialog");
+ if(!host){pill.className="tlbtn tlfix";document.body.appendChild(pill);}
+ else host.insertBefore(pill,host.firstChild);
+ pill.onclick=openOv;
+ API.apply();
+}
+function openOv(){
+ if(!ov){
+  ov=document.createElement("div");ov.className="tlov";ov.hidden=true;
+  var p=document.createElement("div");p.className="tlpanel";
+  var h=document.createElement("h2");h.setAttribute("data-t","langTitle");p.appendChild(h);
+  var np=document.createElement("p");np.setAttribute("data-t","langNote");p.appendChild(np);
+  var g=document.createElement("div");g.className="tlgrid";
+  for(var i=0;i<LANGS.length;i++){
+   var b=document.createElement("button");b.type="button";b.className="tlb";b.dataset.lang=LANGS[i][0];
+   b.innerHTML=LANGS[i][3]+"<b>"+LANGS[i][1]+"</b><span>"+LANGS[i][2]+"</span>";g.appendChild(b);
+  }
+  p.appendChild(g);
+  var x=document.createElement("button");x.type="button";x.className="tlx";x.setAttribute("data-t","close");p.appendChild(x);
+  ov.appendChild(p);document.body.appendChild(ov);
+  g.onclick=function(e){var b=e.target;while(b&&b!==g&&!b.dataset.lang)b=b.parentNode;if(b&&b.dataset.lang){API.set(b.dataset.lang);closeOv();}};
+  x.onclick=closeOv;
+  ov.onclick=function(e){if(e.target===ov)closeOv();};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ov&&!ov.hidden)closeOv();});
+ }
+ API.apply(ov);
+ ov.hidden=false;
+}
+function closeOv(){if(ov)ov.hidden=true;}
+function boot(){
+ try{ensurePill();API.apply();}
+ catch(e){code="en";try{ensurePill();API.apply();}catch(e2){}} // rule 0: English on any kit fault
+}
+/* keep freshly added nodes translated without the page calling apply() */
+new MutationObserver(function(ms){
+ if(!pill)return;
+ try{
+  for(var i=0;i<ms.length;i++){var n=ms[i].addedNodes;
+   for(var j=0;j<n.length;j++){var e=n[j];
+    if(e.nodeType!==1)continue;
+    if(e.matches&&e.matches("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]"))API.apply(e);
+    else if(e.querySelectorAll&&e.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]").length)API.apply(e);
+   }}
+ }catch(e){}
+}).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+window.TLI18N=API;
+})();
+</script>
+<script>
+/* If i18n.js is missing or only half-loaded, the game still runs: this stub keeps the same API and
+   pins English, which selects this page's own immutable EN table (TEXTS_EN). */
+if(!window.TLI18N||typeof window.TLI18N.add!=="function"||typeof window.TLI18N.t!=="function"||typeof window.TLI18N.apply!=="function"||typeof window.TLI18N.mount!=="function"){(function(){var T={en:{}};window.TLI18N={version:"en-fallback",codes:["en"],langs:[["en","EN","English",""]],
+add:function(tab){for(var c in tab){T[c]=Object.assign(T[c]||{},tab[c]);}},
+t:function(k,v){var s=(T.en&&T.en[k]!=null)?T.en[k]:k,o=v||{};for(var p in o)s=String(s).split("{"+p+"}").join(String(o[p]));return s},
+flag:function(){return "";},name:function(c){return c;},lang:function(){return "en";},
+set:function(){},onChange:function(){},apply:function(){},mount:function(){}};})();}
+</script>
 <script>
 (function(){'use strict';
 /* ==================================================================
@@ -242,6 +520,190 @@ var TEXTS={
   banners:{level:'LEVEL',cleared:'LEVEL CLEARED',bonus:'BONUS',lost:'BALL LOST',
     lives:'LIVES',life:'LIFE',left:'LEFT',shieldSaved:'SHIELD SAVED',fieldTag:'FIELD'},
   titles:{home:'Home',ff:'fast forward (hold ▼ or F)',pause:'pause (Esc)',mute:'sound',dice:'random seed'}
+};
+
+var TEXTS_EN=TEXTS;
+var TLANGS={
+es:{
+  docTitle:'SQUISHOID · arkanoid de cuerpo blando',
+  logoA:'SQUISH',logoB:'OID',
+  tag:'ARKANOID DE CUERPO BLANDO · MOTOR DE SEMILLA',
+  seedLabel:'SEMILLA',
+  levelLabel:'NIVEL',
+  hudScore:'PUNTOS',
+  hudLevel:'NIVEL',
+  hudLives:'VIDAS',
+  start:'▶  EMPEZAR',
+  helpBtn:'❔  AYUDA · CONTROLES · PREMIOS',
+  helpLine1:'ARRASTRA / ◀ ▶ mover · TOCA / ESPACIO / ▲ lanzar y disparar · mantén ▼ / F turbo',
+  helpLine2:'la pala convexa curva los tiros · ◆ se pega <b>donde cae</b>',
+  flavor:'cada partida se genera de tu semilla — compártela, compítela',
+  best:'RÉCORD',
+  seedTag:'SEMILLA',
+  chain:'×',
+  pauseTitle:'PAUSA',
+  pauseHint:'TOCA EN CUALQUIER SITIO O PULSA ESC / P',
+  resume:'▶  CONTINUAR',
+  backTitle:'🏠  VOLVER AL INICIO',
+  overA:'FIN ',
+  overB:'DE JUEGO',
+  overScore:'PUNTOS',
+  overLevel:'NIVEL',
+  overSeed:'SEMILLA',
+  retry:'↻  REINTENTAR MISMA SEMILLA',
+  titleBtn:'INICIO / NUEVA SEMILLA',
+  helpA:'CAMPO ',
+  helpB:'MANUAL',
+  close:'CERRAR',
+  manControls:'CONTROLES',
+  manPrizes:'PREMIOS (ladrillos dorados)',
+  manNotes:'NOTAS DE FÍSICA',
+  manControlsTxt:['ARRASTRA / ◀ ▶ o A D — mover la pala',
+    'TOCA / ESPACIO / ▲ — lanzar la bola (por la normal de la curva si está pegada) · disparar el cañón',
+    'mantén ▼ o F o ⏩ — turbo (aceleración suave)',
+    'P o ESC — pausa · M — silenciar · ATRÁS del navegador — pausa → inicio → casa'],
+  manNotesTxt:'La pala convexa curva los rebotes según el punto de contacto; ▼ cóncava invierte la curva y concentra los tiros. ◆ atrapa la bola en el punto de contacto y la relanza por la normal local. 🔥 atraviesa los ladrillos; ⚡ pasa por el metal astillándolo sin deformarlo.',
+  prizeNames:{wide:'PAULA ANCHA', narrow:'PAULA FINA', multi:'MULTIBOLA', slow:'BOLA LENTA', fast:'BOLA RÁPIDA', concave:'PAULA CÓNCAVA', shoot:'CAÑÓN', sticky:'PEGAJOSA', laser:'LÁSER', fireball:'BOLA DE FUEGO', shield:'ESCUDO', disruptor:'DISRUPCTOR', invisible:'BOLA FANTASMA', gravity:'GRAVEDAD BAJA', field:'CAMPO DE FUERZA', life:'VIDA EXTRA'},
+  prizeShort:{wide:'ANCHA', narrow:'FINA', slow:'LENTA', fast:'RÁPIDA', concave:'CÓNCAVA', shoot:'CAÑÓN', sticky:'PEGADA', laser:'LÁSER', fireball:'FUEGO', shield:'ESCUDO', disruptor:'DISRUPT', invisible:'FANTASMA', gravity:'GRAV.BAJA', field:'CAMPO', life:'VIDA'},
+  prizeDesc:{wide:'pala ancha', narrow:'pala fina', multi:'multibola', slow:'bola lenta', fast:'bola rápida', concave:'pala cóncava', shoot:'ráfagas de cañón', sticky:'atrapa pegajosa', laser:'láser rápido', fireball:'bola de fuego atraviesa', shield:'escudo salva la bola', disruptor:'disruptor astilla metal', invisible:'bola fantasma', gravity:'gravedad baja (todas)', field:'campo de fuerza en el suelo', life:'vida extra'},
+  banners:{level:'NIVEL', cleared:'NIVEL SUPERADO', bonus:'BONUS', lost:'BOLA PERDIDA', lives:'VIDAS', life:'VIDA', left:'RESTANTES', shieldSaved:'ESCUDO SALVÓ', fieldTag:'CAMPO'},
+  titles:{home:'Inicio', ff:'turbo (mantén ▼ o F)', pause:'pausa (Esc)', mute:'sonido', dice:'semilla aleatoria'}
+ },
+pt:{
+  docTitle:'SQUISHOID · arkanoid de corpo mole',
+  logoA:'SQUISH',logoB:'OID',
+  tag:'ARKANOID DE CORPO MOLE · MOTOR DE SEMENTE',
+  seedLabel:'SEMENTE',
+  levelLabel:'NÍVEL',
+  hudScore:'PONTOS',
+  hudLevel:'NÍVEL',
+  hudLives:'VIDAS',
+  start:'▶  INICIAR',
+  helpBtn:'❔  AJUDA · CONTROLES · PRÊMIOS',
+  helpLine1:'ARRASTE / ◀ ▶ mover · TOQUE / ESPAÇO / ▲ lançar e disparar · segure ▼ / F turbo',
+  helpLine2:'a pá convexa curva os tiros · ◆ gruda <b>onde cai</b>',
+  flavor:'cada partida é gerada da sua semente — compartilhe, dispute',
+  best:'RECORDE',
+  seedTag:'SEMENTE',
+  chain:'×',
+  pauseTitle:'PAUSA',
+  pauseHint:'TOQUE EM QUALQUER LUGAR OU PRESSIONE ESC / P',
+  resume:'▶  CONTINUAR',
+  backTitle:'🏠  VOLTAR AO INÍCIO',
+  overA:'FIM ',
+  overB:'DE JOGO',
+  overScore:'PONTOS',
+  overLevel:'NÍVEL',
+  overSeed:'SEMENTE',
+  retry:'↻  TENTAR MESMA SEMENTE',
+  titleBtn:'INÍCIO / NOVA SEMENTE',
+  helpA:'CAMPO ',
+  helpB:'MANUAL',
+  close:'FECHAR',
+  manControls:'CONTROLES',
+  manPrizes:'PRÊMIOS (tijolos dourados)',
+  manNotes:'NOTAS DE FÍSICA',
+  manControlsTxt:['ARRASTE / ◀ ▶ ou A D — mover a pá',
+    'TOQUE / ESPAÇO / ▲ — lançar a bola (pela normal da curva se grudar) · disparar o canhão',
+    'segure ▼ ou F ou ⏩ — turbo (aceleração suave)',
+    'P ou ESC — pausa · M — silenciar · VOLTAR do navegador — pausa → início → casa'],
+  manNotesTxt:'A pá convexa curva os quiques conforme o ponto de contato; ▼ côncava inverte a curva e concentra os tiros. ◆ pega a bola no ponto de contato e relança pela normal local. 🔥 atravessa os tijolos; ⚡ passa pelo metal lascando-o sem deformá-lo.',
+  prizeNames:{wide:'PÁ LARGA', narrow:'PÁ FINA', multi:'MULTIBOLA', slow:'BOLA LENTA', fast:'BOLA RÁPIDA', concave:'PÁ CÔNCAVA', shoot:'CANHÃO', sticky:'GRUDA', laser:'LASER', fireball:'BOLA DE FOGO', shield:'ESCUDO', disruptor:'DISRUPTOR', invisible:'BOLA FANTASMA', gravity:'GRAVIDADE BAIXA', field:'CAMPO DE FORÇA', life:'VIDA EXTRA'},
+  prizeShort:{wide:'LARGA', narrow:'FINA', slow:'LENTA', fast:'RÁPIDA', concave:'CÔNCAVA', shoot:'CANHÃO', sticky:'GRUDA', laser:'LASER', fireball:'FOGO', shield:'ESCUDO', disruptor:'DISRUPTO', invisible:'FANTASMA', gravity:'GRV.BAIXA', field:'CAMPO', life:'VIDA'},
+  prizeDesc:{wide:'pá larga', narrow:'pá fina', multi:'multibola', slow:'bola lenta', fast:'bola rápida', concave:'pá côncava', shoot:'canhão em rajadas', sticky:'gruda na bola', laser:'laser rápido', fireball:'bola de fogo perfura', shield:'escudo salva a bola', disruptor:'disruptor lasca metal', invisible:'bola fantasma', gravity:'gravidade baixa (todas)', field:'campo de força no chão', life:'vida extra'},
+  banners:{level:'NÍVEL', cleared:'NÍVEL COMPLETO', bonus:'BÔNUS', lost:'BOLA PERDIDA', lives:'VIDAS', life:'VIDA', left:'REMANESCENTES', shieldSaved:'ESCUDO SALVOU', fieldTag:'CAMPO'},
+  titles:{home:'Início', ff:'turbo (segure ▼ ou F)', pause:'pausa (Esc)', mute:'som', dice:'semente aleatória'}
+ },
+ru:{
+  docTitle:'РЕЗИНОИД · арканоид с мягким телом',
+  logoA:'РЕЗИНОИД',logoB:'',
+  tag:'АРКАНОИД С МЯГКИМ ТЕЛОМ · ГЕНЕРАТОР КОДА УРОВНЯ',
+  seedLabel:'КОД УРОВНЯ',
+  levelLabel:'УРОВЕНЬ',
+  hudScore:'СЧЁТ',
+  hudLevel:'УРОВЕНЬ',
+  hudLives:'ЖИЗНИ',
+  start:'▶  НАЧАТЬ',
+  helpBtn:'❔  ПОМОЩЬ · УПРАВЛЕНИЕ · ПРИЗЫ',
+  helpLine1:'ПЕРЕТАЩИ / ◀ ▶ движение · ТАП / ПРОБЕЛ / ▲ пуск и выстрел · держи ▼ / F ускорение',
+  helpLine2:'выпуклая площадка изгибает удары · ◆ липнет <b>куда упадёт</b>',
+  flavor:'каждый забег генерируется из кода уровня — делись и соревнуйся',
+  best:'РЕКОРД',
+  seedTag:'КОД УРОВНЯ',
+  chain:'×',
+  pauseTitle:'ПАУЗА',
+  pauseHint:'ТАП В ЛЮБОМ МЕСТЕ ИЛИ ESC / P',
+  resume:'▶  ПРОДОЛЖИТЬ',
+  backTitle:'🏠  К ГЛАВНОМУ ЭКРАНУ',
+  overA:'ИГРА ',
+  overB:'ОКОНЧЕНА',
+  overScore:'СЧЁТ',
+  overLevel:'УРОВЕНЬ',
+  overSeed:'КОД УРОВНЯ',
+  retry:'↻  ПОВТОР С ТЕМ ЖЕ КОДОМ',
+  titleBtn:'ГЛАВНЫЙ ЭКРАН / НОВЫЙ КОД',
+  helpA:'ПОЛЕ ',
+  helpB:'СПРАВОЧНИК',
+  close:'ЗАКРЫТЬ',
+  manControls:'УПРАВЛЕНИЕ',
+  manPrizes:'ПРИЗЫ (золотые кирпичи)',
+  manNotes:'ЗАМЕТКИ О ФИЗИКЕ',
+  manControlsTxt:['ПЕРЕТАЩИ / ◀ ▶ или A D — движение площадки',
+    'ТАП / ПРОБЕЛ / ▲ — пуск шара (по нормали кривой, если липнет) · выстрел из пушки',
+    'держи ▼ или F или ⏩ — ускорение (плавный разгон)',
+    'P или ESC — пауза · M — звук · НАЗАД в браузере — пауза → заставка → домой'],
+  manNotesTxt:'Выпуклая площадка изгибает отражения по точке удара; ▼ вогнутая переворачивает кривую и сводит удары. ◆ ловит шар в точке касания и запускает по локальной нормали. 🔥 прожигает кирпичи насквозь; ⚡ проходит металл, откалывая его, не деформируя.',
+  prizeNames:{wide:'ШИРОКАЯ ПЛОЩАДКА', narrow:'ТОНКАЯ ПЛОЩАДКА', multi:'МУЛЬТИШАР', slow:'МЕДЛЕННЫЙ ШАР', fast:'БЫСТРЫЙ ШАР', concave:'ВОГНУТАЯ ПЛОЩАДКА', shoot:'ПУШКА', sticky:'ЛИПУЧКА', laser:'ЛАЗЕР', fireball:'ОГНЕННЫЙ ШАР', shield:'ЩИТ', disruptor:'ДИСРУПТОР', invisible:'ПРИЗРАЧНЫЙ ШАР', gravity:'НИЗКАЯ ГРАВИТАЦИЯ', field:'ПОЛЕ СИЛЫ', life:'ДОП. ЖИЗНЬ'},
+  prizeShort:{wide:'ШИРОК', narrow:'ТОНК', slow:'МЕДЛ', fast:'БЫСТР', concave:'ВОГН', shoot:'ПУШКА', sticky:'ЛИП', laser:'ЛАЗЕР', fireball:'ОГОНЬ', shield:'ЩИТ', disruptor:'ДИСР', invisible:'ПРИЗР', gravity:'ГРАВ.НИЗ', field:'ПОЛЕ', life:'ЖИЗНЬ'},
+  prizeDesc:{wide:'широкая площадка', narrow:'тонкая площадка', multi:'мультишар', slow:'медленный шар', fast:'быстрый шар', concave:'вогнутая площадка', shoot:'очередь из пушки', sticky:'липкий захват', laser:'лазер скорострельный', fireball:'огненный шар сквозь', shield:'щит спасает шар', disruptor:'дисруптор колет металл', invisible:'призрачный шар', gravity:'низкая гравитация (все)', field:'поле силы внизу', life:'доп. жизнь'},
+  banners:{level:'УРОВЕНЬ', cleared:'УРОВЕНЬ ПРОЙДЕН', bonus:'БОНУС', lost:'ШАР ПОТЕРЯН', lives:'ЖИЗНИ', life:'ЖИЗНЬ', left:'ОСТАЛОСЬ', shieldSaved:'ЩИТ СПАС', fieldTag:'ПОЛЕ'},
+  titles:{home:'Домой', ff:'ускорение (держи ▼ или F)', pause:'пауза (Esc)', mute:'звук', dice:'случайное семя'}
+ },
+zh:{
+  docTitle:'SQUISHOID · 软体打砖块',
+  logoA:'SQUISH',logoB:'OID',
+  tag:'软体打砖块 · 种子引擎',
+  seedLabel:'种子',
+  levelLabel:'关卡',
+  hudScore:'分数',
+  hudLevel:'关卡',
+  hudLives:'生命',
+  start:'▶ 开始',
+  helpBtn:'❔ 帮助 · 操作 · 奖励',
+  helpLine1:'拖动 / ◀ ▶ 移动 · 点击 / 空格 / ▲ 发射射击 · 按住 ▼ / F 加速',
+  helpLine2:'凸形挡板让球偏转 · ◆ <b>落在哪儿就粘哪儿</b>',
+  flavor:'每一局都由你的种子生成 — 分享它，比一次',
+  best:'最佳',
+  seedTag:'种子',
+  chain:'×',
+  pauseTitle:'暂停',
+  pauseHint:'点击任意处或按 ESC / P',
+  resume:'▶ 继续',
+  backTitle:'🏠 返回标题',
+  overA:'游戏 ',
+  overB:'结束',
+  overScore:'分数',
+  overLevel:'关卡',
+  overSeed:'种子',
+  retry:'↻ 用同一种子重来',
+  titleBtn:'标题 / 新种子',
+  helpA:'场地 ',
+  helpB:'手册',
+  close:'关闭',
+  manControls:'操作',
+  manPrizes:'奖励（金色砖块）',
+  manNotes:'物理说明',
+  manControlsTxt:['拖动 / ◀ ▶ 或 A D — 移动挡板',
+    '点击 / 空格 / ▲ — 发射小球（粘住时沿曲线法线）· 开炮',
+    '按住 ▼ 或 F 或 ⏩ — 加速（平滑提速）',
+    'P 或 ESC — 暂停 · M — 静音 · 浏览器后退 — 暂停 → 标题 → 首页'],
+  manNotesTxt:'凸形挡板按击中点让反射偏转；▼ 凹形反弯曲线并聚拢弹道。◆ 在接触点接住小球并沿局部法线重发。🔥 直接烧穿砖块；⚡ 穿过金属并削碎它而不使其变形。',
+  prizeNames:{wide:'宽挡板', narrow:'细挡板', multi:'多球', slow:'慢球', fast:'快球', concave:'凹挡板', shoot:'炮', sticky:'粘板', laser:'激光', fireball:'火球', shield:'护盾', disruptor:'干扰器', invisible:'幽灵球', gravity:'低重力', field:'力场', life:'额外生命'},
+  prizeShort:{wide:'宽', narrow:'细', slow:'慢', fast:'快', concave:'凹', shoot:'炮', sticky:'粘', laser:'激光', fireball:'火', shield:'盾', disruptor:'干扰', invisible:'幽灵', gravity:'低重力', field:'力场', life:'生命'},
+  prizeDesc:{wide:'宽挡板', narrow:'细挡板', multi:'多球', slow:'慢球', fast:'快球', concave:'凹挡板', shoot:'炮击连发', sticky:'粘球', laser:'激光连发', fireball:'火球穿透', shield:'护盾救球', disruptor:'干扰器削金属', invisible:'幽灵球', gravity:'低重力（全部）', field:'底部力场', life:'额外生命'},
+  banners:{level:'关卡', cleared:'关卡通过', bonus:'奖励分', lost:'丢球', lives:'生命', life:'生命', left:'剩余', shieldSaved:'护盾救球', fieldTag:'力场'},
+  titles:{home:'首页', ff:'加速（按住 ▼ 或 F）', pause:'暂停（Esc）', mute:'声音', dice:'随机种子'}
+ }
 };
 var LAYOUTS={
   masks:[
@@ -1574,6 +2036,7 @@ function buildHelp(){
   q('helpScroll').innerHTML=h;
 }
 function applyLang(){
+  TEXTS=TLANGS[TLI18N.lang()]||TEXTS_EN;
   document.title=TEXTS.docTitle;
   q('logoTitle').innerHTML=TEXTS.logoA+'<em>'+TEXTS.logoB+'</em>';
   q('logoOver').innerHTML=TEXTS.overA+'<em>'+TEXTS.overB+'</em>';
@@ -1667,9 +2130,28 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 
+TLI18N.mount("#titleOv .panel");
+TLI18N.onChange(applyLang);
 applyLang();makeStars();resize();syncHUD();
 hSet('title',true);
 requestAnimationFrame(frame);
+/* Live handle for the external developer harness (dbg/_harness.js + dbg/noid.js).
+   Names only; nothing here runs on its own and no game behaviour changes. */
+window.TLHOOK={
+  CFG:CFG,
+  get G(){return G},
+  get paddle(){return paddle},
+  get balls(){return balls},
+  get bullets(){return bullets},
+  get grid(){return grid},
+  get attached(){return attachedCount},
+  get TEXTS(){return TEXTS},
+  TEXTS_EN:TEXTS_EN, TLANGS:TLANGS,
+  W:W, H:H, COLS:COLS,
+  makeBall:makeBall, buildLevel:buildLevel, applyPrize:applyPrize, fireBullet:fireBullet,
+  PRIZES:PRIZES,
+  applyLang:applyLang, resize:resize, syncHUD:syncHUD, makeStars:makeStars
+};
 })();
 </script>
 <script>
@@ -1709,5 +2191,232 @@ else seen(cur);
 }).catch(function () {});
 })();
 </script>
+<script>
+/* Developer harness. ?debug=dbg/noid.js loads the shared engine dbg/_harness.js
+   then that script: live panel with state, elements, layout per screen mode,
+   texts, balance, cheats, JSON export. No parameter or missing script = the
+   page behaves exactly as without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
+</script>
+<!-- inlined fs.js — the source of truth is fs.js: edit that file and re-inline this block -->
+<script>
+/* fs.js — the one fullscreen control every page shares.
+
+   Two jobs:
+
+   1. A toggle button. `TLFS.mount("#opts", {cls:"btn"})` puts it inside a menu or
+      title panel using that page's own button class; `TLFS.mount()` alone floats a
+      small icon button in the bottom-right corner; `{icon:true}` swaps the word for
+      a ⤢ glyph and moves it into `aria-label` for narrow hosts. The wording is the
+      shared translation key `fullscreen` / `exitFullscreen` — from the i18n kit, from
+      a page table published through `TLFS_LABEL(key)`, or English as the floor — and
+      a change of `<html lang>` repaints it. Where the Fullscreen API is missing the
+      button hides itself instead of lying.
+
+   2. Re-fit on every usable-area change. Entering or leaving fullscreen, an
+      orientation flip, and a mobile browser bar hiding or showing all change the
+      area the game has to fill — and the bar case does not always fire a plain
+      `resize`. This file listens to `fullscreenchange` (all vendor spellings) and
+      to `visualViewport.resize`, then re-applies `<html data-fs>` and dispatches
+      `resize` (plus `orientationchange`) once per frame, so the page's own layout
+      code runs. `TLFS.refitOnly()` gives a page that already has its own
+      fullscreen button just that wiring, without a second button.
+
+   Nothing here reads game state, and a page that never calls mount/refitOnly gets
+   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+(function () {
+  if (window.TLFS) return;
+  var de = document.documentElement;
+  var REQ = de.requestFullscreen || de.webkitRequestFullscreen ||
+    de.msRequestFullscreen || de.mozRequestFullScreen;
+  var EX = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.msExitFullscreen || document.mozCancelFullScreen;
+  var blocked = !REQ || !EX || de.fullscreenEnabled === false;
+  var ICON = "\u2922"; /* narrow hosts (side stripes, icon bars) get the glyph plus a
+                          translated aria-label instead of the word */
+  var btns = [], cbs = [], queued = false, styleDone = false;
+
+  function isFull() {
+    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
+      de.msFullscreenElement || de.mozFullScreenElement);
+  }
+  function kit() {
+    var k = window.TLI18N;
+    return (k && typeof k.t === "function") ? k : null;
+  }
+  /* A missing key makes t() hand back the key name — that is not a label.
+     Pages that keep their own translation table (billiards, tilt, oilstorm) publish
+     TLFS_LABEL(key) instead of the kit; they win over the kit, English is the floor. */
+  function label() {
+    var want = isFull() ? "exitFullscreen" : "fullscreen";
+    var L = window.TLFS_LABEL;
+    if (typeof L === "function") {
+      try { var v = L(want); if (v && v !== want) return String(v) } catch (e) {}
+    }
+    var k = kit(), t = null;
+    if (k) { try { t = k.t(want) } catch (e) { t = null } }
+    if (!t || t === want) t = isFull() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+    return t;
+  }
+  function cssOnce() {
+    if (styleDone) return;
+    styleDone = true;
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlfs-float:hover{border-color:#ffd76a;color:#ffd76a}" +
+      ".tlfs-float[hidden]{display:none}";
+    document.head.appendChild(st);
+  }
+  function paint() {
+    var txt = label();
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      b.textContent = b.__tlfsIcon ? ICON : txt;
+      b.setAttribute("aria-label", txt);
+      b.setAttribute("aria-pressed", isFull() ? "true" : "false");
+    }
+  }
+  /* One pass per frame: fullscreenchange and visualViewport.resize often arrive
+     together, and dispatching resize from inside a resize listener would loop. */
+  function refit() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint();
+      for (var i = 0; i < cbs.length; i++) { try { cbs[i](isFull()) } catch (e) {} }
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("orientationchange"));
+    });
+  }
+  function toggle() {
+    if (blocked) return false;
+    var was = isFull();
+    try {
+      if (was) EX.call(document);
+      else { var p = REQ.call(de); if (p && p.catch) p.catch(function () {}) }
+    } catch (e) {}
+    /* the change event may never come (sandboxed frames, denied requests, some
+       headless shells that grant then silently drop): repaint the state we can
+       read twice, late enough to catch a transition nobody announced. */
+    setTimeout(refit, 220);
+    setTimeout(refit, 700);
+    return !was;
+  }
+
+  de.setAttribute("data-fs", "off");
+  ["fullscreenchange", "webkitfullscreenchange", "MSFullscreenChange", "mozfullscreenchange"]
+    .forEach(function (t) { document.addEventListener(t, refit, false) });
+  ["fullscreenerror", "webkitfullscreenerror"].forEach(function (t) {
+    document.addEventListener(t, function () { de.setAttribute("data-fs", "off"); paint() }, false)
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", refit, false);
+    window.visualViewport.addEventListener("scroll", function () {
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint(); /* an exit the browser never announced must still clear the label */
+    }, false);
+  }
+  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
+  }, false);
+  /* A language switch changes <html lang>: repaint from whatever table the page
+     uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
+     drive their toggle state off that attribute, and taking it would corrupt them. */
+  new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
+
+  window.TLFS = {
+    version: "2026.11.23.3",
+    supported: !blocked,
+    isFull: isFull,
+    label: label,
+    paint: paint,
+    toggle: toggle,
+    onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
+    /* just the size/orientation wiring, for a page with its own fullscreen button */
+    refitOnly: function () { paint(); return true },
+    /* put the button in `sel` (or float it when the selector matches nothing).
+       opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
+       puts the translated word in aria-label, for narrow hosts. */
+    mount: function (sel, opts) {
+      cssOnce();
+      var o = opts || {};
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = o.cls || "tlfs-float";
+      b.id = o.id || "tlfsBtn";
+      b.__tlfsIcon = !!o.icon;
+      if (o.float !== false && !o.cls) b.classList.add("tlfs-float");
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", label());
+      if (o.ariaLabel) b.setAttribute("data-aria", o.ariaLabel);
+      b.textContent = o.icon ? ICON : label();
+      /* a menu that starts the game on any tap (defender binds pointerdown on the
+         whole title screen) must not fire when the fullscreen button is pressed */
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("touchstart", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle() });
+      var host = sel ? document.querySelector(sel) : null;
+      if (host) {
+        if (o.prepend && host.firstChild) host.insertBefore(b, host.firstChild);
+        else host.appendChild(b);
+      } else {
+        b.classList.add("tlfs-float");
+        document.body.appendChild(b);
+      }
+      if (blocked) b.style.display = "none";
+      btns.push(b);
+      paint();
+      return b;
+    },
+    /* wire a button the page already has in its markup (keeps its own look) */
+    attach: function (el) {
+      cssOnce();
+      if (!el) return null;
+      if (blocked) { el.style.display = "none"; return el }
+      el.addEventListener("click", function (e) { e.preventDefault(); toggle() });
+      btns.push(el);
+      paint();
+      return el;
+    },
+    /* a rebuilt panel drops its children: re-add every button the page mounted */
+    reassert: function () {
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i];
+        if (!b.isConnected && b.__tlfsHost) {
+          var h = document.querySelector(b.__tlfsHost);
+          if (h) h.appendChild(b);
+        }
+      }
+      paint();
+      return btns.length
+    }
+  };
+  /* remember where each button was mounted so a panel rebuild can put it back */
+  var mount0 = window.TLFS.mount;
+  window.TLFS.mount = function (sel, opts) {
+    var b = mount0(sel, opts);
+    if (b) b.__tlfsHost = sel || "body";
+    return b;
+  };
+  var k = kit();
+  if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
+})();
+</script>
+<script>TLFS.mount("#titleOv .panel",{cls:"btn alt"});</script>
 </body>
 </html>

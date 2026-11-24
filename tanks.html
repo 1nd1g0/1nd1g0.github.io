@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0a0d08">
 <title>IRON VANGUARD — Tank '90</title>
-<meta name="version" content="2026.11.20.2">
+<meta name="version" content="2026.11.24.1">
 <style>
 :root{--amber:#ffb000;--amber2:#ffd75e;--olive:#6a7d3f;--olive-d:#2c3519;--steel:#9fb4c7;--red:#ff5040;--cyan:#7fd4ff;--ink:#0a0d08;--panel:#161c11}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -60,32 +60,461 @@ body.touch #touch{display:block}
 </head>
 <body>
 <canvas id="cv"></canvas><div id="fx"></div>
-<div id="hudbtns"><button id="btnPause">❚❚</button><button id="btnMap">▦</button><button id="btnSnd">♪</button></div>
-<div id="touch"><div class="tbtn" id="dU">▲</div><div class="tbtn" id="dD">▼</div><div class="tbtn" id="dL">◀</div><div class="tbtn" id="dR">▶</div><div class="tbtn" id="bF">FIRE</div></div>
+<div id="hudbtns"><button id="btnPause" data-tip="pause">❚❚</button><button id="btnMap" data-tip="minimap">▦</button><button id="btnSnd" data-tip="sound">♪</button></div>
+<div id="touch"><div class="tbtn" id="dU">▲</div><div class="tbtn" id="dD">▼</div><div class="tbtn" id="dL">◀</div><div class="tbtn" id="dR">▶</div><div class="tbtn" id="bF" data-t="fire">FIRE</div></div>
 <div class="ov" id="menuOv"><div class="panel"><div class="hazard"></div>
 <h1 class="h-stencil">IRON VANGUARD</h1>
-<div class="sub h-stencil">TANK BATTALION '90 · PROCEDURAL WARFARE</div>
+<div class="sub h-stencil" data-t="subTitle">TANK BATTALION '90 · PROCEDURAL WARFARE</div>
 <div class="row"><span class="stat" id="hiTxt"></span><span style="flex:1"></span><span class="stat" id="opPreview" style="color:var(--cyan)"></span></div>
 <div class="hr"></div>
-<div class="row"><label class="tag">Mode</label><div class="seg" id="segMode"><button data-v="0" class="on">Solo</button><button data-v="1" class="grn">Co-op Human</button><button data-v="2" class="grn">Co-op CPU</button><button data-v="3" class="grn">CPU Duo</button></div></div>
-<div class="row hid" id="rowSkill"><label class="tag">CPU Skill</label><div class="seg" id="segSkill"><button data-v="0">Cadet</button><button data-v="1" class="on">Veteran</button><button data-v="2">Ace</button></div></div>
-<div class="row hid" id="rowView"><label class="tag">P2 Off-screen</label><div class="seg" id="segView"><button data-v="split" class="on">Split Screen</button><button data-v="arrow">Arrow Icon</button></div></div>
-<div class="row"><label class="tag">Difficulty</label><div class="seg" id="segDiff"><button data-v="0">Recruit</button><button data-v="1" class="on">Veteran</button><button data-v="2">Elite</button></div></div>
-<div class="row"><label class="tag">Supply Rate</label><div class="seg" id="segRate"><button data-v="0">Low</button><button data-v="1" class="on">Normal</button><button data-v="2">High</button><button data-v="3">Flood</button></div></div>
-<div class="row"><label class="tag">Enemy Loot</label><div class="seg" id="segFoe"><button data-v="0" class="on redseg">No Prizes</button><button data-v="1" class="redseg">Upgrades+1UP</button><button data-v="2" class="redseg">Full (Traps!)</button></div></div>
-<div class="row"><label class="tag">Battlefield</label><div class="seg" id="segSize"><button data-v="S">34×24</button><button data-v="M" class="on">46×32</button><button data-v="L">60×40</button><button data-v="XL">84×52</button></div></div>
-<div class="row"><label class="tag">War Seed</label><input type="text" id="seedIn" maxlength="16" spellcheck="false"><button class="btn" id="btnDice">🎲 Random</button></div>
-<div class="row"><label class="tag">Start Level</label><input type="number" id="lvlIn" min="1" max="99" value="1"></div>
-<div class="row"><label class="tag">Options</label><div class="seg"><button id="fxBtn"></button><button id="sndBtn2"></button></div></div>
-<button class="btn big h-stencil" id="btnDeploy">► Deploy</button>
-<div class="row" style="justify-content:center"><a class="btn" id="btnHome" href="https://1nd1g0.github.io/">⌂ Home</a></div>
+<div class="row"><label class="tag" data-t="modeLbl">Mode</label><div class="seg" id="segMode"><button data-v="0" data-t="modeSolo" class="on">Solo</button><button data-v="1" data-t="modeCoopHuman" class="grn">Co-op Human</button><button data-v="2" data-t="modeCoopCpu" class="grn">Co-op CPU</button><button data-v="3" data-t="modeCpuDuo" class="grn">CPU Duo</button></div></div>
+<div class="row hid" id="rowSkill"><label class="tag" data-t="cpuSkill">CPU Skill</label><div class="seg" id="segSkill"><button data-v="0" data-t="cadet">Cadet</button><button data-v="1" data-t="veteran" class="on">Veteran</button><button data-v="2" data-t="ace">Ace</button></div></div>
+<div class="row hid" id="rowView"><label class="tag" data-t="p2Offscreen">P2 Off-screen</label><div class="seg" id="segView"><button data-v="split" data-t="viewSplit" class="on">Split Screen</button><button data-v="arrow" data-t="viewArrow">Arrow Icon</button></div></div>
+<div class="row"><label class="tag" data-t="difficulty">Difficulty</label><div class="seg" id="segDiff"><button data-v="0" data-t="recruit">Recruit</button><button data-v="1" data-t="veteran" class="on">Veteran</button><button data-v="2" data-t="elite">Elite</button></div></div>
+<div class="row"><label class="tag" data-t="supplyRate">Supply Rate</label><div class="seg" id="segRate"><button data-v="0" data-t="low">Low</button><button data-v="1" data-t="normal" class="on">Normal</button><button data-v="2" data-t="high">High</button><button data-v="3" data-t="flood">Flood</button></div></div>
+<div class="row"><label class="tag" data-t="enemyLoot">Enemy Loot</label><div class="seg" id="segFoe"><button data-v="0" data-t="foeNone" class="on redseg">No Prizes</button><button data-v="1" data-t="foeUpgrades" class="redseg">Upgrades+1UP</button><button data-v="2" data-t="foeFull" class="redseg">Full (Traps!)</button></div></div>
+<div class="row"><label class="tag" data-t="battlefield">Battlefield</label><div class="seg" id="segSize"><button data-v="S">34×24</button><button data-v="M" class="on">46×32</button><button data-v="L">60×40</button><button data-v="XL">84×52</button></div></div>
+<div class="row"><label class="tag" data-t="warSeed">War Seed</label><input type="text" id="seedIn" maxlength="16" spellcheck="false"><button class="btn" id="btnDice">🎲 <span data-t="random">Random</span></button></div>
+<div class="row"><label class="tag" data-t="startLvl">Start Level</label><input type="number" id="lvlIn" min="1" max="99" value="1"></div>
+<div class="row"><label class="tag" data-t="options">Options</label><div class="seg"><button id="fxBtn"></button><button id="sndBtn2"></button></div></div>
+<button class="btn big h-stencil" id="btnDeploy">► <span data-t="deploy">Deploy</span></button>
+<div class="row" style="justify-content:center"><a class="btn" id="btnHome" href="https://1nd1g0.github.io/">⌂ <span data-t="home">Home</span></a></div>
 <div class="help center" id="helpTxt"></div>
-<div class="help center"><b>P</b> pause · <b>M</b> minimap · Gamepad / Touch → P1</div>
-<div class="help center">The Eagle sits on the bottom border — nothing can attack it from below.</div>
+<div class="help center"><b>P</b> <span data-t="pause">pause</span> · <b>M</b> <span data-t="minimap">minimap</span> · <span data-t="gpTouchP1">Gamepad / Touch → P1</span></div>
+<div class="help center" data-t="eagleNote">The Eagle sits on the bottom border — nothing can attack it from below.</div>
 </div></div>
-<div class="ov hid" id="pauseOv"><div class="panel"><div class="hazard"></div><h1 class="h-stencil" style="font-size:30px">Battle Paused</h1><div class="sub" id="pauseInfo"></div><button class="btn big" id="btnResume">Resume</button><div class="row" style="justify-content:center"><button class="btn" id="btnRestart">Restart Stage</button><button class="btn" id="btnQuit">Quit to Menu</button></div><div class="help center" id="pauseHelp"></div></div></div>
-<div class="ov hid" id="clearOv"><div class="panel center"><div class="hazard"></div><h1 class="h-stencil" style="font-size:30px;color:var(--cyan)">Area Secured</h1><div class="sub h-stencil" id="clearOp"></div><table class="tally" id="tallyTbl"></table><div class="hr"></div><div class="stat" id="clearScore"></div><button class="btn big" id="btnNext">Next Battlefield ►</button><div class="help" id="nextIn" style="color:var(--amber2)"></div></div></div>
-<div class="ov hid" id="overOv"><div class="panel center"><div class="hazard"></div><h1 class="h-stencil" style="font-size:32px;color:var(--red)">War Over</h1><div class="sub" id="overReason"></div><div class="row center" style="justify-content:center"><span class="stat" id="overScore"></span></div><div id="newRec" class="hid"><span class="badge">★ NEW RECORD ★</span></div><button class="btn big" id="btnRetry">Retry Operation</button><div class="row" style="justify-content:center"><button class="btn" id="btnNewSeed">New Random War</button><button class="btn" id="btnMenu2">Menu</button></div></div></div>
+<div class="ov hid" id="pauseOv"><div class="panel"><div class="hazard"></div><h1 class="h-stencil" style="font-size:30px" data-t="battlePaused">Battle Paused</h1><div class="sub" id="pauseInfo"></div><button class="btn big" id="btnResume" data-t="resume">Resume</button><div class="row" style="justify-content:center"><button class="btn" id="btnRestart" data-t="restartStage">Restart Stage</button><button class="btn" id="btnQuit" data-t="quitToMenu">Quit to Menu</button></div><div class="help center" id="pauseHelp"></div></div></div>
+<div class="ov hid" id="clearOv"><div class="panel center"><div class="hazard"></div><h1 class="h-stencil" style="font-size:30px;color:var(--cyan)" data-t="areaSecured">Area Secured</h1><div class="sub h-stencil" id="clearOp"></div><table class="tally" id="tallyTbl"></table><div class="hr"></div><div class="stat" id="clearScore"></div><button class="btn big" id="btnNext"><span data-t="nextBattlefield">Next Battlefield</span> ►</button><div class="help" id="nextIn" style="color:var(--amber2)"></div></div></div>
+<div class="ov hid" id="overOv"><div class="panel center"><div class="hazard"></div><h1 class="h-stencil" style="font-size:32px;color:var(--red)" data-t="warOver">War Over</h1><div class="sub" id="overReason"></div><div class="row center" style="justify-content:center"><span class="stat" id="overScore"></span></div><div id="newRec" class="hid"><span class="badge">★ <span data-t="newRecord">NEW RECORD</span> ★</span></div><button class="btn big" id="btnRetry" data-t="retryOperation">Retry Operation</button><div class="row" style="justify-content:center"><button class="btn" id="btnNewSeed" data-t="newRandomWar">New Random War</button><button class="btn" id="btnMenu2" data-t="menu">Menu</button></div></div></div>
+<!-- inlined i18n.js — the source of truth is i18n.js: edit that file and re-inline this block -->
+<script>
+/* ============================================================================
+   i18n.js — shared language kit for every page of this site.
+   Language code decision tree (identical everywhere, in this order):
+     0. any technical problem with this kit -> English
+     1. URL ?language=xx      (a region suffix is fine: pt-BR, zh-CN)
+     2. localStorage['tll:lang']
+     3. the browser's language list (navigator.languages, then navigator.language)
+     4. English
+   A code outside CODES is dropped, not trusted, so the next level decides. Only
+   the picker button writes storage, so a ?language= link never overwrites the
+   visitor's saved choice.
+
+   Page usage
+     <script src="i18n.js"><\/script>            BEFORE the game script
+     <script>TLI18N.add({en:{k:"Text"},es:{...},pt:{...},ru:{...},zh:{...}})<\/script>
+     markup:  <b data-t="score">SCORE</b>  <button data-tip="help">?</button>
+              <input data-ph="name">  <i data-aria="pause">  <img data-alt="car">
+     js:      el.textContent=TLI18N.t("gameOver");
+              el.innerHTML="<b>"+TLI18N.t("best")+": "+n+"</b>";
+              ctx.fillText(TLI18N.t("paused"),x,y);
+     canvas / innerHTML redraws: TLI18N.onChange(()=>redrawAll());
+     pick a host for the language button: TLI18N.mount("#startPanel")
+       (omit it and the kit parks a pill in the lower-left corner)
+   Keys missing from a non-English table fall back to English, so a half
+   translated table still runs. Values for *Fmt keys carry {placeholders}.
+   ========================================================================= */
+(function(){
+"use strict";
+var KEY="tll:lang", CODES=["en","es","pt","ru","zh"];
+var LANGS=[ // code · name in its own language · that word for "language" · its flag
+ ['en','English','Language','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#012169"/><path d="M0,0 60,40M60,0 0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 60,40M60,0 0,40" stroke="#C8102E" stroke-width="3.2"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="13"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="8"/></svg>'],
+ ['es','Español','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#AA151B"/><path d="M0,10H60M0,30H60" stroke="#F1BF00" stroke-width="20"/>  </svg>'],
+ ['pt','Português','Idioma','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="40" fill="#046A38"/><rect x="24" width="36" height="40" fill="#DA291C"/><circle cx="24" cy="20" r="7.5" fill="#FEDF00" stroke="#046A38" stroke-width="1.4"/><path d="M24,14.5 24,22.5M20.5,17.5H27.5" stroke="#DA291C" stroke-width="2.2" fill="none"/></svg>'],
+ ['ru','Русский','Язык','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#fff"/><rect y="13.34" width="60" height="13.33" fill="#0039A6"/><rect y="26.67" width="60" height="13.33" fill="#D52B1E"/></svg>'],
+ ['zh','中文','语言','<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#EE1C25"/><circle cx="10" cy="10" r="5.6" fill="#FFDC00"/><circle cx="21" cy="6" r="2.1" fill="#FFDC00"/><circle cx="26" cy="11.5" r="2.1" fill="#FFDC00"/><circle cx="26" cy="18.5" r="2.1" fill="#FFDC00"/><circle cx="21" cy="24" r="2.1" fill="#FFDC00"/></svg>']
+];
+/* ---- shared vocabulary: the same word means the same thing in every game.
+       Values carry no glyphs — pages keep their ⌂ ▶ ■ icons in the markup. ---- */
+var COMMON={
+en:{
+ paused:"PAUSED",pause:"PAUSE",resume:"RESUME",start:"START",play:"PLAY",home:"HOME",menu:"MENU",
+ options:"OPTIONS",settings:"SETTINGS",help:"HELP",howToPlay:"HOW TO PLAY",rules:"RULES",controls:"CONTROLS",
+ keys:"KEYS",gamepad:"GAMEPAD",mouse:"MOUSE",touch:"TOUCH",
+ sound:"SOUND",music:"MUSIC",sfx:"SOUND FX",on:"ON",off:"OFF",fullscreen:"FULLSCREEN",exitFullscreen:"EXIT FULLSCREEN",
+ difficulty:"DIFFICULTY",easy:"EASY",normal:"NORMAL",hard:"HARD",low:"LOW",high:"HIGH",
+ score:"SCORE",best:"BEST",hiScore:"HIGH SCORE",level:"LEVEL",lives:"LIVES",time:"TIME",
+ speed:"SPEED",round:"ROUND",wave:"WAVE",seed:"SEED",newSeed:"NEW SEED",
+ restart:"RESTART",retry:"RETRY",continue:"CONTINUE",tryAgain:"TRY AGAIN",nextLevel:"NEXT LEVEL",
+ gameOver:"GAME OVER",youWin:"YOU WIN",youLose:"GAME OVER",clear:"CLEARED",
+ fire:"FIRE",jump:"JUMP",back:"BACK",exit:"EXIT",close:"CLOSE",ok:"OK",cancel:"CANCEL",
+ loading:"LOADING",shots:"SHOTS",moves:"MOVES",power:"POWER",angle:"ANGLE",
+ langTitle:"LANGUAGE",langNote:"Choose your language — it is remembered, and it applies to this game and to the whole catalogue.",
+ langBack:"CHANGE LANGUAGE",players:"PLAYERS",player:"PLAYER",you:"YOU",cpu:"CPU",random:"RANDOM"},
+es:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INICIO",play:"JUGAR",home:"INICIO",menu:"MENÚ",
+ options:"OPCIONES",settings:"AJUSTES",help:"AYUDA",howToPlay:"CÓMO JUGAR",rules:"REGLAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"MANDO",mouse:"RATÓN",touch:"TÁCTIL",
+ sound:"SONIDO",music:"MÚSICA",sfx:"EFECTOS",on:"ACTIVO",off:"APAGADO",fullscreen:"PANTALLA COMPLETA",exitFullscreen:"SALIR DE PANTALLA COMPLETA",
+ difficulty:"DIFICULTAD",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAJO",high:"ALTO",
+ score:"PUNTOS",best:"RÉCORD",hiScore:"RÉCORD",level:"NIVEL",lives:"VIDAS",time:"TIEMPO",
+ speed:"VELOCIDAD",round:"RONDA",wave:"OLEADA",seed:"SEMILLA",newSeed:"NUEVA SEMILLA",
+ restart:"REINICIAR",retry:"REINTENTAR",continue:"CONTINUAR",tryAgain:"INTÉNTALO OTRA VEZ",nextLevel:"SIGUIENTE NIVEL",
+ gameOver:"FIN DEL JUEGO",youWin:"¡GANASTE!",youLose:"FIN DEL JUEGO",clear:"SUPERADO",
+ fire:"DISPARO",jump:"SALTAR",back:"ATRÁS",exit:"SALIR",close:"CERRAR",ok:"ACEPTAR",cancel:"CANCELAR",
+ loading:"CARGANDO",shots:"LANZAMIENTOS",moves:"MOVIMIENTOS",power:"FUERZA",angle:"ÁNGULO",
+ langTitle:"IDIOMA",langNote:"Elige tu idioma: se recuerda y se aplica a este juego y a todo el catálogo.",
+ langBack:"CAMBIAR IDIOMA",players:"JUGADORES",player:"JUGADOR",you:"TÚ",cpu:"CPU",random:"ALEATORIO"},
+pt:{
+ paused:"PAUSA",pause:"PAUSA",resume:"CONTINUAR",start:"INÍCIO",play:"JOGAR",home:"INÍCIO",menu:"MENU",
+ options:"OPÇÕES",settings:"CONFIGURAÇÕES",help:"AJUDA",howToPlay:"COMO JOGAR",rules:"REGRAS",controls:"CONTROLES",
+ keys:"TECLAS",gamepad:"CONTROLE",mouse:"MOUSE",touch:"TOQUE",
+ sound:"SOM",music:"MÚSICA",sfx:"EFEITOS",on:"LIGADO",off:"DESLIGADO",fullscreen:"TELA CHEIA",exitFullscreen:"SAIR DA TELA CHEIA",
+ difficulty:"DIFICULDADE",easy:"FÁCIL",normal:"NORMAL",hard:"DIFÍCIL",low:"BAIXO",high:"ALTO",
+ score:"PONTOS",best:"RECORDE",hiScore:"RECORDE",level:"NÍVEL",lives:"VIDAS",time:"TEMPO",
+ speed:"VELOCIDADE",round:"RODADA",wave:"ONDA",seed:"SEMENTE",newSeed:"NOVA SEMENTE",
+ restart:"REINICIAR",retry:"TENTAR DE NOVO",continue:"CONTINUAR",tryAgain:"TENTE DE NOVO",nextLevel:"PRÓXIMO NÍVEL",
+ gameOver:"FIM DE JOGO",youWin:"VOCÊ VENCEU",youLose:"FIM DE JOGO",clear:"COMPLETO",
+ fire:"DISPARO",jump:"SALTAR",back:"VOLTAR",exit:"SAIR",close:"FECHAR",ok:"OK",cancel:"CANCELAR",
+ loading:"CARREGANDO",shots:"BATIDAS",moves:"JOGADAS",power:"FORÇA",angle:"ÂNGULO",
+ langTitle:"IDIOMA",langNote:"Escolha seu idioma: ele é lembrado e vale para este jogo e para todo o catálogo.",
+ langBack:"MUDAR IDIOMA",players:"JOGADORES",player:"JOGADOR",you:"VOCÊ",cpu:"CPU",random:"ALEATÓRIO"},
+ru:{
+ paused:"ПАУЗА",pause:"ПАУЗА",resume:"ПРОДОЛЖИТЬ",start:"СТАРТ",play:"ИГРАТЬ",home:"ДОМОЙ",menu:"МЕНЮ",
+ options:"НАСТРОЙКИ",settings:"НАСТРОЙКИ",help:"ПОМОЩЬ",howToPlay:"КАК ИГРАТЬ",rules:"ПРАВИЛА",controls:"УПРАВЛЕНИЕ",
+ keys:"КЛАВИШИ",gamepad:"ГЕЙМПАД",mouse:"МЫШЬ",touch:"СЕНСОР",
+ sound:"ЗВУК",music:"МУЗЫКА",sfx:"ЗВУКИ",on:"ВКЛ",off:"ВЫКЛ",fullscreen:"НА ВЕСЬ ЭКРАН",exitFullscreen:"ВЫЙТИ С ЭКРАНА",
+ difficulty:"СЛОЖНОСТЬ",easy:"ЛЕГКО",normal:"НОРМА",hard:"СЛОЖНО",low:"НИЗ",high:"ВЕРХ",
+ score:"СЧЁТ",best:"РЕКОРД",hiScore:"РЕКОРД",level:"УРОВЕНЬ",lives:"ЖИЗНИ",time:"ВРЕМЯ",
+ speed:"СКОРОСТЬ",round:"РАУНД",wave:"ВОЛНА",seed:"КОД УРОВНЯ",newSeed:"НОВЫЙ КОД",
+ restart:"ЗАНОВО",retry:"ЕЩЁ РАЗ",continue:"ПРОДОЛЖИТЬ",tryAgain:"ПОПРОБУЙ ЕЩЁ",nextLevel:"СЛЕДУЮЩИЙ УРОВЕНЬ",
+ gameOver:"КОНЕЦ",youWin:"ПОБЕДА",youLose:"КОНЕЦ",clear:"УРОВЕНЬ ПРОЙДЕН",
+ fire:"ОГОНЬ",jump:"ПРЫЖОК",back:"НАЗАД",exit:"ВЫХОД",close:"ЗАКРЫТЬ",ok:"ОК",cancel:"ОТМЕНА",
+ loading:"ЗАГРУЗКА",shots:"УДАРЫ",moves:"ХОДЫ",power:"СИЛА",angle:"УГОЛ",
+ langTitle:"ЯЗЫК",langNote:"Выберите язык — он запоминается и действует для этой игры и для всего каталога.",
+ langBack:"СМЕНИТЬ ЯЗЫК",players:"ИГРОКИ",player:"ИГРОК",you:"ВЫ",cpu:"БОТ",random:"СЛУЧАЙНО"},
+zh:{
+ paused:"暂停",pause:"暂停",resume:"继续",start:"开始",play:"开始游戏",home:"主页",menu:"菜单",
+ options:"选项",settings:"设置",help:"帮助",howToPlay:"怎么玩",rules:"规则",controls:"操作",
+ keys:"按键",gamepad:"手柄",mouse:"鼠标",touch:"触摸",
+ sound:"声音",music:"音乐",sfx:"音效",on:"开",off:"关",fullscreen:"全屏",exitFullscreen:"退出全屏",
+ difficulty:"难度",easy:"简单",normal:"普通",hard:"困难",low:"低",high:"高",
+ score:"得分",best:"最高分",hiScore:"最高分",level:"关卡",lives:"生命",time:"时间",
+ speed:"速度",round:"回合",wave:"波次",seed:"种子",newSeed:"新种子",
+ restart:"重新开始",retry:"重试",continue:"继续",tryAgain:"再试一次",nextLevel:"下一关",
+ gameOver:"游戏结束",youWin:"胜利",youLose:"游戏结束",clear:"过关",
+ fire:"射击",jump:"跳跃",back:"返回",exit:"退出",close:"关闭",ok:"确定",cancel:"取消",
+ loading:"加载中",shots:"击球",moves:"步数",power:"力量",angle:"角度",
+ langTitle:"语言",langNote:"选择语言：会被记住，并用于这个游戏和整个游戏目录。",
+ langBack:"更换语言",players:"玩家",player:"玩家",you:"你",cpu:"电脑",random:"随机"}
+};
+var PAGE={en:{},es:{},pt:{},ru:{},zh:{}};
+function lget(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+function lset(v){try{localStorage.setItem(KEY,v)}catch(e){}}
+var code=null;
+/* A browser language list -> a supported code, or null when it says nothing
+   usable. "pt-BR", "ru_RU", "zh-CN" all match on their 2-letter base. */
+function fromBrowser(){
+ try{
+  var list=null;
+  if(navigator&&Array.isArray(navigator.languages)&&navigator.languages.length)list=navigator.languages;
+  else if(navigator)list=[navigator.language||navigator.userLanguage||""];
+  for(var i=0;i<(list||[]).length;i++){
+   var c=String(list[i]||"").toLowerCase().slice(0,2);
+   if(CODES.indexOf(c)>=0)return c;
+  }
+ }catch(e){}
+ return null;
+}
+(function(){
+ try{
+  var c=null,m=/[?&]language=([a-zA-Z]{2,3})/.exec(location.search||"");
+  if(m)c=m[1].toLowerCase().slice(0,2);           // ?language=pt-BR counts as pt
+  if(c&&CODES.indexOf(c)<0)c=null;
+  if(!c){var s=(lget()||"").toLowerCase().slice(0,2);if(CODES.indexOf(s)>=0)c=s;}
+  if(!c)c=fromBrowser();
+  code=c||"en";
+ }catch(e){code="en";} // a broken lookup speaks English, never nothing
+})();
+function raw(k){
+ var t=PAGE[code]?PAGE[code][k]:null; if(t!=null)return t;
+ t=COMMON[code]?COMMON[code][k]:null; if(t!=null)return t;
+ t=PAGE.en[k]; if(t!=null)return t;
+ t=COMMON.en[k]; return t==null?null:t;
+}
+var hooks=[];
+var API={
+ version:"2026.11.22.2", codes:CODES.slice(), langs:LANGS,
+ lang:function(){return code},
+ browserLang:function(){return fromBrowser()},
+ t:function(k,v){var s;try{s=raw(k)}catch(e){code="en";try{s=raw(k)}catch(e2){s=null}}
+  if(s==null)s=k;var o=v||{};for(var p in o)s=s.split("{"+p+"}").join(String(o[p]));return s},
+ flag:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][3];return ""},
+ name:function(c){for(var i=0;i<LANGS.length;i++)if(LANGS[i][0]===c)return LANGS[i][2];return c},
+ add:function(tab){for(var c in tab){if(!PAGE[c])continue;for(var k in tab[c])PAGE[c][k]=tab[c][k];}
+  try{API.apply()}catch(e){}},
+ /* read the tables (the developer harness edits texts through these) */
+ keys:function(c){var out=[],seen={};try{var src=[PAGE[c],COMMON[c],PAGE.en,COMMON.en];
+  for(var i=0;i<src.length;i++)for(var k in src[i])if(!seen[k]){seen[k]=1;out.push(k)}out.sort();}catch(e){}
+  return out},
+ table:function(){var o={};try{for(var i=0;i<CODES.length;i++){var c=CODES[i],m={},s=[COMMON[c],PAGE[c],COMMON.en,PAGE.en];
+  for(var j=0;j<s.length;j++)for(var k in s[j])if(m[k]==null&&s[j][k]!=null)m[k]=s[j][k];o[c]=m;}}catch(e){}
+  return o},
+ setKey:function(c,k,v){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;
+  try{(PAGE[c]=PAGE[c]||{})[k]=String(v);}catch(e){return;}
+  try{API.apply()}catch(e){}
+  for(var i=0;i<hooks.length;i++)try{hooks[i](code)}catch(e){}},
+ onChange:function(f){hooks.push(f)},
+ set:function(c){c=String(c||"").toLowerCase().slice(0,2);if(CODES.indexOf(c)<0)return;code=c;lset(c);
+  try{API.apply()}catch(e){}for(var i=0;i<hooks.length;i++)try{hooks[i](c)}catch(e){}},
+ apply:function(root){
+  if(document.documentElement)document.documentElement.lang=code;
+  var r=root||document;
+  var set=function(e,attr,put){var v=raw(e.getAttribute(attr));if(v!=null)put(e,v);};
+  var all=[];
+  if(r.nodeType===1)all.push(r);
+  if(r.querySelectorAll)all=all.concat([].slice.call(r.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]")));
+  for(var i=0;i<all.length;i++){var e=all[i];
+   try{
+    if(e.hasAttribute("data-t"))set(e,"data-t",function(n,v){n.textContent=v});
+    if(e.hasAttribute("data-ph"))set(e,"data-ph",function(n,v){n.placeholder=v});
+    if(e.hasAttribute("data-tip"))set(e,"data-tip",function(n,v){n.title=v});
+    if(e.hasAttribute("data-aria"))set(e,"data-aria",function(n,v){n.setAttribute("aria-label",v)});
+    if(e.hasAttribute("data-alt"))set(e,"data-alt",function(n,v){n.alt=v});
+   }catch(e2){} // one odd node never aborts the pass
+  }
+  if(pill){try{pill.innerHTML=API.flag(code)+"<span>"+API.name(code)+"</span>";pill.title=API.t("langTitle");}catch(e){}}
+ },
+ mount:function(sel){hostSel=sel;ensurePill();},
+};
+/* ---------------- language button + picker overlay ---------------- */
+var hostSel=null,pill=null,ov=null;
+var CSS=".tlbtn{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(20,24,22,.72);flex:0 0 auto;align-self:center;"
+ +"border:1px solid #3a463f;border-radius:6px;color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:1px;"
+ +"cursor:pointer;line-height:1;width:auto;max-width:100%}.tlbtn:hover,.tlbtn:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}"
+ +".tlbtn svg{width:22px;height:15px;border:1px solid #2e3a34;border-radius:2px;display:block}"
+ +".tlfix{position:fixed;left:12px;bottom:12px;z-index:2147483000}"
+ +".tlov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;"
+ +"background:rgba(4,7,6,.86);padding:16px}.tlov[hidden]{display:none}"
+ +".tlpanel{max-width:660px;width:100%;background:#141816;border:1px solid #3a463f;border-radius:12px;"
+ +"padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.6);color:#c9d2cb;font:inherit;text-align:center}"
+ +".tlpanel h2{margin:0 0 6px;font-size:20px;letter-spacing:4px;color:#ffd76a}"
+ +".tlpanel p{margin:0 0 16px;font-size:12px;line-height:1.6;color:#8a948e}"
+ +".tlgrid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}"
+ +".tlb{width:132px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;"
+ +"background:rgba(20,24,22,.7);border:1px solid #3a463f;border-radius:8px;cursor:pointer;color:#c9d2cb;font:inherit}"
+ +".tlb:hover,.tlb:focus{border-color:#ffd76a;color:#f4e9c8;outline:none;box-shadow:0 0 14px rgba(255,215,106,.18)}"
+ +".tlb svg{width:50px;height:34px;border:1px solid #2e3a34;border-radius:4px;display:block}"
+ +".tlb b{font-size:13px;color:#f4e9c8}.tlb span{font-size:10px;letter-spacing:1px;color:#8a948e}"
+ +".tlx{margin-top:16px;padding:7px 20px;background:none;border:1px solid #3a463f;border-radius:6px;"
+ +"color:#c9d2cb;font:inherit;font-size:12px;letter-spacing:2px;cursor:pointer}"
+ +".tlx:hover,.tlx:focus{border-color:#ffd76a;color:#f4e9c8;outline:none}";
+function style(){if(document.getElementById("tlcss"))return;var s=document.createElement("style");s.id="tlcss";s.textContent=CSS;document.head.appendChild(s);}
+function ensurePill(){
+ if(pill)return;
+ var host=hostSel?document.querySelector(hostSel):null;
+ if(!host&&document.readyState==="loading")return; // retried at DOMContentLoaded
+ style();
+ pill=document.createElement("button");
+ pill.type="button";pill.className="tlbtn";pill.setAttribute("aria-haspopup","dialog");
+ if(!host){pill.className="tlbtn tlfix";document.body.appendChild(pill);}
+ else host.insertBefore(pill,host.firstChild);
+ pill.onclick=openOv;
+ API.apply();
+}
+function openOv(){
+ if(!ov){
+  ov=document.createElement("div");ov.className="tlov";ov.hidden=true;
+  var p=document.createElement("div");p.className="tlpanel";
+  var h=document.createElement("h2");h.setAttribute("data-t","langTitle");p.appendChild(h);
+  var np=document.createElement("p");np.setAttribute("data-t","langNote");p.appendChild(np);
+  var g=document.createElement("div");g.className="tlgrid";
+  for(var i=0;i<LANGS.length;i++){
+   var b=document.createElement("button");b.type="button";b.className="tlb";b.dataset.lang=LANGS[i][0];
+   b.innerHTML=LANGS[i][3]+"<b>"+LANGS[i][1]+"</b><span>"+LANGS[i][2]+"</span>";g.appendChild(b);
+  }
+  p.appendChild(g);
+  var x=document.createElement("button");x.type="button";x.className="tlx";x.setAttribute("data-t","close");p.appendChild(x);
+  ov.appendChild(p);document.body.appendChild(ov);
+  g.onclick=function(e){var b=e.target;while(b&&b!==g&&!b.dataset.lang)b=b.parentNode;if(b&&b.dataset.lang){API.set(b.dataset.lang);closeOv();}};
+  x.onclick=closeOv;
+  ov.onclick=function(e){if(e.target===ov)closeOv();};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&ov&&!ov.hidden)closeOv();});
+ }
+ API.apply(ov);
+ ov.hidden=false;
+}
+function closeOv(){if(ov)ov.hidden=true;}
+function boot(){
+ try{ensurePill();API.apply();}
+ catch(e){code="en";try{ensurePill();API.apply();}catch(e2){}} // rule 0: English on any kit fault
+}
+/* keep freshly added nodes translated without the page calling apply() */
+new MutationObserver(function(ms){
+ if(!pill)return;
+ try{
+  for(var i=0;i<ms.length;i++){var n=ms[i].addedNodes;
+   for(var j=0;j<n.length;j++){var e=n[j];
+    if(e.nodeType!==1)continue;
+    if(e.matches&&e.matches("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]"))API.apply(e);
+    else if(e.querySelectorAll&&e.querySelectorAll("[data-t],[data-ph],[data-tip],[data-aria],[data-alt]").length)API.apply(e);
+   }}
+ }catch(e){}
+}).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+window.TLI18N=API;
+})();
+</script>
+<script>
+/* If i18n.js is missing or only half-loaded, the game still runs: this stub
+   keeps the same API, pins English, and serves the en table this page registers
+   below via add(). */
+if(!window.TLI18N||typeof window.TLI18N.add!=="function"||typeof window.TLI18N.t!=="function"||typeof window.TLI18N.apply!=="function"||typeof window.TLI18N.mount!=="function"){(function(){var T={en:{}};window.TLI18N={version:"en-fallback",codes:["en"],langs:[["en","EN","English",""]],
+add:function(tab){for(var c in tab){T[c]=Object.assign(T[c]||{},tab[c]);}},
+t:function(k,v){var s=(T.en&&T.en[k]!=null)?T.en[k]:k,o=v||{};for(var p in o)s=String(s).split("{"+p+"}").join(String(o[p]));return s},
+flag:function(){return "";},name:function(c){return c;},lang:function(){return "en";},
+set:function(){},onChange:function(){},apply:function(){},mount:function(){}};})();}
+</script>
+<script>
+TLI18N.add({
+en:{
+// --- menu panel
+subTitle:"TANK BATTALION '90 · PROCEDURAL WARFARE",modeLbl:"Mode",modeSolo:"Solo",modeCoopHuman:"Co-op Human",modeCoopCpu:"Co-op CPU",modeCpuDuo:"CPU Duo",
+cpuSkill:"CPU Skill",cadet:"Cadet",veteran:"Veteran",ace:"Ace",p2Offscreen:"P2 Off-screen",viewSplit:"Split Screen",viewArrow:"Arrow Icon",
+recruit:"Recruit",elite:"Elite",supplyRate:"Supply Rate",flood:"Flood",enemyLoot:"Enemy Loot",foeNone:"No Prizes",foeUpgrades:"Upgrades + 1UP",foeFull:"Full (Traps!)",
+battlefield:"Battlefield",warSeed:"War Seed",startLvl:"Start Level",deploy:"Deploy",minimap:"minimap",gpTouchP1:"Gamepad / Touch → P1",
+eagleNote:"The Eagle sits on the bottom border — nothing can attack it from below.",
+// --- overlays
+battlePaused:"Battle Paused",restartStage:"Restart Stage",quitToMenu:"Quit to Menu",areaSecured:"Area Secured",nextBattlefield:"Next Battlefield",
+areaBonus:"AREA BONUS",warOver:"War Over",newRecord:"NEW RECORD",retryOperation:"Retry Operation",newRandomWar:"New Random War",
+// --- HUD and canvas labels
+hiScoreFmt:"HI-SCORE {1}",stage:"ST",baseLbl:"BASE",hiLbl:"HI",fxOn:"FX: HIGH",fxOff:"FX: LITE",sndOn:"SOUND: ON",sndOff:"SOUND: OFF",
+effShd:"SHD",effFrz:"FRZ",effFrp:"FRP",effWll:"WLL",effSpd:"SPD",effRpd:"RPD",effAp:"AP",
+// --- help lines
+helpSolo:"<b>WASD / Arrows</b> drive · <b>Space / J / Enter</b> fire",helpCoop:"<b>P1: WASD + Space</b> · <b>P2: Arrows + Enter</b> · allies never hurt each other",
+helpCpu:"<b>WASD + Space</b> drive &amp; fire · CPU ally defends Eagle and hunts enemies",helpBoth:"<b>SPECTATE MODE</b> · both tanks are CPU-controlled · watch the procedural war unfold",
+// --- floating battle log
+popStar:"FIREPOWER UP!",popAP:"STEEL-PIERCING ROUNDS!",popTree:"FOREST CLEARER!",popShield:"SHIELD!",popNuke:"NUKE!",popFreeze:"ENEMIES FROZEN",
+popFort:"BASE FORTIFIED",popLife:"1UP!",popRepair:"BASE REPAIRED",popSpeed:"OVERDRIVE!",popRapid:"RAPID FIRE!",popSecret:"SECRET!",
+popEUp:"ENEMY UPGRADED",popELife:"ENEMY 1UP",popEShield:"ENEMY SHIELD",popESpeed:"ENEMY OVERDRIVE",popERapid:"ENEMY RAPID",
+popBomb:"TRAP BOMB!",popPFreeze:"PLAYERS FROZEN!",popBreach:"WALLS BREACHED!",
+// --- reasons, enemies, generated operation names
+reasonEagle:"THE EAGLE HAS FALLEN",reasonArmy:"ALL TANKS DESTROYED",foeBasic:"ARMORED SCOUT",foeFast:"RAIDER",foePower:"GUNSHIP",foeArmor:"FORTRESS",
+opFmt:"OP. {1} {2}",adjList:"CRIMSON|IRON|SILENT|BROKEN|GOLDEN|FROZEN|BURNING|HIDDEN|THUNDER|MIDNIGHT|SAVAGE|LONE",
+nounList:"VANGUARD|BASTION|HAMMER|HORIZON|CITADEL|RECKONING|STAMPEDE|MIRAGE|AVALANCHE|PROTOCOL|SIEGE|DAWN",
+// --- composed lines
+pauseInfoFmt:"STAGE {1} · {2} · SEED {3}{4}",pauseLineFmt:"Supplies: {1} · Enemy loot: {2}",pausePlFmt:"{1}: weapon L{2} · lives {3}{4}",outLbl:" · OUT",
+introStatsFmt:"SEED {1} · GRID {2} · {3} HOSTILES · SUPPLY {4} · FOE {5}",autoNextFmt:"NEXT IN {1}s"
+},
+es:{
+// --- menu panel
+subTitle:"BATALLÓN DE TANQUES '90 · GUERRA PROCEDURAL",modeLbl:"Modo",modeSolo:"Solo",modeCoopHuman:"Co-op humano",modeCoopCpu:"Co-op CPU",modeCpuDuo:"Dúo CPU",
+cpuSkill:"Nivel CPU",cadet:"Cadete",veteran:"Veterano",ace:"As",p2Offscreen:"P2 fuera de pantalla",viewSplit:"Pantalla dividida",viewArrow:"Icono flecha",
+recruit:"Recluta",elite:"Élite",supplyRate:"Suministros",flood:"Diluvio",enemyLoot:"Botín enemigo",foeNone:"Sin premios",foeUpgrades:"Mejoras + 1UP",foeFull:"Todo (¡trampas!)",
+battlefield:"Campo de batalla",warSeed:"Semilla de guerra",startLvl:"Nivel inicial",deploy:"Desplegar",minimap:"minimapa",gpTouchP1:"Mando / Táctil → P1",
+eagleNote:"El Águila está en el borde inferior: nada puede atacarla desde abajo.",
+// --- overlays
+battlePaused:"Batalla en pausa",restartStage:"Reiniciar etapa",quitToMenu:"Salir al menú",areaSecured:"Zona asegurada",nextBattlefield:"Siguiente campo",
+areaBonus:"BONUS DE ZONA",warOver:"Guerra terminada",newRecord:"NUEVO RÉCORD",retryOperation:"Repetir operación",newRandomWar:"Nueva guerra al azar",
+// --- HUD and canvas labels
+hiScoreFmt:"RÉCORD {1}",stage:"N",baseLbl:"BASE",hiLbl:"RÉC",fxOn:"EFECTOS: ALTOS",fxOff:"EFECTOS: BAJOS",sndOn:"SONIDO: SÍ",sndOff:"SONIDO: NO",
+effShd:"ESC",effFrz:"CONG",effFrp:"CONP",effWll:"MURO",effSpd:"VEL",effRpd:"RAF",effAp:"AP",
+// --- help lines
+helpSolo:"<b>WASD / Flechas</b> mueven · <b>Space / J / Enter</b> disparan",helpCoop:"<b>P1: WASD + Space</b> · <b>P2: Flechas + Enter</b> · los aliados nunca se dañan entre sí",
+helpCpu:"<b>WASD + Space</b> conducen y disparan · un aliado CPU defiende el Águila y caza enemigos",helpBoth:"<b>MODO ESPECTADOR</b> · ambos tanques los lleva la CPU · mira cómo se despliega la guerra procedural",
+// --- floating battle log
+popStar:"¡MÁS FUEGO!",popAP:"¡BALAS PERFORANTES!",popTree:"¡DESFLORESTADOR!",popShield:"¡ESCUDO!",popNuke:"¡NUCLEAR!",popFreeze:"ENEMIGOS CONGELADOS",
+popFort:"BASE FORTIFICADA",popLife:"1UP!",popRepair:"BASE REPARADA",popSpeed:"¡SOBREMARCHA!",popRapid:"¡CADENCIA RAPIDA!",popSecret:"¡SECRETO!",
+popEUp:"ENEMIGO MEJORADO",popELife:"ENEMIGO 1UP",popEShield:"ESCUDO ENEMIGO",popESpeed:"SOBREMARCHA ENEMIGA",popERapid:"ENEMIGO VELOZ",
+popBomb:"¡BOMBA TRAMPA!",popPFreeze:"¡JUGADORES CONGELADOS!",popBreach:"¡MUROS DERRIBADOS!",
+// --- reasons, enemies, generated operation names
+reasonEagle:"EL ÁGUILA HA CAÍDO",reasonArmy:"TODOS LOS TANQUES DESTRUIDOS",foeBasic:"BATEDOR BLINDADO",foeFast:"SAQUEADOR",foePower:"CAÑONERA",foeArmor:"FORTALEZA",
+opFmt:"OP. {1} {2}",adjList:"CARMESÍ|FÉRRERO|SILENCIOSO|ROTO|DORADO|CONGELADO|ARDIENTE|OCULTO|TRONADOR|MEDIANOCHE|FEROS|SOLITARIO",
+nounList:"AVANGUARDIA|BALUARTE|MARRO|HORIZONTE|CENTINELA|CASTIGO|DESFILE|ESPEJISMO|ALUD|PROTOCOLO|ASEDIO|AMANECER",
+// --- composed lines
+pauseInfoFmt:"ETAPA {1} · {2} · SEMILLA {3}{4}",pauseLineFmt:"Suministros: {1} · Botín: {2}",pausePlFmt:"{1}: arma N{2} · vidas {3}{4}",outLbl:" · BAJA",
+introStatsFmt:"SEMILLA {1} · MALLA {2} · {3} ENEMIGOS · SUMINISTRO {4} · BOTÍN {5}",autoNextFmt:"SIGUIENTE EN {1}s"
+},
+pt:{
+// --- menu panel
+subTitle:"BATALHÃO DE TANQUES '90 · GUERRA PROCEDURAL",modeLbl:"Modo",modeSolo:"Solo",modeCoopHuman:"Co-op humano",modeCoopCpu:"Co-op CPU",modeCpuDuo:"Duo CPU",
+cpuSkill:"Nível CPU",cadet:"Cadete",veteran:"Veterano",ace:"Ás",p2Offscreen:"P2 fora da tela",viewSplit:"Tela dividida",viewArrow:"Ícone seta",
+recruit:"Recruta",elite:"Elite",supplyRate:"Suprimentos",flood:"Dilúvio",enemyLoot:"Espólio inimigo",foeNone:"Sem prêmios",foeUpgrades:"Melhorias + 1UP",foeFull:"Tudo (armadilhas!)",
+battlefield:"Campo de batalha",warSeed:"Semente de guerra",startLvl:"Nível inicial",deploy:"Desdobrar",minimap:"minimapa",gpTouchP1:"Controle / Toque → P1",
+eagleNote:"A Águia fica na borda inferior — nada pode atacá-la por baixo.",
+// --- overlays
+battlePaused:"Batalha em pausa",restartStage:"Reiniciar fase",quitToMenu:"Sair para o menu",areaSecured:"Zona assegurada",nextBattlefield:"Próximo campo",
+areaBonus:"BÔNUS DE ZONA",warOver:"Guerra encerrada",newRecord:"NOVO RECORDE",retryOperation:"Tentar de novo",newRandomWar:"Nova guerra aleatória",
+// --- HUD and canvas labels
+hiScoreFmt:"RECORDE {1}",stage:"N",baseLbl:"BASE",hiLbl:"REC",fxOn:"EFEITOS: ALTOS",fxOff:"EFEITOS: BAJOS",sndOn:"SOM: LIGADO",sndOff:"SOM: DESLIGADO",
+effShd:"ESC",effFrz:"CONG",effFrp:"CONP",effWll:"MURO",effSpd:"VEL",effRpd:"RAF",effAp:"AP",
+// --- help lines
+helpSolo:"<b>WASD / Setas</b> movem · <b>Space / J / Enter</b> disparam",helpCoop:"<b>P1: WASD + Space</b> · <b>P2: Setas + Enter</b> · aliados nunca se atingem",
+helpCpu:"<b>WASD + Space</b> dirigem e disparam · um aliado CPU defende a Águia e caça inimigos",helpBoth:"<b>MODO ESPECTADOR</b> · ambos tanques são da CPU · assista à guerra procedural",
+// --- floating battle log
+popStar:"PODER DE FOGO!",popAP:"BALAS PERFURANTES!",popTree:"DESMATADOR!",popShield:"ESCUDO!",popNuke:"NUQUE!",popFreeze:"INIMIGOS CONGELADOS",
+popFort:"BASE FORTIFICADA",popLife:"1UP!",popRepair:"BASE REPARADA",popSpeed:"OVERDRIVE!",popRapid:"TIRO RÁPIDO!",popSecret:"SEGREDO!",
+popEUp:"INIMIGO MELHORADO",popELife:"INIMIGO 1UP",popEShield:"ESCUDO INIMIGO",popESpeed:"INIMIGO EM OVERDRIVE",popERapid:"INIMIGO RÁPIDO",
+popBomb:"BOMBA-ARMADILHA!",popPFreeze:"JOGADORES CONGELADOS!",popBreach:"MUROS DERRUBADOS!",
+// --- reasons, enemies, generated operation names
+reasonEagle:"A ÁGUIA CAIU",reasonArmy:"TODOS OS TANQUES DESTRUÍDOS",foeBasic:"BATEDOR BLINDADO",foeFast:"SAQUEADOR",foePower:"CANHONEIRA",foeArmor:"FORTALEZA",
+opFmt:"OP. {1} {2}",adjList:"CARMESIM|FÉRREO|SILENCIOSO|PARTIDO|DOURADO|CONGELADO|ARDENTE|ESCONDIDO|ESTRONDO|MEIANOCHE|FEROS|SOLITÁRIO",
+nounList:"VANGUARDA|BALUARTE|MARRETO|HORIZONTE|SENTINELA|CASTIGO|DESFILE|ESPEJISMO|AVALANCHE|PROTOCOLO|ASEDIO|AMANHECER",
+// --- composed lines
+pauseInfoFmt:"FASE {1} · {2} · SEMENTE {3}{4}",pauseLineFmt:"Suprimentos: {1} · Espólio: {2}",pausePlFmt:"{1}: arma N{2} · vidas {3}{4}",outLbl:" · BAIXA",
+introStatsFmt:"SEMENTE {1} · GRADE {2} · {3} INIMIGOS · SUPRIMENTO {4} · ESPÓLIO {5}",autoNextFmt:"PRÓXIMO EM {1}s"
+},
+ru:{
+// --- menu panel
+subTitle:"ТАНКОВЫЙ БАТАЛЬОН '90 · ПРОЦЕДУРНАЯ ВОЙНА",modeLbl:"Режим",modeSolo:"Соло",modeCoopHuman:"Кооп-люди",modeCoopCpu:"Кооп + бот",modeCpuDuo:"Дуэт ботов",
+cpuSkill:"Уровень бота",cadet:"Кадет",veteran:"Ветеран",ace:"Ас",p2Offscreen:"P2 вне экрана",viewSplit:"Экран пополам",viewArrow:"Значок стрелки",
+recruit:"Новичок",elite:"Элита",supplyRate:"Припасы",flood:"Поток",enemyLoot:"Трофеи врагов",foeNone:"Без трофеев",foeUpgrades:"Апгрейды + ❤",foeFull:"Всё (ловушки!)",
+battlefield:"Поле боя",warSeed:"Код войны",startLvl:"Начальный уровень",deploy:"В бой!",minimap:"миникарта",gpTouchP1:"Геймпад / Сенсор → P1",
+eagleNote:"Орёл стоит у нижней кромки поля — снизу его не атакует никто.",
+// --- overlays
+battlePaused:"Бой приостановлен",restartStage:"Заново этап",quitToMenu:"Выйти в меню",areaSecured:"Район зачищен",nextBattlefield:"Следующий район",
+areaBonus:"БОНУС ЗА РАЙОН",warOver:"Война окончена",newRecord:"НОВЫЙ РЕКОРД",retryOperation:"Повторить операцию",newRandomWar:"Новая случайная война",
+// --- HUD and canvas labels
+hiScoreFmt:"РЕКОРД {1}",stage:"ЭТ",baseLbl:"БАЗА",hiLbl:"РЕКОРД",scoreLbl:"СЧЁТ",fxOn:"ЭФФЕКТЫ: ПОЛНЫЕ",fxOff:"ЭФФЕКТЫ: ЛЁГКИЕ",sndOn:"ЗВУК: ВКЛ",sndOff:"ЗВУК: ВЫКЛ",
+effShd:"ЩИТ",effFrz:"ЗАМВ",effFrp:"ЗАМП",effWll:"СТЕН",effSpd:"УСКОР",effRpd:"СКОР",effAp:"БП",
+// --- help lines
+helpSolo:"<b>WASD / Стрелки</b> — движение · <b>Space / J / Enter</b> — огонь",helpCoop:"<b>P1: WASD + Space</b> · <b>P2: Стрелки + Enter</b> · союзники не калечат друг друга",
+helpCpu:"<b>WASD + Space</b> ведут огонь · союзник-бот защищает Орла и ищет врагов",helpBoth:"<b>РЕЖИМ НАБЛЮДАТЕЛЯ</b> · оба танка ведёт бот · наблюдайте за процедурной войной",
+// --- floating battle log
+popStar:"ОГОНЬ УСИЛЕН!",popAP:"БРОЕБИТНЫЕ СНАРЯДЫ!",popTree:"РУБИТЕЛЬ ЛЕСА!",popShield:"ЩИТ!",popNuke:"ЯДЕРНЫЙ УДАР!",popFreeze:"ВРАГИ ЗАМОРОЖЕНЫ",
+popFort:"БАЗА УКРЕПЛЕНА",popLife:"+1❤️",popRepair:"БАЗА ОТРЕМОНТИРОВАНА",popSpeed:"ФОРСАЖ!",popRapid:"СКОРОСТРЕЛ!",popSecret:"СЕКРЕТ!",
+popEUp:"ВРАГ УСИЛЕН",popELife:"ВРАГ 1UP",popEShield:"ЩИТ У ВРАГА",popESpeed:"ВРАГ НА ФОРСАЖЕ",popERapid:"ВРАГ СКОРОСТРЕЛ",
+popBomb:"БОМБА-ЛОВУШКА!",popPFreeze:"ИГРОКИ ЗАМОРОЖЕНЫ!",popBreach:"СТЕНЫ ПРОБИТЫ!",
+// --- reasons, enemies, generated operation names
+reasonEagle:"ОРЁЛ ПАЛ",reasonArmy:"ВСЕ ТАНКИ УНИЧТОЖЕНЫ",foeBasic:"РАЗВЕДЧИК",foeFast:"РЕЙДЕР",foePower:"ОГНЕВИК",foeArmor:"КРЕПОСТЬ",
+opFmt:"ОП. {1} {2}",adjList:"БАГРОВЫЙ|ЖЕЛЕЗНЫЙ|БЕЗМЯТЕЖНЫЙ|СЛОМАННЫЙ|ЗОЛОТОЙ|МЁРЗЛЫЙ|ГОРЯЩИЙ|ТАЙНЫЙ|ГРОЗОВОЙ|ПОЛУНОЧНЫЙ|ДИКИЙ|ОДИНОКИЙ",
+nounList:"АВАНГАРД|БАСТИОН|МОЛОТ|ГОРИЗОНТ|РУБЕЖ|ВЫЗОВ|ПОХОД|МИРАЖ|ЗАХВАТ|ПРОТОКОЛ|ШТУРМ|РАССВЕТ",
+// --- composed lines
+pauseInfoFmt:"ЭТАП {1} · {2} · КОД {3}{4}",pauseLineFmt:"Припасы: {1} · Трофеи: {2}",pausePlFmt:"{1}: пушка У{2} · жизни {3}{4}",outLbl:" · ВЫБЫЛ",
+introStatsFmt:"КОД {1} · СЕТКА {2} · {3} ВРАГОВ · ПРИПАСЫ {4} · ТРОФЕИ {5}",autoNextFmt:"СЛЕДУЮЩИЙ ЧЕРЕЗ {1}с"
+},
+zh:{
+// --- menu panel
+subTitle:"90坦克营 · 程序化战争",modeLbl:"模式",modeSolo:"单人",modeCoopHuman:"双人合作",modeCoopCpu:"合作+电脑",modeCpuDuo:"电脑双打",
+cpuSkill:"电脑水平",cadet:"学员",veteran:"老兵",ace:"王牌",p2Offscreen:"P2屏外",viewSplit:"分屏",viewArrow:"箭头标记",
+recruit:"新兵",elite:"精锐",supplyRate:"补给量",flood:"海量",enemyLoot:"敌人掉落",foeNone:"无战利品",foeUpgrades:"强化+1UP",foeFull:"全部(有陷阱)",
+battlefield:"战场",warSeed:"战争种子",startLvl:"起始关卡",deploy:"出击",minimap:"小地图",gpTouchP1:"手柄 / 触屏 → P1",
+eagleNote:"鹰徽位于底边 — 无法从下方被攻击。",
+// --- overlays
+battlePaused:"战斗暂停",restartStage:"重来本关",quitToMenu:"返回菜单",areaSecured:"区域已肃清",nextBattlefield:"下一个战场",
+areaBonus:"区域奖励",warOver:"战争结束",newRecord:"新纪录",retryOperation:"重试行动",newRandomWar:"随机新战役",
+// --- HUD and canvas labels
+hiScoreFmt:"最高分{1}",stage:"第",baseLbl:"基地",hiLbl:"纪录",fxOn:"特效:全",fxOff:"特效:简",sndOn:"声音:开",sndOff:"声音:关",
+effShd:"护盾",effFrz:"敌冻",effFrp:"我冻",effWll:"坚壁",effSpd:"加速",effRpd:"速射",effAp:"穿甲",
+// --- help lines
+helpSolo:"<b>WASD / 方向键</b>驾驶 · <b>Space / J / Enter</b>射击",helpCoop:"<b>P1: WASD + Space</b> · <b>P2: 方向键 + Enter</b> · 友军不会互相伤害",
+helpCpu:"<b>WASD + Space</b>驾驶射击 · 电脑盟友守护鹰徽并猎杀敌人",helpBoth:"<b>观战模式</b> · 两辆坦克均由电脑操控 · 观看程序化战争展开",
+// --- floating battle log
+popStar:"火力提升!",popAP:"穿甲弹!",popTree:"伐林弹!",popShield:"护盾!",popNuke:"核弹!",popFreeze:"敌人冻结",
+popFort:"基地加固",popLife:"1UP!",popRepair:"基地已修复",popSpeed:"超速挡!",popRapid:"速射!",popSecret:"秘密!",
+popEUp:"敌人强化",popELife:"敌人1UP",popEShield:"敌人护盾",popESpeed:"敌人超速",popERapid:"敌人速射",
+popBomb:"陷阱炸弹!",popPFreeze:"玩家冻结!",popBreach:"城墙被破!",
+// --- reasons, enemies, generated operation names
+reasonEagle:"鹰徽陷落",reasonArmy:"全部坦克被毁",foeBasic:"装甲斥候",foeFast:"突袭者",foePower:"炮艇",foeArmor:"要塞",
+opFmt:"行动:{1}{2}",adjList:"赤色|钢铁|寂静|残破|黄金|冰封|燃烧|隐秘|雷霆|午夜|狂暴|孤独",
+nounList:"先锋|堡垒|铁锤|地平线|要塞|审判|奔袭|幻影|雪崩|协议|围攻|破晓",
+// --- composed lines
+pauseInfoFmt:"第{1}关 · {2} · 种子{3}{4}",pauseLineFmt:"补给:{1} · 敌人掉落:{2}",pausePlFmt:"{1}: 武器L{2} · 生命{3}{4}",outLbl:" · 阵亡",
+introStatsFmt:"种子{1} · 地图{2} · {3}敌军 · 补给{4} · 掉落{5}",autoNextFmt:"{1}秒后下一关"
+}
+});
+TLI18N.mount("#menuOv .panel");
+</script>
 <script>
 (function(){'use strict';
 var $=function(id){return document.getElementById(id);};
@@ -98,6 +527,24 @@ function rndSeed(){var A='ABCDEFGHJKMNPQRSTUVWXYZ23456789',s='',i;for(i=0;i<4;i+
 function dist2(ax,ay,bx,by){var dx=ax-bx,dy=ay-by;return dx*dx+dy*dy;}
 var STR={hiScore:'HI-SCORE {1}',helpSolo:'<b>WASD / Arrows</b> drive · <b>Space / J / Enter</b> fire',helpCoop:'<b>P1: WASD + Space</b> · <b>P2: Arrows + Enter</b> · allies never hurt each other',helpCpu:'<b>WASD + Space</b> drive &amp; fire · CPU ally defends Eagle and hunts enemies',helpBoth:'<b>SPECTATE MODE</b> · both tanks are CPU-controlled · watch the procedural war unfold',modes:['SOLO','CO-OP HUMAN','CO-OP CPU','CPU DUO'],skills:['CADET','VETERAN','ACE'],diffs:['RECRUIT','VETERAN','ELITE'],rates:['LOW','NORMAL','HIGH','FLOOD'],foes:['NO PRIZES','UPGRADES + 1UP','FULL (TRAPS!)'],fxOn:'FX: HIGH',fxOff:'FX: LITE',sndOn:'SOUND: ON',sndOff:'SOUND: OFF',stage:'ST',base:'BASE',p1:'1P',p2:'2P',ai:'AI',ai1:'AI1',ai2:'AI2',scoreLbl:'SCORE',hiLbl:'HI',eff:{SHD:'SHD',FRZ:'FRZ',FRP:'FRP',WLL:'WLL',SPD:'SPD',RPD:'RPD',AP:'AP'},popStar:'FIREPOWER UP!',popAP:'STEEL-PIERCING ROUNDS!',popTree:'FOREST CLEARER!',popShield:'SHIELD!',popNuke:'NUKE!',popFreeze:'ENEMIES FROZEN',popFort:'BASE FORTIFIED',popLife:'1UP!',popRepair:'BASE REPAIRED',popSpeed:'OVERDRIVE!',popRapid:'RAPID FIRE!',popGem:'+1500',popSecret:'SECRET!',popEUp:'ENEMY UPGRADED',popELife:'ENEMY 1UP',popEShield:'ENEMY SHIELD',popESpeed:'ENEMY OVERDRIVE',popERapid:'ENEMY RAPID',popBomb:'TRAP BOMB!',popPFreeze:'PLAYERS FROZEN!',popBreach:'WALLS BREACHED!',reasonEagle:'THE EAGLE HAS FALLEN',reasonArmy:'ALL TANKS DESTROYED',enemies:{basic:'ARMORED SCOUT',fast:'RAIDER',power:'GUNSHIP',armor:'FORTRESS'},op:'OP. {1} {2}',adj:['CRIMSON','IRON','SILENT','BROKEN','GOLDEN','FROZEN','BURNING','HIDDEN','THUNDER','MIDNIGHT','SAVAGE','LONE'],noun:['VANGUARD','BASTION','HAMMER','HORIZON','CITADEL','RECKONING','STAMPEDE','MIRAGE','AVALANCHE','PROTOCOL','SIEGE','DAWN'],pauseInfo:'STAGE {1} · {2} · SEED {3}{4}',pauseLine:'Supplies: {1} · Enemy loot: {2}',pausePl:'{1}: weapon L{2} · lives {3}{4}',out:' · OUT',introStats:'SEED {1} · GRID {2} · {3} HOSTILES · SUPPLY {4} · FOE {5}',autoNext:'NEXT IN {1}s'};
 function tx(k){var s=STR[k],i,a;if(s===undefined)return k;a=Array.prototype.slice.call(arguments,1);for(i=0;i<a.length;i++)s=String(s).replace('{'+(i+1)+'}',a[i]);return s;}
+/* the kit table is the single source of truth for game text — mirror it into STR */
+var TXAL={hiScore:'hiScoreFmt',op:'opFmt',base:'baseLbl',out:'outLbl',pauseInfo:'pauseInfoFmt',pauseLine:'pauseLineFmt',pausePl:'pausePlFmt',introStats:'introStatsFmt',autoNext:'autoNextFmt'};
+function syncSTR(){
+ if(!window.TLI18N||typeof TLI18N.t!=='function')return;
+ var t=TLI18N.t,k,kk,q;
+ for(k in STR){if(Array.isArray(STR[k])||typeof STR[k]!=='string')continue;kk=TXAL[k]||k;q=t(kk);if(q!==kk)STR[k]=q;}
+ STR.modes=[t('modeSolo'),t('modeCoopHuman'),t('modeCoopCpu'),t('modeCpuDuo')];
+ STR.skills=[t('cadet'),t('veteran'),t('ace')];
+ STR.diffs=[t('recruit'),t('veteran'),t('elite')];
+ STR.rates=[t('low'),t('normal'),t('high'),t('flood')];
+ STR.foes=[t('foeNone'),t('foeUpgrades'),t('foeFull')];
+ STR.adj=String(t('adjList')||STR.adj.join('|')).split('|');
+ STR.noun=String(t('nounList')||STR.noun.join('|')).split('|');
+ STR.enemies={basic:t('foeBasic'),fast:t('foeFast'),power:t('foePower'),armor:t('foeArmor')};
+ STR.eff={SHD:t('effShd'),FRZ:t('effFrz'),FRP:t('effFrp'),WLL:t('effWll'),SPD:t('effSpd'),RPD:t('effRpd'),AP:t('effAp')};
+}
+syncSTR();
+if(window.TLI18N&&typeof TLI18N.onChange==='function')TLI18N.onChange(syncSTR);
 var BAL={ui:{hudReserve:142},cam:{maxW:880,maxH:620,speed:5,lookahead:22},fx:{particles:140,shakeMax:9},player:{speed:72,speedBoost:1.45,lives:3,respawnDelay:1.3,spawnShield:3,baseCd:0.36,cdLvl2:0.85,cdLvl3:0.8,cdRapid:0.55,bulletSpeed:280,bulletSpeedPerLvl:25,maxBullets:2,shieldTime:12,speedTime:12},eagle:{hp:2},enemy:{types:{basic:{hp:1,spd:44,bs:170,pts:100,aggro:0.55},fast:{hp:1,spd:76,bs:185,pts:200,aggro:0.65},power:{hp:1,spd:50,bs:265,pts:300,aggro:0.8},armor:{hp:4,spd:38,bs:185,pts:400,aggro:0.7}},rosterBase:[12,16,20],rosterPerLevel:1,rosterLevelCap:8,rosterMax:26,maxConcurrent:5,spawnIntBase:2.6,spawnIntMin:1.2,spawnIntLevelCut:0.05,spawnIntDiffCut:0.4,fireBase:0.9,fireVar:1.8,upBonus:55,drop:[0,0.08,0.2,0.4],flashEvery:7,lootRange:80,lootChance:0.65},diff:{spd:[0.85,1,1.15],fire:[0.7,1,1.4],levelScale:0.02,levelCap:0.25},prizes:{life:20,secrets:[1,3,5,8],pickupScore:500,gem:1000}};
 var ETYPES=BAL.enemy.types;
 var SPLIT_M=40,JOIN_M=120;
@@ -1035,6 +1482,24 @@ $('hiTxt').textContent=tx('hiScore',pad(G.hiscore));
 $('opPreview').textContent=opName(ST.seed,1);
 toMenu();
 requestAnimationFrame(frame);
+
+/* Developer harness bridge (?debug=dbg/tanks.js): names only, no logic, no
+   listeners. Game behaviour is identical with and without the debug parameter. */
+window.TLHOOK = {
+  get update() { return update }, set update(f) { update = f },
+  render: render, renderHUD: renderHUD, renderMinimap: renderMinimap, renderIntro: renderIntro,
+  renderAttract: renderAttract, drawView: drawView, drawCell: drawCell, frame: frame, resize: resize,
+  genLevel: genLevel, solidTank: solidTank, cellHasTank: cellHasTank, unstuckTank: unstuckTank,
+  spawnPow: spawnPow, addEnemyRespawn: addEnemyRespawn, fireBullet: fireBullet, playerFire: playerFire,
+  enemyFire: enemyFire, moveTank: moveTank, aiDecideState: aiDecideState, idx: idx, pickPow: pickPow,
+  mkPlayer: mkPlayer, startCampaign: startCampaign, startLevel: startLevel, stageClear: stageClear,
+  nextLevel: nextLevel, showOver: showOver, togglePause: togglePause, toMenu: toMenu, opName: opName,
+  get BAL() { return BAL }, get ETYPES() { return ETYPES }, get ST() { return ST }, get G() { return G },
+  get VW() { return VW }, get VH() { return VH },
+  get CELL() { return T },
+  get STEP() { return STEP }, get acc() { return acc }
+};
+
 })();
 </script>
 <script>
@@ -1074,5 +1539,232 @@ else seen(cur);
 }).catch(function () {});
 })();
 </script>
+<script>
+/* Developer harness. ?debug=dbg/tanks.js loads the shared engine dbg/_harness.js
+   then that script: live panel with state, elements, layout per screen mode,
+   texts, balance, cheats, JSON export. No parameter or missing script = the
+   page behaves exactly as without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
+</script>
+<!-- inlined fs.js — the source of truth is fs.js: edit that file and re-inline this block -->
+<script>
+/* fs.js — the one fullscreen control every page shares.
+
+   Two jobs:
+
+   1. A toggle button. `TLFS.mount("#opts", {cls:"btn"})` puts it inside a menu or
+      title panel using that page's own button class; `TLFS.mount()` alone floats a
+      small icon button in the bottom-right corner; `{icon:true}` swaps the word for
+      a ⤢ glyph and moves it into `aria-label` for narrow hosts. The wording is the
+      shared translation key `fullscreen` / `exitFullscreen` — from the i18n kit, from
+      a page table published through `TLFS_LABEL(key)`, or English as the floor — and
+      a change of `<html lang>` repaints it. Where the Fullscreen API is missing the
+      button hides itself instead of lying.
+
+   2. Re-fit on every usable-area change. Entering or leaving fullscreen, an
+      orientation flip, and a mobile browser bar hiding or showing all change the
+      area the game has to fill — and the bar case does not always fire a plain
+      `resize`. This file listens to `fullscreenchange` (all vendor spellings) and
+      to `visualViewport.resize`, then re-applies `<html data-fs>` and dispatches
+      `resize` (plus `orientationchange`) once per frame, so the page's own layout
+      code runs. `TLFS.refitOnly()` gives a page that already has its own
+      fullscreen button just that wiring, without a second button.
+
+   Nothing here reads game state, and a page that never calls mount/refitOnly gets
+   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+(function () {
+  if (window.TLFS) return;
+  var de = document.documentElement;
+  var REQ = de.requestFullscreen || de.webkitRequestFullscreen ||
+    de.msRequestFullscreen || de.mozRequestFullScreen;
+  var EX = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.msExitFullscreen || document.mozCancelFullScreen;
+  var blocked = !REQ || !EX || de.fullscreenEnabled === false;
+  var ICON = "\u2922"; /* narrow hosts (side stripes, icon bars) get the glyph plus a
+                          translated aria-label instead of the word */
+  var btns = [], cbs = [], queued = false, styleDone = false;
+
+  function isFull() {
+    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
+      de.msFullscreenElement || de.mozFullScreenElement);
+  }
+  function kit() {
+    var k = window.TLI18N;
+    return (k && typeof k.t === "function") ? k : null;
+  }
+  /* A missing key makes t() hand back the key name — that is not a label.
+     Pages that keep their own translation table (billiards, tilt, oilstorm) publish
+     TLFS_LABEL(key) instead of the kit; they win over the kit, English is the floor. */
+  function label() {
+    var want = isFull() ? "exitFullscreen" : "fullscreen";
+    var L = window.TLFS_LABEL;
+    if (typeof L === "function") {
+      try { var v = L(want); if (v && v !== want) return String(v) } catch (e) {}
+    }
+    var k = kit(), t = null;
+    if (k) { try { t = k.t(want) } catch (e) { t = null } }
+    if (!t || t === want) t = isFull() ? "EXIT FULLSCREEN" : "FULLSCREEN";
+    return t;
+  }
+  function cssOnce() {
+    if (styleDone) return;
+    styleDone = true;
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlfs-float:hover{border-color:#ffd76a;color:#ffd76a}" +
+      ".tlfs-float[hidden]{display:none}";
+    document.head.appendChild(st);
+  }
+  function paint() {
+    var txt = label();
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      b.textContent = b.__tlfsIcon ? ICON : txt;
+      b.setAttribute("aria-label", txt);
+      b.setAttribute("aria-pressed", isFull() ? "true" : "false");
+    }
+  }
+  /* One pass per frame: fullscreenchange and visualViewport.resize often arrive
+     together, and dispatching resize from inside a resize listener would loop. */
+  function refit() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint();
+      for (var i = 0; i < cbs.length; i++) { try { cbs[i](isFull()) } catch (e) {} }
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new Event("orientationchange"));
+    });
+  }
+  function toggle() {
+    if (blocked) return false;
+    var was = isFull();
+    try {
+      if (was) EX.call(document);
+      else { var p = REQ.call(de); if (p && p.catch) p.catch(function () {}) }
+    } catch (e) {}
+    /* the change event may never come (sandboxed frames, denied requests, some
+       headless shells that grant then silently drop): repaint the state we can
+       read twice, late enough to catch a transition nobody announced. */
+    setTimeout(refit, 220);
+    setTimeout(refit, 700);
+    return !was;
+  }
+
+  de.setAttribute("data-fs", "off");
+  ["fullscreenchange", "webkitfullscreenchange", "MSFullscreenChange", "mozfullscreenchange"]
+    .forEach(function (t) { document.addEventListener(t, refit, false) });
+  ["fullscreenerror", "webkitfullscreenerror"].forEach(function (t) {
+    document.addEventListener(t, function () { de.setAttribute("data-fs", "off"); paint() }, false)
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", refit, false);
+    window.visualViewport.addEventListener("scroll", function () {
+      de.setAttribute("data-fs", isFull() ? "on" : "off");
+      paint(); /* an exit the browser never announced must still clear the label */
+    }, false);
+  }
+  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
+  }, false);
+  /* A language switch changes <html lang>: repaint from whatever table the page
+     uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
+     drive their toggle state off that attribute, and taking it would corrupt them. */
+  new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
+
+  window.TLFS = {
+    version: "2026.11.23.3",
+    supported: !blocked,
+    isFull: isFull,
+    label: label,
+    paint: paint,
+    toggle: toggle,
+    onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
+    /* just the size/orientation wiring, for a page with its own fullscreen button */
+    refitOnly: function () { paint(); return true },
+    /* put the button in `sel` (or float it when the selector matches nothing).
+       opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
+       puts the translated word in aria-label, for narrow hosts. */
+    mount: function (sel, opts) {
+      cssOnce();
+      var o = opts || {};
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = o.cls || "tlfs-float";
+      b.id = o.id || "tlfsBtn";
+      b.__tlfsIcon = !!o.icon;
+      if (o.float !== false && !o.cls) b.classList.add("tlfs-float");
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", label());
+      if (o.ariaLabel) b.setAttribute("data-aria", o.ariaLabel);
+      b.textContent = o.icon ? ICON : label();
+      /* a menu that starts the game on any tap (defender binds pointerdown on the
+         whole title screen) must not fire when the fullscreen button is pressed */
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("touchstart", function (e) { e.stopPropagation() }, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); toggle() });
+      var host = sel ? document.querySelector(sel) : null;
+      if (host) {
+        if (o.prepend && host.firstChild) host.insertBefore(b, host.firstChild);
+        else host.appendChild(b);
+      } else {
+        b.classList.add("tlfs-float");
+        document.body.appendChild(b);
+      }
+      if (blocked) b.style.display = "none";
+      btns.push(b);
+      paint();
+      return b;
+    },
+    /* wire a button the page already has in its markup (keeps its own look) */
+    attach: function (el) {
+      cssOnce();
+      if (!el) return null;
+      if (blocked) { el.style.display = "none"; return el }
+      el.addEventListener("click", function (e) { e.preventDefault(); toggle() });
+      btns.push(el);
+      paint();
+      return el;
+    },
+    /* a rebuilt panel drops its children: re-add every button the page mounted */
+    reassert: function () {
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i];
+        if (!b.isConnected && b.__tlfsHost) {
+          var h = document.querySelector(b.__tlfsHost);
+          if (h) h.appendChild(b);
+        }
+      }
+      paint();
+      return btns.length
+    }
+  };
+  /* remember where each button was mounted so a panel rebuild can put it back */
+  var mount0 = window.TLFS.mount;
+  window.TLFS.mount = function (sel, opts) {
+    var b = mount0(sel, opts);
+    if (b) b.__tlfsHost = sel || "body";
+    return b;
+  };
+  var k = kit();
+  if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
+})();
+</script>
+<script>TLFS.mount("#menuOv .panel",{cls:"btn"});</script>
 </body>
 </html>

@@ -552,6 +552,15 @@ document.getElementById('langB').onclick=function(e){var b=e.target,root=documen
  if(!b||b===root)return;
  LANG=b.getAttribute('data-lang');store('tll:lang',LANG);apply();ov.hidden=true};
 apply();
+/* Live handle for the external developer harness (dbg/index.js + dbg/_harness.js).
+   Names only; nothing here runs on its own and no page behaviour changes. */
+window.TLHOOK={
+ get lang(){return LANG}, set lang(v){if(TR[v])LANG=v},
+ get savedLang(){return store('tll:lang')},
+ TR:TR, LANGS:LANGS,
+ apply:apply, t:t, stat:stat, tagsFn:tags, links:links, picker:picker, btnUi:btnUi,
+ flagOf:flagOf, wordOf:wordOf, store:store
+};
 })();
 </script>
 
@@ -636,6 +645,20 @@ else seen(cur);
 });
 }).catch(function () {});
 })();
+</script>
+<script>
+/* Developer harness. ?debug=dbg/index.js loads the shared engine dbg/_harness.js
+   then that script: live panel with state, elements, layout per screen mode,
+   texts, balance, cheats, JSON export. No parameter or missing script = the
+   page behaves exactly as without this block. */
+(function(){var m=location.search.match(/[?&]debug=([^&]+)/);if(!m)return;
+ var p=decodeURIComponent(m[1]);if(/\.\.|[^\/\w.-]/.test(p))return;
+ if(p.indexOf(".js")<0)p+=".js";if(p.indexOf("/")<0)p="dbg/"+p;
+ function load(u,next){var s=document.createElement("script");s.src=u;
+  s.onerror=function(){console.warn("[TLDBG] harness not loaded: "+u)};
+  if(next)s.onload=next;document.head.appendChild(s);}
+ function go(){load("dbg/_harness.js",function(){load(p)});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();})();
 </script>
 </body>
 </html>
