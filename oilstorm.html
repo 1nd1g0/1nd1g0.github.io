@@ -2721,5 +2721,10 @@ else seen(cur);
 })();
 </script>
 <script>TLFS.mount("#scrOptions .wrap",{cls:"btn"});</script>
+<script>/* TL_NOTOUCH_GATE: hide on-screen touch controls when the device has no touch capability */
+(function(){var t=false;
+try{t=matchMedia('(pointer: coarse)').matches||matchMedia('(any-pointer: coarse)').matches;}catch(e){}
+if((navigator.maxTouchPoints||0)>0||('ontouchstart' in window))t=true;
+if(!t)document.documentElement.classList.add('tl-notouch');})();</script>
 </body>
 </html>

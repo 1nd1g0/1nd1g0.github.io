@@ -64,6 +64,7 @@ html,body{
   flex-direction:column;
   gap:var(--gap);
 }
+html.tl-notouch #controls{display:none!important}
 .row1{
   display:grid;
   grid-template-columns:repeat(5,1fr);
@@ -3339,5 +3340,10 @@ else seen(cur);
 })();
 </script>
 <script>TLFS.mount("#tlHost",{cls:"ovSecondary"});</script>
+<script>/* TL_NOTOUCH_GATE: hide on-screen touch controls when the device has no touch capability */
+(function(){var t=false;
+try{t=matchMedia('(pointer: coarse)').matches||matchMedia('(any-pointer: coarse)').matches;}catch(e){}
+if((navigator.maxTouchPoints||0)>0||('ontouchstart' in window))t=true;
+if(!t)document.documentElement.classList.add('tl-notouch');})();</script>
 </body>
 </html>

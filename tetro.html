@@ -398,6 +398,7 @@ body[data-mode="landscape"] .kick{font-size:clamp(19px,3.4vh,32px)}
 body[data-mode="landscape"] .msg{font-size:10px;line-height:1.5}
 
 @media (prefers-reduced-motion:reduce){*{animation-duration:.001s!important}}
+html.tl-notouch #pad{display:none!important}
 </style>
 </head>
 <body data-mode="">
@@ -2607,5 +2608,10 @@ tlfsP.style.top="10px";tlfsP.style.right="10px";tlfsP.style.bottom="auto";
 var tlfsCss=document.createElement("style");
 tlfsCss.textContent="#tlfsBtnP{display:none}body[data-mode='portrait'] #tlfsBtnP{display:block}";
 document.head.appendChild(tlfsCss);</script>
+<script>/* TL_NOTOUCH_GATE: hide on-screen touch controls when the device has no touch capability */
+(function(){var t=false;
+try{t=matchMedia('(pointer: coarse)').matches||matchMedia('(any-pointer: coarse)').matches;}catch(e){}
+if((navigator.maxTouchPoints||0)>0||('ontouchstart' in window))t=true;
+if(!t)document.documentElement.classList.add('tl-notouch');})();</script>
 </body>
 </html>

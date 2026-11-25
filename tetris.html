@@ -74,6 +74,7 @@ input[type=range]{width:140px;accent-color:var(--accent);}
 .meter{width:100%;height:14px;background:#26262e;border-radius:4px;overflow:hidden;border:1px solid #44444f;}
 #zone-fill{height:100%;width:0%;background:linear-gradient(90deg,#0044ff,#00e5ff);transition:width .15s;}
 .touch-controls{display:none;}
+html.tl-notouch .touch-controls{display:none!important}
 .pause-btn{display:none;}
 
 .zone-active #gameCanvas{border-color:#fff;box-shadow:0 0 40px #0055ff,0 0 90px #00e5ff;animation:zp 1.2s infinite alternate;}
@@ -1118,5 +1119,10 @@ else seen(cur);
 })();
 </script>
 <script>TLFS.mount("#options-screen",{cls:"menu-btn"});</script>
+<script>/* TL_NOTOUCH_GATE: hide on-screen touch controls when the device has no touch capability */
+(function(){var t=false;
+try{t=matchMedia('(pointer: coarse)').matches||matchMedia('(any-pointer: coarse)').matches;}catch(e){}
+if((navigator.maxTouchPoints||0)>0||('ontouchstart' in window))t=true;
+if(!t)document.documentElement.classList.add('tl-notouch');})();</script>
 </body>
 </html>

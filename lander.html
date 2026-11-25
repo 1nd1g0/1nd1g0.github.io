@@ -29,6 +29,7 @@ input{background:#001018;border:1px solid #2bd;color:#8ff;font:inherit;padding:6
 .ctrl{pointer-events:auto;width:72px;height:72px;border-radius:50%;background:rgba(10,40,60,.45);border:2px solid rgba(80,200,255,.45);color:#cff;font-size:28px;line-height:1;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none}
 .ctrl.thrust{width:88px;height:88px;background:rgba(60,30,0,.45);border-color:rgba(255,190,70,.55)}
 .ctrl.active{background:rgba(80,220,255,.35);border-color:#fff}
+html.tl-notouch #controls{display:none!important}
 #msg{position:absolute;top:18%;left:50%;transform:translateX(-50%);z-index:18;background:rgba(0,0,0,.58);border:1px solid #3cf;color:#bff;padding:8px 14px;border-radius:6px;opacity:0;transition:opacity .25s;pointer-events:none;font-size:14px}
 .small{opacity:.72;font-size:12px}
 button:focus-visible,.btn:focus-visible{outline:2px solid #3cf;outline-offset:2px}
@@ -4055,5 +4056,10 @@ else seen(cur);
 })();
 </script>
 <script>TLFS.mount("#title",{cls:""});</script>
+<script>/* TL_NOTOUCH_GATE: hide on-screen touch controls when the device has no touch capability */
+(function(){var t=false;
+try{t=matchMedia('(pointer: coarse)').matches||matchMedia('(any-pointer: coarse)').matches;}catch(e){}
+if((navigator.maxTouchPoints||0)>0||('ontouchstart' in window))t=true;
+if(!t)document.documentElement.classList.add('tl-notouch');})();</script>
 </body>
 </html>

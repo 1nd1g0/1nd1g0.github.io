@@ -35,7 +35,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden;background:#0b0908;color:var(--ink);font-family:"Segoe UI",Roboto,Arial,sans-serif}
-body.playing{cursor:none}
+body.playing{cursor:crosshair}
 canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 #hud{pointer-events:none;z-index:2}
 #grain{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:.06;mix-blend-mode:overlay}
@@ -2933,8 +2933,10 @@ else if(STATE==="title"&&c==="Enter")$("btnSurv").click();
 },
 ts:function(e){
 AU.init();AU.resume();
-if(this.onUI(e.target))return;
 if(STATE!=="play")return;
+/* stick zones win over HUD chrome: a finger that lands in a stick's zone
+   (move circle, fire circle, stick buttons) drives the stick even when a
+   topbar button or popup is painted on top of it. */
 e.preventDefault();
 for(var i=0;i<e.changedTouches.length;i++){
 var t=e.changedTouches[i],x=t.clientX,y=t.clientY,done=false;
@@ -2965,7 +2967,8 @@ if(sqrt(dxf*dxf+dyf*dyf)<st.rad+34){st.fid=t.identifier;st.fv={x:0,y:0};done=tru
 }
 },
 tm:function(e){
-if(this.onUI(e.target))return;
+/* no onUI bail: the touch target stays whatever element received touchstart;
+   bound sticks must keep tracking even when that element is HUD chrome */
 if(STATE!=="play")return;
 e.preventDefault();
 for(var i=0;i<e.changedTouches.length;i++){
@@ -3001,7 +3004,7 @@ for(var p=0;p<players.length;p++){players[p].padMove=null;players[p].padAim=null
 layout:function(){
 this.sticks=[];if(!isTouch)return;
 var rad=clamp(Math.min(W,H)*0.10,34,56),ins=rad+24,self=this;
-var L=SA.l+ins,R=W-SA.r-ins,T=SA.t+ins,B=H-SA.b-ins;
+var L=SA.l+ins,R=W-SA.r-ins,T=SA.t+ins+50,B=H-SA.b-ins;/* +50: clear the #topbar buttons painted in the top-right corner */
 function clampBtn(x,y){return {x:clamp(x,SA.l+22,W-SA.r-22),y:clamp(y,SA.t+22,H-SA.b-22)}}
 function mk(pi,mx,my,fx,fy,rot,up){
 var s={pi:pi,mx:mx,my:my,fx:fx,fy:fy,rad:rad,rot:rot,mid:null,fid:null,mv:{x:0,y:0},fv:{x:0,y:0},btns:[],tap:0};
@@ -3064,6 +3067,27 @@ var pj=players[j];if(pj){pj.padMove=null;pj.padAim=null;pj.padFire=false;pj.padL
 }
 }
 };
+var orientTried=0;
+function coopOrient(){
+/* Two-player co-op places the device flat on the table: lock the screen in
+   landscape so shaking it cannot flip the controls. screen.orientation.lock
+   needs fullscreen on Android — retry once after entering it via TLFS.
+   Where the API is absent (iOS Safari) this is a no-op best-effort. */
+var o=screen&&screen.orientation;
+if(!o||typeof o.lock!=="function")return;
+var two=players.length>1&&(STATE==="play"||STATE==="paused");
+if(!two){try{o.unlock()}catch(e){}orientTried=0;return}
+if(o.type&&o.type.indexOf("landscape")===0){orientTried=0;return}
+if(orientTried)return;
+orientTried=1;
+try{
+var p=o.lock("landscape");
+if(p&&p.catch)p.catch(function(){
+if(!document.fullscreenElement&&window.TLFS){TLFS.toggle();
+setTimeout(function(){try{var q=o.lock("landscape");if(q&&q.catch)q.catch(function(){})}catch(e){}},400)}
+});
+}catch(e){}
+}
 function keyLabel(c){
 if(typeof c==="number")return "B"+c;
 return String(c).replace("Key","").replace("Digit","").replace("Arrow","").replace("ShiftLeft","L-SHIFT")
@@ -3078,6 +3102,7 @@ var d=hyp(x,y);return d>0?{x:x/d,y:y/d}:{x:0,y:0};
 }
 function aimKeys(pi){
 var km=(pi===0)?KEYS.p1:KEYS.p2,k=Input.keys,x=0,y=0;
+if(pi===0&&players.length>1&&players[1]&&!players[1].cpu)return null;/* arrows steer P2 in 2P games */
 if(k[km.aimLeft])x--;if(k[km.aimRight])x++;if(k[km.aimUp])y--;if(k[km.aimDown])y++;
 var d=hyp(x,y);return d>0?atan2(y,x):null;
 }
@@ -3395,13 +3420,18 @@ if(stk){mv.x+=stk.mv.x;mv.y+=stk.mv.y}
 var md0=hyp(mv.x,mv.y);if(md0>1){mv.x/=md0;mv.y/=md0}
 var lock=Input.keys[(p.idx===0)?KEYS.p1.lock:KEYS.p2.lock]||p.padLock||(stk&&Input.lockTgl[p.idx]);
 var ak=aimKeys(p.idx);
-if(ak!==null){aim=ak;firing=true}
 if(p.idx===0){
-if(Input.ml||(OPT.coop===1&&Input.mActive&&nowMs()-Input.mTime<2500&&ak===null&&!p.padAim)){
+/* the mouse is P1's aim device once used at all (mousemove or click): the
+   crosshair direction wins over movement in every mode — WASD only moves.
+   Left click fires toward the crosshair; holding and dragging keeps shots
+   following it live. Aim keys override only while held, pad/aim stick take
+   over while pressed. */
+if(Input.mActive&&!p.padAim&&!(stk&&hyp(stk.fv.x,stk.fv.y)>0.3)){
 var wx=CAM.rx+(Input.mx-W/2)/CAM.z,wy=CAM.ry+(Input.my-H/2)/CAM.z;
 aim=atan2(wy-p.y,wx-p.x);if(Input.ml)firing=true;
 }
 }
+if(ak!==null){aim=ak;firing=true}
 if(p.padAim){aim=atan2(p.padAim.y,p.padAim.x);firing=true}
 if(p.padFire)firing=true;
 if(stk&&hyp(stk.fv.x,stk.fv.y)>0.3){aim=atan2(stk.fv.y,stk.fv.x);firing=true}
@@ -3413,7 +3443,7 @@ if(da<bestD){bestD=da;bestA=a}
 });
 if(bestA!==null)aim=aim+(((bestA-aim+PI*3)%TAU)-PI)*0.5;
 }
-if(lock){if(!p.locked){p.locked=true;p.lockFace=p.face}firing=true}else p.locked=false;
+if(lock&&!Input.ml){if(!p.locked){p.locked=true;p.lockFace=p.face}firing=true}else p.locked=false;
 }
 var md=hyp(mv.x,mv.y);if(md>1){mv.x/=md;mv.y/=md}
 if(aim!==null&&!p.locked)p.face=aim;
@@ -4299,6 +4329,7 @@ function syncRuntime(){
 var active=(STATE==="play"||STATE==="title");
 document.body.classList.toggle("playing",STATE==="play");
 $("btnPause").style.display=(STATE==="play"||STATE==="paused")?"":"none";
+coopOrient();
 if(document.hidden){stopLoop();stopIdle();AU.suspend();return}
 if(active){
 stopIdle();startLoop();
@@ -4338,7 +4369,7 @@ render();
 drawHUD();
 }
 window.addEventListener("resize",resize,false);
-window.addEventListener("orientationchange",function(){setTimeout(resize,140)},false);
+window.addEventListener("orientationchange",function(){coopOrient();setTimeout(resize,140)},false);
 function tlResync(){
 refreshTitle();refreshSound();refreshFullBtns();
 if(isTouch&&Input.sticks)Input.layout();
@@ -4650,5 +4681,10 @@ else seen(cur);
 </script>
 <script>/* arena has its own FULLSCREEN buttons already — take only the re-fit wiring */
 TLFS.refitOnly();</script>
+<script>/* TL_NOTOUCH_GATE: hide on-screen touch controls when the device has no touch capability */
+(function(){var t=false;
+try{t=matchMedia('(pointer: coarse)').matches||matchMedia('(any-pointer: coarse)').matches;}catch(e){}
+if((navigator.maxTouchPoints||0)>0||('ontouchstart' in window))t=true;
+if(!t)document.documentElement.classList.add('tl-notouch');})();</script>
 </body>
 </html>

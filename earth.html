@@ -73,6 +73,7 @@ button:disabled{opacity:.4;cursor:default}
 #dpad{grid-template-columns:repeat(3,31px);grid-template-rows:repeat(3,31px)}
 .dbtn{min-height:31px;font-size:14px}
 }
+html.tl-notouch #controls{display:none!important}
 </style>
 </head>
 <body>
@@ -6093,5 +6094,10 @@ else seen(cur);
 })();
 </script>
 <script>TLFS.mount("#setupOverlay .pnl",{cls:"btn"});</script>
+<script>/* TL_NOTOUCH_GATE: hide on-screen touch controls when the device has no touch capability */
+(function(){var t=false;
+try{t=matchMedia('(pointer: coarse)').matches||matchMedia('(any-pointer: coarse)').matches;}catch(e){}
+if((navigator.maxTouchPoints||0)>0||('ontouchstart' in window))t=true;
+if(!t)document.documentElement.classList.add('tl-notouch');})();</script>
 </body>
 </html>

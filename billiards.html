@@ -2196,5 +2196,10 @@ window.TLHOOK={
 <script>/* billiards keeps its own TR table: label through it, mount on the start panel */
 window.TLFS_LABEL=function(k){var H=window.TLHOOK;if(!H||!H.TR)return null;var b=H.TR[H.LANG]||H.TR.en;var v=b?b[k]:null;return v==null?null:v};
 TLFS.mount("#startOv .panel",{cls:"big ghost pe"});</script>
+<script>/* TL_NOTOUCH_GATE: hide on-screen touch controls when the device has no touch capability */
+(function(){var t=false;
+try{t=matchMedia('(pointer: coarse)').matches||matchMedia('(any-pointer: coarse)').matches;}catch(e){}
+if((navigator.maxTouchPoints||0)>0||('ontouchstart' in window))t=true;
+if(!t)document.documentElement.classList.add('tl-notouch');})();</script>
 </body>
 </html>
