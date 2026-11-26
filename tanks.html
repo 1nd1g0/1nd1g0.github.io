@@ -83,7 +83,7 @@ body.touch #touch{display:block}
 <div class="help center"><b>P</b> <span data-t="pause">pause</span> · <b>M</b> <span data-t="minimap">minimap</span> · <span data-t="gpTouchP1">Gamepad / Touch → P1</span></div>
 <div class="help center" data-t="eagleNote">The Eagle sits on the bottom border — nothing can attack it from below.</div>
 </div></div>
-<div class="ov hid" id="pauseOv"><div class="panel"><div class="hazard"></div><h1 class="h-stencil" style="font-size:30px" data-t="battlePaused">Battle Paused</h1><div class="sub" id="pauseInfo"></div><button class="btn big" id="btnResume" data-t="resume">Resume</button><div class="row" style="justify-content:center"><button class="btn" id="btnRestart" data-t="restartStage">Restart Stage</button><button class="btn" id="btnQuit" data-t="quitToMenu">Quit to Menu</button></div><div class="help center" id="pauseHelp"></div></div></div>
+<div class="ov hid" id="pauseOv"><div class="panel"><div class="hazard"></div><h1 class="h-stencil" style="font-size:30px" data-t="battlePaused">Battle Paused</h1><div class="sub" id="pauseInfo"></div><button class="btn big" id="btnResume" data-t="resume">Resume</button><div class="row" style="justify-content:center"><button class="btn" id="btnRestart" data-t="restartStage">Restart Stage</button><button class="btn" id="btnQuit" data-t="quitToMenu">Quit to Menu</button><a class="btn" id="btnPauseHome" href="https://1nd1g0.github.io/">⌂ <span data-t="home">Home</span></a></div><div class="help center" id="pauseHelp"></div></div></div>
 <div class="ov hid" id="clearOv"><div class="panel center"><div class="hazard"></div><h1 class="h-stencil" style="font-size:30px;color:var(--cyan)" data-t="areaSecured">Area Secured</h1><div class="sub h-stencil" id="clearOp"></div><table class="tally" id="tallyTbl"></table><div class="hr"></div><div class="stat" id="clearScore"></div><button class="btn big" id="btnNext"><span data-t="nextBattlefield">Next Battlefield</span> ►</button><div class="help" id="nextIn" style="color:var(--amber2)"></div></div></div>
 <div class="ov hid" id="overOv"><div class="panel center"><div class="hazard"></div><h1 class="h-stencil" style="font-size:32px;color:var(--red)" data-t="warOver">War Over</h1><div class="sub" id="overReason"></div><div class="row center" style="justify-content:center"><span class="stat" id="overScore"></span></div><div id="newRec" class="hid"><span class="badge">★ <span data-t="newRecord">NEW RECORD</span> ★</span></div><button class="btn big" id="btnRetry" data-t="retryOperation">Retry Operation</button><div class="row" style="justify-content:center"><button class="btn" id="btnNewSeed" data-t="newRandomWar">New Random War</button><button class="btn" id="btnMenu2" data-t="menu">Menu</button></div></div></div>
 <!-- inlined i18n.js — the source of truth is i18n.js: edit that file and re-inline this block -->
@@ -514,6 +514,12 @@ introStatsFmt:"种子{1} · 地图{2} · {3}敌军 · 补给{4} · 掉落{5}",au
 }
 });
 TLI18N.mount("#menuOv .panel");
+/* audit pass 2026-11-26: SOLO/NORMAL/ELITE/MENU/AP read identically in es/pt;
+   the co-op+CPU mode label needed translating */
+TLI18N.add({
+ es:{modeCoopCpu:"Coop + CPU"},
+ pt:{modeCoopCpu:"Co-op + CPU"}
+});
 </script>
 <script>
 (function(){'use strict';
@@ -545,11 +551,11 @@ function syncSTR(){
 }
 syncSTR();
 if(window.TLI18N&&typeof TLI18N.onChange==='function')TLI18N.onChange(syncSTR);
-var BAL={ui:{hudReserve:142},cam:{maxW:880,maxH:620,speed:5,lookahead:22},fx:{particles:140,shakeMax:9},player:{speed:72,speedBoost:1.45,lives:3,respawnDelay:1.3,spawnShield:3,baseCd:0.36,cdLvl2:0.85,cdLvl3:0.8,cdRapid:0.55,bulletSpeed:280,bulletSpeedPerLvl:25,maxBullets:2,shieldTime:12,speedTime:12},eagle:{hp:2},enemy:{types:{basic:{hp:1,spd:44,bs:170,pts:100,aggro:0.55},fast:{hp:1,spd:76,bs:185,pts:200,aggro:0.65},power:{hp:1,spd:50,bs:265,pts:300,aggro:0.8},armor:{hp:4,spd:38,bs:185,pts:400,aggro:0.7}},rosterBase:[12,16,20],rosterPerLevel:1,rosterLevelCap:8,rosterMax:26,maxConcurrent:5,spawnIntBase:2.6,spawnIntMin:1.2,spawnIntLevelCut:0.05,spawnIntDiffCut:0.4,fireBase:0.9,fireVar:1.8,upBonus:55,drop:[0,0.08,0.2,0.4],flashEvery:7,lootRange:80,lootChance:0.65},diff:{spd:[0.85,1,1.15],fire:[0.7,1,1.4],levelScale:0.02,levelCap:0.25},prizes:{life:20,secrets:[1,3,5,8],pickupScore:500,gem:1000}};
+var BAL={ui:{hudReserve:142},cam:{maxW:880,maxH:620,speed:5,lookahead:22},fx:{particles:140,shakeMax:9},player:{speed:72,speedBoost:1.45,lives:3,respawnDelay:1.3,spawnShield:3,baseCd:0.36,cdLvl2:0.85,cdLvl3:0.8,cdRapid:0.55,bulletSpeed:280,bulletSpeedPerLvl:25,maxBullets:2,shieldTime:12,speedTime:12,aceCd:0.66},eagle:{hp:2},enemy:{types:{basic:{hp:1,spd:44,bs:170,pts:100,aggro:0.55},fast:{hp:1,spd:76,bs:185,pts:200,aggro:0.65},power:{hp:1,spd:50,bs:265,pts:300,aggro:0.8},armor:{hp:4,spd:38,bs:185,pts:400,aggro:0.7}},rosterBase:[12,16,20],rosterPerLevel:1,rosterLevelCap:8,rosterMax:26,maxConcurrent:5,spawnIntBase:2.6,spawnIntMin:1.2,spawnIntLevelCut:0.05,spawnIntDiffCut:0.4,fireBase:0.9,fireVar:1.8,upBonus:55,drop:[0,0.08,0.2,0.4],flashEvery:7,lootRange:80,lootChance:0.65},diff:{spd:[0.85,1,1.15],fire:[0.7,1,1.4],levelScale:0.02,levelCap:0.25},prizes:{life:20,secrets:[1,3,5,8],pickupScore:500,gem:1000}};
 var ETYPES=BAL.enemy.types;
 var SPLIT_M=40,JOIN_M=120;
 var LS={get:function(k,d){try{var v=localStorage.getItem('iv90_'+k);return v===null?d:v;}catch(e){return d;}},set:function(k,v){try{localStorage.setItem('iv90_'+k,v);}catch(e){}}};
-var ST={diff:cInt(LS.get('diff',1),1,2),size:LS.get('size','M'),seed:LS.get('seed','')||rndSeed(),snd:LS.get('snd','1')==='1',fx:LS.get('fx','hi')==='lite'?'lite':'hi',mode:cInt(LS.get('mode',0),0,3),skill:cInt(LS.get('skill',1),1,2),rate:cInt(LS.get('rate',1),1,3),foeSup:cInt(LS.get('foe',0),0,2),aiView:LS.get('aiview','split')==='arrow'?'arrow':'split'};
+var ST={diff:cInt(LS.get('diff',1),1,2),size:LS.get('size','M'),seed:LS.get('seed','')||rndSeed(),snd:LS.get('snd','1')==='1',fx:LS.get('fx','hi')==='lite'?'lite':'hi',mode:cInt(LS.get('mode',0),0,3),skill:cInt(LS.get('skill',2),1,2),rate:cInt(LS.get('rate',1),1,3),foeSup:cInt(LS.get('foe',0),0,2),aiView:LS.get('aiview','split')==='arrow'?'arrow':'split'};
 var cv=$('cv'),ctx=cv.getContext('2d',{alpha:false}),VW=0,VH=0;
 function mkC(w,h){var c=document.createElement('canvas');c.width=w;c.height=h;return c;}
 function resize(){var w=innerWidth,h=innerHeight,f=Math.min(1,BAL.cam.maxW/w,BAL.cam.maxH/h,Math.sqrt((BAL.cam.maxW*BAL.cam.maxH)/(w*h)));cv.width=Math.max(300,Math.round(w*f));cv.height=Math.max(220,Math.round(h*f));VW=cv.width;VH=cv.height;ctx.imageSmoothingEnabled=false;}
@@ -682,9 +688,9 @@ cp.dodgeDir=-1;cp.dodgeTime=0;cp.blastDir=-1;cp.blastTime=0;
 }
 var p1=G.pl[0],p2=G.pl[1]||p1,mw=W*T,mh=H*T,vw2=Math.max(140,VW/2);
 G.cam.x=clamp(p1.x-VW/2,(mw<=VW)?(mw-VW)/2:0,Math.max(0,mw-VW));
-G.cam.y=mh<=VH?(mh-VH):clamp(p1.y-VH/2,0,mh-VH);
+G.cam.y=mh<=VH?0:clamp(p1.y-VH/2,0,mh-VH);
 G.cam2.x=clamp(p2.x-vw2/2,(mw<=vw2)?(mw-vw2)/2:0,Math.max(0,mw-vw2));
-G.cam2.y=mh<=VH?(mh-VH):clamp(p2.y-VH/2,0,mh-VH);
+G.cam2.y=mh<=VH?0:clamp(p2.y-VH/2,0,mh-VH);
 }
 function solidTank(v){return v===C_B||v===C_S||v===C_W||v===C_BASE;}
 function rectSolid(x,y,self){var x0,y0,x1,y1,cx,cy,e,pl;if(x<0||y<0||x+T>G.W*T||y+T>G.H*T)return true;x0=(x/T)|0;y0=(y/T)|0;x1=((x+T-1)/T)|0;y1=((y+T-1)/T)|0;for(cy=y0;cy<=y1;cy++)for(cx=x0;cx<=x1;cx++)if(solidTank(G.grid[idx(cx,cy)]))return true;for(e of G.enemies){if(e===self||e.dead)continue;if(x<e.x+T&&x+T>e.x&&y<e.y+T&&y+T>e.y)return true;}for(pl of G.pl){if(pl===self||pl.dead)continue;if(x<pl.x+T&&x+T>pl.x&&y<pl.y+T&&y+T>pl.y)return true;}return false;}
@@ -710,7 +716,21 @@ function addEnemyRespawn(px,py){var types=['basic','fast','power'];G.roster.push
 function breachWalls(px,py){var i,ri;G.fortifyT=0;G.pendingWalls.length=0;for(i=0;i<G.ring.length;i++){ri=idx(G.ring[i][0],G.ring[i][1]);if(G.grid[ri]===C_B||G.grid[ri]===C_S)setCell(G.ring[i][0],G.ring[i][1],C_E);}pop(px,py,STR.popBreach,'#ff5040');SFX.bigBoom();shake(6);}
 function enemyPow(e,p){var mode=ST.foeSup,px=p.x,py=p.y-6,pl,i;if(mode===0)return false;if(mode===1&&p.type!=='star'&&p.type!=='life')return false;switch(p.type){case 'star':e.up=Math.min(3,(e.up||0)+1);pop(px,py,STR.popEUp,'#ff9040');SFX.pow();break;case 'life':addEnemyRespawn(px,py);break;case 'gem':addEnemyRespawn(px,py);break;case 'shield':e.shieldT+=10;pop(px,py,STR.popEShield,'#7fd4ff');SFX.pow();break;case 'speed':e.spdT+=12;pop(px,py,STR.popESpeed,'#ffd23f');SFX.pow();break;case 'rapid':e.hasRapid=true;pop(px,py,STR.popERapid,'#ff9040');SFX.pow();break;case 'nuke':pop(px,py,STR.popBomb,'#ff5040');SFX.nuke();shake(7);addBoom(px,py,true,0);for(i=0;i<G.pl.length;i++){pl=G.pl[i];if(!pl.dead){pl.shieldT=0;killPlayer(pl);}}break;case 'timer':G.plFreezeT+=4;pop(px,py,STR.popPFreeze,'#7fd4ff');SFX.freeze();break;case 'shovel':case 'repair':breachWalls(px,py);break;}return true;}
 function fireBullet(x,y,dir,owner,spd,pow){G.bullets.push({x:x+DIRS[dir][0]*10,y:y+DIRS[dir][1]*10,dir:dir,owner:owner,pow:pow,spd:spd,dead:false,src:null,cpu:false,thr:0});addParts(x+DIRS[dir][0]*10,y+DIRS[dir][1]*10,2,['#ffd23f','#fff'],40);}
-function playerFire(pl){var maxB=pl.lvl>=2?BAL.player.maxBullets:1,mine=0,b,cd;for(b of G.bullets)if(b.owner===pl&&!b.dead)mine++;if(mine>=maxB||pl.cd>0||pl.dead)return;cd=BAL.player.baseCd;if(pl.lvl>=2)cd*=BAL.player.cdLvl2;if(pl.lvl>=3)cd*=BAL.player.cdLvl3;if(pl.hasRapid)cd*=BAL.player.cdRapid;pl.cd=cd;fireBullet(pl.x+8,pl.y+8,pl.dir,pl,BAL.player.bulletSpeed+pl.lvl*BAL.player.bulletSpeedPerLvl,pl.lvl);SFX.shoot();}
+function playerFire(pl){var maxB=pl.lvl>=2?BAL.player.maxBullets:1,mine=0,b,cd;for(b of G.bullets)if(b.owner===pl&&!b.dead)mine++;if(mine>=maxB||pl.cd>0||pl.dead)return;cd=BAL.player.baseCd;if(pl.lvl>=2)cd*=BAL.player.cdLvl2;if(pl.lvl>=3)cd*=BAL.player.cdLvl3;if(pl.hasRapid)cd*=BAL.player.cdRapid;if(pl.isCPU&&ST.skill>=2)cd*=BAL.player.aceCd;pl.cd=cd;fireBullet(pl.x+8,pl.y+8,pl.dir,pl,BAL.player.bulletSpeed+pl.lvl*BAL.player.bulletSpeedPerLvl,pl.lvl);SFX.shoot();}
+function enemyHasTargetInLine(e){
+var ex=e.x+8,ey=e.y+8,dx=DIRS[e.dir][0],dy=DIRS[e.dir][1],c0=((ex)/T)|0,r0=((ey)/T)|0,d,cx,cy,v,e3,pl3;
+for(d=1;d<Math.max(G.W,G.H);d++){
+ cx=c0+dx*d;cy=r0+dy*d;
+ if(cx<0||cy<0||cx>=G.W||cy>=G.H)return false;
+ v=G.grid[idx(cx,cy)];
+ if(v===C_S)return false;
+ if(v===C_B)return d<=3;
+ if(v===C_BASE)return true;
+ for(e3 of G.enemies){if(!e3.dead&&((e3.x+8)/T|0)===cx&&((e3.y+8)/T|0)===cy)return true;}
+ for(pl3 of G.pl){if(!pl3.dead&&((pl3.x+8)/T|0)===cx&&((pl3.y+8)/T|0)===cy)return true;}
+}
+return false;
+}
 function enemyFire(e){var n=0,b,st;for(b of G.bullets)if(b.owner===null&&b.src===e)n++;if(n>=1)return;st=ETYPES[e.type];fireBullet(e.x+8,e.y+8,e.dir,null,st.bs+(e.up||0)*BAL.enemy.upBonus,1);G.bullets[G.bullets.length-1].src=e;SFX.eshoot();}
 function killEnemy(e,score){if(e.dead)return;e.dead=true;addBoom(e.x+8,e.y+8,true,0);SFX.boom();shake(2);if(score!==false){G.score+=ETYPES[e.type].pts;pop(e.x+8,e.y,'+'+ETYPES[e.type].pts);}G.stats[e.type]=(G.stats[e.type]||0)+1;if(e.drop||e.forcePow||seedGen()<BAL.enemy.drop[ST.rate])spawnPow(e.forcePow||pickPow(),e.x+8,e.y+8);}
 function killPlayer(pl){if(pl.dead||pl.shieldT>0)return;pl.dead=true;addBoom(pl.x+8,pl.y+8,true,0);SFX.bigBoom();shake(5);pl.lives--;pl.lvl=1;pl.speedT=0;pl.hasRapid=false;if(pl.lives<0){pl.out=true;if(G.pl.every(function(p){return p.out;}))gameOver('reasonArmy');}else pl.respawnT=BAL.player.respawnDelay;}
@@ -762,7 +782,7 @@ if(tent<gScore[ni]){cameFrom[ni]=cur;gScore[ni]=tent;fScore[ni]=tent+h(ni);open.
 return null;}
 function aiLineOfSight(px,py,dir,maxDist){var vx=DIRS[dir][0],vy=DIRS[dir][1],d,cx,cy,v,e,ex,ey,b,bx,by;for(d=8;d<=maxDist;d+=8){cx=((px+vx*d)/T)|0;cy=((py+vy*d)/T)|0;if(cx<0||cy<0||cx>=G.W||cy>=G.H)break;v=G.grid[idx(cx,cy)];if(v===C_S)return{type:'steel',dist:d};if(v===C_B)return{type:'brick',x:cx,y:cy,dist:d};if(v===C_BASE)return{type:'eagle',dist:d};for(e of G.enemies){if(e.dead)continue;ex=e.x+8;ey=e.y+8;if(vx!==0&&Math.abs(ey-py)<12&&((ex-px)*vx>0)&&Math.abs(ex-px)<=d+8&&Math.abs(ex-px)>=d-8)return{type:'enemy',ref:e,dist:Math.abs(ex-px)};if(vy!==0&&Math.abs(ex-px)<12&&((ey-py)*vy>0)&&Math.abs(ey-py)<=d+8&&Math.abs(ey-py)>=d-8)return{type:'enemy',ref:e,dist:Math.abs(ey-py)};}for(b of G.bullets){if(b.owner!==null||b.dead)continue;bx=b.x;by=b.y;if(vx!==0&&Math.abs(by-py)<12&&((bx-px)*vx>0)&&Math.abs(bx-px)<=d+8&&Math.abs(bx-px)>=d-8)return{type:'bullet',ref:b,dist:Math.abs(bx-px)};if(vy!==0&&Math.abs(bx-px)<12&&((by-py)*vy>0)&&Math.abs(by-py)<=d+8&&Math.abs(by-py)>=d-8)return{type:'bullet',ref:b,dist:Math.abs(by-py)};}}return null;}
 function aiSafeToShoot(pl,dir){var px=pl.x+8,py=pl.y+8,vx=DIRS[dir][0],vy=DIRS[dir][1],ex=G.base.x*T+T,ey=G.base.y*T+T,o,hx,hy,i;for(i=0;i<G.pl.length;i++){o=G.pl[i];if(o===pl||o.isCPU||o.dead)continue;hx=o.x+8;hy=o.y+8;if(vx!==0&&Math.abs(hy-py)<14){if((hx-px)*vx>0)return false;}if(vy!==0&&Math.abs(hx-px)<14){if((hy-py)*vy>0)return false;}}var los=aiLineOfSight(px,py,dir,300);if(los){if(los.type==='enemy'||los.type==='bullet')return true;if(los.type==='eagle')return false;if(los.type==='brick'||los.type==='steel')return true;}if(vx!==0&&Math.abs(ey-py)<14){if((ex-px)*vx>0)return false;}if(vy!==0&&Math.abs(ex-px)<14){if((ey-py)*vy>0)return false;}return true;}
-function aiFindShot(pl){var px=pl.x+8,py=pl.y+8,bestDir=-1,bestScore=-1,dir,los,threat,score,eagleX=G.base.x*T+T,eagleY=G.base.y*T+T;for(dir=0;dir<4;dir++){if(!aiSafeToShoot(pl,dir))continue;los=aiLineOfSight(px,py,dir,300);if(los){if(los.type==='enemy'){threat=ETYPES[los.ref.type]?ETYPES[los.ref.type].pts:100;var ed=Math.sqrt((los.ref.x+8-eagleX)*(los.ref.x+8-eagleX)+(los.ref.y+8-eagleY)*(los.ref.y+8-eagleY));if(ed<12*T)threat+=6000;if(ed<5*T)threat+=4000;score=threat/(los.dist+1);if(score>bestScore){bestScore=score;bestDir=dir;}}else if(los.type==='bullet'){var bd=Math.sqrt((los.ref.x-eagleX)*(los.ref.x-eagleX)+(los.ref.y-eagleY)*(los.ref.y-eagleY));var bthreat=50;if(bd<6*T)bthreat+=6000;score=bthreat/(los.dist+1);if(score>bestScore){bestScore=score;bestDir=dir;}}}}return bestDir;}
+function aiFindShot(pl){var px=pl.x+8,py=pl.y+8,bestDir=-1,bestScore=-1,dir,los,threat,score,eagleX=G.base.x*T+T,eagleY=G.base.y*T+T;for(dir=0;dir<4;dir++){if(!aiSafeToShoot(pl,dir))continue;los=aiLineOfSight(px,py,dir,300);if(los){if(los.type==='enemy'){threat=ETYPES[los.ref.type]?ETYPES[los.ref.type].pts:100;var ed=Math.sqrt((los.ref.x+8-eagleX)*(los.ref.x+8-eagleX)+(los.ref.y+8-eagleY)*(los.ref.y+8-eagleY));if(ed<12*T)threat+=6000;if(ed<5*T)threat+=4000;score=threat/(los.dist+1);if(score>bestScore){bestScore=score;bestDir=dir;}}else if(los.type==='bullet'){var bd=Math.sqrt((los.ref.x-eagleX)*(los.ref.x-eagleX)+(los.ref.y-eagleY)*(los.ref.y-eagleY));var bthreat=400;if(bd<8*T)bthreat+=6000;score=bthreat/(los.dist+1);if(score>bestScore){bestScore=score;bestDir=dir;}}}}return bestDir;}
 function getProtectedBricks(){var protectedSet=new Set(),bx,by,x,y,v;if(!G.base)return protectedSet;bx=G.base.x;by=G.base.y;
 for(x=bx;x<=bx+1;x++){for(y=by-1;y>=0;y--){v=G.grid[idx(x,y)];if(v===C_B||v===C_S){protectedSet.add(idx(x,y));break;}}}
 for(x=bx;x<=bx+1;x++){for(y=by+2;y<G.H;y++){v=G.grid[idx(x,y)];if(v===C_B||v===C_S){protectedSet.add(idx(x,y));break;}}}
@@ -797,6 +817,78 @@ for(var i=0;i<dirsToTry.length;i++){
 return -1;
 }
 
+function eagleLineThreat(e){
+var ex=e.x+8,ey=e.y+8,bx=G.base.x*T+T,by=G.base.y*T+T,c0,r0,r,c,v,step;
+if(Math.abs(ex-bx)<=12){
+ c0=((ex)/T)|0;
+ if(c0<G.base.x||c0>G.base.x+1)return false;
+ step=ey<G.base.y*T?1:-1;
+ for(r=((ey)/T)|0;;r+=step){
+  if(r<0||r>=G.H)return false;
+  v=G.grid[idx(c0,r)];
+  if(v===C_BASE)return true;
+  if(v===C_S||v===C_W)return false;
+ }
+}
+if(Math.abs(ey-by)<=12){
+ r0=((ey)/T)|0;
+ if(r0<G.base.y||r0>G.base.y+1)return false;
+ step=ex<G.base.x*T?1:-1;
+ for(c=((ex)/T)|0;;c+=step){
+  if(c<0||c>=G.W)return false;
+  v=G.grid[idx(c,r0)];
+  if(v===C_BASE)return true;
+  if(v===C_S||v===C_W)return false;
+ }
+}
+return false;
+}
+
+function aiLaneBlock(e){
+var ex=e.x+8,ey=e.y+8,bx=G.base.x*T+T,by=G.base.y*T+T,c0,r0,k,c,r,v,post;
+if(Math.abs(ex-bx)<=12){
+ c0=((ex)/T)|0;
+ if(c0<G.base.x||c0>G.base.x+1)return null;
+ if(ey<G.base.y*T){
+  for(k=1;k<=7;k++){
+   r=G.base.y-k;
+   if(r<1)return null;
+   v=G.grid[idx(c0,r)];
+   if(v===C_E)return{x:c0*T+8,y:r*T+8};
+  }
+ }else{
+  for(k=1;k<=7;k++){
+   r=G.base.y+1+k;
+   if(r>=G.H-1)return null;
+   v=G.grid[idx(c0,r)];
+   if(v===C_E)return{x:c0*T+8,y:r*T+8};
+  }
+ }
+ return null;
+}
+if(Math.abs(ey-by)<=12){
+ r0=((ey)/T)|0;
+ if(r0<G.base.y||r0>G.base.y+1)return null;
+ if(ex<G.base.x*T){
+  for(k=1;k<=7;k++){
+   c=G.base.x-k;
+   if(c<1)return null;
+   v=G.grid[idx(c,r0)];
+   if(v===C_E)return{x:c*T+8,y:r0*T+8};
+  }
+ }else{
+  for(k=1;k<=7;k++){
+   c=G.base.x+1+k;
+   if(c>=G.W-1)return null;
+   v=G.grid[idx(c,r0)];
+   if(v===C_E)return{x:c*T+8,y:r0*T+8};
+  }
+ }
+ return null;
+}
+return null;
+}
+
 function aiDecideState(pl){
 var px=pl.x+8,py=pl.y+8,eagleX=G.base.x*T+T,eagleY=G.base.y*T+T,i,e,ed,d,p,bestPow=null,bestPowDist=Infinity,ad,closestEnemyToAI=null,closestAI=Infinity,assaultScore=0,scavengeScore=0;
 for(e of G.enemies){if(e.dead)continue;ad=Math.sqrt((e.x+8-px)*(e.x+8-px)+(e.y+8-py)*(e.y+8-py));if(ad<closestAI){closestAI=ad;closestEnemyToAI=e;}}
@@ -805,11 +897,15 @@ for(p of G.pows){if(isUselessPow(p.type,pl))continue;d=Math.sqrt((p.x-px)*(p.x-p
 // ==== EAGLE AREA DEFENSE — top priority. All CPUs stay engaged when enemies are near. ====
 var DEFEND_RADIUS=12*T;
 var nearEagle=[];
+var laneEagle=[];
+function eaglePush(e,d){nearEagle.push({ref:e,d:d});}
 for(e of G.enemies){
   if(e.dead)continue;
   ed=Math.sqrt((e.x+8-eagleX)*(e.x+8-eagleX)+(e.y+8-eagleY)*(e.y+8-eagleY));
-  if(ed<DEFEND_RADIUS)nearEagle.push({ref:e,d:ed});
+  if(ed<DEFEND_RADIUS)eaglePush(e,ed);
+  else if(eagleLineThreat(e))laneEagle.push({ref:e,d:ed});
 }
+if(!nearEagle.length&&laneEagle.length)nearEagle=laneEagle;
 nearEagle.sort(function(a,b){return a.d-b.d;});
 if(nearEagle.length>0){
   var cpus=[];
@@ -824,7 +920,8 @@ if(nearEagle.length>0){
   var myRank=-1;
   for(i=0;i<cpus.length;i++){if(cpus[i].ref===pl){myRank=i;break;}}
   if(myRank>=0&&myRank<nearEagle.length){
-    return{state:'defend',target:nearEagle[myRank].ref,eagleX:eagleX,eagleY:eagleY};
+    var tgt=nearEagle[myRank].ref;
+    return{state:'defend',target:tgt,eagleX:eagleX,eagleY:eagleY,block:aiLaneBlock(tgt)};
   }else{
     // Extra defender: intercept the nearest approaching enemy, or guard the Eagle perimeter.
     var inc=null,incD=Infinity;
@@ -840,7 +937,7 @@ if(nearEagle.length>0){
 
 // ==== Incoming shell interception ====
 var criticalThreat=null,criticalDist=Infinity;var b,bd,vx,vy,dx,dy,dot;
-for(b of G.bullets){if(b.owner!==null||b.dead)continue;bd=Math.sqrt((b.x-eagleX)*(b.x-eagleX)+(b.y-eagleY)*(b.y-eagleY));vx=DIRS[b.dir][0];vy=DIRS[b.dir][1];dx=eagleX-b.x;dy=eagleY-b.y;dot=dx*vx+dy*vy;if(dot>0&&bd<6*T){if(bd<criticalDist){criticalDist=bd;criticalThreat=b;}}}
+for(b of G.bullets){if(b.owner!==null||b.dead)continue;bd=Math.sqrt((b.x-eagleX)*(b.x-eagleX)+(b.y-eagleY)*(b.y-eagleY));vx=DIRS[b.dir][0];vy=DIRS[b.dir][1];dx=eagleX-b.x;dy=eagleY-b.y;dot=dx*vx+dy*vy;if(dot>0&&bd<8*T){if(bd<criticalDist){criticalDist=bd;criticalThreat=b;}}}
 if(criticalThreat){
   var myDist=Math.sqrt((px-criticalThreat.x)*(px-criticalThreat.x)+(py-criticalThreat.y)*(py-criticalThreat.y));
   var closestCPU=true;
@@ -848,14 +945,18 @@ if(criticalThreat){
   if(closestCPU)return{state:'defend_eagle',target:criticalThreat,eagleX:eagleX,eagleY:eagleY};
 }
 
-// ==== Normal behavior when the Eagle area is clear ====
-if(closestEnemyToAI)assaultScore+=2;
-if(closestAI<200)assaultScore+=2;
-if(bestPow&&bestPowDist<64)scavengeScore+=5;
-else if(bestPow&&bestPowDist<150)scavengeScore+=2;
+// ==== Eagle area clear of close threats: perimeter defense. Engage whoever
+// crosses into the outer ring; otherwise hold near the fort. With blind fire
+// gated, threats now materialize close, and a defender already home beats a
+// chaser already gone.
 if(G.state==='clear'){return{state:'scavenge',target:bestPow||{x:eagleX,y:eagleY}};}
-if(scavengeScore>=assaultScore)return{state:'scavenge',target:bestPow};
-return{state:'assault',target:closestEnemyToAI};}
+var powSafe=bestPow&&Math.sqrt((bestPow.x-eagleX)*(bestPow.x-eagleX)+(bestPow.y-eagleY)*(bestPow.y-eagleY))<11*T;
+if(bestPow&&bestPowDist<150&&powSafe)return{state:'scavenge',target:bestPow};
+var ne=null,ned=Infinity;
+for(e of G.enemies){if(e.dead)continue;d=Math.sqrt((e.x+8-eagleX)*(e.x+8-eagleX)+(e.y+8-eagleY)*(e.y+8-eagleY));if(d<ned){ned=d;ne=e;}}
+if(ne&&ned<15*T)return{state:'assault',target:ne};
+if(ne&&G.rosterIx>=G.roster.length)return{state:'assault',target:ne};
+return{state:'hold',target:null};}
 function cpuThink(pl,dt){
 var c=pl.cpu,moved,prog,logDir,decision,tx,ty,sx,sy,gx,gy,goalChanged,needRepath,wp,wx,wy,wdx,wdy,adx,ady,md,d;
 c.shootCd=Math.max(0,(c.shootCd||0)-dt);
@@ -916,6 +1017,7 @@ decision=aiDecideState(pl);
 if(decision.state==='defend'){
   if(decision.target&&!decision.target.dead){
     tx=decision.target.x+8;ty=decision.target.y+8;
+    if(decision.block){tx=decision.block.x;ty=decision.block.y;}
     var shotDir=aiFindShot(pl);
     if(shotDir>=0){logDir(shotDir);c.fire=true;c.hold=true;c.shootCd=0.1;return;}
     var brickDir=aiFindPathBrickShot(pl,tx,ty);
@@ -925,7 +1027,7 @@ if(decision.state==='defend'){
 else if(decision.state==='defend_eagle'){var threat=decision.target;if(threat.owner===null&&threat.dir!==undefined&&threat.spd!==undefined){tx=threat.x;ty=threat.y;}else{tx=threat.x+8;ty=threat.y+8;}}
 else if(decision.state==='scavenge'&&decision.target){tx=decision.target.x;ty=decision.target.y;}
 else if(decision.state==='assault'&&decision.target){tx=decision.target.x+8;ty=decision.target.y+8;}
-else{c.patrolAngle=(c.patrolAngle||0)+0.3;var rr=T*4;tx=G.base.x*T+T+Math.cos(c.patrolAngle)*rr;ty=G.base.y*T+T+Math.sin(c.patrolAngle)*rr;}
+else{c.patrolAngle=(c.patrolAngle||0)+0.3;var rr=T*5;tx=G.base.x*T+T+Math.cos(c.patrolAngle)*rr;ty=G.base.y*T+T+Math.sin(c.patrolAngle)*rr;}
 if(decision.target&&decision.target.x!==undefined&&!decision.target.dead){
 var tCx=decision.target.x+8,tCy=decision.target.y+8,dxx=Math.abs((pl.x+8)-tCx),dyy=Math.abs((pl.y+8)-tCy);
 if(dxx<=24&&dyy<=24){
@@ -983,7 +1085,7 @@ if(md>=0&&!dirPassable(pl,md)){c.blockCount++;c.visited.add(idx(sx,sy));c.repath
 c.hold=true;c.fire=false;
 }
 function bothFit(m){var a=G.pl[0],b=G.pl[1],dx,dy,mw,mh,okW,okH;if(!a||!b||a.dead||b.dead)return false;dx=Math.abs(a.x-b.x);dy=Math.abs(a.y-b.y);mw=G.W*T;mh=G.H*T;okW=mw<=VW||dx+2*m<=VW;okH=mh<=VH||dy+2*m<=VH;return okW&&okH;}
-function followCam(cam,fx,fy,ld,vw,vh,mw,mh,dt){var tx2=fx-vw/2+DIRS[ld][0]*BAL.cam.lookahead,ty2=fy-vh/2+DIRS[ld][1]*BAL.cam.lookahead,k;if(mw<=vw)tx2=(mw-vw)/2;else tx2=clamp(tx2,0,mw-vw);if(mh<=vh)ty2=mh-vh;else ty2=clamp(ty2,0,mh-vh);k=Math.min(1,dt*BAL.cam.speed);cam.x+=(tx2-cam.x)*k;cam.y+=(ty2-cam.y)*k;}
+function followCam(cam,fx,fy,ld,vw,vh,mw,mh,dt){var tx2=fx-vw/2+DIRS[ld][0]*BAL.cam.lookahead,ty2=fy-vh/2+DIRS[ld][1]*BAL.cam.lookahead,k;if(mw<=vw)tx2=(mw-vw)/2;else tx2=clamp(tx2,0,mw-vw);if(mh<=vh)ty2=0;else ty2=clamp(ty2,0,mh-vh);k=Math.min(1,dt*BAL.cam.speed);cam.x+=(tx2-cam.x)*k;cam.y+=(ty2-cam.y)*k;}
 function moveTank(o,dx,dy,self){var nx,ny;if(dx!==0){nx=o.x+dx;if(!rectSolid(nx,o.y,self))o.x=nx;}if(dy!==0){ny=o.y+dy;if(!rectSolid(o.x,ny,self))o.y=ny;}}
 function camFollow(dt){
 var mw=G.W*T,mh=G.H*T,coop=ST.mode>=1&&G.pl.length>1,a=G.pl[0],b=G.pl[1],both=coop&&a&&b&&!a.dead&&!b.dead,splitAllowed=both&&(ST.mode===1||ST.aiView==='split'),L,R,tmp,arrowMode,alive,f,sp;
@@ -1117,7 +1219,7 @@ moveTank(e,mx,my,e);
 if((e.x===ox&&mx!==0)||(e.y===oy&&my!==0))e.moveT=0;
 e.anim+=dt*(spd/8);
 if(e.moveT<=0){e.dir=chooseDir(e);e.moveT=0.5+seedGen()*1.5;}
-if(G.state==='play'&&e.fireCd<=0){if(seedGen()<0.92)enemyFire(e);e.fireCd=(BAL.enemy.fireBase+seedGen()*BAL.enemy.fireVar)/ETYPES[e.type].aggro/G.fireMul*(e.hasRapid?0.55:1)/(1+0.25*(e.up||0));}
+if(G.state==='play'&&e.fireCd<=0){if(seedGen()<0.92&&enemyHasTargetInLine(e))enemyFire(e);e.fireCd=(BAL.enemy.fireBase+seedGen()*BAL.enemy.fireVar)/ETYPES[e.type].aggro/G.fireMul*(e.hasRapid?0.55:1)/(1+0.25*(e.up||0));}
 }
 G.enemies=G.enemies.filter(function(e){return !e.dead;});
 for(b of G.bullets){
@@ -1497,9 +1599,336 @@ window.TLHOOK = {
   get BAL() { return BAL }, get ETYPES() { return ETYPES }, get ST() { return ST }, get G() { return G },
   get VW() { return VW }, get VH() { return VH },
   get CELL() { return T },
-  get STEP() { return STEP }, get acc() { return acc }
+  get STEP() { return STEP }, get acc() { return acc },
+  /* guide wiring needs the state gate and the pause toggle from outside */
+  get state() { return G.state },
+  pause: function () { togglePause() }
 };
 
+})();
+/* guide bridge — the tanks modules share one IIFE whose files end mid-function,
+   so this bridge lives after the IIFE closes and drives the game through the
+   TLHOOK dev-bridge surface (state getter + pause toggle) instead of scope. */
+window.TLGC={id:"tanks",
+head:{en:"IRON VANGUARD — QUICK GUIDE",es:"VANGUARDIA DE HIERRO — GUÍA RÁPIDA",pt:"VANGUARDA DE FERRO — GUIA RÁPIDO",
+      ru:"ЖЕЛЕЗНЫЙ АВАНГАРД — КРАТКИЙ ГИД",zh:"钢铁先锋 — 快速指南"},cls:"btn",
+mount:["#menuOv .panel",["#pauseOv .panel","btn"]],
+playing:function(){return window.TLHOOK&&TLHOOK.state==="play"},
+pause:function(){if(window.TLHOOK)TLHOOK.pause()},
+resume:function(){if(window.TLHOOK&&TLHOOK.state==="pause")TLHOOK.pause()},
+steps:[
+["wheel","DRIVE","WASD / arrows steer the tank — walls slow the tracks."],
+["fire","FIRE","Space shoots; shells ricochet — angle bank shots around corners."],
+["shield","GUARD THE EAGLE","The eagle is the base. Its armor is thin — intercept before the walls."],
+["coin","SUPPLIES","Killed tanks drop weapons and speed. Grab them fresh — they expire."]],
+L:{
+es:[["CONDUCCIÓN","WASD / flechas dirigen el tanque: los muros frenan las orugas."],
+["DISPARO","Espacio dispara; los obuses rebotan: calcula los rebotes en las esquinas."],
+["PROTEGE EL ÁGUILA","El águila es la base. Su coraza es fina: intercepta antes de los muros."],
+["SUMINISTROS","Los tanques destruidos sueltan armas y velocidad: cógelos frescos, caducan."]],
+pt:[["DIRIGIR","WASD / setas guiam o tanque: paredes atrasam as esteiras."],
+["DISPARO","Espaço dispara; obuses ricocheteiam — ângulos de quina nas esquinas."],
+["GUARDE A ÁGUIA","A águia é a base. A blindagem é fina: intercepte antes das paredes."],
+["SUPRIMENTOS","Tanques destruídos largam armas e velocidade: pegue logo, expiram."]],
+ru:[["УПРАВЛЕНИЕ","WASD / стрелки ведут танк — стены тормозят гусеницы."],
+["ОГОНЬ","Пробел стреляет; снаряды рикошетят — считайте отражения от углов."],
+["БЕРЕГИ ОРЛА","Орёл — это база. Броня тонка: перехватывайте до стен."],
+["СНАБЖЕНИЕ","Подбитые танки роняют оружие и скорость. Берите свежими — они исчезают."]],
+zh:[["驾驶","WASD/方向键转向——墙壁会拖慢履带。"],
+["开火","空格射击，炮弹可反弹——拐角算好弹道。"],
+["守护金鹰","金鹰就是基地，装甲很薄——在墙前拦截。"],
+["补给","被击毁的坦克掉落武器与速度——趁新鲜捡，会过期。"]]
+}};
+/* guide.js — the one first-run tutorial card set every page shares.
+
+   A game publishes its guide through `window.TLGC` (a src module at the end
+   of the game block, so it sees the game's own scope):
+
+     TLGC = {
+       id:    "tetris",                       // localStorage key: tlg_<id>
+       head:  "HOW TO PLAY",                  // optional card header; pass an
+                                             // object {en:,es:,pt:,ru:,zh:} to
+                                             // translate it with the page
+       steps: [["move","MOVE","Arrows or WASD slide the stack."], ...],
+       L:     {es:[["MOVE","..."],...], pt:[...], ru:[...], zh:[...]},
+                                             // same order as steps; rows may be
+                                             // [title,text] — the icon rides
+                                             // from the English row
+       mount: ["#options-screen", ["#pauseOv .panel","menu-btn"]],
+       cls:   "menu-btn",                     // default class for the GUIDE buttons
+       t:     fn,                             // optional: returns L('next') etc, or null
+       playing: fn, pause: fn, resume: fn     // optional gameplay freeze hooks
+     }
+
+   The engine mounts a GUIDE button into every menu the game lists (title AND
+   pause — a page may repeat), and on first visit (never seen, keys not touched)
+   runs the card set once, freezing gameplay through the hooks while it reads.
+   SKIP ends the run instantly; any end records "seen", which switches the
+   auto-run off for good. The mounted GUIDE button is the manual re-entry: it
+   replays the cards (that IS the manual re-enable — it also re-arms auto for
+   the next visit), and every finished run disarms it again.
+
+   The cards are pure DOM: scrim + panel + inline-SVG pictograms + short text,
+   styled from this file. No images, no fonts, no requests — the shipped page
+   stays a single file. The overlay swallows every pointer/touch, so a title
+   screen that starts on any tap cannot fire through it. Buttons stop their own
+   pointerdown too, for the same reason.                                */
+(function () {
+  if (window.TLG) return;
+  var cfg = window.TLGC;
+  if (!cfg || !cfg.steps || !cfg.steps.length) return;
+  var KEY = "tlg_" + (cfg.id || "game");
+  var run = false, idx = 0, froze = false, ov = null, queued = 0;
+  var btns = [];
+
+  function seen() { try { return !!JSON.parse(localStorage.getItem(KEY) || "0").s } catch (e) { return true } }
+  function markSeen() { try { localStorage.setItem(KEY, JSON.stringify({ s: 1 })) } catch (e) {} }
+  /* the hub's five languages; <html lang> is what every page's i18n flips */
+  function curlang() {
+    var l = (document.documentElement.lang || "").toLowerCase();
+    for (var i = 0; i < LANGS.length; i++) if (l.indexOf(LANGS[i]) === 0) return LANGS[i];
+    return "en";
+  }
+  var LANGS = ["en", "es", "pt", "ru", "zh"];
+  var CHROME = {
+    en: { guide: "GUIDE", next: "NEXT \u2192", skip: "SKIP", done: "GOT IT", head: "HOW TO PLAY" },
+    es: { guide: "GUÍA", next: "SIGUIENTE \u2192", skip: "SALTAR", done: "ENTENDIDO", head: "GUÍA RÁPIDA" },
+    pt: { guide: "GUIA", next: "PRÓXIMO \u2192", skip: "PULAR", done: "ENTENDI", head: "GUIA RÁPIDO" },
+    ru: { guide: "ГИД", next: "ДАЛЕЕ \u2192", skip: "ПРОПУСК", done: "ПОНЯТНО", head: "КРАТКИЙ ГИД" },
+    zh: { guide: "指南", next: "下一个 \u2192", skip: "跳过", done: "明白了", head: "快速指南" }
+  };
+  function L(k) {
+    if (cfg.t) { try { var v = cfg.t(k); if (v && v !== k) return v } catch (e) {} }
+    var c = CHROME[curlang()] || CHROME.en;
+    return c[k] || CHROME.en[k] || k;
+  }
+  /* the card set for the current language (bridge L map), English floor */
+  function curSteps() {
+    var s = cfg.L && cfg.L[curlang()];
+    return (s && s.length === cfg.steps.length) ? s : cfg.steps;
+  }
+
+  /* pictograms: line art, 64 grid, currentColor — the graphical half of a card */
+  var P = {
+    dpad: '<path d="M26 6h12v14h14v12H38v14H26V32H12V20h14z" fill="none" stroke-width="2"/><path d="M32 12l-4 5h8zM32 52l-4-5h8zM12 26l5 4v-8zM52 26l-5 4v8z"/>',
+    stick: '<circle cx="24" cy="40" r="14" fill="none" stroke-width="2"/><circle cx="28" cy="36" r="6"/><path d="M48 12v16M48 28l-4-6h8z"/><path d="M56 20H40M40 20l6-4v8z"/>',
+    fire: '<circle cx="32" cy="32" r="16" fill="none" stroke-width="2"/><path d="M32 10v8M32 46v8M10 32h8M46 32h8"/><circle cx="32" cy="32" r="3"/>',
+    twostick: '<circle cx="18" cy="42" r="12" fill="none" stroke-width="2"/><circle cx="22" cy="38" r="5"/><circle cx="46" cy="42" r="12" fill="none" stroke-width="2"/><circle cx="42" cy="38" r="5"/><path d="M18 20V8M18 8l-4 6h8z" stroke-width="2" fill="none"/><path d="M46 16l8-8M54 8l-7 1 1 7z"/>',
+    dash: '<path d="M8 32h20M14 22l-8 10 8 10" stroke-width="2.4" fill="none"/><path d="M30 32h20M36 22l-8 10 8 10" stroke-width="2.4" fill="none"/><path d="M52 32h6" stroke-width="2.4"/>',
+    jump: '<path d="M32 50V16M32 16l-8 10h16z"/><path d="M12 56h40" stroke-width="2"/>',
+    tap: '<circle cx="32" cy="32" r="18" fill="none" stroke-width="1.6" opacity=".6"/><circle cx="32" cy="32" r="10" fill="none" stroke-width="1.6" opacity=".8"/><circle cx="32" cy="32" r="4"/><path d="M46 18l6-6M52 12l-6 1 1 6z"/>',
+    drag: '<path d="M20 44V20a3 3 0 016 0v18M26 38V16a3 3 0 016 0v20M32 38V18a3 3 0 016 0v20M38 38V22a3 3 0 015 0v18c0 9-5 16-13 16s-13-6-16-12" fill="none" stroke-width="1.8"/><path d="M48 48h10M58 48l-5-4v8z"/>',
+    keys: '<rect x="6" y="28" width="14" height="14" rx="3" fill="none" stroke-width="1.6"/><rect x="24" y="28" width="14" height="14" rx="3" fill="none" stroke-width="1.6"/><rect x="42" y="28" width="14" height="14" rx="3" fill="none" stroke-width="1.6"/><path d="M31 39l0 0M13 35l-3 4h6zM31 33l-3 4h6zM49 39l3-4-6 0z" /><path d="M31 10v12M31 10l-4 6h8z" stroke-width="2"/>',
+    wheel: '<circle cx="32" cy="32" r="18" fill="none" stroke-width="2.4"/><circle cx="32" cy="32" r="5"/><path d="M32 14v13M16 40l11-6M48 40l-11-6" stroke-width="2"/>',
+    brake: '<circle cx="32" cy="32" r="16" fill="none" stroke-width="2"/><path d="M22 22l20 20" stroke-width="2"/><path d="M44 48l8 8M52 56l1-6-7 1z"/>',
+    tilt: '<rect x="22" y="8" width="20" height="38" rx="3" fill="none" stroke-width="1.8" transform="rotate(-18 32 27)"/><path d="M10 30a22 22 0 008 22M18 52l-4-5 6-1z" fill="none" stroke-width="1.8"/>',
+    rotate: '<path d="M46 18a18 18 0 10-2 26" fill="none" stroke-width="2.4"/><path d="M44 8v12h12z"/>',
+    pause: '<rect x="20" y="16" width="8" height="32" rx="2"/><rect x="36" y="16" width="8" height="32" rx="2"/>',
+    menu: '<rect x="12" y="16" width="40" height="5" rx="2.5"/><rect x="12" y="30" width="40" height="5" rx="2.5"/><rect x="12" y="44" width="40" height="5" rx="2.5"/>',
+    target: '<circle cx="32" cy="32" r="18" fill="none" stroke-width="1.6"/><circle cx="32" cy="32" r="9" fill="none" stroke-width="1.6"/><circle cx="32" cy="32" r="2.5"/><path d="M32 4v8M32 52v8M4 32h8M52 32h8" stroke-width="2"/>',
+    bomb: '<circle cx="28" cy="38" r="14" fill="none" stroke-width="2"/><path d="M38 26l6-6" stroke-width="2"/><path d="M48 10l-4 8h9l-5 8" fill="none" stroke-width="2"/><path d="M20 34c1-4 4-6 8-6" fill="none" stroke-width="1.6"/>',
+    shield: '<path d="M32 8l20 8v14c0 12-8 20-20 26-12-6-20-14-20-26V16z" fill="none" stroke-width="2"/><path d="M24 32l6 6 12-12" fill="none" stroke-width="2.4"/>',
+    gear: '<circle cx="32" cy="32" r="9" fill="none" stroke-width="2"/><path d="M32 8v8M32 48v8M8 32h8M48 32h8M15 15l6 6M43 43l6 6M49 15l-6 6M21 43l-6 6" stroke-width="2.4"/>',
+    paddle: '<path d="M14 44c0-10 8-24 18-24s18 14 18 24" fill="none" stroke-width="2.4"/><path d="M32 40v14" stroke-width="2.4"/><circle cx="48" cy="16" r="5"/>',
+    ball: '<circle cx="32" cy="32" r="14" fill="none" stroke-width="2"/><path d="M18 32c6-4 10-4 14 0s8 4 14 0" fill="none" stroke-width="1.6"/>',
+    blocks: '<rect x="10" y="30" width="14" height="14" fill="none" stroke-width="1.8"/><rect x="24" y="30" width="14" height="14" fill="none" stroke-width="1.8"/><rect x="24" y="16" width="14" height="14" fill="none" stroke-width="1.8"/><rect x="38" y="30" width="14" height="14" fill="none" stroke-width="1.8"/><path d="M10 52h44" stroke-width="2"/>',
+    flag: '<path d="M20 54V10" stroke-width="2.4"/><path d="M20 10h22l-6 7 6 7H20" fill="none" stroke-width="2"/><path d="M12 54h40" stroke-width="2"/>',
+    wrench: '<path d="M42 10a12 12 0 00-14 16L10 44l10 10 18-18a12 12 0 0016-14l-8 8-6-6z" fill="none" stroke-width="2"/>',
+    gauge: '<path d="M10 44a24 24 0 0144 0" fill="none" stroke-width="2.4"/><path d="M32 40l12-14" stroke-width="2.4"/><circle cx="32" cy="42" r="3"/>',
+    heart: '<path d="M32 52S10 38 10 23a11 11 0 0122-3 11 11 0 0122 3c0 15-22 29-22 29z" fill="none" stroke-width="2"/>',
+    skull: '<path d="M16 26a16 14 0 1132 0c0 8-4 12-8 14v8H24v-8c-4-2-8-6-8-14z" fill="none" stroke-width="2"/><circle cx="24" cy="26" r="3"/><circle cx="40" cy="26" r="3"/>',
+    box: '<rect x="12" y="12" width="40" height="40" rx="4" fill="none" stroke-width="2"/><path d="M12 26h40M26 26v26" stroke-width="1.6"/>',
+    swap: '<path d="M12 24h28l-6-6M52 40H24l6 6" fill="none" stroke-width="2.4"/>',
+    mic: '<rect x="26" y="8" width="12" height="24" rx="6" fill="none" stroke-width="2"/><path d="M16 30a16 16 0 0032 0M32 46v8M24 54h16" fill="none" stroke-width="2"/>',
+    grid: '<rect x="10" y="10" width="44" height="44" fill="none" stroke-width="1.6"/><path d="M25 10v44M39 10v44M10 25h44M10 39h44" stroke-width="1.2"/>',
+    eye: '<path d="M6 32C14 18 24 12 32 12s18 6 26 20c-8 14-18 20-26 20S14 46 6 32z" fill="none" stroke-width="2"/><circle cx="32" cy="32" r="7"/>',
+    cursor: '<path d="M16 8l28 20-13 2 7 14-5 3-7-14-8 9z"/><path d="M46 46l10 10" stroke-width="2"/>',
+    coin: '<circle cx="32" cy="32" r="16" fill="none" stroke-width="2"/><path d="M32 20v24M26 26c0-3 3-5 6-5s6 2 6 5-3 4-6 5-6 2-6 5 3 5 6 5 6-2 6-5" fill="none" stroke-width="1.6"/>',
+    wave: '<path d="M6 24c8-12 12-12 20 0s12 12 20 0M6 40c8-12 12-12 20 0s12 12 20 0" fill="none" stroke-width="2"/>',
+    plant: '<path d="M32 54V22" stroke-width="2"/><path d="M32 34c-10 0-14-6-14-14 10 0 14 6 14 14zM32 28c10 0 14-6 14-14-10 0-14 6-14 14z" fill="none" stroke-width="1.8"/>'
+  };
+  function picto(k) {
+    var s = P[k] || P.target;
+    return '<svg viewBox="0 0 64 64" width="88" height="88" fill="currentColor" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + s + "</svg>";
+  }
+
+  function css() {
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlg-ov{position:fixed;inset:0;z-index:2147483001;background:rgba(8,6,4,.84);" +
+      "display:flex;align-items:center;justify-content:center;padding:14px;" +
+      "font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#f2ead8;touch-action:none}" +
+      ".tlg-card{width:min(560px,94vw);background:rgba(16,12,7,.96);border:1px solid rgba(255,255,255,.28);" +
+      "border-radius:14px;box-shadow:0 18px 60px rgba(0,0,0,.6);padding:18px 20px 16px;text-align:center}" +
+      ".tlg-h{letter-spacing:.18em;font-weight:700;font-size:11px;color:#9b8f74;margin:2px 0 10px}" +
+      ".tlg-p{color:#ffd76a;margin:2px auto 10px;line-height:0}" +
+      ".tlg-t{font-size:20px;font-weight:700;letter-spacing:.1em;color:#fff;margin:0 0 6px}" +
+      ".tlg-x{font-size:13.5px;color:#cfc4ab;margin:0 auto 14px;max-width:44ch}" +
+      ".tlg-dots{display:flex;gap:6px;justify-content:center;margin:0 0 12px}" +
+      ".tlg-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25)}" +
+      ".tlg-dots i.on{background:#ffd76a}" +
+      ".tlg-row{display:flex;gap:10px;justify-content:center;align-items:center}" +
+      ".tlg-b{font:inherit;letter-spacing:.1em;padding:10px 18px;border-radius:9px;cursor:pointer;" +
+      "border:1px solid #ffd76a;background:rgba(255,215,106,.14);color:#ffd76a;touch-action:manipulation}" +
+      ".tlg-b.gh{border-color:rgba(255,255,255,.3);background:none;color:#9b8f74}" +
+      ".tlg-b:active{transform:translateY(1px)}" +
+      ".tlg-n{color:#77705c;font-size:11px;min-width:38px}" +
+      ".tlg-float{position:fixed;left:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlg-float:hover{border-color:#ffd76a;color:#ffd76a}";
+    document.head.appendChild(st);
+  }
+
+  function headTxt() {
+    if (cfg.head && typeof cfg.head === "object") {
+      var h = cfg.head[curlang()] || cfg.head.en; if (h) return h;
+    }
+    return cfg.head || L("head");
+  }
+  function paint() {
+    var b = cfg.steps[idx], s = curSteps()[idx];
+    var ic = s.length > 2 ? s[0] : b[0], ti = s.length > 2 ? s[1] : s[0], tx = s.length > 2 ? s[2] : s[1];
+    ov.querySelector(".tlg-h").textContent = headTxt();
+    ov.querySelector(".tlg-p").innerHTML = picto(ic);
+    ov.querySelector(".tlg-t").textContent = ti;
+    ov.querySelector(".tlg-x").textContent = tx;
+    var ds = ov.querySelectorAll(".tlg-dots i"), i;
+    for (i = 0; i < ds.length; i++) ds[i].className = i === idx ? "on" : "";
+    ov.querySelector(".tlg-n").textContent = (idx + 1) + "/" + cfg.steps.length;
+    ov.querySelector(".tlg-next").textContent = idx === cfg.steps.length - 1 ? L("done") : L("next");
+  }
+
+  function stop(e) { e.stopPropagation() }
+  function eat(e) { e.preventDefault(); e.stopPropagation() }
+
+  function runNow(manual) {
+    if (run) return;
+    run = true;
+    if (manual) { try { localStorage.removeItem(KEY) } catch (e) {} } /* the button re-enables auto for next visit */
+    froze = !!(cfg.playing && cfg.playing());
+    if (froze && cfg.pause) { try { cfg.pause() } catch (e) {} }
+    idx = 0;
+    css();
+    ov = document.createElement("div");
+    ov.className = "tlg-ov";
+    var dots = "";
+    for (var d = 0; d < cfg.steps.length; d++) dots += "<i></i>";
+    ov.innerHTML = '<div class="tlg-card"><div class="tlg-h">' + headTxt() + "</div>" +
+      '<div class="tlg-p"></div><div class="tlg-t"></div><div class="tlg-x"></div>' +
+      '<div class="tlg-dots">' + dots + '</div><div class="tlg-row">' +
+      '<button type="button" class="tlg-b gh tlg-skip">' + L("skip") + '</button>' +
+      '<span class="tlg-n"></span>' +
+      '<button type="button" class="tlg-b tlg-next"></button></div></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener("pointerdown", eat, true);
+    ov.addEventListener("touchstart", eat, true);
+    ov.addEventListener("wheel", eat, { passive: false });
+    ov.querySelector(".tlg-next").addEventListener("click", function (e) {
+      eat(e);
+      if (idx === cfg.steps.length - 1) end();
+      else { idx++; paint() }
+    });
+    ov.querySelector(".tlg-skip").addEventListener("click", function (e) { eat(e); end() });
+    paint();
+  }
+
+  function end() {
+    if (!run) return;
+    run = false;
+    markSeen();
+    if (ov) { ov.remove(); ov = null }
+    if (froze && cfg.resume) { try { cfg.resume() } catch (e) {} }
+    froze = false;
+    reassert();
+  }
+
+  /* menus rebuild their children (language switch, screen re-entry): re-add our buttons */
+  function reassert() {
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      if (b.isConnected) continue;
+      var h = document.querySelector(b.__tlgHost);
+      if (h && h !== b.parentNode) h.appendChild(b);
+    }
+  }
+  function mountAll() {
+    var m = cfg.mount || [];
+    for (var i = 0; i < m.length; i++) {
+      var spec = m[i], sel = typeof spec === "string" ? spec : spec[0];
+      var host = document.querySelector(sel);
+      if (!host) continue;
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = (typeof spec === "string" ? cfg.cls : spec[1]) || cfg.cls || "";
+      b.id = "tlgBtn" + i;
+      b.__tlgHost = sel;
+      b.textContent = L("guide");
+      b.setAttribute("aria-label", L("guide"));
+      b.addEventListener("pointerdown", stop, false);
+      b.addEventListener("touchstart", stop, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); runNow(true) });
+      host.appendChild(b);
+      btns.push(b);
+    }
+    if (!btns.length) {
+      var f = document.createElement("button");
+      f.type = "button";
+      f.id = "tlgBtn0";
+      f.className = "tlg-float";
+      f.__tlgHost = "body";
+      f.textContent = L("guide");
+      f.addEventListener("pointerdown", stop, false);
+      f.addEventListener("touchstart", stop, false);
+      f.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); runNow(true) });
+      document.body.appendChild(f);
+      btns.push(f);
+    }
+    var mo = new MutationObserver(function () {
+      if (queued) return;
+      queued = 1;
+      requestAnimationFrame(function () { queued = 0; reassert() });
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+  }
+
+  /* while a guide is up, keys belong to the guide: Enter/Space/Right = next,
+     S/B = skip. Everything else is swallowed so the game underneath stays
+     frozen; Escape is left alone for the fullscreen wiring. */
+  document.addEventListener("keydown", function (e) {
+    if (!run) return;
+    if (e.key === "Escape") return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.key === "Enter" || e.key === " " || e.key === "ArrowRight") {
+      if (idx === cfg.steps.length - 1) end(); else { idx++; paint() }
+    } else if (e.key === "s" || e.key === "S" || e.key === "b") end();
+  }, true);
+
+  /* a language flip retitles the mounted buttons and any open card */
+  new MutationObserver(function () {
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].textContent = L("guide");
+      btns[i].setAttribute("aria-label", L("guide"));
+    }
+    if (run && ov) {
+      ov.querySelector(".tlg-skip").textContent = L("skip");
+      paint();
+    }
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
+
+  window.TLG = {
+    version: "2026.11.26.2",
+    open: function () { runNow(true) },
+    close: end,
+    running: function () { return run },
+    mount: mountAll
+  };
+
+  mountAll();
+  if (!seen()) setTimeout(function () { runNow(false) }, 1500);
 })();
 </script>
 <script>
@@ -1577,8 +2006,19 @@ else seen(cur);
       code runs. `TLFS.refitOnly()` gives a page that already has its own
       fullscreen button just that wiring, without a second button.
 
+   3. Fullscreen from the very beginning, and one shared way to flip it: the
+      request fires at script load (installed PWAs, kiosk shells and some
+      headless hosts grant it outright) and again on the first pointer/key/touch
+      for browsers that demand a user activation. Back, Escape and F11 all run
+      the same toggle as the button: F11 is claimed before the browser's own
+      fullscreen, Escape opens fullscreen when out of it (in it, the browser
+      exits natively and this file repaints), and browser back is caught by a
+      sentinel history entry which re-arms itself and toggles instead of
+      leaving the page. A page whose own history walk lands below the sentinel
+      keeps its back navigation; typing in a field leaves Escape alone.
+
    Nothing here reads game state, and a page that never calls mount/refitOnly gets
-   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+   all of the above regardless — it is wiring, not opt-in.                      */
 (function () {
   if (window.TLFS) return;
   var de = document.documentElement;
@@ -1592,8 +2032,8 @@ else seen(cur);
   var btns = [], cbs = [], queued = false, styleDone = false;
 
   function isFull() {
-    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
-      de.msFullscreenElement || de.mozFullScreenElement);
+    return !!(document.fullscreenElement || document.webkitFullscreenElement ||
+      document.msFullscreenElement || document.mozFullScreenElement);
   }
   function kit() {
     var k = window.TLI18N;
@@ -1678,17 +2118,66 @@ else seen(cur);
       paint(); /* an exit the browser never announced must still clear the label */
     }, false);
   }
-  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  /* Escape toggles: out of fullscreen it opens it (capture + stop, so the
+     page's own Escape binding — pause, close-overlay — does not also fire);
+     in fullscreen the browser exits on its own and usually delivers no
+     keydown at all, but shells that do must still repaint. Text fields keep
+     their Escape (blur/cancel) untouched. */
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
-  }, false);
+    if (e.key !== "Escape") return;
+    if (isFull()) { setTimeout(refit, 60); return; }
+    if (blocked) return;
+    var t = e.target;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    toggle();
+  }, true);
+  /* F11: claimed before the browser's own fullscreen flip so page state,
+     labels and re-fit stay in sync — same toggle as the button. */
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "F11") return;
+    e.preventDefault();
+    toggle();
+  }, true);
+  /* Browser back toggles instead of leaving the page: a sentinel entry armed
+     on top; popping it re-arms the trap and runs the toggle. A game walking
+     its OWN history below the sentinel lands on its own state — the trap is
+     re-armed but the toggle waits for the next back. */
+  if (!blocked) {
+    try { history.pushState({ tlfsBack: 1 }, "", ""); } catch (e) {}
+    window.addEventListener("popstate", function (e) {
+      var mine = e.state && e.state.tlfsBack;
+      if (!mine) { try { history.pushState({ tlfsBack: 1 }, "", ""); } catch (err) {} }
+      if (!mine) toggle();
+    }, false);
+  }
+  /* Fullscreen from the very beginning: ask now — installed PWAs, kiosk and
+     some headless shells grant it with no gesture — and where the browser
+     demands activation, retry on the first pointer/key/touch, as early as any
+     page can reach. One attempt per phase; a user who toggles manually is
+     never re-entered behind their back. */
+  function autoFs() {
+    if (blocked || isFull()) return;
+    var p = REQ.call(de);
+    if (p && p.catch) p.catch(function () {});
+  }
+  autoFs();
+  if (!blocked && !isFull()) {
+    var armEv = ["pointerdown", "touchstart", "keydown"];
+    var autoOnce = function () {
+      for (var i = 0; i < armEv.length; i++) document.removeEventListener(armEv[i], autoOnce, true);
+      autoFs();
+    };
+    for (var ai = 0; ai < armEv.length; ai++) document.addEventListener(armEv[ai], autoOnce, true);
+  }
   /* A language switch changes <html lang>: repaint from whatever table the page
      uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
      drive their toggle state off that attribute, and taking it would corrupt them. */
   new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
 
   window.TLFS = {
-    version: "2026.11.23.3",
+    version: "2026.11.25.1",
     supported: !blocked,
     isFull: isFull,
     label: label,

@@ -524,6 +524,7 @@ body:not(.st-play):not(.st-dying) #comboLbl{opacity:0!important}
         <button class="btn" id="pzOptions">OPTIONS</button>
         <button class="btn" id="pzManual">MANUAL</button>
         <button class="btn danger" id="pzQuit">ABANDON RUN</button>
+        <a class="btn" id="pzHome" href="https://1nd1g0.github.io/">⌂ HOME</a>
       </div>
       <div>
         <label class="fld">FUSION LAB — THIS RUN'S RECIPES</label>
@@ -1639,7 +1640,47 @@ if(p.cpu)drawText("CPU",p.x,p.y-s-26,6,PAL[GRN],.7,B_GLOW,true);
 if(G.biome===2&&!G.attract){poly(SH.cone,p.x,p.y,p.aim,480,340,PAL[AMB],.10,B_LIGHT);
 poly(SH.cone,p.x,p.y,p.aim,300,200,PAL[WHT],.08,B_LIGHT);glowC(p.x,p.y,130,col,.7,B_LIGHT);}}}
 
-/* ---------------- CPU ally ---------------- */
+/* ---------------- CPU ally ----------------
+   Experienced-ally rules on top of the HUNT/COVER/REVIVE core:
+   - never stand in burning oil, and walk out of it first thing;
+   - hurt and cornered is not brave: at low HP with something on top of you,
+     break away and take the medkit instead of trading hits;
+   - a downed partner is worth dying for only when there is a way back —
+     approach the body when the pack is off it, otherwise orbit and shoot
+     the things sitting on them until there is;
+   - mech cells and weapon crates pull like targets: a veteran banks the
+     3-cell mech and out-guns the late waves instead of out-standing them. */
+function cpuFireBad(x,y){var c=fcell(x,y);return c>=0&&F.fire[c]>0}
+function cpuFireOut(p){
+  /* step toward the closest non-burning neighbourhood, 4 sampled fan dirs */
+  var best=null,bs=-1e9;
+  for(var k=0;k<8;k++){
+    var a=k/8*Math.PI*2,ax=p.x+fcos(a)*60,ay=p.y+fsin(a)*60;
+    if(cpuFireBad(ax,ay))continue;
+    var s=(fcos(a))*0+(k%2)*0.1;
+    var ne=nearestEnemy(p.x,p.y,240);
+    if(ne){var ddx=ax-ne.x,ddy=ay-ne.y;s+=Math.sqrt(ddx*ddx+ddy*ddy)*0.01;}
+    if(s>bs){bs=s;best={x:fcos(a),y:fsin(a)};}
+  }
+  return best||{x:fcos(G.time*2+p.id),y:fsin(G.time*2+p.id)};
+}
+function cpuLootOil(p){
+  var best=null,bs=-1e9;
+  for(var k=0;k<PK.length;k++){
+    var pk=PK[k];if(pk.dead)continue;
+    if(pk.kind!=="med"&&pk.kind!=="cell"&&pk.kind!=="crate"&&pk.kind!=="power")continue;
+    var d=Math.sqrt(d2(pk.x,pk.y,p.x,p.y));
+    if(d>360||cpuFireBad(pk.x,pk.y))continue;
+    var v;
+    if(pk.kind==="med")v=p.hp<p.maxhp*0.65?210:25;
+    else if(pk.kind==="cell")v=p.mechCells<3?170:30;
+    else if(pk.kind==="crate")v=150;
+    else v=p.hp<p.maxhp*0.5?120:90;
+    var s=v-d*0.35;
+    if(s>bs){bs=s;best=pk;}
+  }
+  return best;
+}
 function cpuThink(p,dt){p.cpuT-=dt;
 var human=null;for(var i=0;i<G.players.length;i++)if(G.players[i].human&&G.players[i].alive)human=G.players[i];
 if(p.cpuT<=0){p.cpuT=.15;
@@ -1648,47 +1689,68 @@ if(human){for(var j=0;j<EN.length;j++){var e=EN[j];if(!e.alive)continue;var dd=d
 if(dd<300*300)danger+=1;if(dd<td){td=dd;threat=e;}}
 if(human.hp<human.maxhp*.35)danger+=8;}
 var reviving=null;for(j=0;j<G.players.length;j++){var o=G.players[j];if(o!==p&&o.downed&&o.alive)reviving=o;}
-if(reviving)p.cpuMode="REVIVE";
+var hpF=p.hp/p.maxhp;
+if(reviving&&!(hpF<0.35&&nearestEnemy(p.x,p.y,190)))p.cpuMode="REVIVE";
+else if(hpF<0.35&&nearestEnemy(p.x,p.y,190))p.cpuMode="HUNT";/* break and heal: a dead ally revives nobody */
 else if(danger>=6||human&&human.hp<human.maxhp*.3)p.cpuMode="COVER";
+else if(reviving)p.cpuMode="COVER";/* too hurt to dive: keep the body covered until HP comes back */
 else p.cpuMode="HUNT";
 p.styleEMA=lerp(p.styleEMA,p.cpuMode==="COVER"?1:0,.1);
 if(p.cpuMode==="REVIVE")p.cpuTarget=reviving;
 else if(p.cpuMode==="COVER")p.cpuTarget=threat;
 else{var best=null,bs=-1;
+var lootT=cpuLootOil(p);
+if(lootT&&Math.sqrt(d2(lootT.x,lootT.y,p.x,p.y))<300){p.cpuLoot=lootT;p.cpuTarget=null;}
+else{p.cpuLoot=null;
 for(j=0;j<EN.length;j++){var e2=EN[j];if(!e2.alive)continue;
 var sc=(e2.elite?50:0)+(e2.boss?80:0)+d2(e2.x,e2.y,human?human.x:p.x,p.y?0:0)*0;
 sc=(e2.elite?50:0)+(e2.boss?80:0)-Math.sqrt(d2(e2.x,e2.y,p.x,p.y))*.05;
 if(human)sc+=Math.sqrt(d2(e2.x,e2.y,human.x,human.y))*.08;
 if(sc>bs){bs=sc;best=e2;}}
-p.cpuTarget=best;}}
+p.cpuTarget=best;}}}
 var mx=0,my=0,ax=0,ay=0,fire=false;
+/* burning ground outranks every plan — walk out of it right now */
+if(cpuFireBad(p.x,p.y)){var fo=cpuFireOut(p);mx=fo.x;my=fo.y;
+var neF=nearestEnemy(p.x,p.y,260);if(neF){ax=neF.x-p.x;ay=neF.y-p.y;fire=true;}
+if(nearestEnemy(p.x,p.y,120)&&p.dashCd<=0)p.dashReq=true;
+p.in.mx=mx;p.in.my=my;p.in.ax=ax;p.in.ay=ay;p.in.fire=fire;p.autoAim=true;return;}
 if(p.cpuMode==="REVIVE"&&p.cpuTarget){var dx=p.cpuTarget.x-p.x,dy=p.cpuTarget.y-p.y,l=Math.sqrt(dx*dx+dy*dy);
 if(l>50){mx=dx/l;my=dy/l;}
-var ne=nearestEnemy(p.x,p.y,300);if(ne){ax=ne.x-p.x;ay=ne.y-p.y;fire=true;}}
+var ne=nearestEnemy(p.x,p.y,300);if(ne){ax=ne.x-p.x;ay=ne.y-p.y;fire=true;}
+/* dash in across the open — the i-frames are the point */
+if(l>140&&nearestEnemy(p.x,p.y,240)&&p.dashCd<=0)p.dashReq=true;}
 else if(p.cpuMode==="COVER"&&human){var hx=human.x,hy=human.y,tx2=hx,ty2=hy;
 if(p.cpuTarget&&p.cpuTarget.alive){tx2=(hx+p.cpuTarget.x)/2;ty2=(hy+p.cpuTarget.y)/2;}
 var dx2=tx2-p.x,dy2=ty2-p.y,l2=Math.sqrt(dx2*dx2+dy2*dy2);
 if(l2>40){mx=dx2/l2;my=dy2/l2;}
+else if(l2<=40){/* backed off the spot a touch: a stationary cover tank is a drone buffet */
+var neC=nearestEnemy(p.x,p.y,160);
+if(neC){mx=(p.x-neC.x)/(Math.sqrt(d2(p.x,p.y,neC.x,neC.y))||1);my=(p.y-neC.y)/(Math.sqrt(d2(p.x,p.y,neC.x,neC.y))||1);}}
 var tgt=p.cpuTarget&&p.cpuTarget.alive?p.cpuTarget:nearestEnemy(p.x,p.y,520);
 if(tgt){var lead=Math.sqrt(d2(p.x,p.y,tgt.x,tgt.y))/900;ax=tgt.x+tgt.vx*lead-p.x;ay=tgt.y+tgt.vy*lead-p.y;fire=true;}
-if(human.hp<human.maxhp*.25&&p.dashCd<=0&&nearestEnemy(human.x,human.y,120))p.dashReq=true;}
+if(human.hp<human.maxhp*.25&&p.dashCd<=0&&nearestEnemy(human.x,human.y,120))p.dashReq=true;
+if(p.hp<p.maxhp*.3&&p.dashCd<=0&&nearestEnemy(p.x,p.y,110))p.dashReq=true;}
+else{/* HUNT — also the break-away mode while hurt: loot first, then re-engage */
+var lt=p.cpuLoot;
+if(lt&&!lt.dead){var dl=Math.sqrt(d2(lt.x,lt.y,p.x,p.y));
+if(dl>30){mx=(lt.x-p.x)/dl;my=(lt.y-p.y)/dl;}
+var neL=nearestEnemy(p.x,p.y,300);if(neL){ax=neL.x-p.x;ay=neL.y-p.y;fire=true;}}
 else{var t3=p.cpuTarget;
 if(t3&&t3.alive){var d3=Math.sqrt(d2(p.x,p.y,t3.x,t3.y));
 if(d3>320){mx=(t3.x-p.x)/d3;my=(t3.y-p.y)/d3;}
 else if(d3<160){mx=-(t3.x-p.x)/d3;my=-(t3.y-p.y)/d3;}
 else{var sa=Math.atan2(t3.y-p.y,t3.x-p.x)+Math.PI/2;mx=fcos(sa)*.6;my=fsin(sa)*.6;}
 var lead3=d3/900;ax=t3.x+t3.vx*lead3-p.x;ay=t3.y+t3.vy*lead3-p.y;fire=d3<560;}
-else{/* collect far gems */
+else{/* collect far gems, and cells/crates anywhere on reach */
 var gem=null,gd=1e9;for(var k=0;k<PK.length;k++){var pk=PK[k];if(pk.dead||pk.kind!=="gem")continue;
 if(human&&d2(pk.x,pk.y,human.x,human.y)<240*240)continue;
 var dd3=d2(pk.x,pk.y,p.x,p.y);if(dd3<gd){gd=dd3;gem=pk;}}
 if(gem){var gl2=Math.sqrt(gd);mx=(gem.x-p.x)/gl2;my=(gem.y-p.y)/gl2;}
-else{mx=fsin(G.time*.7+p.id*3);my=fcos(G.time*.5+p.id*2);}}
+else{mx=fsin(G.time*.7+p.id*3);my=fcos(G.time*.5+p.id*2);}}}}
 /* dodge chargers & bombers */
 var nearB=nearestEnemy(p.x,p.y,90);
-if(nearB&&(nearB.type===4||nearB.state===2)&&p.dashCd<=0){p.dashReq=true;mx=p.x-nearB.x;my=p.y-nearB.y;var ml=Math.sqrt(mx*mx+my*my)||1;mx/=ml;my/=ml;}}
+if(nearB&&(nearB.type===4||nearB.state===2)&&p.dashCd<=0){p.dashReq=true;mx=p.x-nearB.x;my=p.y-nearB.y;var ml=Math.sqrt(mx*mx+my*my)||1;mx/=ml;my/=ml;}
 p.in.mx=mx;p.in.my=my;p.in.ax=ax;p.in.ay=ay;p.in.fire=fire;p.autoAim=true;}
-
 /* ---------------- pickups ---------------- */
 var PK=[],PKfree=[];
 function spawnPickup(kind,x,y,val,wpn){if(PK.length>=260)return;var k=PKfree.pop()||{};
@@ -2456,6 +2518,327 @@ bindUI();
 refreshTitle();
 attractInit();
 requestAnimationFrame(frame);
+/* guide bridge — publish the card set + freeze hooks to _shared/guide.js */
+window.TLGC={id:"oilstorm",
+head:{en:"OILSTORM — QUICK GUIDE",es:"OILSTORM — GUÍA RÁPIDA",pt:"OILSTORM — GUIA RÁPIDO",
+      ru:"НЕФТЕШТОРМ — КРАТКИЙ ГИД",zh:"石油风暴 — 快速指南"},cls:"btn",
+mount:["#scrTitle",["#scrOptions .wrap","btn"],["#scrPause","btn"]],
+playing:function(){return G.state==="play"},pause:pauseGame,resume:resumeGame,
+t:function(k){return typeof TLI18N!=="undefined"?TLI18N.t(k):null},
+steps:[
+["dpad","MOVE","WASD (P1) and arrows (P2 in co-op) steer; on touch the sticks live in the corners."],
+["fire","FIRE","You auto-fire toward the aim stick — lead the target, keep walking."],
+["gear","DRAFT","Each level-up drafts one perk. Combos build the run; plan them."],
+["skull","FUEL & FIRE","Burning oil hurts everyone, friend included. Douse with electrolyte."]],
+L:{
+es:[["MOVERSE","WASD (J1) y flechas (J2 en co-op) dirigen; en táctil los sticks viven en las esquinas."],
+["FUEGO","Disparas solo hacia el stick de puntería: adelanta el blanco, no te quedes."],
+["ELECCIÓN","Cada nivel te deja elegir una ventaja; las combinaciones arman la partida."],
+["COMBUSTIBLE","El aceite ardiendo hiere a todos, aliados incluidos. Apágalo con electrolito."]],
+pt:[["DIRIGIR","WASD (J1) e setas (J2 no coop) dirigem; no toque os sticks ficam nos cantos."],
+["FOGO","Você atira sozinho na direção do stick: antecipe o alvo, continue andando."],
+["ESCOLHA","Cada nível escolha uma vantagem; combos montam a partida."],
+["COMBUSTÍVEL","Óleo em fogo machuca todos, aliados inclusive. Apague com eletrólito."]],
+ru:[["ДВИЖЕНИЕ","WASD (И1) и стрелки (И2 в коопе); на сенсоре стики по углам."],
+["ОГОНЬ","Стрельба идёт автоматически по стику прицела — упреждайте цель, двигайтесь."],
+["ДРАФТ","Каждый уровень выбираете перк; комбинации собирают ран — планируйте."],
+["ТОПЛИВО","Горящая нефть бьёт по всем, включая своих. Тушите электролитом."]],
+zh:[["移动","WASD(1P)与方向键(合作2P)驾驶；触屏摇杆在四角。"],
+["火力","自动朝瞄准摇杆开火——预判提前量，保持走位。"],
+["抽取","每次升级抽一项强化；组合构筑流派，提前规划。"],
+["燃料与火","燃油起火无差别伤害，包括自己人。用电解液灭火。"]]
+}};
+/* guide.js — the one first-run tutorial card set every page shares.
+
+   A game publishes its guide through `window.TLGC` (a src module at the end
+   of the game block, so it sees the game's own scope):
+
+     TLGC = {
+       id:    "tetris",                       // localStorage key: tlg_<id>
+       head:  "HOW TO PLAY",                  // optional card header; pass an
+                                             // object {en:,es:,pt:,ru:,zh:} to
+                                             // translate it with the page
+       steps: [["move","MOVE","Arrows or WASD slide the stack."], ...],
+       L:     {es:[["MOVE","..."],...], pt:[...], ru:[...], zh:[...]},
+                                             // same order as steps; rows may be
+                                             // [title,text] — the icon rides
+                                             // from the English row
+       mount: ["#options-screen", ["#pauseOv .panel","menu-btn"]],
+       cls:   "menu-btn",                     // default class for the GUIDE buttons
+       t:     fn,                             // optional: returns L('next') etc, or null
+       playing: fn, pause: fn, resume: fn     // optional gameplay freeze hooks
+     }
+
+   The engine mounts a GUIDE button into every menu the game lists (title AND
+   pause — a page may repeat), and on first visit (never seen, keys not touched)
+   runs the card set once, freezing gameplay through the hooks while it reads.
+   SKIP ends the run instantly; any end records "seen", which switches the
+   auto-run off for good. The mounted GUIDE button is the manual re-entry: it
+   replays the cards (that IS the manual re-enable — it also re-arms auto for
+   the next visit), and every finished run disarms it again.
+
+   The cards are pure DOM: scrim + panel + inline-SVG pictograms + short text,
+   styled from this file. No images, no fonts, no requests — the shipped page
+   stays a single file. The overlay swallows every pointer/touch, so a title
+   screen that starts on any tap cannot fire through it. Buttons stop their own
+   pointerdown too, for the same reason.                                */
+(function () {
+  if (window.TLG) return;
+  var cfg = window.TLGC;
+  if (!cfg || !cfg.steps || !cfg.steps.length) return;
+  var KEY = "tlg_" + (cfg.id || "game");
+  var run = false, idx = 0, froze = false, ov = null, queued = 0;
+  var btns = [];
+
+  function seen() { try { return !!JSON.parse(localStorage.getItem(KEY) || "0").s } catch (e) { return true } }
+  function markSeen() { try { localStorage.setItem(KEY, JSON.stringify({ s: 1 })) } catch (e) {} }
+  /* the hub's five languages; <html lang> is what every page's i18n flips */
+  function curlang() {
+    var l = (document.documentElement.lang || "").toLowerCase();
+    for (var i = 0; i < LANGS.length; i++) if (l.indexOf(LANGS[i]) === 0) return LANGS[i];
+    return "en";
+  }
+  var LANGS = ["en", "es", "pt", "ru", "zh"];
+  var CHROME = {
+    en: { guide: "GUIDE", next: "NEXT \u2192", skip: "SKIP", done: "GOT IT", head: "HOW TO PLAY" },
+    es: { guide: "GUÍA", next: "SIGUIENTE \u2192", skip: "SALTAR", done: "ENTENDIDO", head: "GUÍA RÁPIDA" },
+    pt: { guide: "GUIA", next: "PRÓXIMO \u2192", skip: "PULAR", done: "ENTENDI", head: "GUIA RÁPIDO" },
+    ru: { guide: "ГИД", next: "ДАЛЕЕ \u2192", skip: "ПРОПУСК", done: "ПОНЯТНО", head: "КРАТКИЙ ГИД" },
+    zh: { guide: "指南", next: "下一个 \u2192", skip: "跳过", done: "明白了", head: "快速指南" }
+  };
+  function L(k) {
+    if (cfg.t) { try { var v = cfg.t(k); if (v && v !== k) return v } catch (e) {} }
+    var c = CHROME[curlang()] || CHROME.en;
+    return c[k] || CHROME.en[k] || k;
+  }
+  /* the card set for the current language (bridge L map), English floor */
+  function curSteps() {
+    var s = cfg.L && cfg.L[curlang()];
+    return (s && s.length === cfg.steps.length) ? s : cfg.steps;
+  }
+
+  /* pictograms: line art, 64 grid, currentColor — the graphical half of a card */
+  var P = {
+    dpad: '<path d="M26 6h12v14h14v12H38v14H26V32H12V20h14z" fill="none" stroke-width="2"/><path d="M32 12l-4 5h8zM32 52l-4-5h8zM12 26l5 4v-8zM52 26l-5 4v8z"/>',
+    stick: '<circle cx="24" cy="40" r="14" fill="none" stroke-width="2"/><circle cx="28" cy="36" r="6"/><path d="M48 12v16M48 28l-4-6h8z"/><path d="M56 20H40M40 20l6-4v8z"/>',
+    fire: '<circle cx="32" cy="32" r="16" fill="none" stroke-width="2"/><path d="M32 10v8M32 46v8M10 32h8M46 32h8"/><circle cx="32" cy="32" r="3"/>',
+    twostick: '<circle cx="18" cy="42" r="12" fill="none" stroke-width="2"/><circle cx="22" cy="38" r="5"/><circle cx="46" cy="42" r="12" fill="none" stroke-width="2"/><circle cx="42" cy="38" r="5"/><path d="M18 20V8M18 8l-4 6h8z" stroke-width="2" fill="none"/><path d="M46 16l8-8M54 8l-7 1 1 7z"/>',
+    dash: '<path d="M8 32h20M14 22l-8 10 8 10" stroke-width="2.4" fill="none"/><path d="M30 32h20M36 22l-8 10 8 10" stroke-width="2.4" fill="none"/><path d="M52 32h6" stroke-width="2.4"/>',
+    jump: '<path d="M32 50V16M32 16l-8 10h16z"/><path d="M12 56h40" stroke-width="2"/>',
+    tap: '<circle cx="32" cy="32" r="18" fill="none" stroke-width="1.6" opacity=".6"/><circle cx="32" cy="32" r="10" fill="none" stroke-width="1.6" opacity=".8"/><circle cx="32" cy="32" r="4"/><path d="M46 18l6-6M52 12l-6 1 1 6z"/>',
+    drag: '<path d="M20 44V20a3 3 0 016 0v18M26 38V16a3 3 0 016 0v20M32 38V18a3 3 0 016 0v20M38 38V22a3 3 0 015 0v18c0 9-5 16-13 16s-13-6-16-12" fill="none" stroke-width="1.8"/><path d="M48 48h10M58 48l-5-4v8z"/>',
+    keys: '<rect x="6" y="28" width="14" height="14" rx="3" fill="none" stroke-width="1.6"/><rect x="24" y="28" width="14" height="14" rx="3" fill="none" stroke-width="1.6"/><rect x="42" y="28" width="14" height="14" rx="3" fill="none" stroke-width="1.6"/><path d="M31 39l0 0M13 35l-3 4h6zM31 33l-3 4h6zM49 39l3-4-6 0z" /><path d="M31 10v12M31 10l-4 6h8z" stroke-width="2"/>',
+    wheel: '<circle cx="32" cy="32" r="18" fill="none" stroke-width="2.4"/><circle cx="32" cy="32" r="5"/><path d="M32 14v13M16 40l11-6M48 40l-11-6" stroke-width="2"/>',
+    brake: '<circle cx="32" cy="32" r="16" fill="none" stroke-width="2"/><path d="M22 22l20 20" stroke-width="2"/><path d="M44 48l8 8M52 56l1-6-7 1z"/>',
+    tilt: '<rect x="22" y="8" width="20" height="38" rx="3" fill="none" stroke-width="1.8" transform="rotate(-18 32 27)"/><path d="M10 30a22 22 0 008 22M18 52l-4-5 6-1z" fill="none" stroke-width="1.8"/>',
+    rotate: '<path d="M46 18a18 18 0 10-2 26" fill="none" stroke-width="2.4"/><path d="M44 8v12h12z"/>',
+    pause: '<rect x="20" y="16" width="8" height="32" rx="2"/><rect x="36" y="16" width="8" height="32" rx="2"/>',
+    menu: '<rect x="12" y="16" width="40" height="5" rx="2.5"/><rect x="12" y="30" width="40" height="5" rx="2.5"/><rect x="12" y="44" width="40" height="5" rx="2.5"/>',
+    target: '<circle cx="32" cy="32" r="18" fill="none" stroke-width="1.6"/><circle cx="32" cy="32" r="9" fill="none" stroke-width="1.6"/><circle cx="32" cy="32" r="2.5"/><path d="M32 4v8M32 52v8M4 32h8M52 32h8" stroke-width="2"/>',
+    bomb: '<circle cx="28" cy="38" r="14" fill="none" stroke-width="2"/><path d="M38 26l6-6" stroke-width="2"/><path d="M48 10l-4 8h9l-5 8" fill="none" stroke-width="2"/><path d="M20 34c1-4 4-6 8-6" fill="none" stroke-width="1.6"/>',
+    shield: '<path d="M32 8l20 8v14c0 12-8 20-20 26-12-6-20-14-20-26V16z" fill="none" stroke-width="2"/><path d="M24 32l6 6 12-12" fill="none" stroke-width="2.4"/>',
+    gear: '<circle cx="32" cy="32" r="9" fill="none" stroke-width="2"/><path d="M32 8v8M32 48v8M8 32h8M48 32h8M15 15l6 6M43 43l6 6M49 15l-6 6M21 43l-6 6" stroke-width="2.4"/>',
+    paddle: '<path d="M14 44c0-10 8-24 18-24s18 14 18 24" fill="none" stroke-width="2.4"/><path d="M32 40v14" stroke-width="2.4"/><circle cx="48" cy="16" r="5"/>',
+    ball: '<circle cx="32" cy="32" r="14" fill="none" stroke-width="2"/><path d="M18 32c6-4 10-4 14 0s8 4 14 0" fill="none" stroke-width="1.6"/>',
+    blocks: '<rect x="10" y="30" width="14" height="14" fill="none" stroke-width="1.8"/><rect x="24" y="30" width="14" height="14" fill="none" stroke-width="1.8"/><rect x="24" y="16" width="14" height="14" fill="none" stroke-width="1.8"/><rect x="38" y="30" width="14" height="14" fill="none" stroke-width="1.8"/><path d="M10 52h44" stroke-width="2"/>',
+    flag: '<path d="M20 54V10" stroke-width="2.4"/><path d="M20 10h22l-6 7 6 7H20" fill="none" stroke-width="2"/><path d="M12 54h40" stroke-width="2"/>',
+    wrench: '<path d="M42 10a12 12 0 00-14 16L10 44l10 10 18-18a12 12 0 0016-14l-8 8-6-6z" fill="none" stroke-width="2"/>',
+    gauge: '<path d="M10 44a24 24 0 0144 0" fill="none" stroke-width="2.4"/><path d="M32 40l12-14" stroke-width="2.4"/><circle cx="32" cy="42" r="3"/>',
+    heart: '<path d="M32 52S10 38 10 23a11 11 0 0122-3 11 11 0 0122 3c0 15-22 29-22 29z" fill="none" stroke-width="2"/>',
+    skull: '<path d="M16 26a16 14 0 1132 0c0 8-4 12-8 14v8H24v-8c-4-2-8-6-8-14z" fill="none" stroke-width="2"/><circle cx="24" cy="26" r="3"/><circle cx="40" cy="26" r="3"/>',
+    box: '<rect x="12" y="12" width="40" height="40" rx="4" fill="none" stroke-width="2"/><path d="M12 26h40M26 26v26" stroke-width="1.6"/>',
+    swap: '<path d="M12 24h28l-6-6M52 40H24l6 6" fill="none" stroke-width="2.4"/>',
+    mic: '<rect x="26" y="8" width="12" height="24" rx="6" fill="none" stroke-width="2"/><path d="M16 30a16 16 0 0032 0M32 46v8M24 54h16" fill="none" stroke-width="2"/>',
+    grid: '<rect x="10" y="10" width="44" height="44" fill="none" stroke-width="1.6"/><path d="M25 10v44M39 10v44M10 25h44M10 39h44" stroke-width="1.2"/>',
+    eye: '<path d="M6 32C14 18 24 12 32 12s18 6 26 20c-8 14-18 20-26 20S14 46 6 32z" fill="none" stroke-width="2"/><circle cx="32" cy="32" r="7"/>',
+    cursor: '<path d="M16 8l28 20-13 2 7 14-5 3-7-14-8 9z"/><path d="M46 46l10 10" stroke-width="2"/>',
+    coin: '<circle cx="32" cy="32" r="16" fill="none" stroke-width="2"/><path d="M32 20v24M26 26c0-3 3-5 6-5s6 2 6 5-3 4-6 5-6 2-6 5 3 5 6 5 6-2 6-5" fill="none" stroke-width="1.6"/>',
+    wave: '<path d="M6 24c8-12 12-12 20 0s12 12 20 0M6 40c8-12 12-12 20 0s12 12 20 0" fill="none" stroke-width="2"/>',
+    plant: '<path d="M32 54V22" stroke-width="2"/><path d="M32 34c-10 0-14-6-14-14 10 0 14 6 14 14zM32 28c10 0 14-6 14-14-10 0-14 6-14 14z" fill="none" stroke-width="1.8"/>'
+  };
+  function picto(k) {
+    var s = P[k] || P.target;
+    return '<svg viewBox="0 0 64 64" width="88" height="88" fill="currentColor" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + s + "</svg>";
+  }
+
+  function css() {
+    var st = document.createElement("style");
+    st.textContent =
+      ".tlg-ov{position:fixed;inset:0;z-index:2147483001;background:rgba(8,6,4,.84);" +
+      "display:flex;align-items:center;justify-content:center;padding:14px;" +
+      "font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#f2ead8;touch-action:none}" +
+      ".tlg-card{width:min(560px,94vw);background:rgba(16,12,7,.96);border:1px solid rgba(255,255,255,.28);" +
+      "border-radius:14px;box-shadow:0 18px 60px rgba(0,0,0,.6);padding:18px 20px 16px;text-align:center}" +
+      ".tlg-h{letter-spacing:.18em;font-weight:700;font-size:11px;color:#9b8f74;margin:2px 0 10px}" +
+      ".tlg-p{color:#ffd76a;margin:2px auto 10px;line-height:0}" +
+      ".tlg-t{font-size:20px;font-weight:700;letter-spacing:.1em;color:#fff;margin:0 0 6px}" +
+      ".tlg-x{font-size:13.5px;color:#cfc4ab;margin:0 auto 14px;max-width:44ch}" +
+      ".tlg-dots{display:flex;gap:6px;justify-content:center;margin:0 0 12px}" +
+      ".tlg-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25)}" +
+      ".tlg-dots i.on{background:#ffd76a}" +
+      ".tlg-row{display:flex;gap:10px;justify-content:center;align-items:center}" +
+      ".tlg-b{font:inherit;letter-spacing:.1em;padding:10px 18px;border-radius:9px;cursor:pointer;" +
+      "border:1px solid #ffd76a;background:rgba(255,215,106,.14);color:#ffd76a;touch-action:manipulation}" +
+      ".tlg-b.gh{border-color:rgba(255,255,255,.3);background:none;color:#9b8f74}" +
+      ".tlg-b:active{transform:translateY(1px)}" +
+      ".tlg-n{color:#77705c;font-size:11px;min-width:38px}" +
+      ".tlg-float{position:fixed;left:10px;bottom:10px;z-index:2147483000;" +
+      "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
+      "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
+      "font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;" +
+      "cursor:pointer;touch-action:manipulation}" +
+      ".tlg-float:hover{border-color:#ffd76a;color:#ffd76a}";
+    document.head.appendChild(st);
+  }
+
+  function headTxt() {
+    if (cfg.head && typeof cfg.head === "object") {
+      var h = cfg.head[curlang()] || cfg.head.en; if (h) return h;
+    }
+    return cfg.head || L("head");
+  }
+  function paint() {
+    var b = cfg.steps[idx], s = curSteps()[idx];
+    var ic = s.length > 2 ? s[0] : b[0], ti = s.length > 2 ? s[1] : s[0], tx = s.length > 2 ? s[2] : s[1];
+    ov.querySelector(".tlg-h").textContent = headTxt();
+    ov.querySelector(".tlg-p").innerHTML = picto(ic);
+    ov.querySelector(".tlg-t").textContent = ti;
+    ov.querySelector(".tlg-x").textContent = tx;
+    var ds = ov.querySelectorAll(".tlg-dots i"), i;
+    for (i = 0; i < ds.length; i++) ds[i].className = i === idx ? "on" : "";
+    ov.querySelector(".tlg-n").textContent = (idx + 1) + "/" + cfg.steps.length;
+    ov.querySelector(".tlg-next").textContent = idx === cfg.steps.length - 1 ? L("done") : L("next");
+  }
+
+  function stop(e) { e.stopPropagation() }
+  function eat(e) { e.preventDefault(); e.stopPropagation() }
+
+  function runNow(manual) {
+    if (run) return;
+    run = true;
+    if (manual) { try { localStorage.removeItem(KEY) } catch (e) {} } /* the button re-enables auto for next visit */
+    froze = !!(cfg.playing && cfg.playing());
+    if (froze && cfg.pause) { try { cfg.pause() } catch (e) {} }
+    idx = 0;
+    css();
+    ov = document.createElement("div");
+    ov.className = "tlg-ov";
+    var dots = "";
+    for (var d = 0; d < cfg.steps.length; d++) dots += "<i></i>";
+    ov.innerHTML = '<div class="tlg-card"><div class="tlg-h">' + headTxt() + "</div>" +
+      '<div class="tlg-p"></div><div class="tlg-t"></div><div class="tlg-x"></div>' +
+      '<div class="tlg-dots">' + dots + '</div><div class="tlg-row">' +
+      '<button type="button" class="tlg-b gh tlg-skip">' + L("skip") + '</button>' +
+      '<span class="tlg-n"></span>' +
+      '<button type="button" class="tlg-b tlg-next"></button></div></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener("pointerdown", eat, true);
+    ov.addEventListener("touchstart", eat, true);
+    ov.addEventListener("wheel", eat, { passive: false });
+    ov.querySelector(".tlg-next").addEventListener("click", function (e) {
+      eat(e);
+      if (idx === cfg.steps.length - 1) end();
+      else { idx++; paint() }
+    });
+    ov.querySelector(".tlg-skip").addEventListener("click", function (e) { eat(e); end() });
+    paint();
+  }
+
+  function end() {
+    if (!run) return;
+    run = false;
+    markSeen();
+    if (ov) { ov.remove(); ov = null }
+    if (froze && cfg.resume) { try { cfg.resume() } catch (e) {} }
+    froze = false;
+    reassert();
+  }
+
+  /* menus rebuild their children (language switch, screen re-entry): re-add our buttons */
+  function reassert() {
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      if (b.isConnected) continue;
+      var h = document.querySelector(b.__tlgHost);
+      if (h && h !== b.parentNode) h.appendChild(b);
+    }
+  }
+  function mountAll() {
+    var m = cfg.mount || [];
+    for (var i = 0; i < m.length; i++) {
+      var spec = m[i], sel = typeof spec === "string" ? spec : spec[0];
+      var host = document.querySelector(sel);
+      if (!host) continue;
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = (typeof spec === "string" ? cfg.cls : spec[1]) || cfg.cls || "";
+      b.id = "tlgBtn" + i;
+      b.__tlgHost = sel;
+      b.textContent = L("guide");
+      b.setAttribute("aria-label", L("guide"));
+      b.addEventListener("pointerdown", stop, false);
+      b.addEventListener("touchstart", stop, false);
+      b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); runNow(true) });
+      host.appendChild(b);
+      btns.push(b);
+    }
+    if (!btns.length) {
+      var f = document.createElement("button");
+      f.type = "button";
+      f.id = "tlgBtn0";
+      f.className = "tlg-float";
+      f.__tlgHost = "body";
+      f.textContent = L("guide");
+      f.addEventListener("pointerdown", stop, false);
+      f.addEventListener("touchstart", stop, false);
+      f.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); runNow(true) });
+      document.body.appendChild(f);
+      btns.push(f);
+    }
+    var mo = new MutationObserver(function () {
+      if (queued) return;
+      queued = 1;
+      requestAnimationFrame(function () { queued = 0; reassert() });
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+  }
+
+  /* while a guide is up, keys belong to the guide: Enter/Space/Right = next,
+     S/B = skip. Everything else is swallowed so the game underneath stays
+     frozen; Escape is left alone for the fullscreen wiring. */
+  document.addEventListener("keydown", function (e) {
+    if (!run) return;
+    if (e.key === "Escape") return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.key === "Enter" || e.key === " " || e.key === "ArrowRight") {
+      if (idx === cfg.steps.length - 1) end(); else { idx++; paint() }
+    } else if (e.key === "s" || e.key === "S" || e.key === "b") end();
+  }, true);
+
+  /* a language flip retitles the mounted buttons and any open card */
+  new MutationObserver(function () {
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].textContent = L("guide");
+      btns[i].setAttribute("aria-label", L("guide"));
+    }
+    if (run && ov) {
+      ov.querySelector(".tlg-skip").textContent = L("skip");
+      paint();
+    }
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
+
+  window.TLG = {
+    version: "2026.11.26.2",
+    open: function () { runNow(true) },
+    close: end,
+    running: function () { return run },
+    mount: mountAll
+  };
+
+  mountAll();
+  if (!seen()) setTimeout(function () { runNow(false) }, 1500);
+})();
 </script>
 <script>
 // self-update v3: one-time title-screen freshness check, two HEAD requests,
@@ -2532,8 +2915,19 @@ else seen(cur);
       code runs. `TLFS.refitOnly()` gives a page that already has its own
       fullscreen button just that wiring, without a second button.
 
+   3. Fullscreen from the very beginning, and one shared way to flip it: the
+      request fires at script load (installed PWAs, kiosk shells and some
+      headless hosts grant it outright) and again on the first pointer/key/touch
+      for browsers that demand a user activation. Back, Escape and F11 all run
+      the same toggle as the button: F11 is claimed before the browser's own
+      fullscreen, Escape opens fullscreen when out of it (in it, the browser
+      exits natively and this file repaints), and browser back is caught by a
+      sentinel history entry which re-arms itself and toggles instead of
+      leaving the page. A page whose own history walk lands below the sentinel
+      keeps its back navigation; typing in a field leaves Escape alone.
+
    Nothing here reads game state, and a page that never calls mount/refitOnly gets
-   no behaviour change beyond `<html data-fs>` and the re-fit dispatch.        */
+   all of the above regardless — it is wiring, not opt-in.                      */
 (function () {
   if (window.TLFS) return;
   var de = document.documentElement;
@@ -2547,8 +2941,8 @@ else seen(cur);
   var btns = [], cbs = [], queued = false, styleDone = false;
 
   function isFull() {
-    return !!(de.fullscreenElement || de.webkitFullscreenElement ||
-      de.msFullscreenElement || de.mozFullScreenElement);
+    return !!(document.fullscreenElement || document.webkitFullscreenElement ||
+      document.msFullscreenElement || document.mozFullScreenElement);
   }
   function kit() {
     var k = window.TLI18N;
@@ -2633,17 +3027,66 @@ else seen(cur);
       paint(); /* an exit the browser never announced must still clear the label */
     }, false);
   }
-  /* an Escape-triggered exit is not a click; the label must follow it anyway */
+  /* Escape toggles: out of fullscreen it opens it (capture + stop, so the
+     page's own Escape binding — pause, close-overlay — does not also fire);
+     in fullscreen the browser exits on its own and usually delivers no
+     keydown at all, but shells that do must still repaint. Text fields keep
+     their Escape (blur/cancel) untouched. */
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && isFull()) setTimeout(refit, 60);
-  }, false);
+    if (e.key !== "Escape") return;
+    if (isFull()) { setTimeout(refit, 60); return; }
+    if (blocked) return;
+    var t = e.target;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    toggle();
+  }, true);
+  /* F11: claimed before the browser's own fullscreen flip so page state,
+     labels and re-fit stay in sync — same toggle as the button. */
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "F11") return;
+    e.preventDefault();
+    toggle();
+  }, true);
+  /* Browser back toggles instead of leaving the page: a sentinel entry armed
+     on top; popping it re-arms the trap and runs the toggle. A game walking
+     its OWN history below the sentinel lands on its own state — the trap is
+     re-armed but the toggle waits for the next back. */
+  if (!blocked) {
+    try { history.pushState({ tlfsBack: 1 }, "", ""); } catch (e) {}
+    window.addEventListener("popstate", function (e) {
+      var mine = e.state && e.state.tlfsBack;
+      if (!mine) { try { history.pushState({ tlfsBack: 1 }, "", ""); } catch (err) {} }
+      if (!mine) toggle();
+    }, false);
+  }
+  /* Fullscreen from the very beginning: ask now — installed PWAs, kiosk and
+     some headless shells grant it with no gesture — and where the browser
+     demands activation, retry on the first pointer/key/touch, as early as any
+     page can reach. One attempt per phase; a user who toggles manually is
+     never re-entered behind their back. */
+  function autoFs() {
+    if (blocked || isFull()) return;
+    var p = REQ.call(de);
+    if (p && p.catch) p.catch(function () {});
+  }
+  autoFs();
+  if (!blocked && !isFull()) {
+    var armEv = ["pointerdown", "touchstart", "keydown"];
+    var autoOnce = function () {
+      for (var i = 0; i < armEv.length; i++) document.removeEventListener(armEv[i], autoOnce, true);
+      autoFs();
+    };
+    for (var ai = 0; ai < armEv.length; ai++) document.addEventListener(armEv[ai], autoOnce, true);
+  }
   /* A language switch changes <html lang>: repaint from whatever table the page
      uses (kit or its own). Buttons carry no data-t of their own — pages like tetro
      drive their toggle state off that attribute, and taking it would corrupt them. */
   new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
 
   window.TLFS = {
-    version: "2026.11.23.3",
+    version: "2026.11.25.1",
     supported: !blocked,
     isFull: isFull,
     label: label,
