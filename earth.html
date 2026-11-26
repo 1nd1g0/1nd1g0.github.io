@@ -5891,8 +5891,11 @@ zh:[["模式","空格切换移动与射击。WASD、方向键或手柄按当前�
    The cards are pure DOM: scrim + panel + inline-SVG pictograms + short text,
    styled from this file. No images, no fonts, no requests — the shipped page
    stays a single file. The overlay swallows every pointer/touch, so a title
-   screen that starts on any tap cannot fire through it. Buttons stop their own
-   pointerdown too, for the same reason.                                */
+   screen that starts on any tap cannot fire through it — by stopping
+   propagation and absorbing the synthesized click, never by cancelling the
+   touch start itself (a cancelled start synthesizes no click and the buttons
+   go dead on touch — see _shared/CODEX.md). Buttons stop their own pointerdown
+   too, for the same reason.                                */
 (function () {
   if (window.TLG) return;
   var cfg = window.TLGC;
@@ -6043,8 +6046,18 @@ zh:[["模式","空格切换移动与射击。WASD、方向键或手柄按当前�
       '<span class="tlg-n"></span>' +
       '<button type="button" class="tlg-b tlg-next"></button></div></div>';
     document.body.appendChild(ov);
-    ov.addEventListener("pointerdown", eat, true);
-    ov.addEventListener("touchstart", eat, true);
+    ov.addEventListener("pointerdown", stop, true);
+    ov.addEventListener("touchstart", stop, true);
+    /* Swallow clicks that are not on one of our buttons so the title screen
+       under the card cannot start on the tap. Never preventDefault the
+       pointerdown/touchstart itself: a cancelled touch start synthesizes no
+       click, and the buttons' click handlers are the only thing they have —
+       that is how a tap reaches them (pointer events stop here, click does
+       not need them). */
+    ov.addEventListener("click", function (e) {
+      if (e.target && e.target.closest && e.target.closest("button")) return;
+      eat(e);
+    }, true);
     ov.addEventListener("wheel", eat, { passive: false });
     ov.querySelector(".tlg-next").addEventListener("click", function (e) {
       eat(e);
@@ -6140,7 +6153,7 @@ zh:[["模式","空格切换移动与射击。WASD、方向键或手柄按当前�
   }).observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
 
   window.TLG = {
-    version: "2026.11.26.2",
+    version: "2026.11.26.3",
     open: function () { runNow(true) },
     close: end,
     running: function () { return run },
