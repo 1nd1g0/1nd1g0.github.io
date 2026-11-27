@@ -14,9 +14,9 @@
   #stage{position:relative}
   canvas{display:block;background:#000;box-shadow:0 0 40px rgba(30,80,255,.35),0 0 4px rgba(0,255,255,.5)}
   #hud{position:absolute;left:0;top:0;right:0;display:flex;align-items:center;gap:8px;
-    padding:calc(4px + env(safe-area-inset-top)) 8px 6px;z-index:5;
+    padding:calc(4px + env(safe-area-inset-top) + var(--tlst,0px)) 8px 6px;z-index:20;
     background:linear-gradient(180deg,rgba(2,4,18,.92),rgba(2,4,18,.55) 75%,transparent)}
-  .hg{display:flex;flex-direction:column;line-height:1.05;min-width:0}
+  .hg{display:flex;flex-direction:column;line-height:1.05;min-width:0;flex:0 1 auto;white-space:nowrap}
   .hg .l{font-size:9px;letter-spacing:1px;color:#4be1ff;opacity:.85}
   .hg .v{font-family:'Courier New',monospace;font-weight:700;color:#ffb32b;
     text-shadow:0 0 8px rgba(255,150,0,.8);font-size:15px;white-space:nowrap}
@@ -33,7 +33,8 @@
   @keyframes pop{0%{opacity:0;transform:scale(.4)}10%{opacity:1;transform:scale(1.1)}
     20%{transform:scale(1)}75%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}
   #overlay{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
-    justify-content:center;text-align:center;color:#cfeaff;background:rgba(3,5,16,.86);padding:12px}
+    justify-content:safe center;text-align:center;color:#cfeaff;background:rgba(3,5,16,.86);overflow-y:auto;
+    padding:calc(52px + env(safe-area-inset-top) + var(--tlst,0px)) 12px calc(12px + var(--tlsb,0px));box-sizing:border-box}
   #overlay.hidden{display:none}
   #overlay h1{margin:0;font-size:clamp(26px,8vmin,54px);letter-spacing:3px;color:#fff;
     text-shadow:0 0 10px #0ff,0 0 30px #08f,0 0 60px #f0f}
@@ -1269,6 +1270,7 @@ else seen(cur);
     styleDone = true;
     var st = document.createElement("style");
     st.textContent =
+      ":where(button,a,.menu-btn,.btn,.tbtn):focus-visible{outline:2px solid #ffd76a;outline-offset:2px}" +
       ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
       "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
       "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
@@ -1387,8 +1389,184 @@ else seen(cur);
      drive their toggle state off that attribute, and taking it would corrupt them. */
   new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
 
+  /* ---- orientation gate: a game declares the orientation its controls
+     assume; touch visitors see a "rotate your device" card instead of a
+     layout that fights them. Desktop (fine pointer) is exempt — a window
+     shape is the user's choice there. */
+  var orientWant = null, orientOv = null;
+  var ORT = {
+    en: "Rotate your device", ru: "Поверните устройство", es: "Gire el dispositivo",
+    pt: "Gire o dispositivo", zh: "请旋转设备"
+  };
+  function orientLang() {
+    var c = (de.lang || "en").slice(0, 2);
+    return ORT[c] || ORT.en;
+  }
+  function orientCss() {
+    if (document.getElementById("tlfsOrtCss")) return;
+    var st = document.createElement("style");
+    st.id = "tlfsOrtCss";
+    st.textContent =
+      ".tlfs-rot{position:fixed;inset:0;z-index:2147483600;display:flex;flex-direction:column;" +
+      "align-items:center;justify-content:center;gap:18px;background:#0a0908;color:#ffd76a;" +
+      "font:700 clamp(16px,4vw,22px)/1.4 system-ui,sans-serif;text-align:center;padding:24px;" +
+      "letter-spacing:1px} .tlfs-rot svg{width:74px;height:74px;animation:tlfsrot 2.4s ease-in-out infinite}" +
+      ".tlfs-rot small{color:#9c8b74;font-weight:400;max-width:30ch}" +
+      "@keyframes tlfsrot{0%,18%{transform:rotate(0)}62%,100%{transform:rotate(90deg)}}";
+    document.head.appendChild(st);
+  }
+  function orientEval() {
+    if (!orientWant) return;
+    var coarse = matchMedia("(pointer:coarse)").matches;
+    var bad = coarse && de.getAttribute("data-orient") === orientWant;
+    if (bad && !orientOv) {
+      orientCss();
+      orientOv = document.createElement("div");
+      orientOv.className = "tlfs-rot";
+      orientOv.innerHTML = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6'>" +
+        "<rect x='4' y='2.5' width='11' height='19' rx='2'/><path d='M8 19h4' stroke-linecap='round'/>" +
+        "<path d='M18.5 8a7 7 0 0 1 1.4 4.6' stroke-linecap='round'/><path d='M17 12.2l3 .4.4-3' stroke-linecap='round' stroke-linejoin='round'/></svg>" +
+        "<div>" + orientLang() + "</div><small id='tlfsOrtSub'></small>";
+      document.body.appendChild(orientOv);
+    } else if (!bad && orientOv) {
+      orientOv.remove();
+      orientOv = null;
+    }
+  }
+  function orientMark() {
+    if (!orientWant) return;
+    de.setAttribute("data-orient", matchMedia("(orientation:portrait)").matches ? "portrait" : "landscape");
+    orientEval();
+  }
+  /* ---- bar-safe insets: on a touch device that is NOT fullscreen, a browser
+     chrome bar (URL bar) can sit at the top or the bottom of the window and
+     cover page chrome that hugs the edge. Pages that want edge-safe HUDs use
+     --tlst / --tlsb in their top/bottom bar offsets. Fullscreen and desktop
+     get zeros. */
+  function sizeVars() {
+    var coarse = matchMedia("(pointer:coarse)").matches;
+    var t = 0, b = 0;
+    if (coarse && !isFull()) {
+      if (matchMedia("(orientation:portrait)").matches) { t = 56; b = 50; }
+      else { t = 52; b = 44; }
+    }
+    de.style.setProperty("--tlst", t + "px");
+    de.style.setProperty("--tlsb", b + "px");
+  }
+  sizeVars();
+  cbs.push(sizeVars);
+  window.addEventListener("resize", sizeVars, false);
+  window.addEventListener("resize", orientMark, false);
+  try {
+    var omq = matchMedia("(orientation:portrait)");
+    if (omq.addEventListener) omq.addEventListener("change", orientMark);
+    else if (omq.addListener) omq.addListener(orientMark);
+  } catch (e) {}
+
+  /* ---- default focus: every menu screen has its primary button pre-focused,
+     so Enter / a gamepad A / Space fires it the moment the screen shows.
+     Only fires while nothing is focused (never steals from inputs or from a
+     page that manages focus itself), and never while the guide card is open. */
+  var CHROME_ID = /^(tlgBtn|tlfsBtn|tlfs|langBtn|langPill|homeBtn|bHome|tlg|optLang)/i;
+  function chromeEl(el) {
+    if (CHROME_ID.test(el.id || "")) return true;
+    var c = String(el.className || "");
+    return /(^|\s)(tlbtn|home|langPill|tlg-float|tlfs-float)(\s|$)/.test(c) || /home/i.test(el.className.baseVal || "");
+  }
+  function fVis(el) {
+    if (!el.isConnected) return false;
+    for (var p = el; p && p !== de; p = p.parentElement) {
+      var s = getComputedStyle(p);
+      if (s.display === "none" || s.visibility === "hidden" || +s.opacity < 0.05) return false;
+    }
+    var r = el.getBoundingClientRect();
+    return r.width > 3 && r.height > 3 && r.bottom > 0 && r.top < innerHeight;
+  }
+  function pickBtn() {
+    if (window.TLG && TLG.running && TLG.running()) {
+      var g = [].slice.call(document.querySelectorAll(".tlg-card button,.tlg-ov button"))
+        .filter(fVis);
+      return g.filter(function (b) { return /tlg-(next|go|pri|primary)/.test(b.className) })[0] || g[0] || null;
+    }
+    var els = [].slice.call(document.querySelectorAll("button,a[href],input[type=range]"))
+      .filter(function (el) {
+        if (el.tagName === "INPUT") return false;
+        if (chromeEl(el)) return false;
+        /* only menu contexts get a default button — HUD buttons inside the
+           playfield keep their plain click semantics and are never focused
+           behind the player's back */
+        var mc = el.closest ? el.closest(".ov,.overlay,.screen,.panel,.card,.modal,.menu,.dialog,.chips,.lnBtns") : null;
+        var anc = el.parentElement ? el.parentElement.closest("[id]") : null;
+        if (!mc && !/scr|menu|over|pause|option|start|title/i.test(anc ? anc.id : "")) return false;
+        return fVis(el);
+      });
+    if (!els.length) return null;
+    /* the topmost layer wins: pick the deepest root child, then the first
+       primary-looking button in it */
+    function rootOf(el) {
+      for (var p = el; p && p.parentElement !== document.body; p = p.parentElement) {}
+      return p || document.body;
+    }
+    var kids = [].slice.call(document.body.children);
+    var best = null, bestRank = -1;
+    for (var i = 0; i < els.length; i++) {
+      var rank = kids.indexOf(rootOf(els[i]));
+      if (rank > bestRank) { bestRank = rank; best = rootOf(els[i]); }
+    }
+    var group = els.filter(function (el) { return rootOf(el) === best });
+    var PR = /(^|\s)(big|pri|primary|cta|go|play|start|ovPrimary|on)(\s|$|_)/i;
+    var prim = group.filter(function (el) { return PR.test(el.className) || PR.test(el.id) });
+    if (prim.length) return prim[0];
+    return group[0];
+  }
+  function focusDefault() {
+    var ae = document.activeElement;
+    if (ae && ae !== document.body && ae.tagName !== "HTML") return; /* someone already owns focus */
+    var b = pickBtn();
+    if (b) {
+      try { b.focus({ preventScroll: true }); lastFocused = b; } catch (e) {}
+    }
+  }
+  var lastFocused = null;
+  var fTimer = 0;
+  function focusSoon() {
+    clearTimeout(fTimer);
+    fTimer = setTimeout(focusDefault, 80);
+  }
+  /* Enter / Space on a focused non-button that still wants activation */
+  document.addEventListener("keydown", function (e) {
+    var ae = document.activeElement;
+    if (!ae || ae.tagName === "BUTTON" || ae.tagName === "A" || ae.tagName === "INPUT") return;
+    if ((e.key === "Enter" || e.key === " ") && ae.dataset && (ae.dataset.act || ae.onclick)) {
+      e.preventDefault();
+      ae.click();
+    }
+    /* arrow keys roam the visible menu — but only while focus already sits
+       on a menu control: mid-gameplay (focus on body) arrows stay the
+       game's own steering keys */
+    if ((e.key === "ArrowDown" || e.key === "ArrowUp") &&
+        (ae.tagName === "BUTTON" || ae.tagName === "A" || ae.classList.contains("menu-btn") || getComputedStyle(ae).cursor === "pointer")) {
+      var els = [].slice.call(document.querySelectorAll("button,a[href]"))
+        .filter(fVis).filter(function (el) { return !chromeEl(el) });
+      var i = els.indexOf(ae);
+      if (i >= 0 && els.length > 1) {
+        e.preventDefault();
+        var step = (e.key === "ArrowUp") ? -1 : 1;
+        var next = els[(i + step + els.length * 2) % els.length];
+        next.focus();
+        lastFocused = next;
+      }
+    }
+  }, true);
+  new MutationObserver(focusSoon).observe(document.body, {
+    subtree: true, childList: true,
+    attributes: true, attributeFilter: ["class", "hidden", "style", "aria-hidden"]
+  });
+  cssOnce();
+  setTimeout(focusDefault, 250);
+
   window.TLFS = {
-    version: "2026.11.25.1",
+    version: "2026.11.26.1",
     supported: !blocked,
     isFull: isFull,
     label: label,
@@ -1397,6 +1575,26 @@ else seen(cur);
     onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
     /* just the size/orientation wiring, for a page with its own fullscreen button */
     refitOnly: function () { paint(); return true },
+    /* show the "rotate your device" card to touch visitors while the viewport
+       is in `mode` (the orientation the game's layout cannot serve).
+       e.g. TLFS.blockOrient("portrait") for a landscape-only game. */
+    blockOrient: function (mode, subKey) {
+      if (mode === null || mode === "" || mode === false) {
+        orientWant = null;
+        if (orientOv) { orientOv.remove(); orientOv = null; }
+        return true;
+      }
+      if (mode !== "portrait" && mode !== "landscape") return false;
+      orientWant = mode;
+      orientMark();
+      if (subKey && orientOv) {
+        var L = window.TLFS_LABEL, s = null;
+        try { s = typeof L === "function" ? L(subKey) : (kit() && kit().t(subKey)); } catch (e) {}
+        var el = document.getElementById("tlfsOrtSub");
+        if (el && s && s !== subKey) el.textContent = s;
+      }
+      return true;
+    },
     /* put the button in `sel` (or float it when the selector matches nothing).
        opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
        puts the translated word in aria-label, for narrow hosts. */

@@ -48,7 +48,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .tbtn.off{color:#7f6d57}
 #fps{display:none;font:700 11px monospace;color:var(--acid);background:rgba(10,8,6,.7);border:1px solid #3d4d2b;border-radius:4px;padding:7px 8px}
 #ui{position:fixed;inset:0;z-index:40;pointer-events:none}
-.screen{position:absolute;inset:0;display:none;pointer-events:auto;overflow-y:auto;overflow-x:hidden;padding:22px 14px 44px;
+.screen{position:absolute;inset:0;display:none;pointer-events:auto;overflow-y:auto;overflow-x:hidden;padding:calc(22px + var(--tlst,0px)) 14px calc(44px + var(--tlsb,0px));
 background:radial-gradient(125% 92% at 50% 0%,rgba(38,22,10,.72),var(--scrim) 72%);
 scrollbar-width:thin;scrollbar-color:var(--rust) #14100c}
 .screen::-webkit-scrollbar{width:11px}
@@ -204,7 +204,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 <div class="panel"><div class="ptitle" style="color:var(--amber)" data-t="p1_kb">Player 1 &mdash; Keyboard</div><div id="keysP1"></div></div>
 <div class="panel"><div class="ptitle" style="color:var(--volt)" data-t="p2_kb">Player 2 &mdash; Keyboard (co-op)</div><div id="keysP2"></div></div>
 <div class="panel"><div class="ptitle" data-t="gamepad">Gamepad</div><div class="hint" style="text-align:left" data-t="pad_hint">Left stick move &middot; right stick aim + fire &middot; <b>RT fires &amp; locks direction</b> &middot; first two pads map to P1 / P2.</div><div id="keysPad"></div></div>
-<div class="panel"><div class="ptitle" data-t="touch">Touch</div><div class="hint" style="text-align:left" data-t="touch_hint">Solo: move stick bottom-left, fire stick bottom-right. Co-op landscape: each player owns one short side &mdash; <b>move stick is on your left, fire stick on your right</b>, HUD reads facing you. Double-tap the move stick to dash.</div></div>
+<div class="panel"><div class="ptitle" data-t="touch">Touch</div><div class="hint" style="text-align:left" data-t="touch_hint">Solo: move stick bottom-left, fire stick bottom-right. Co-op on a phone: hold it PORTRAIT &mdash; one player owns each short side &mdash; <b>move stick is on your left, fire stick on your right</b>, HUD reads facing you. Double-tap the move stick to dash.</div></div>
 <div class="row"><button class="btn small" id="btnKReset" data-t="reset_defaults">Reset Defaults</button><button class="btn" id="btnKBack" data-t="back">Back</button></div>
 </div></div>
 <div class="screen" id="scrDraft"><div class="wrap">
@@ -534,7 +534,7 @@ en:{
  controls_sub:"click a binding, then press a key · gamepad: click then press a button",
  p1_kb:"Player 1 — Keyboard", p2_kb:"Player 2 — Keyboard (co-op)", gamepad:"Gamepad",
  pad_hint:"Left stick move · right stick aim + fire · RT fires & locks direction · first two pads map to P1 / P2.",
- touch_hint:"Solo: move stick bottom-left, fire stick bottom-right. Co-op landscape: each player owns one short side — move stick is on your left, fire stick on your right, HUD reads facing you. Double-tap the move stick to dash.",
+ touch_hint:"Solo: move stick bottom-left, fire stick bottom-right. Co-op on a phone: hold it PORTRAIT — one player owns each short side; the move stick is always on YOUR left, fire stick on your right, HUD reads facing you. Double-tap the move stick to dash.",
  reset_defaults:"Reset Defaults", level_up:"LEVEL UP", draft_sub:"draft one upgrade · press 1 / 2 / 3 or tap",
  contract_board:"CONTRACT BOARD", contract_sub:"the director offers the next wave — pick your poison",
  current_build:"Current Build", restart_run:"Restart Run", abandon_title:"Abandon → Title",
@@ -623,7 +623,7 @@ es:{
  controls_sub:"clic en una acción y luego pulsa una tecla · mando: clic y pulsa un botón",
  p1_kb:"Jugador 1 — Teclado", p2_kb:"Jugador 2 — Teclado (co-op)", gamepad:"MANDO",
  pad_hint:"Stick izquierdo mover · stick derecho apuntar y disparar · RT dispara y fija la dirección · los dos primeros mandos van a P1 / P2.",
- touch_hint:"Solo: stick de movimiento abajo a la izquierda, stick de fuego abajo a la derecha. Co-op horizontal: cada jugador tiene un lado corto — el stick de movimiento a tu izquierda, el de fuego a tu derecha, el HUD te mira de frente. Doble toque en el stick de movimiento para dash.",
+ touch_hint:"Solo: stick de movimiento abajo a la izquierda, stick de fuego abajo a la derecha. Co-op en el móvil: ponlo en VERTICAL — cada jugador tiene un lado corto; el stick de movimiento siempre a tu izquierda, el de fuego a tu derecha, el HUD te mira de frente. Doble toque en el stick de movimiento para dash.",
  reset_defaults:"Restaurar valores", level_up:"SUBIR DE NIVEL", draft_sub:"elige una mejora · pulsa 1 / 2 / 3 o toca",
  contract_board:"TABLÓN DE CONTRATOS", contract_sub:"el director ofrece la siguiente oleada — elige tu veneno",
  current_build:"CONSTRUCCIÓN ACTUAL", restart_run:"Reiniciar partida", abandon_title:"Abandonar → Título",
@@ -712,7 +712,7 @@ pt:{
  controls_sub:"clique numa ação e depois pressione uma tecla · gamepad: clique e pressione um botão",
  p1_kb:"Jogador 1 — Teclado", p2_kb:"Jogador 2 — Teclado (co-op)", gamepad:"GAMEPAD",
  pad_hint:"Analógico esquerdo mover · analógico direito mirar e atirar · RT atira e trava a direção · os dois primeiros gamepads vão para P1 / P2.",
- touch_hint:"Solo: analógico de movimento embaixo à esquerda, analógico de tiro embaixo à direita. Co-op em paisagem: cada jogador fica com um lado curto — o analógico de movimento fica à sua esquerda, o de tiro à sua direita, o HUD lê na sua frente. Toque duplo no analógico de movimento para dash.",
+ touch_hint:"Solo: analógico de movimento embaixo à esquerda, analógico de tiro embaixo à direita. Co-op no celular: segure na VERTICAL — cada jogador fica com um lado curto; o analógico de movimento fica sempre à sua esquerda, o de tiro à sua direita, o HUD lê na sua frente. Toque duplo no analógico de movimento para dash.",
  reset_defaults:"Restaurar padrões", level_up:"SUBIR DE NÍVEL", draft_sub:"escolha uma melhoria · pressione 1 / 2 / 3 ou toque",
  contract_board:"PAINEL DE CONTRATOS", contract_sub:"o diretor oferece a próxima onda — escolha seu veneno",
  current_build:"CONSTRUÇÃO ATUAL", restart_run:"Reiniciar corrida", abandon_title:"Abandonar → Título",
@@ -801,7 +801,7 @@ ru:{
  controls_sub:"клик по привязке, затем нажми клавишу · геймпад: клик и нажми кнопку",
  p1_kb:"Игрок 1 — Клавиатура", p2_kb:"Игрок 2 — Клавиатура (кооп)", gamepad:"ГЕЙМПАД",
  pad_hint:"Левый стик — движение · правый стик — прицел и стрельба · RT стреляет и фиксирует направление · первые два геймпада идут в P1 / P2.",
- touch_hint:"Соло: стик движения внизу слева, стик стрельбы внизу справа. Кооп в альбомнике: у каждого игрока своя короткая сторона — стик движения слева от тебя, стик стрельбы справа, HUD читается на тебя. Двойной тап по стику движения — dash.",
+ touch_hint:"Соло: стик движения внизу слева, стик стрельбы внизу справа. Кооп на телефоне: держи его ВЕРТИКАЛЬНО — каждый игрок занимает свою короткую сторону; стик движения всегда СЛЕВА ОТ ТЕБЯ, стик стрельбы справа, HUD читается на тебя. Двойной тап по стику движения — dash.",
  reset_defaults:"Сброс настроек", level_up:"НОВЫЙ УРОВЕНЬ", draft_sub:"выбери одно улучшение · нажми 1 / 2 / 3 или тапни",
  contract_board:"ДОСКА КОНТРАКТОВ", contract_sub:"директор предлагает следующую волну — выбирай, от чего умереть",
  current_build:"ТЕКУЩАЯ СБОРКА", restart_run:"Заново этот забег", abandon_title:"Бросить → Главный экран",
@@ -890,7 +890,7 @@ zh:{
  controls_sub:"点击一项绑定，再按一个键 · 手柄：点击后按一个键",
  p1_kb:"玩家 1 — 键盘", p2_kb:"玩家 2 — 键盘（双人）", gamepad:"手柄",
  pad_hint:"左摇杆移动 · 右摇杆瞄准并射击 · RT 射击并锁定方向 · 前两个手柄对应 P1 / P2。",
- touch_hint:"单人：左下移动摇杆，右下射击摇杆。横屏双人：每位玩家占据一个短边 — 移动摇杆在你的左侧，射击摇杆在你的右侧，HUD 面向你。双击移动摇杆即可冲刺。",
+ touch_hint:"单人：左下移动摇杆，右下射击摇杆。手机双人：竖屏握持 — 每位玩家占据一个短边；移动摇杆永远在你的左侧，射击摇杆在右侧，HUD 面向你。双击移动摇杆即可冲刺。",
  reset_defaults:"恢复默认", level_up:"升级", draft_sub:"选择一项强化 · 按 1 / 2 / 3 或点击",
  contract_board:"契约看板", contract_sub:"导演给出下一波 — 选你要哪种死法",
  current_build:"当前构筑", restart_run:"重开这次闯关", abandon_title:"放弃 → 标题",
@@ -1845,6 +1845,26 @@ var dx=x1-x0,dy=y1-y0,d=sqrt(dx*dx+dy*dy),n=Math.max(2,(d/26)|0),a=atan2(dy,dx);
 for(var i=0;i<n;i++){var t=i/n;
 part({s:"f_spark",x:lerp(x0,x1,t)+rr(-5,5),y:lerp(y0,y1,t)+rr(-5,5),life:0.14,sz:0.9,rot:a+rr(-0.4,0.4),add:true,tint:"#7ff0ff"})}
 }
+/* Arcs and flames must respect cover exactly like bullets do: a wall tile
+   stops them, props stop the beam AND take the hit (electricity is a poor
+   hammer — it charges a crate at 60% — but it must reach crates and barrels
+   at all, or the Arc Caster can never open loot or chain the fuel). */
+function rayWalls(x0,y0,x1,y1){
+var dx=x1-x0,dy=y1-y0,n=Math.max(1,Math.ceil(sqrt(dx*dx+dy*dy)/16)),i;
+for(i=1;i<n;i++){var t=i/n;if(isSolid(x0+dx*t,y0+dy*t))return true}
+return false;
+}
+function segBlockProp(x0,y0,x1,y1,skip){
+var dx=x1-x0,dy=y1-y0,dd=dx*dx+dy*dy;if(dd===0)return null;
+var best=null,bt=2,i,pr;
+for(i=0;i<WORLD.props.length;i++){
+pr=WORLD.props[i];if(pr.dead||pr===skip)continue;
+var t=((pr.x-x0)*dx+(pr.y-y0)*dy)/dd;if(t<0)t=0;else if(t>1)t=1;
+var qx=x0+dx*t-pr.x,qy=y0+dy*t-pr.y;
+if(qx*qx+qy*qy<(pr.r+6)*(pr.r+6)&&t<bt){bt=t;best=pr}
+}
+return best;
+}
 function chainVolt(x,y,dmg,src,maxN){
 var seen=[],cx=x,cy=y;
 for(var i=0;i<maxN;i++){
@@ -1852,7 +1872,9 @@ var best=null,bd=150;
 (function(cx,cy){near(cx,cy,150,function(e){
 if(seen.indexOf(e)>=0)return;var dx=e.x-cx,dy=e.y-cy,d=sqrt(dx*dx+dy*dy);if(d<bd){bd=d;best=e}
 })})(cx,cy);
-if(!best)break;
+if(!best||rayWalls(cx,cy,best.x,best.y))break;
+var bl=segBlockProp(cx,cy,best.x,best.y,null);
+if(bl){zapLine(cx,cy,bl.x,bl.y);hurtProp(bl,dmg*0.6,src);break}
 seen.push(best);zapLine(cx,cy,best.x,best.y);
 hurtFoe(best,dmg,0,0,"shock",src,true);best.tag="shock";
 cx=best.x;cy=best.y;dmg*=0.6;
@@ -2149,7 +2171,7 @@ var targets=[],best=null,bd=range;
 near(p.x,p.y,range,function(e){
 var dx=e.x-p.x,dy=e.y-p.y,d=sqrt(dx*dx+dy*dy);if(d>range)return;
 var a=atan2(dy,dx),da=abs(((a-face)%TAU+TAU)%TAU);if(da>PI)da=TAU-da;
-if(da<1.2&&d<bd){bd=d;best=e}
+if(da<1.2&&d<bd&&!rayWalls(p.x,p.y,e.x,e.y)){bd=d;best=e}
 });
 if(best){
 targets.push(best);var cur=best;
@@ -2158,18 +2180,22 @@ var nxt=null,nd=150;
 (function(cur){near(cur.x,cur.y,150,function(e){
 if(targets.indexOf(e)>=0)return;var dx=e.x-cur.x,dy=e.y-cur.y,d=sqrt(dx*dx+dy*dy);if(d<nd){nd=d;nxt=e}
 })})(cur);
-if(!nxt)break;targets.push(nxt);cur=nxt;
+if(!nxt||rayWalls(cur.x,cur.y,nxt.x,nxt.y))break;targets.push(nxt);cur=nxt;
 }
 var px=mx,py=my;
 for(var j=0;j<targets.length;j++){
-var e2=targets[j];zapLine(px,py,e2.x,e2.y);
+var e2=targets[j];
+var bl=segBlockProp(px,py,e2.x,e2.y,null);
+if(bl){zapLine(px,py,bl.x,bl.y);hurtProp(bl,w.dmg*mul*0.6,p);break}
+zapLine(px,py,e2.x,e2.y);
 hurtFoe(e2,w.dmg*mul,(e2.x-p.x)*0.01,(e2.y-p.y)*0.01,"shock",p);e2.tag="shock";
 zapTiles(e2.x,e2.y,12,p);px=e2.x;py=e2.y;
 }
 }else{
 var tx=p.x+cosL(face)*range*0.8,ty=p.y+sinL(face)*range*0.8;
-zapLine(mx,my,tx,ty);
-if(!zapTiles(tx,ty,18,p))part({s:"f_flash",x:tx,y:ty,life:0.1,sz:0.5,add:true,tint:"#7ff0ff"});
+var bl0=segBlockProp(mx,my,tx,ty,null);
+if(bl0){zapLine(mx,my,bl0.x,bl0.y);hurtProp(bl0,w.dmg*mul*0.6,p)}
+else{zapLine(mx,my,tx,ty);if(!zapTiles(tx,ty,18,p))part({s:"f_flash",x:tx,y:ty,life:0.1,sz:0.5,add:true,tint:"#7ff0ff"})}
 }
 p.recoil=2;
 }
@@ -2186,8 +2212,21 @@ addLight(mx+cosL(face)*80,my+sinL(face)*80,190,"#ff9040",1.5,0.1);
 near(p.x,p.y,range,function(e){
 var dx=e.x-p.x,dy=e.y-p.y,d=sqrt(dx*dx+dy*dy);if(d>range)return;
 var a2=atan2(dy,dx),da=abs(((a2-face)%TAU+TAU)%TAU);if(da>PI)da=TAU-da;
-if(da<0.35)hurtFoe(e,w.dmg*mul,cosL(face)*0.3,sinL(face)*0.3,"fire",p);
+if(da>=0.35)return;
+if(rayWalls(p.x,p.y,e.x,e.y))return;
+var bl=segBlockProp(p.x,p.y,e.x,e.y,null);
+if(bl){hurtProp(bl,w.dmg*mul,p);return}
+hurtFoe(e,w.dmg*mul,cosL(face)*0.3,sinL(face)*0.3,"fire",p);
 });
+for(var pj0=0;pj0<WORLD.props.length;pj0++){
+var pr0=WORLD.props[pj0];if(pr0.dead)continue;
+var dpx=pr0.x-p.x,dpy=pr0.y-p.y,dp0=sqrt(dpx*dpx+dpy*dpy);if(dp0>range)continue;
+var ap0=atan2(dpy,dpx),dap=abs(((ap0-face)%TAU+TAU)%TAU);if(dap>PI)dap=TAU-dap;
+if(dap>=0.35)continue;
+if(rayWalls(p.x,p.y,pr0.x,pr0.y))continue;
+if(segBlockProp(p.x,p.y,pr0.x,pr0.y,pr0))continue;
+hurtProp(pr0,w.dmg*mul,p);
+}
 for(var d2=40;d2<range;d2+=50){
 var tx=p.x+cosL(face)*d2,ty=p.y+sinL(face)*d2;igniteAt(tx,ty);
 var idx=tIdx(tx,ty);
@@ -4351,7 +4390,7 @@ $("fps").style.display=OPT.fps?"":"none";
 window.TLGC={id:"arena",cls:"btn small",
 head:{en:"RUSTFALL — QUICK GUIDE",es:"RUSTFALL — GUÍA RÁPIDA",pt:"RUSTFALL — GUIA RÁPIDO",
       ru:"RUSTFALL — КРАТКИЙ ГИД",zh:"RUSTFALL — 快速指南"},
-mount:["#scrTitle","#scrOptions",["#scrPause","btn"]],
+mount:["#scrTitle .panel","#scrOptions .wrap","#scrPause .panel"],
 playing:function(){return STATE==="play"},pause:pauseGame,resume:resumeGame,
 steps:[
 ["twostick","MOVE + FIRE","Left stick drives, right stick aims and fires. On keyboard: WASD + mouse."],
@@ -4480,6 +4519,12 @@ window.TLHOOK={
   get hurtPlayer(){return hurtPlayer}, set hurtPlayer(f){hurtPlayer=f},
   get hurtFoe(){return hurtFoe},
   get hurtProp(){return hurtProp},
+  get fireTesla(){return fireTesla},
+  get fireFlame(){return fireFlame},
+  get rayWalls(){return rayWalls},
+  get segBlockProp(){return segBlockProp},
+  get makeGun(){return makeGun},
+  get prop(){return prop},
   get spawnFoe(){return spawnFoe},
   get banner(){return banner},
   get persist(){return persist},
@@ -4920,6 +4965,7 @@ else seen(cur);
     styleDone = true;
     var st = document.createElement("style");
     st.textContent =
+      ":where(button,a,.menu-btn,.btn,.tbtn):focus-visible{outline:2px solid #ffd76a;outline-offset:2px}" +
       ".tlfs-float{position:fixed;right:10px;bottom:10px;z-index:2147483000;" +
       "min-width:38px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);" +
       "border-radius:8px;background:rgba(0,0,0,.55);color:#fff;" +
@@ -5038,8 +5084,184 @@ else seen(cur);
      drive their toggle state off that attribute, and taking it would corrupt them. */
   new MutationObserver(paint).observe(de, {attributes: true, attributeFilter: ["lang"]});
 
+  /* ---- orientation gate: a game declares the orientation its controls
+     assume; touch visitors see a "rotate your device" card instead of a
+     layout that fights them. Desktop (fine pointer) is exempt — a window
+     shape is the user's choice there. */
+  var orientWant = null, orientOv = null;
+  var ORT = {
+    en: "Rotate your device", ru: "Поверните устройство", es: "Gire el dispositivo",
+    pt: "Gire o dispositivo", zh: "请旋转设备"
+  };
+  function orientLang() {
+    var c = (de.lang || "en").slice(0, 2);
+    return ORT[c] || ORT.en;
+  }
+  function orientCss() {
+    if (document.getElementById("tlfsOrtCss")) return;
+    var st = document.createElement("style");
+    st.id = "tlfsOrtCss";
+    st.textContent =
+      ".tlfs-rot{position:fixed;inset:0;z-index:2147483600;display:flex;flex-direction:column;" +
+      "align-items:center;justify-content:center;gap:18px;background:#0a0908;color:#ffd76a;" +
+      "font:700 clamp(16px,4vw,22px)/1.4 system-ui,sans-serif;text-align:center;padding:24px;" +
+      "letter-spacing:1px} .tlfs-rot svg{width:74px;height:74px;animation:tlfsrot 2.4s ease-in-out infinite}" +
+      ".tlfs-rot small{color:#9c8b74;font-weight:400;max-width:30ch}" +
+      "@keyframes tlfsrot{0%,18%{transform:rotate(0)}62%,100%{transform:rotate(90deg)}}";
+    document.head.appendChild(st);
+  }
+  function orientEval() {
+    if (!orientWant) return;
+    var coarse = matchMedia("(pointer:coarse)").matches;
+    var bad = coarse && de.getAttribute("data-orient") === orientWant;
+    if (bad && !orientOv) {
+      orientCss();
+      orientOv = document.createElement("div");
+      orientOv.className = "tlfs-rot";
+      orientOv.innerHTML = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6'>" +
+        "<rect x='4' y='2.5' width='11' height='19' rx='2'/><path d='M8 19h4' stroke-linecap='round'/>" +
+        "<path d='M18.5 8a7 7 0 0 1 1.4 4.6' stroke-linecap='round'/><path d='M17 12.2l3 .4.4-3' stroke-linecap='round' stroke-linejoin='round'/></svg>" +
+        "<div>" + orientLang() + "</div><small id='tlfsOrtSub'></small>";
+      document.body.appendChild(orientOv);
+    } else if (!bad && orientOv) {
+      orientOv.remove();
+      orientOv = null;
+    }
+  }
+  function orientMark() {
+    if (!orientWant) return;
+    de.setAttribute("data-orient", matchMedia("(orientation:portrait)").matches ? "portrait" : "landscape");
+    orientEval();
+  }
+  /* ---- bar-safe insets: on a touch device that is NOT fullscreen, a browser
+     chrome bar (URL bar) can sit at the top or the bottom of the window and
+     cover page chrome that hugs the edge. Pages that want edge-safe HUDs use
+     --tlst / --tlsb in their top/bottom bar offsets. Fullscreen and desktop
+     get zeros. */
+  function sizeVars() {
+    var coarse = matchMedia("(pointer:coarse)").matches;
+    var t = 0, b = 0;
+    if (coarse && !isFull()) {
+      if (matchMedia("(orientation:portrait)").matches) { t = 56; b = 50; }
+      else { t = 52; b = 44; }
+    }
+    de.style.setProperty("--tlst", t + "px");
+    de.style.setProperty("--tlsb", b + "px");
+  }
+  sizeVars();
+  cbs.push(sizeVars);
+  window.addEventListener("resize", sizeVars, false);
+  window.addEventListener("resize", orientMark, false);
+  try {
+    var omq = matchMedia("(orientation:portrait)");
+    if (omq.addEventListener) omq.addEventListener("change", orientMark);
+    else if (omq.addListener) omq.addListener(orientMark);
+  } catch (e) {}
+
+  /* ---- default focus: every menu screen has its primary button pre-focused,
+     so Enter / a gamepad A / Space fires it the moment the screen shows.
+     Only fires while nothing is focused (never steals from inputs or from a
+     page that manages focus itself), and never while the guide card is open. */
+  var CHROME_ID = /^(tlgBtn|tlfsBtn|tlfs|langBtn|langPill|homeBtn|bHome|tlg|optLang)/i;
+  function chromeEl(el) {
+    if (CHROME_ID.test(el.id || "")) return true;
+    var c = String(el.className || "");
+    return /(^|\s)(tlbtn|home|langPill|tlg-float|tlfs-float)(\s|$)/.test(c) || /home/i.test(el.className.baseVal || "");
+  }
+  function fVis(el) {
+    if (!el.isConnected) return false;
+    for (var p = el; p && p !== de; p = p.parentElement) {
+      var s = getComputedStyle(p);
+      if (s.display === "none" || s.visibility === "hidden" || +s.opacity < 0.05) return false;
+    }
+    var r = el.getBoundingClientRect();
+    return r.width > 3 && r.height > 3 && r.bottom > 0 && r.top < innerHeight;
+  }
+  function pickBtn() {
+    if (window.TLG && TLG.running && TLG.running()) {
+      var g = [].slice.call(document.querySelectorAll(".tlg-card button,.tlg-ov button"))
+        .filter(fVis);
+      return g.filter(function (b) { return /tlg-(next|go|pri|primary)/.test(b.className) })[0] || g[0] || null;
+    }
+    var els = [].slice.call(document.querySelectorAll("button,a[href],input[type=range]"))
+      .filter(function (el) {
+        if (el.tagName === "INPUT") return false;
+        if (chromeEl(el)) return false;
+        /* only menu contexts get a default button — HUD buttons inside the
+           playfield keep their plain click semantics and are never focused
+           behind the player's back */
+        var mc = el.closest ? el.closest(".ov,.overlay,.screen,.panel,.card,.modal,.menu,.dialog,.chips,.lnBtns") : null;
+        var anc = el.parentElement ? el.parentElement.closest("[id]") : null;
+        if (!mc && !/scr|menu|over|pause|option|start|title/i.test(anc ? anc.id : "")) return false;
+        return fVis(el);
+      });
+    if (!els.length) return null;
+    /* the topmost layer wins: pick the deepest root child, then the first
+       primary-looking button in it */
+    function rootOf(el) {
+      for (var p = el; p && p.parentElement !== document.body; p = p.parentElement) {}
+      return p || document.body;
+    }
+    var kids = [].slice.call(document.body.children);
+    var best = null, bestRank = -1;
+    for (var i = 0; i < els.length; i++) {
+      var rank = kids.indexOf(rootOf(els[i]));
+      if (rank > bestRank) { bestRank = rank; best = rootOf(els[i]); }
+    }
+    var group = els.filter(function (el) { return rootOf(el) === best });
+    var PR = /(^|\s)(big|pri|primary|cta|go|play|start|ovPrimary|on)(\s|$|_)/i;
+    var prim = group.filter(function (el) { return PR.test(el.className) || PR.test(el.id) });
+    if (prim.length) return prim[0];
+    return group[0];
+  }
+  function focusDefault() {
+    var ae = document.activeElement;
+    if (ae && ae !== document.body && ae.tagName !== "HTML") return; /* someone already owns focus */
+    var b = pickBtn();
+    if (b) {
+      try { b.focus({ preventScroll: true }); lastFocused = b; } catch (e) {}
+    }
+  }
+  var lastFocused = null;
+  var fTimer = 0;
+  function focusSoon() {
+    clearTimeout(fTimer);
+    fTimer = setTimeout(focusDefault, 80);
+  }
+  /* Enter / Space on a focused non-button that still wants activation */
+  document.addEventListener("keydown", function (e) {
+    var ae = document.activeElement;
+    if (!ae || ae.tagName === "BUTTON" || ae.tagName === "A" || ae.tagName === "INPUT") return;
+    if ((e.key === "Enter" || e.key === " ") && ae.dataset && (ae.dataset.act || ae.onclick)) {
+      e.preventDefault();
+      ae.click();
+    }
+    /* arrow keys roam the visible menu — but only while focus already sits
+       on a menu control: mid-gameplay (focus on body) arrows stay the
+       game's own steering keys */
+    if ((e.key === "ArrowDown" || e.key === "ArrowUp") &&
+        (ae.tagName === "BUTTON" || ae.tagName === "A" || ae.classList.contains("menu-btn") || getComputedStyle(ae).cursor === "pointer")) {
+      var els = [].slice.call(document.querySelectorAll("button,a[href]"))
+        .filter(fVis).filter(function (el) { return !chromeEl(el) });
+      var i = els.indexOf(ae);
+      if (i >= 0 && els.length > 1) {
+        e.preventDefault();
+        var step = (e.key === "ArrowUp") ? -1 : 1;
+        var next = els[(i + step + els.length * 2) % els.length];
+        next.focus();
+        lastFocused = next;
+      }
+    }
+  }, true);
+  new MutationObserver(focusSoon).observe(document.body, {
+    subtree: true, childList: true,
+    attributes: true, attributeFilter: ["class", "hidden", "style", "aria-hidden"]
+  });
+  cssOnce();
+  setTimeout(focusDefault, 250);
+
   window.TLFS = {
-    version: "2026.11.25.1",
+    version: "2026.11.26.1",
     supported: !blocked,
     isFull: isFull,
     label: label,
@@ -5048,6 +5270,26 @@ else seen(cur);
     onChange: function (fn) { if (typeof fn === "function") cbs.push(fn); return fn },
     /* just the size/orientation wiring, for a page with its own fullscreen button */
     refitOnly: function () { paint(); return true },
+    /* show the "rotate your device" card to touch visitors while the viewport
+       is in `mode` (the orientation the game's layout cannot serve).
+       e.g. TLFS.blockOrient("portrait") for a landscape-only game. */
+    blockOrient: function (mode, subKey) {
+      if (mode === null || mode === "" || mode === false) {
+        orientWant = null;
+        if (orientOv) { orientOv.remove(); orientOv = null; }
+        return true;
+      }
+      if (mode !== "portrait" && mode !== "landscape") return false;
+      orientWant = mode;
+      orientMark();
+      if (subKey && orientOv) {
+        var L = window.TLFS_LABEL, s = null;
+        try { s = typeof L === "function" ? L(subKey) : (kit() && kit().t(subKey)); } catch (e) {}
+        var el = document.getElementById("tlfsOrtSub");
+        if (el && s && s !== subKey) el.textContent = s;
+      }
+      return true;
+    },
     /* put the button in `sel` (or float it when the selector matches nothing).
        opts: {cls, id, prepend, ariaLabel, icon} — `icon` draws the ⤢ glyph and
        puts the translated word in aria-label, for narrow hosts. */
@@ -5116,8 +5358,29 @@ else seen(cur);
   if (k && typeof k.onChange === "function") { try { k.onChange(paint) } catch (e) {} }
 })();
 </script>
-<script>/* arena has its own FULLSCREEN buttons already — take only the re-fit wiring */
-TLFS.refitOnly();</script>
+<script>/* arena has its own FULLSCREEN buttons already - take only the re-fit wiring */
+TLFS.refitOnly();
+
+/* mobile touch co-op is designed for portrait: P1 bottom, P2 top, controls on
+   the short sides. Landscape would put the pair across the long edges and
+   cram the arena into a strip - rotate the phone instead. Desktop (fine
+   pointer) and solo runs keep both orientations. The game keeps OPT private
+   to its closure; TLHOOK.opts is the published handle to the same object. */
+(function () {
+  /* primary-pointer coarse: a phone/tablet. A touch-capable laptop keeps its
+     fine pointer and is never told to rotate. */
+  function touchy() { return window.matchMedia && matchMedia("(pointer:coarse)").matches }
+  function orientGate() {
+    var coop = window.TLHOOK && TLHOOK.opts && TLHOOK.opts.coop === 2;
+    TLFS.blockOrient(coop && touchy() ? "landscape" : null);
+  }
+  setTimeout(orientGate, 0);
+  var seg = document.getElementById("segMode");
+  if (seg) new MutationObserver(orientGate).observe(seg, {
+    subtree: true, attributes: true, attributeFilter: ["class"]
+  });
+  window.addEventListener("resize", orientGate, false);
+})();</script>
 <script>/* TL_NOTOUCH_GATE: hide on-screen touch controls when the device has no touch capability */
 (function(){var t=false;
 try{t=matchMedia('(pointer: coarse)').matches||matchMedia('(any-pointer: coarse)').matches;}catch(e){}
